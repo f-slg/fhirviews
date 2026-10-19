@@ -1,0 +1,26 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "encuentros",
+  "title": "Encuentros",
+  "description": "Una fila por encuentro (Encounter) con la clase (ambulatorio, hospitalización, emergencia...), el tipo, el periodo, el primer motivo y el establecimiento.",
+  "status": "active",
+  "resource": "Encounter",
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "description": "Clave del encuentro"},
+        {"name": "paciente", "path": "subject.getReferenceKey(Patient)", "description": "Clave del paciente"},
+        {"name": "estado", "path": "status", "type": "code", "description": "Estado del encuentro"},
+        {"name": "clase", "path": "class.code", "type": "code", "description": "Clase (AMB, IMP, EMER...)"},
+        {"name": "tipo", "path": "type.coding.code.first()", "type": "code", "description": "Código del tipo de encuentro"},
+        {"name": "tipo_texto", "path": "type.text.first()", "type": "string", "description": "Texto del tipo de encuentro"},
+        {"name": "inicio", "path": "period.start", "type": "dateTime", "description": "Inicio"},
+        {"name": "fin", "path": "period.end", "type": "dateTime", "description": "Fin"},
+        {"name": "motivo", "path": "reasonCode.coding.code.first()", "type": "code", "description": "Código del primer motivo"},
+        {"name": "motivo_texto", "path": "reasonCode.text.first()", "type": "string", "description": "Texto del primer motivo"},
+        {"name": "establecimiento", "path": "serviceProvider.getReferenceKey(Organization)", "description": "Clave del establecimiento (Organization)"},
+        {"name": "ubicacion", "path": "location.location.getReferenceKey(Location).first()", "description": "Clave de la primera ubicación (Location)"}
+      ]
+    }
+  ]
+}

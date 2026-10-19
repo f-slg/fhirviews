@@ -1,0 +1,31 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "inmunizaciones",
+  "title": "Inmunizaciones",
+  "description": "Una fila por vacuna aplicada o no aplicada (Immunization) con el código CVX y el primer código de la vacuna en cualquier sistema, el estado, la fecha, el número de dosis, el lote y el motivo de no aplicación.",
+  "status": "active",
+  "resource": "Immunization",
+  "constant": [
+    {"name": "sistema_cvx", "valueString": "http://hl7.org/fhir/sid/cvx"}
+  ],
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "description": "Clave de la inmunización"},
+        {"name": "paciente", "path": "patient.getReferenceKey(Patient)", "description": "Clave del paciente"},
+        {"name": "encuentro", "path": "encounter.getReferenceKey(Encounter)", "description": "Clave del encuentro"},
+        {"name": "vacuna_cvx", "path": "vaccineCode.coding.where(system = %sistema_cvx).code.first()", "type": "code", "description": "Código CVX de la vacuna"},
+        {"name": "vacuna_codigo", "path": "vaccineCode.coding.code.first()", "type": "code", "description": "Primer código de la vacuna, en cualquier sistema"},
+        {"name": "vacuna_sistema", "path": "vaccineCode.coding.system.first()", "type": "uri", "description": "Sistema de vacuna_codigo"},
+        {"name": "vacuna", "path": "vaccineCode.text", "type": "string", "description": "Texto de la vacuna"},
+        {"name": "estado", "path": "status", "type": "code", "description": "completed, not-done o entered-in-error"},
+        {"name": "fecha", "path": "occurrence.ofType(dateTime)", "type": "dateTime", "description": "Fecha de aplicación"},
+        {"name": "dosis", "path": "protocolApplied.doseNumber.ofType(positiveInt).first()", "type": "positiveInt", "description": "Número de dosis en la serie"},
+        {"name": "serie", "path": "protocolApplied.series.first()", "type": "string", "description": "Esquema o serie"},
+        {"name": "lote", "path": "lotNumber", "type": "string", "description": "Lote"},
+        {"name": "motivo_no_aplicacion", "path": "statusReason.coding.code.first()", "type": "code", "description": "Código del motivo de no aplicación"},
+        {"name": "motivo_no_aplicacion_texto", "path": "statusReason.text", "type": "string", "description": "Texto del motivo de no aplicación"}
+      ]
+    }
+  ]
+}

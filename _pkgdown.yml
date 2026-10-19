@@ -93,6 +93,11 @@ reference:
   - vista_validar
   - vista_json
   - vista_duckdb
+- title: Catálogo de vistas
+  desc: ViewDefinition listos para vigilancia y salud pública.
+  contents:
+  - vista_catalogo
+  - vista_plantilla
 - title: Motor DuckDB (experimental)
   desc: Traducir vistas a SQL y ejecutarlas sobre NDJSON o Parquet sin cargar
     los recursos en R.

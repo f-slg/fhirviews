@@ -1,0 +1,27 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "medicamentos",
+  "title": "Prescripciones de medicamentos",
+  "description": "Una fila por prescripción (MedicationRequest) con el medicamento (código, sistema y texto, o la referencia a Medication), el estado, la intención, la fecha y el primer motivo.",
+  "status": "active",
+  "resource": "MedicationRequest",
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "description": "Clave de la prescripción"},
+        {"name": "paciente", "path": "subject.getReferenceKey(Patient)", "description": "Clave del paciente"},
+        {"name": "encuentro", "path": "encounter.getReferenceKey(Encounter)", "description": "Clave del encuentro"},
+        {"name": "medicamento_codigo", "path": "medication.ofType(CodeableConcept).coding.code.first()", "type": "code", "description": "Código del medicamento"},
+        {"name": "medicamento_sistema", "path": "medication.ofType(CodeableConcept).coding.system.first()", "type": "uri", "description": "Sistema de medicamento_codigo"},
+        {"name": "medicamento", "path": "medication.ofType(CodeableConcept).text", "type": "string", "description": "Texto del medicamento"},
+        {"name": "medicamento_ref", "path": "medication.ofType(Reference).getReferenceKey(Medication)", "description": "Clave del recurso Medication, si se usa una referencia"},
+        {"name": "estado", "path": "status", "type": "code", "description": "Estado (active, completed, stopped...)"},
+        {"name": "intencion", "path": "intent", "type": "code", "description": "Intención (order, plan...)"},
+        {"name": "fecha", "path": "authoredOn", "type": "dateTime", "description": "Fecha de la prescripción"},
+        {"name": "motivo", "path": "reasonCode.coding.code.first()", "type": "code", "description": "Código del primer motivo"},
+        {"name": "motivo_texto", "path": "reasonCode.text.first()", "type": "string", "description": "Texto del primer motivo"},
+        {"name": "motivo_ref", "path": "reasonReference.getReferenceKey(Condition).first()", "description": "Clave del diagnóstico (Condition) que motiva la prescripción"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "pacientes",
+  "title": "Pacientes",
+  "description": "Una fila por paciente con sexo, fecha de nacimiento, fallecimiento y la dirección de residencia (cantón o municipio, ciudad, provincia y código de división político-administrativa). La dirección de residencia es la primera con uso 'home' o sin uso indicado.",
+  "status": "active",
+  "resource": "Patient",
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "description": "Clave del paciente"},
+        {"name": "sexo", "path": "gender", "type": "code", "description": "Sexo administrativo (male, female, other, unknown)"},
+        {"name": "nacimiento", "path": "birthDate", "type": "date", "description": "Fecha de nacimiento"},
+        {"name": "fallecido", "path": "iif(deceased.ofType(dateTime).exists(), true, deceased.ofType(boolean))", "type": "boolean", "description": "Si el paciente falleció (vacío si no se registra)"},
+        {"name": "fecha_fallecimiento", "path": "deceased.ofType(dateTime)", "type": "dateTime", "description": "Fecha de fallecimiento"}
+      ]
+    },
+    {
+      "forEachOrNull": "address.where(use = 'home' or use.empty()).first()",
+      "column": [
+        {"name": "canton", "path": "district", "type": "string", "description": "Cantón o municipio (Address.district)"},
+        {"name": "ciudad", "path": "city", "type": "string", "description": "Ciudad o parroquia (Address.city)"},
+        {"name": "provincia", "path": "state", "type": "string", "description": "Provincia o departamento (Address.state)"},
+        {"name": "pais", "path": "country", "type": "string", "description": "País"},
+        {"name": "codigo_dpa", "path": "extension('https://f-slg.github.io/fhirviews/StructureDefinition/codigo-dpa').value.ofType(code).first()", "type": "code", "description": "Código de la división político-administrativa"}
+      ]
+    }
+  ]
+}

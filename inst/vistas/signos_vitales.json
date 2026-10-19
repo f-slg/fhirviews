@@ -1,0 +1,49 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "signos_vitales",
+  "title": "Signos vitales",
+  "description": "Observaciones de la categoría vital-signs, una fila por medición con valor numérico. Los paneles de presión arterial (85354-9) se separan en una fila para la presión sistólica (8480-6) y otra para la diastólica (8462-4).",
+  "status": "active",
+  "resource": "Observation",
+  "constant": [
+    {"name": "sistema_loinc", "valueString": "http://loinc.org"}
+  ],
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "description": "Clave de la observación"},
+        {"name": "paciente", "path": "subject.getReferenceKey(Patient)", "description": "Clave del paciente"},
+        {"name": "encuentro", "path": "encounter.getReferenceKey(Encounter)", "description": "Clave del encuentro"},
+        {"name": "estado", "path": "status", "type": "code", "description": "Estado de la observación"},
+        {"name": "fecha", "path": "effective.ofType(dateTime)", "type": "dateTime", "description": "Fecha y hora de la medición"}
+      ]
+    },
+    {
+      "unionAll": [
+        {
+          "forEach": "where(value.ofType(Quantity).exists())",
+          "column": [
+            {"name": "codigo", "path": "code.coding.where(system = %sistema_loinc).code.first()", "type": "code", "description": "Código LOINC de la medición"},
+            {"name": "descripcion", "path": "code.text", "type": "string", "description": "Texto del código"},
+            {"name": "valor", "path": "value.ofType(Quantity).value", "type": "decimal", "description": "Valor medido"},
+            {"name": "unidad", "path": "value.ofType(Quantity).unit", "type": "string", "description": "Unidad legible"},
+            {"name": "unidad_ucum", "path": "value.ofType(Quantity).code", "type": "code", "description": "Unidad en UCUM"}
+          ]
+        },
+        {
+          "forEach": "component.where(code.coding.where(system = %sistema_loinc and (code = '8480-6' or code = '8462-4')).exists())",
+          "column": [
+            {"name": "codigo", "path": "code.coding.where(system = %sistema_loinc).code.first()", "type": "code"},
+            {"name": "descripcion", "path": "code.text", "type": "string"},
+            {"name": "valor", "path": "value.ofType(Quantity).value", "type": "decimal"},
+            {"name": "unidad", "path": "value.ofType(Quantity).unit", "type": "string"},
+            {"name": "unidad_ucum", "path": "value.ofType(Quantity).code", "type": "code"}
+          ]
+        }
+      ]
+    }
+  ],
+  "where": [
+    {"path": "category.coding.where(code = 'vital-signs').exists()", "description": "Solo signos vitales"}
+  ]
+}

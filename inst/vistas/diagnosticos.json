@@ -1,0 +1,28 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "diagnosticos",
+  "title": "Diagnósticos",
+  "description": "Una fila por diagnóstico (Condition) con el código CIE-10 y SNOMED CT, el texto, los estados clínico y de verificación, las fechas de inicio y registro, el paciente y el encuentro. Los sistemas de codificación son constantes que se pueden cambiar con vista_plantilla().",
+  "status": "active",
+  "resource": "Condition",
+  "constant": [
+    {"name": "sistema_cie10", "valueString": "http://hl7.org/fhir/sid/icd-10"},
+    {"name": "sistema_snomed", "valueString": "http://snomed.info/sct"}
+  ],
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "description": "Clave del diagnóstico"},
+        {"name": "paciente", "path": "subject.getReferenceKey(Patient)", "description": "Clave del paciente"},
+        {"name": "encuentro", "path": "encounter.getReferenceKey(Encounter)", "description": "Clave del encuentro"},
+        {"name": "cie10", "path": "code.coding.where(system = %sistema_cie10).code.first()", "type": "code", "description": "Código CIE-10"},
+        {"name": "snomed", "path": "code.coding.where(system = %sistema_snomed).code.first()", "type": "code", "description": "Código SNOMED CT"},
+        {"name": "descripcion", "path": "code.text", "type": "string", "description": "Texto del diagnóstico"},
+        {"name": "estado_clinico", "path": "clinicalStatus.coding.code.first()", "type": "code", "description": "Estado clínico (active, resolved...)"},
+        {"name": "verificacion", "path": "verificationStatus.coding.code.first()", "type": "code", "description": "Estado de verificación (confirmed, provisional...)"},
+        {"name": "inicio", "path": "onset.ofType(dateTime)", "type": "dateTime", "description": "Fecha de inicio de síntomas"},
+        {"name": "registro", "path": "recordedDate", "type": "dateTime", "description": "Fecha de registro"}
+      ]
+    }
+  ]
+}
