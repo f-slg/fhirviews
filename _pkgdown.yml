@@ -91,6 +91,12 @@ reference:
   - vista_validar
   - vista_json
   - vista_duckdb
+- title: Motor DuckDB (experimental)
+  desc: Traducir vistas a SQL y ejecutarlas sobre NDJSON o Parquet sin cargar
+    los recursos en R.
+  contents:
+  - vista_ejecutar_duckdb
+  - vista_sql
 - title: Conformidad
   contents:
   - vista_conformidad

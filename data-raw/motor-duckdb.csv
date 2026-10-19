@@ -1,0 +1,4 @@
+"recursos","mb","filas","duckdb_tabla","duckdb_df","v8","equipo"
+50000,13,89180,0.654,0.635,10.772,"Linux 8 nucleos, R 4.5.2 duckdb 1.5.6"
+250000,67,444942,1.159,1.344,55.442,"Linux 8 nucleos, R 4.5.2 duckdb 1.5.6"
+1000000,271,1781318,4.43,4.53,NA,"Linux 8 nucleos, R 4.5.2 duckdb 1.5.6"
