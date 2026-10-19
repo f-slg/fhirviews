@@ -50,10 +50,18 @@ reference:
   - fhir_validar
   - fhir_capacidades
   - fhir_peticion
+  - fhir_ejecutar_texto
+  - fhir_vista
   - fhir_disponible
+- title: RStudio
+  desc: Panel Connections, conexión activa y addins.
+  contents:
+  - fhir_conexion_activa
+  - addin_peticion
 - title: Recursos FHIR
   contents:
   - fhir_recursos
+  - fhir_tabla
 - title: Vistas SQL on FHIR
   desc: Convertir recursos FHIR en tablas con un ViewDefinition.
   contents:

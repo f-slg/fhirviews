@@ -46,3 +46,14 @@
   otra conexión DBI) para consultarlas y unirlas con SQL; las columnas
   `collection` se guardan como listas de DuckDB. DBI y duckdb van en
   Suggests.
+* Integración con RStudio: `fhir_conectar()` registra el servidor en el panel
+  *Connections* (tipos de recurso, columnas, vista previa y acciones) y lo
+  deja como conexión activa (`fhir_conexion_activa()`,
+  `fhir_desconectar()`); el diálogo *New Connection* ofrece FHIR; addins
+  *Ejecutar petición FHIR* y *Ejecutar ViewDefinition*.
+* `fhir_ejecutar_texto()` ejecuta peticiones escritas como en Postman o en
+  archivos `.http`; `fhir_vista()` descarga del servidor y aplica una vista
+  en un paso; `fhir_tabla()` da una tabla rápida sin ViewDefinition.
+* `fhir_peticion()` devuelve un objeto `fhir_respuesta` que se imprime con el
+  estado HTTP y el JSON con sangría.
+* El token de acceso solo se envía a URL del servidor de la conexión.

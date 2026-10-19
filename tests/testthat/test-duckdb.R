@@ -18,7 +18,7 @@ test_that("guarda varias vistas y se pueden unir con SQL", {
       paciente = "subject.getReferenceKey(Patient)",
       valor = "value.ofType(Quantity).value"))
   ))
-  on.exit(DBI::dbDisconnect(db, shutdown = TRUE))
+  on.exit(DBI::dbDisconnect(db, shutdown = TRUE), add = TRUE)
   expect_setequal(DBI::dbListTables(db), c("paciente", "obs"))
   r <- DBI::dbGetQuery(db, "SELECT p.sexo, o.valor FROM obs o
                             JOIN paciente p ON o.paciente = p.id")
@@ -34,7 +34,7 @@ test_that("listas, objetos, nombres y modo agregar", {
                               collection = TRUE),
                          list(name = "nombre", path = "name.first()"))))))
   db <- vista_duckdb(recursos, v)
-  on.exit(DBI::dbDisconnect(db, shutdown = TRUE))
+  on.exit(DBI::dbDisconnect(db, shutdown = TRUE), add = TRUE)
   r <- DBI::dbGetQuery(db, "SELECT id, len(dados) AS n, nombre FROM nombres
                             ORDER BY id")
   expect_identical(as.integer(r$n), c(2L, 1L))

@@ -33,6 +33,14 @@ fhir_recursos <- function(x) {
   if (is.character(x)) {
     return(recursos_desde_texto(x))
   }
+  if (inherits(x, "fhir_respuesta")) {
+    texto <- attr(x, "texto")
+    x <- unclass(x)
+    attributes(x) <- list(names = names(x))
+    r <- recursos_desde_lista(x)
+    fuente <- if (!is.null(texto) && nzchar(texto)) texto
+    return(nuevo_fhir_recursos(r, fuente = fuente))
+  }
   if (!is.list(x)) {
     cli::cli_abort(c(
       "{.arg x} debe ser una lista, texto JSON o la ruta a un archivo.",
@@ -46,6 +54,7 @@ fhir_recursos <- function(x) {
 # de texto o de archivos) para que el motor lo use sin volver a convertirlos
 # a JSON. Cualquier modificación de la lista lo descarta.
 nuevo_fhir_recursos <- function(x, fuente = NULL) {
+  if (is.null(x)) x <- list()
   structure(unname(x), class = c("fhir_recursos", "list"), fuente = fuente)
 }
 

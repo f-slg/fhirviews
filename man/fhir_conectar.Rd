@@ -9,7 +9,8 @@ fhir_conectar(
   token = NULL,
   cabeceras = list(),
   tiempo = 60,
-  verificar = TRUE
+  verificar = TRUE,
+  panel = TRUE
 )
 }
 \arguments{
@@ -27,9 +28,13 @@ variable de entorno y usa por ejemplo \code{Sys.getenv("FHIR_TOKEN")}.}
 \item{verificar}{Si es \code{TRUE} (por defecto), consulta el \code{CapabilityStatement}
 (\code{GET [base]/metadata}) para comprobar que el servidor responde y anotar
 su software y versión de FHIR.}
+
+\item{panel}{Si es \code{TRUE} (por defecto) y se usa RStudio, registra la
+conexión en el panel \emph{Connections} (ver \code{\link[=fhir_conexion_activa]{fhir_conexion_activa()}}).}
 }
 \value{
-Un objeto de clase \code{fhir_conexion}.
+Un objeto de clase \code{fhir_conexion}, que además queda como conexión
+activa para los addins y \code{\link[=fhir_ejecutar_texto]{fhir_ejecutar_texto()}}.
 }
 \description{
 Crea una conexión a un servidor HL7 FHIR R4 que usan las demás funciones

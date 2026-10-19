@@ -44,7 +44,7 @@ test_that("ciclo completo de escritura en un servidor de pruebas", {
       birthDate = "1985-03-12"
     ))
   })
-  on.exit(for (p in creados) try(fhir_borrar(con, p), silent = TRUE))
+  on.exit(for (p in creados) try(fhir_borrar(con, p), silent = TRUE), add = TRUE)
   expect_true(all(vapply(creados, function(p) es_texto(p$id), logical(1))))
 
   encontrados <- fhir_buscar(

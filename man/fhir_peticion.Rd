@@ -31,8 +31,11 @@ repite el parámetro (equivale a un \emph{Y} en búsquedas FHIR).}
 \item{cabeceras}{Lista con nombre de cabeceras adicionales.}
 }
 \value{
-El cuerpo de la respuesta como lista de R (o \code{NULL} si viene
-vacío), con los atributos \code{estado} (código HTTP) y \code{cabeceras}.
+El cuerpo de la respuesta como lista de R de clase
+\code{fhir_respuesta} (vacía si el servidor no devolvió cuerpo), con los
+atributos \code{estado} (código HTTP) y \code{cabeceras}. Al imprimirla muestra el
+estado y el JSON con sangría, como Postman. Si es un Bundle, se puede
+pasar a \code{\link[=fhir_recursos]{fhir_recursos()}}, \code{\link[=fhir_tabla]{fhir_tabla()}} o \code{\link[=vista_ejecutar]{vista_ejecutar()}}.
 }
 \description{
 Envía una petición HTTP al servidor, al estilo de Postman, y devuelve el

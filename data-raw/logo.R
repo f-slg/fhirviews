@@ -95,3 +95,21 @@ grid.text("views", x = x0 + w1, y = 0.255, just = "left",
 
 invisible(dev.off())
 message("Escrito: man/figures/logo.png")
+
+# --- Icono del panel Connections de RStudio (inst/icons/fhir.png) ------------
+dir.create("inst/icons", showWarnings = FALSE, recursive = TRUE)
+png("inst/icons/fhir.png", width = 64, height = 64, bg = "transparent",
+    type = "cairo", antialias = "subpixel")
+grid.newpage()
+h <- list(x = 0.5 + 0.48 * cos(pi / 2 + (0:5) * pi / 3),
+          y = 0.5 + 0.48 * sin(pi / 2 + (0:5) * pi / 3))
+grid.polygon(h$x, h$y, gp = gpar(fill = azul, col = dorado, lwd = 3))
+for (i in 1:3) {
+  for (j in 1:2) {
+    grid.rect(x = 0.27 + (j - 1) * 0.24, y = 0.70 - (i - 1) * 0.19,
+              width = 0.21, height = 0.15, just = c("left", "top"),
+              gp = gpar(col = NA, fill = if (i == 1) dorado else blanco))
+  }
+}
+invisible(dev.off())
+message("Escrito: inst/icons/fhir.png")

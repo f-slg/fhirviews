@@ -15,15 +15,18 @@
 #' @param verificar Si es `TRUE` (por defecto), consulta el `CapabilityStatement`
 #'   (`GET [base]/metadata`) para comprobar que el servidor responde y anotar
 #'   su software y versión de FHIR.
+#' @param panel Si es `TRUE` (por defecto) y se usa RStudio, registra la
+#'   conexión en el panel *Connections* (ver [fhir_conexion_activa()]).
 #'
-#' @return Un objeto de clase `fhir_conexion`.
+#' @return Un objeto de clase `fhir_conexion`, que además queda como conexión
+#'   activa para los addins y [fhir_ejecutar_texto()].
 #' @seealso [fhir_buscar()], [fhir_leer()], [fhir_crear()], [fhir_peticion()].
 #' @export
 #' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' con
 fhir_conectar <- function(url, token = NULL, cabeceras = list(), tiempo = 60,
-                          verificar = TRUE) {
+                          verificar = TRUE, panel = TRUE) {
   texto_simple(url, "url")
   if (!grepl("^https?://", url)) {
     cli::cli_abort("{.arg url} debe empezar con {.val http://} o {.val https://}.",
@@ -46,6 +49,10 @@ fhir_conectar <- function(url, token = NULL, cabeceras = list(), tiempo = 60,
     software <- cs$software
     con$servidor <- trimws(paste(software$name %||% "", software$version %||% ""))
     con$version_fhir <- cs$fhirVersion %||% NA_character_
+  }
+  .fhirviews$activa <- con
+  if (panel) {
+    abrir_panel(con)
   }
   con
 }
@@ -102,8 +109,11 @@ fhir_disponible <- function(url, tiempo = 5) {
 #'   repite el parámetro (equivale a un *Y* en búsquedas FHIR).
 #' @param cabeceras Lista con nombre de cabeceras adicionales.
 #'
-#' @return El cuerpo de la respuesta como lista de R (o `NULL` si viene
-#'   vacío), con los atributos `estado` (código HTTP) y `cabeceras`.
+#' @return El cuerpo de la respuesta como lista de R de clase
+#'   `fhir_respuesta` (vacía si el servidor no devolvió cuerpo), con los
+#'   atributos `estado` (código HTTP) y `cabeceras`. Al imprimirla muestra el
+#'   estado y el JSON con sangría, como Postman. Si es un Bundle, se puede
+#'   pasar a [fhir_recursos()], [fhir_tabla()] o [vista_ejecutar()].
 #' @export
 #' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
@@ -116,11 +126,39 @@ fhir_peticion <- function(con, metodo = "GET", ruta = "", cuerpo = NULL,
   metodo <- toupper(metodo)
   res <- peticion_json(con, metodo, ruta, cuerpo = cuerpo_json(cuerpo),
                        parametros = parametros, cabeceras = cabeceras)
+  nueva_respuesta(res)
+}
+
+nueva_respuesta <- function(res) {
   datos <- res$datos
   if (is.null(datos)) datos <- list()
-  attr(datos, "estado") <- res$estado
-  attr(datos, "cabeceras") <- res$cabeceras
-  datos
+  structure(datos, class = c("fhir_respuesta", "list"), estado = res$estado,
+            cabeceras = res$cabeceras, texto = res$texto)
+}
+
+#' @export
+print.fhir_respuesta <- function(x, ..., lineas = 40L) {
+  estado <- attr(x, "estado")
+  tipo <- x$resourceType
+  resumen <- if (is.null(tipo)) "sin cuerpo" else tipo
+  if (identical(tipo, "Bundle")) {
+    resumen <- paste0("Bundle (", x$type %||% "?",
+                      if (!is.null(x$total)) paste0(", total ", x$total),
+                      ", ", length(x$entry), " entradas)")
+  } else if (!is.null(x$id)) {
+    resumen <- paste0(tipo, "/", x$id)
+  }
+  cat("<fhir_respuesta> ", estado %||% "", " \u00b7 ", resumen, "\n", sep = "")
+  if (length(x) > 0L) {
+    json <- strsplit(as.character(jsonlite::toJSON(
+      unclass(x), auto_unbox = TRUE, pretty = TRUE, null = "null",
+      digits = NA)), "\n")[[1]]
+    cat(utils::head(json, lineas), sep = "\n")
+    if (length(json) > lineas) {
+      cat("... (", length(json) - lineas, " l\u00edneas m\u00e1s)\n", sep = "")
+    }
+  }
+  invisible(x)
 }
 
 #' Buscar recursos con paginación automática
@@ -398,7 +436,8 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
   req <- httr2::req_user_agent(req, agente())
   req <- httr2::req_headers(req, Accept = "application/fhir+json",
                             !!!con$cabeceras, !!!cabeceras)
-  if (!is.null(con$token)) {
+  # El token solo se envía al servidor de la conexión, no a otras URL
+  if (!is.null(con$token) && startsWith(url, paste0(con$url, "/"))) {
     req <- httr2::req_auth_bearer_token(req, con$token)
   }
   if (length(parametros) > 0L) {

@@ -110,7 +110,7 @@ test_that("los errores de FHIRPath son legibles y liberan memoria", {
 test_that("el motor encadena nodos sin perder el tipo", {
   m <- motor_actual()
   inicio <- m$tamano()
-  on.exit(m$liberar(inicio))
+  on.exit(m$liberar(inicio), add = TRUE)
   ids <- m$cargar(fhir_recursos(observacion))
   componentes <- m$evaluar(ids, "component", modo = "nodos")[[1]]
   expect_length(componentes, 2L)
@@ -131,6 +131,6 @@ test_that("informa el motor y la version de fhirpath.js", {
   expect_output(info <- fhirviews_motor(), "fhirpath.js")
   expect_identical(info$fhirpath_js, fhirviews_version_fhirpath())
   withr_opcion <- options(fhirviews.motor = "otro")
-  on.exit(options(withr_opcion))
+  on.exit(options(withr_opcion), add = TRUE)
   expect_error(motor_actual(), class = "fhirviews_error")
 })

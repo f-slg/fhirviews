@@ -1,0 +1,9 @@
+Name: Ejecutar petición FHIR
+Description: Envía al servidor FHIR activo la petición seleccionada (por ejemplo GET Patient?family=Paredes, con cabeceras y cuerpo JSON opcionales) y muestra la respuesta.
+Binding: addin_peticion
+Interactive: false
+
+Name: Ejecutar ViewDefinition
+Description: Ejecuta el ViewDefinition seleccionado (o el archivo JSON abierto) contra el servidor FHIR activo y abre la tabla resultante.
+Binding: addin_vista
+Interactive: false
