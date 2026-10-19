@@ -43,6 +43,9 @@ navbar:
         href: articles/vistas.html
       - text: Tasas por cantón con FHIR y pobecu
         href: articles/tasas-pobecu.html
+      - text: -------
+      - text: Cómo funciona por dentro
+        href: articles/arquitectura.html
     news:
       text: Novedades
       href: news/index.html

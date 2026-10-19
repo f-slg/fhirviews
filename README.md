@@ -2,90 +2,136 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/f-slg/fhirviews/actions/workflows/pkgdown.yaml/badge.svg)](https://f-slg.github.io/fhirviews/)
+[![SQL on FHIR: 133/133 shareable](https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-2a78d6.svg)](https://f-slg.github.io/fhirviews/reference/vista_conformidad.html)
+[![HL7 FHIR R4](https://img.shields.io/badge/HL7%20FHIR-R4-0F2233.svg)](https://hl7.org/fhir/R4/)
 [![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md)
-[![SQL on FHIR: 133/133 shareable](https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-0F2233.svg)](https://f-slg.github.io/fhirviews/reference/vista_conformidad.html)
 <!-- badges: end -->
 
-**fhirviews** permite trabajar con **HL7 FHIR R4** desde R y RStudio como si
-fuera Postman, y convertir los recursos FHIR en **tablas** con el estándar
+**fhirviews** lleva **HL7 FHIR R4** a R: un cliente para hablar con cualquier
+servidor FHIR desde R y RStudio, como harías con Postman, y un motor que
+convierte los recursos FHIR en **tablas** con el estándar
 **[SQL on FHIR](https://sql-on-fhir.org/)** (`ViewDefinition`). Es la primera
-implementación de SQL on FHIR en R.
+implementación de SQL on FHIR en R y pasa **todas las pruebas *shareable*** del
+banco oficial de conformidad.
 
-- **Cliente FHIR** (`fhir_*`): buscar con paginación automática, leer, crear,
-  actualizar, borrar, `$everything` y `$validate`, con errores legibles a
-  partir del `OperationOutcome`.
-- **Vistas SQL on FHIR** (`vista_*`): un `ViewDefinition` aplicado a una
-  lista de recursos, un Bundle o un archivo NDJSON da un `data.frame`. Pasa
-  **todas las pruebas *shareable*** del banco oficial de conformidad.
-- **DuckDB**: las vistas se guardan como tablas para consultarlas con SQL.
-- **RStudio**: el servidor aparece en el panel *Connections*, y dos addins
-  ejecutan una petición o un `ViewDefinition` con un clic.
+<img src="man/figures/README-json-tabla.png" width="100%" alt="Tres paneles: un recurso Patient en JSON, un ViewDefinition con column y forEach, y el data.frame resultante con una fila por cada nombre del paciente" />
 
 > **Nota:** fhirviews es un paquete independiente, desarrollado a título
-> personal. No es un producto de HL7 ni de ninguna otra institución.
+> personal. No es un producto de HL7 ni de ninguna otra institución. Los datos
+> de los ejemplos son ficticios.
+
+## Contenido
+
+- [¿Por qué fhirviews?](#por-qué-fhirviews)
+- [Instalación](#instalación)
+- [Inicio rápido](#inicio-rápido)
+- [Para qué se puede usar](#para-qué-se-puede-usar)
+- [Cómo funciona](#cómo-funciona)
+- [Conformidad con SQL on FHIR](#conformidad-con-sql-on-fhir)
+- [Rendimiento](#rendimiento)
+- [Funciones](#funciones)
+- [Comparación con otras herramientas](#comparación-con-otras-herramientas)
+- [Hoja de ruta](#hoja-de-ruta)
+- [Documentación, contribuciones y licencia](#documentación)
+
+## ¿Por qué fhirviews?
+
+**FHIR** es el estándar con el que hoy se intercambian datos clínicos:
+historias clínicas, laboratorios, vacunación, sistemas de vigilancia. Sus
+recursos son **árboles JSON**: un paciente tiene varios nombres, cada nombre
+varios apellidos, cada observación varios componentes... Ideal para
+intercambiar información, incómodo para analizarla: un indicador, una tasa o
+un modelo estadístico necesitan **tablas**.
+
+Aplanar FHIR a mano es frágil: cada equipo escribe su propio código, con sus
+propias decisiones sobre qué hacer con las listas, las extensiones o los
+valores ausentes, y los resultados no se pueden comparar.
+**[SQL on FHIR](https://sql-on-fhir.org/)** resuelve esto con un formato
+estándar, el `ViewDefinition`: una descripción en JSON de qué columnas sacar de
+cada recurso, con expresiones [FHIRPath](https://hl7.org/fhirpath/). La misma
+vista da la misma tabla en cualquier implementación (Pathling, Aidbox, Google
+FHIR Data Pipes...). fhirviews trae ese estándar a R.
+
+| Necesidad | Qué ofrece fhirviews |
+|---|---|
+| Consultar un servidor FHIR sin salir de R | Cliente completo: búsqueda con paginación, lectura, escritura, transacciones, `$everything`, `$validate`, errores legibles |
+| Convertir recursos en tablas de forma reproducible | Motor de `ViewDefinition` conforme al estándar, validado con el banco oficial |
+| Trabajar con volúmenes reales | Evaluación por lotes: unos 7 000 pacientes por segundo desde NDJSON |
+| Analizar con SQL | Las vistas se guardan en DuckDB (u otra base DBI) con un comando |
+| Enseñar y explorar | Panel *Connections* y addins de RStudio, peticiones al estilo Postman, datos de ejemplo |
 
 ## Instalación
-
-Versión de desarrollo desde GitHub:
 
 ```r
 # install.packages("pak")
 pak::pak("f-slg/fhirviews")
 ```
 
-fhirviews usa el paquete [V8](https://cran.r-project.org/package=V8) para
-evaluar FHIRPath. En Linux, V8 se instala sin pasos adicionales (descarga
-una versión estática del motor si no encuentra `libv8` en el sistema).
+fhirviews evalúa FHIRPath con [fhirpath.js](https://github.com/HL7/fhirpath.js)
+a través del paquete [V8](https://cran.r-project.org/package=V8):
 
-## De un servidor FHIR a una tabla
+- **Windows y macOS:** V8 se instala como binario, sin pasos adicionales.
+- **Ubuntu, Debian, RHEL y derivados (x86_64 o arm64):** V8 descarga
+  automáticamente una versión estática del motor.
+- **Fedora, Arch u otros:** instala `v8-devel` (o el equivalente) o define
+  `DOWNLOAD_STATIC_LIBV8=1` antes de instalar V8.
+
+Opcionales: `duckdb` y `DBI` (vistas en SQL), `rstudioapi` (addins) y
+[pobecu](https://f-slg.github.io/pobecu/) (población del Ecuador para tasas).
+
+## Inicio rápido
+
+El paquete incluye el caso clínico ficticio del taller
+[aprende-fhir](https://github.com/f-slg/aprende-fhir) (60 recursos de 29
+tipos), así que el ejemplo funciona sin conexión:
 
 ```r
 library(fhirviews)
 
-con <- fhir_conectar("https://hapi.fhir.org/baseR4")
-con
-#> <fhir_conexion> https://hapi.fhir.org/baseR4
-#>   Servidor:     HAPI FHIR Server 8.13.10-SNAPSHOT/6bd250944e/2026-09-25
-#>   Versión FHIR: 4.0.1
+caso <- fhir_recursos(system.file("extdata", "caso_clinico.ndjson",
+                                  package = "fhirviews"))
 
-# Busca y sigue los enlaces "next" de cada página
-pacientes <- fhir_buscar(con, "Patient", gender = "female", `_count` = 50,
-                         max_paginas = 3)
-pacientes
-#> <fhir_recursos> 150 recursos
-#>   Patient: 150
-
-# Una vista: una columna por expresión FHIRPath
-vista <- vista_crear("Patient", c(
-  apellido = "name.first().family",
-  nacimiento = "birthDate",
-  ciudad = "address.first().city"
-))
-vista_ejecutar(pacientes, vista)
+signos <- vista_crear(
+  "Observation",
+  c(fecha  = "effective.ofType(dateTime)",
+    medida = "code.text",
+    valor  = "value.ofType(Quantity).value",
+    unidad = "value.ofType(Quantity).unit"),
+  where = "value.ofType(Quantity).exists()"
+)
+vista_ejecutar(caso, signos)
+#>          id                     fecha                  medida  valor            unidad
+#> 1  obs-temp 2025-03-20T07:30:00-05:00    Temperatura corporal  38.40                °C
+#> 2    obs-fr 2025-03-20T07:30:00-05:00 Frecuencia respiratoria  20.00 respiraciones/min
+#> 3    obs-fc 2025-03-20T07:30:00-05:00     Frecuencia cardíaca 102.00       latidos/min
+#> 4 obs-tumor                2025-05-08        Tamaño del tumor   3.50                cm
+#> 5   obs-bsa                2025-07-01     Superficie corporal   1.77                m2
 ```
 
-(Los datos del servidor público cambian constantemente; la salida depende del
-momento.)
-
-Leer, escribir y otras operaciones:
+Con un servidor real, los mismos pasos:
 
 ```r
-paciente <- fhir_leer(con, "Patient", "123")
-nuevo <- fhir_crear(con, "paciente.json")     # lista de R, texto JSON o archivo
-nuevo <- fhir_actualizar(con, nuevo)
-fhir_borrar(con, nuevo)
-todo <- fhir_everything(con, "Patient", "123")
-fhir_validar(con, list(resourceType = "Patient", gender = "mujer"))
-#> No válido: 1 error y 0 advertencias.
-#>   severidad codigo     ubicacion mensaje
-#> 1 error     processing <NA>      HAPI-0450: Failed to parse request body as
-#>   JSON resource. ... Unknown AdministrativeGender code 'mujer'
-
-# Cualquier otra petición, como en Postman o en un archivo .http
-fhir_ejecutar_texto("GET Patient/123/_history")
+con <- fhir_conectar("https://hapi.fhir.org/baseR4")
+observaciones <- fhir_buscar(con, "Observation", category = "vital-signs",
+                             `_count` = 100, max_paginas = 5)
+vista_ejecutar(observaciones, signos)
 ```
 
-Los errores muestran lo que dice el servidor:
+## Para qué se puede usar
+
+### 1. Explorar un servidor FHIR como en Postman
+
+```r
+con <- fhir_conectar("https://hapi.fhir.org/baseR4")
+fhir_capacidades(con)                               # qué recursos y operaciones admite
+fhir_ejecutar_texto("GET Patient?family=Paredes&_count=5")
+fhir_leer(con, "Patient", "123")
+fhir_everything(con, "Patient", "123")              # todo lo del paciente
+```
+
+Las respuestas se imprimen con el estado HTTP y el JSON con sangría, y los
+errores muestran lo que dice el servidor (`OperationOutcome`):
 
 ```r
 fhir_leer(con, "Patient", "no-existe")
@@ -95,168 +141,293 @@ fhir_leer(con, "Patient", "no-existe")
 #> • [error] HAPI-2001: Resource Patient/no-existe is not known
 ```
 
-## ViewDefinition
+En RStudio, el servidor aparece en el panel **Connections** (tipos de recurso,
+columnas y vista previa), y los addins **Ejecutar petición FHIR** y **Ejecutar
+ViewDefinition** ejecutan el texto seleccionado con un clic.
 
-Las vistas se escriben en el JSON estándar de SQL on FHIR, así que se pueden
-compartir con otras implementaciones (Pathling, Aidbox, Google FHIR Data
-Pipes...). Con el caso clínico ficticio del taller
-[aprende-fhir](https://github.com/f-slg/aprende-fhir), incluido en el paquete:
+### 2. Vigilancia epidemiológica: de casos FHIR a tasas por territorio
+
+Los sistemas de notificación guardan cada caso como `Patient` + `Condition`.
+Con dos vistas y la población oficial del INEC del paquete
+[pobecu](https://f-slg.github.io/pobecu/) se obtienen tasas por cantón:
 
 ```r
-caso <- fhir_recursos(system.file("extdata", "caso_clinico.ndjson",
-                                  package = "fhirviews"))
-
-valores <- vista_leer(r"-({
-  "resourceType": "ViewDefinition",
-  "name": "valores",
-  "resource": "Observation",
-  "select": [
-    {"column": [
-      {"name": "id", "path": "getResourceKey()"},
-      {"name": "medida", "path": "code.text"}
-    ]},
-    {"unionAll": [
-      {"forEach": "value.ofType(Quantity)", "column": [
-        {"name": "valor", "path": "value.toString() + ' ' + unit"}]},
-      {"forEach": "value.ofType(CodeableConcept)", "column": [
-        {"name": "valor", "path": "text"}]},
-      {"forEach": "value.ofType(Ratio)", "column": [
-        {"name": "valor", "path": "numerator.value.toString() + ':' + denominator.value.toString()"}]}
-    ]}
-  ]
-})-")
-vista_ejecutar(caso, valores)[, c("medida", "valor")]
-#>                                              medida                valor
-#> 1                              Temperatura corporal              38.4 °C
-#> 2                           Frecuencia respiratoria 20 respiraciones/min
-#> 3                               Frecuencia cardíaca      102 latidos/min
-#> 4                            Sangre oculta en heces             Positivo
-#> 5 Salmonella typhi O, anticuerpos (título) en suero                1:160
-#> 6                                  Tamaño del tumor               3.5 cm
-#> 7                             Receptor de estrógeno             Positivo
-#> 8                               Superficie corporal              1.77 m2
+dengue <- fhir_recursos(system.file("extdata", "dengue_2025.ndjson.gz",
+                                    package = "fhirviews"))
+pacientes <- vista_ejecutar(dengue, v_paciente)  # con el código DPA del cantón
+casos <- vista_ejecutar(dengue, v_dengue)        # solo diagnósticos confirmados
+por_canton <- aggregate(paciente ~ dpa_canton, merge(casos, pacientes, ...), length)
+pobecu::pob_tasa(por_canton, "casos")
 ```
 
-Se admiten todos los elementos de la especificación: `select` anidados,
-`column` (con `type` y `collection`), `forEach`, `forEachOrNull`, `repeat`,
-`unionAll`, `where`, `constant` y `%rowIndex`, con las funciones FHIRPath del
-perfil *shareable* (`getResourceKey()`, `getReferenceKey()`, `ofType()`,
-`extension()`, `join()`, `first()`, `exists()`, `empty()`...).
+<img src="man/figures/README-tasas.png" width="100%" alt="Barras horizontales con las tasas ficticias de dengue por 100 000 habitantes de los 15 cantones con tasas más altas, coloreadas por provincia" />
 
-Para explorar los datos y probar expresiones:
+El ejemplo completo está en la viñeta
+[*Tasas por cantón con FHIR y pobecu*](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html).
+
+### 3. Indicadores y tableros con SQL
+
+`vista_duckdb()` guarda varias vistas como tablas de
+[DuckDB](https://duckdb.org/) en un paso. A partir de ahí, cualquier
+indicador es una consulta SQL:
 
 ```r
-fhir_tabla(caso, tipo = "Patient")          # tabla rápida, sin vista
+db <- vista_duckdb(dengue, list(
+  paciente = vista_crear("Patient", c(sexo = "gender", nacimiento = "birthDate",
+                                      provincia = "address.state.first()")),
+  dengue = vista_crear("Condition", c(
+    paciente = "subject.getReferenceKey(Patient)",
+    inicio = "onset.ofType(dateTime)",
+    grave = "code.coding.where(system = 'http://hl7.org/fhir/sid/icd-10').code = 'A91'"),
+    where = "verificationStatus.coding.where(code = 'confirmed').exists()")
+))
+
+DBI::dbGetQuery(db, "
+  SELECT p.provincia, count(*) AS casos,
+         round(100 * avg(CASE WHEN d.grave THEN 1 ELSE 0 END), 1) AS pct_graves,
+         round(avg(date_diff('year', CAST(p.nacimiento AS DATE),
+                             CAST(d.inicio AS DATE))), 1) AS edad_media
+  FROM dengue d JOIN paciente p ON d.paciente = p.id
+  GROUP BY p.provincia ORDER BY casos DESC")
+#>   provincia casos pct_graves edad_media
+#> 1    Guayas   329        5.2       29.7
+#> 2    Manabí   136        5.1       27.7
+#> 3  Los Ríos   111       14.4       28.3
+#> 4    El Oro    85       10.6       30.5
+```
+
+### 4. Cohortes y conjuntos de datos para investigación
+
+Las vistas son reproducibles y se pueden compartir: el mismo `ViewDefinition`
+JSON produce la misma tabla en fhirviews y en otras implementaciones. Para
+exportar una cohorte a Parquet o CSV basta con DuckDB:
+
+```r
+vista_json(v_dengue)                                   # compartir la definición
+DBI::dbExecute(db, "COPY dengue TO 'dengue.parquet' (FORMAT parquet)")
+```
+
+### 5. Interoperabilidad: cargar, validar y transaccionar
+
+```r
+local <- fhir_conectar("http://localhost:8080/fhir")   # por ejemplo, HAPI en Podman
+fhir_validar(local, "paciente.json")                   # $validate: tabla de problemas
+fhir_crear(local, "transaccion.json")                  # Bundle transaction -> POST [base]
+for (r in caso) fhir_actualizar(local, r)              # cargar el caso clínico con sus ids
+```
+
+### 6. Docencia
+
+El caso clínico de [aprende-fhir](https://github.com/f-slg/aprende-fhir) viene
+incluido, `fhir_tabla()` da un vistazo rápido sin escribir vistas,
+`vista_fhirpath()` permite probar expresiones FHIRPath una a una y
+`vista_validar()` explica qué está mal en un `ViewDefinition`:
+
+```r
 vista_fhirpath(caso[1], "name.where(use = 'official').text")
 #> [1] "Luis Alberto Paredes Cevallos"
 ```
 
-## Conformidad
+## Cómo funciona
+
+```mermaid
+flowchart LR
+    subgraph Fuentes
+        S["Servidor FHIR R4"]
+        F["Archivos JSON, NDJSON,<br/>Bundle, .ndjson.gz"]
+        L["Listas de R"]
+    end
+    subgraph Cliente["Cliente FHIR (httr2)"]
+        B["fhir_buscar()<br/>paginación por next"]
+        P["fhir_leer(), fhir_crear(),<br/>$everything, $validate"]
+    end
+    subgraph Motor["Motor de vistas (R)"]
+        R["fhir_recursos()<br/>conserva el JSON original"]
+        V["vista_validar()"]
+        E["vista_ejecutar()<br/>evaluación por lotes"]
+    end
+    subgraph JS["V8"]
+        FP["fhirpath.js 5.2.1<br/>+ almacén de nodos tipados"]
+    end
+    S --> B --> R
+    S --> P
+    F --> R
+    L --> R
+    R --> E
+    V --> E
+    E <-->|"una llamada por<br/>expresión y nivel"| FP
+    E --> T["data.frame"]
+    T --> D["DuckDB / SQL"]
+    T --> A["Análisis en R,<br/>pobecu, gráficos"]
+```
+
+**Cliente.** Las peticiones usan `application/fhir+json`, se reintentan si el
+servidor está saturado (429/503) y convierten el `OperationOutcome` de los
+errores en mensajes legibles, con una clase de error por código HTTP. La
+búsqueda sigue los enlaces `next` de cada Bundle y se detiene si el servidor
+repite uno. El token de acceso solo se envía al servidor de la conexión y se
+avisa si viajaría sin cifrar.
+
+```mermaid
+sequenceDiagram
+    participant R as fhir_buscar()
+    participant S as Servidor FHIR
+    R->>S: GET Patient?family=Paredes&_count=100
+    S-->>R: Bundle (100 entradas, link next)
+    R->>S: GET [link next]
+    S-->>R: Bundle (100 entradas, link next)
+    R->>S: GET [link next]
+    S-->>R: Bundle (37 entradas, sin next)
+    Note over R: 237 recursos en un fhir_recursos,<br/>con el JSON de cada página
+```
+
+**Motor de vistas.** El `ViewDefinition` se valida (estructura, nombres,
+`unionAll`, constantes, compilación de cada expresión FHIRPath) y se ejecuta
+**por lotes**: cada `column`, `forEach` o `where` es una sola llamada a V8 para
+todos los recursos a la vez, no una por recurso. Los elementos que devuelven
+`forEach` y `repeat` se guardan en V8 como nodos tipados, de modo que
+`ofType()` y `extension()` funcionan también en elementos anidados. Las filas
+de cada parte se combinan con índices (`rep()` y `sequence()`) en R.
+
+```mermaid
+flowchart TD
+    A["Recursos del tipo de la vista"] --> W{"where"}
+    W -->|"cumplen"| S["select"]
+    S --> C["column<br/>una fila por recurso"]
+    S --> FE["forEach / forEachOrNull / repeat<br/>una fila por elemento,<br/>con %rowIndex"]
+    S --> U["unionAll<br/>filas de varias ramas"]
+    FE --> C2["column, select y unionAll<br/>anidados"]
+    C --> X["producto de filas<br/>por recurso de origen"]
+    C2 --> X
+    U --> X
+    X --> T["data.frame tipado<br/>(type o modelo FHIR R4)"]
+```
+
+**Tipos.** Con `type`, cada columna se convierte al tipo de R correspondiente
+(`boolean` a lógico, `integer` a entero, `decimal` a numérico, el resto a
+texto) y se avisa si algún valor no es compatible. Sin `type`, las columnas
+vacías toman el tipo del modelo de FHIR R4, para que la misma vista dé siempre
+los mismos tipos.
+
+**Seguridad.** fhirpath.js corre aislado en V8, sin acceso a red ni a archivos
+(funciones como `resolve()` están desactivadas): un `ViewDefinition` no puede
+hacer peticiones ni leer datos fuera de los recursos que se le pasan.
+
+## Conformidad con SQL on FHIR
 
 El paquete incluye el
 [banco oficial de pruebas](https://github.com/FHIR/sql-on-fhir.js/tree/main/tests)
-de SQL on FHIR y lo ejecuta en cada comprobación:
+de SQL on FHIR, que se ejecuta en cada comprobación de integración continua.
+Pasan **las 133 pruebas del perfil *shareable*** (el que debe cumplir toda
+implementación) y 7 de las 11 experimentales.
+
+<img src="man/figures/README-conformidad.png" width="80%" alt="Barras por archivo del banco de pruebas: todas las pruebas shareable aprobadas; en fn_boundary, 4 de 8 pruebas experimentales fallan" />
+
+Las cuatro que fallan son de `lowBoundary()` y `highBoundary()`, funciones
+experimentales de FHIRPath que dependen de la precisión decimal original del
+JSON y de la zona horaria. Para comprobarlo en tu equipo, o con la versión más
+reciente del banco:
 
 ```r
 vista_conformidad()
-#> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09)
-#> fhirviews 0.1.0 · fhirpath.js 5.2.1
-#>
-#>   experimental     7 de  11 aprobadas
-#>   shareable      133 de 133 aprobadas
-#>   total          140 de 144 aprobadas
+vista_conformidad(descargar = TRUE, informe = "informe.json")  # formato oficial
 ```
 
-Las cuatro experimentales que fallan son de `lowBoundary()` y
-`highBoundary()` (precisión decimal y zona horaria). Con
-`vista_conformidad(descargar = TRUE)` se usa la versión más reciente del
-banco, y con `informe = "informe.json"` se genera el informe en el formato
-oficial de la
-[página de implementaciones](https://sql-on-fhir.org/extra/impls.html).
+## Rendimiento
 
-## SQL con DuckDB
+El tiempo crece de forma lineal con el número de recursos. Desde JSON o NDJSON
+(lo que devuelve un servidor o un `$export`), la vista pasa el texto original
+directamente a V8, sin volver a convertirlo:
 
-```r
-db <- vista_duckdb(caso, list(
-  paciente = vista_crear("Patient", c(nombre = "name.where(use = 'official').text")),
-  encuentro = vista_crear("Encounter", c(
-    paciente = "subject.getReferenceKey(Patient)", tipo = "serviceType.text")),
-  valores = valores
-))
-DBI::dbGetQuery(db, "
-  SELECT p.nombre, e.tipo, v.medida, v.valor
-  FROM valores v
-  JOIN encuentro e ON v.encuentro = e.id
-  JOIN paciente p ON e.paciente = p.id")
-```
+<img src="man/figures/README-rendimiento.png" width="90%" alt="Gráfico de líneas: el tiempo de vista_ejecutar crece linealmente, 7 segundos para 50 000 pacientes desde NDJSON y 14 segundos para 25 000 pacientes desde listas de R" />
 
-(Para esta consulta, la vista `valores` necesita además la columna
-`encuentro` = `encounter.getReferenceKey(Encounter)`; la viñeta
-[*ViewDefinition en detalle*](https://f-slg.github.io/fhirviews/articles/vistas.html)
-tiene el ejemplo completo.)
+Medido con `data-raw/rendimiento.R` (pacientes sintéticos, vista con `where`,
+cuatro columnas y `forEach` sobre `name`). Los recursos armados como listas de
+R son unas cuatro veces más lentos porque deben convertirse a JSON.
 
-## Tasas con pobecu
+## Funciones
 
-Las vistas se unen con la población oficial del INEC del paquete
-[pobecu](https://f-slg.github.io/pobecu/) para calcular tasas por cantón. La
-viñeta [*Tasas por cantón con FHIR y
-pobecu*](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html) lo hace
-con 755 casos ficticios de dengue:
+| Grupo | Funciones | Para qué |
+|---|---|---|
+| Conexión | `fhir_conectar()`, `fhir_disponible()`, `fhir_capacidades()` | Conectarse, comprobar que el servidor responde y ver qué admite |
+| Lectura | `fhir_buscar()`, `fhir_leer()`, `fhir_everything()` | Buscar con paginación, leer un recurso o todo un paciente |
+| Escritura | `fhir_crear()`, `fhir_actualizar()`, `fhir_borrar()` | Crear, actualizar, borrar y ejecutar transacciones |
+| Validación | `fhir_validar()` | Operación `$validate`, con la tabla de problemas |
+| Peticiones libres | `fhir_peticion()`, `fhir_ejecutar_texto()` | Cualquier otra petición, también escrita como en Postman |
+| Recursos | `fhir_recursos()`, `fhir_tabla()` | Reunir recursos de cualquier fuente y verlos como tabla rápida |
+| Vistas | `vista_crear()`, `vista_leer()`, `vista_json()`, `vista_validar()` | Definir, leer, exportar y validar `ViewDefinition` |
+| Ejecución | `vista_ejecutar()`, `fhir_vista()`, `vista_fhirpath()` | Aplicar una vista (a recursos o directamente al servidor) y probar FHIRPath |
+| SQL | `vista_duckdb()` | Guardar vistas como tablas de DuckDB u otra base DBI |
+| Conformidad | `vista_conformidad()` | Ejecutar el banco oficial de pruebas de SQL on FHIR |
+| RStudio | `fhir_conexion_activa()`, `fhir_desconectar()` | Conexión activa del panel *Connections* y de los addins |
+| Motor | `fhirviews_motor()`, `fhirviews_version_fhirpath()` | Versión de fhirpath.js y del motor de JavaScript |
 
-<img src="man/figures/README-tasas.png" width="100%" alt="Barras horizontales con las tasas ficticias de dengue por 100 000 habitantes de los 15 cantones con tasas más altas de El Oro, Guayas, Los Ríos y Manabí" />
+## Comparación con otras herramientas
 
-## RStudio
+| | fhirviews | [fhircrackr](https://cran.r-project.org/package=fhircrackr) | Implementaciones de SQL on FHIR en otros lenguajes ([Pathling](https://pathling.csiro.au/), [sof-js](https://github.com/FHIR/sql-on-fhir.js), ...) |
+|---|---|---|---|
+| Lenguaje | R | R | Java, Python, JavaScript, SQL |
+| Cliente FHIR | Sí, en JSON (búsqueda, escritura, transacciones, `$everything`, `$validate`) | Sí, en XML (búsqueda, `POST`, `PUT`) | Según la implementación |
+| Cómo se definen las tablas | `ViewDefinition` estándar (FHIRPath) | Descripciones propias con XPath | `ViewDefinition` estándar |
+| Vistas portables entre herramientas | Sí | No | Sí |
+| Banco oficial de conformidad | Incluido, 133/133 *shareable* | No aplica | Según la implementación |
+| Integración con RStudio | Panel *Connections* y addins | No | No aplica |
 
-- `fhir_conectar()` registra el servidor en el panel **Connections**: tipos
-  de recurso, columnas y vista previa de los datos. También está en el
-  diálogo *New Connection*.
-- Addins **Ejecutar petición FHIR** (selecciona `GET Patient?family=Paredes`,
-  con cabeceras y cuerpo JSON opcionales) y **Ejecutar ViewDefinition**
-  (selecciona un ViewDefinition o abre su archivo JSON).
+fhirviews y fhircrackr pueden convivir: sus funciones no comparten nombres.
 
-## Cómo funciona
+## Hoja de ruta
 
-FHIRPath se evalúa con [fhirpath.js](https://github.com/HL7/fhirpath.js)
-5.2.1, la biblioteca de la Biblioteca Nacional de Medicina de EE. UU. (NLM)
-y Health Samurai, incluida sin modificar en el paquete y ejecutada con V8.
-El motor de vistas está escrito en R y evalúa cada expresión sobre todos los
-recursos a la vez: una sola llamada a FHIRPath por expresión y nivel. Los
-recursos que llegan como JSON (de un servidor o un archivo NDJSON) pasan a V8
-sin volver a convertirse. La capa de FHIRPath está separada, de modo que en
-el futuro se podrá cambiar por un motor escrito en R.
+- Motor de FHIRPath escrito en R, como alternativa a V8 (la capa ya está
+  separada: `options(fhirviews.motor = ...)`).
+- Búsquedas largas por `POST [tipo]/_search` y exportación masiva `$export`.
+- Operaciones de SQL on FHIR 3.0 (`$run`, `$export` de vistas) y
+  `SQLQuery`.
+- Caché del panel *Connections* para servidores lentos.
+- Envío a CRAN, después de [pobecu](https://github.com/f-slg/pobecu).
 
-## Más información
+## Documentación
 
-- [Primeros pasos](https://f-slg.github.io/fhirviews/articles/fhirviews.html)
-- [ViewDefinition en detalle](https://f-slg.github.io/fhirviews/articles/vistas.html)
-- [Tasas por cantón con FHIR y pobecu](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html)
-- [Referencia de funciones](https://f-slg.github.io/fhirviews/reference/)
+- [Primeros pasos](https://f-slg.github.io/fhirviews/articles/fhirviews.html):
+  cliente, recursos y primeras vistas con el caso clínico.
+- [ViewDefinition en detalle](https://f-slg.github.io/fhirviews/articles/vistas.html):
+  todos los elementos de la especificación, validación y DuckDB.
+- [Tasas por cantón con FHIR y pobecu](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html):
+  vigilancia epidemiológica de punta a punta.
+- [Cómo funciona por dentro](https://f-slg.github.io/fhirviews/articles/arquitectura.html):
+  arquitectura, motor por lotes, tipos y seguridad.
+- [Referencia de funciones](https://f-slg.github.io/fhirviews/reference/).
 
-## Paquetes relacionados
+### Paquetes relacionados
 
 - [pobecu](https://f-slg.github.io/pobecu/): población del Ecuador por
   provincia, cantón y parroquia.
-- [geoecu](https://f-slg.github.io/geoecu/): límites territoriales del
-  Ecuador.
-- [aprende-fhir](https://github.com/f-slg/aprende-fhir): taller de HL7 FHIR
-  con un caso clínico ecuatoriano ficticio.
-- [fhircrackr](https://cran.r-project.org/package=fhircrackr): otro cliente
-  FHIR para R, que aplana recursos con XPath.
+- [geoecu](https://f-slg.github.io/geoecu/): límites territoriales del Ecuador.
+- [aprende-fhir](https://github.com/f-slg/aprende-fhir): taller de HL7 FHIR con
+  un caso clínico ecuatoriano ficticio.
 
-## Contribuir
+### Contribuir
 
 Las preguntas van en
-[Discussions](https://github.com/f-slg/fhirviews/discussions) y los errores
-o propuestas en [issues](https://github.com/f-slg/fhirviews/issues/new/choose).
-Revisa la [guía de contribución](https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md). Este proyecto
-sigue un [código de conducta](https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md); al participar, te
-comprometes a respetarlo.
+[Discussions](https://github.com/f-slg/fhirviews/discussions) y los errores o
+propuestas en [issues](https://github.com/f-slg/fhirviews/issues/new/choose)
+(hay una plantilla para problemas de conformidad con SQL on FHIR). Revisa la
+[guía de contribución](https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md).
+Este proyecto sigue un
+[código de conducta](https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md);
+al participar, te comprometes a respetarlo.
 
-## Licencia
+### Cita
 
-MIT © Ronald Fabricio Salas Guerrero. El paquete incluye fhirpath.js y el
-banco de pruebas de SQL on FHIR con sus propias licencias (ver
-[`inst/COPYRIGHTS`](https://github.com/f-slg/fhirviews/blob/main/inst/COPYRIGHTS)).
+```r
+citation("fhirviews")
+```
 
-FHIR® y HL7® son marcas registradas de Health Level Seven International;
-su uso no implica respaldo de HL7.
+### Licencia
+
+MIT © Ronald Fabricio Salas Guerrero. El paquete incluye fhirpath.js (NLM y
+Health Samurai, licencia tipo BSD) y el banco de pruebas de SQL on FHIR (MIT),
+sin modificar; el detalle está en
+[`inst/COPYRIGHTS`](https://github.com/f-slg/fhirviews/blob/main/inst/COPYRIGHTS).
+
+FHIR® y HL7® son marcas registradas de Health Level Seven International; su
+uso no implica respaldo de HL7.
