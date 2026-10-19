@@ -1,7 +1,9 @@
 # Crear, actualizar y borrar recursos
 
 - `fhir_crear()` envía un recurso nuevo (`POST [base]/[tipo]`); el
-  servidor le asigna el id.
+  servidor le asigna el id. Un Bundle de tipo `transaction` o `batch` se
+  envía a la base del servidor (`POST [base]`), que lo procesa: crea,
+  actualiza o borra cada entrada según su `request`.
 
 - `fhir_actualizar()` reemplaza un recurso existente
   (`PUT [base]/[tipo]/[id]`), o lo crea con ese id si el servidor lo
@@ -39,8 +41,10 @@ fhir_borrar(con, recurso, id = NULL)
 ## Value
 
 `fhir_crear()` y `fhir_actualizar()` devuelven el recurso tal como lo
-guardó el servidor (con su id y `meta.versionId`). `fhir_borrar()`
-devuelve `TRUE` de forma invisible.
+guardó el servidor (con su id y `meta.versionId`); para un Bundle
+`transaction` o `batch`, el Bundle de respuesta del servidor
+(`transaction-response` o `batch-response`). `fhir_borrar()` devuelve
+`TRUE` de forma invisible.
 
 ## Examples
 

@@ -33,9 +33,13 @@ Un `data.frame` con una columna por cada `column` de la vista, en el
 orden que define la especificación. Los tipos de R siguen el `type` de
 cada columna cuando se indica (`boolean` a lógico; `integer`,
 `positiveInt` y `unsignedInt` a entero; `decimal` a numérico; el resto a
-texto) y, si no, el de los valores. Las fechas quedan como texto ISO
-8601 porque FHIR admite fechas parciales (`"2024"`, `"2024-05"`). Las
-columnas con `collection: true` son listas.
+texto); si algún valor no es compatible (por ejemplo 1.7 en una columna
+`integer`) se avisa y se conserva sin convertir. Sin `type`, el tipo
+sale de los valores; si la columna no tiene ninguno, se deduce del
+modelo de FHIR R4 (por ejemplo `birthDate` es texto y `active`, lógico),
+para que la misma vista dé siempre los mismos tipos. Las fechas quedan
+como texto ISO 8601 porque FHIR admite fechas parciales (`"2024"`,
+`"2024-05"`). Las columnas con `collection: true` son listas.
 
 ## Details
 

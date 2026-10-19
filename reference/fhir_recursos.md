@@ -28,7 +28,8 @@ fhir_recursos(x)
   - texto NDJSON (un recurso por línea) o un vector de caracteres con un
     recurso JSON por elemento;
 
-  - la ruta a un archivo `.json`, `.ndjson` o `.ndjson.gz`.
+  - la ruta a un archivo `.json`, `.ndjson` o `.ndjson.gz`, o un vector
+    de rutas (los recursos de todos los archivos se juntan).
 
 ## Value
 

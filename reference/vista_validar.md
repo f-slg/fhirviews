@@ -35,8 +35,13 @@ La vista, de forma invisible, si es válida. Si no, un error de clase
 - los `select` de un `unionAll` producen las mismas columnas, en el
   mismo orden;
 
+- `column`, `select` y `unionAll`, si aparecen, tienen al menos un
+  elemento;
+
 - cada constante tiene nombre y un solo valor (`valueString`,
-  `valueInteger`, etc.);
+  `valueInteger`, etc.), y su nombre no es una variable reservada de
+  FHIRPath o del motor (`resource`, `rootResource`, `context`,
+  `rowIndex`, `ucum`, `sct`, `loinc`...);
 
 - todas las expresiones FHIRPath se pueden compilar.
 

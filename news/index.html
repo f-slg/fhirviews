@@ -42,6 +42,22 @@
 <h2 class="pkg-version" data-toc-text="0.1.0" id="fhirviews-010">fhirviews 0.1.0<a class="anchor" aria-label="anchor" href="#fhirviews-010"></a></h2>
 <ul><li>Primera versión.</li>
 </ul><div class="section level3">
+<h3 id="correcciones-de-la-auditoría-técnica-0-1-0">Correcciones de la auditoría técnica<a class="anchor" aria-label="anchor" href="#correcciones-de-la-auditor%C3%ADa-t%C3%A9cnica-0-1-0"></a></h3>
+<ul><li>
+<code><a href="../reference/fhir_buscar.html">fhir_buscar()</a></code> y <code><a href="../reference/fhir_everything.html">fhir_everything()</a></code> dejan de paginar (con un aviso) si el servidor repite un enlace <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">next</a></code>, en lugar de entrar en un bucle infinito.</li>
+<li>
+<code><a href="../reference/fhir_crear.html">fhir_crear()</a></code> envía los Bundle <code>transaction</code> y <code>batch</code> a la base del servidor (<code>POST [base]</code>), que los procesa, en vez de guardarlos como un recurso Bundle.</li>
+<li>
+<code><a href="../reference/vista_validar.html">vista_validar()</a></code> rechaza <code>column</code>, <code>select</code> y <code>unionAll</code> vacíos (antes <code>unionAll: []</code> daba un error poco claro) y las constantes con nombres reservados (<code>resource</code>, <code>rowIndex</code>…), que quedaban ocultas.</li>
+<li>Las vistas sobre recursos de varios tipos leídos de JSON o NDJSON ya no vuelven a convertirlos a JSON: unas 9 veces más rápidas.</li>
+<li>
+<code>type</code> ya no trunca ni convierte en <code>NA</code> en silencio: si un valor no es compatible, se avisa y se conserva. Las columnas sin <code>type</code> y sin valores toman el tipo del modelo de FHIR R4, de modo que la misma vista da siempre los mismos tipos.</li>
+<li>
+<code><a href="../reference/fhir_conectar.html">fhir_conectar()</a></code> avisa si un token viajaría sin cifrar por http.</li>
+<li>
+<code><a href="../reference/fhir_recursos.html">fhir_recursos()</a></code> informa claramente si un archivo no existe y acepta un vector con varias rutas de archivo.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="cliente-fhir-0-1-0">Cliente FHIR<a class="anchor" aria-label="anchor" href="#cliente-fhir-0-1-0"></a></h3>
 <ul><li>
 <code><a href="../reference/fhir_conectar.html">fhir_conectar()</a></code>, <code><a href="../reference/fhir_buscar.html">fhir_buscar()</a></code> (paginación automática por los enlaces <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">next</a></code>), <code><a href="../reference/fhir_leer.html">fhir_leer()</a></code>, <code><a href="../reference/fhir_crear.html">fhir_crear()</a></code>, <code><a href="../reference/fhir_crear.html">fhir_actualizar()</a></code>, <code><a href="../reference/fhir_crear.html">fhir_borrar()</a></code>, <code><a href="../reference/fhir_everything.html">fhir_everything()</a></code>, <code><a href="../reference/fhir_validar.html">fhir_validar()</a></code>, <code><a href="../reference/fhir_capacidades.html">fhir_capacidades()</a></code>, <code><a href="../reference/fhir_peticion.html">fhir_peticion()</a></code>, <code><a href="../reference/fhir_ejecutar_texto.html">fhir_ejecutar_texto()</a></code> y <code><a href="../reference/fhir_disponible.html">fhir_disponible()</a></code>, con httr2.</li>

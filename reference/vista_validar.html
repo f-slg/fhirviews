@@ -76,8 +76,12 @@ clase <code>fhirviews_error_vista</code> con la lista de problemas encontrados.<
 repiten;</p></li>
 <li><p>los <code>select</code> de un <code>unionAll</code> producen las mismas columnas, en el mismo
 orden;</p></li>
+<li><p><code>column</code>, <code>select</code> y <code>unionAll</code>, si aparecen, tienen al menos un
+elemento;</p></li>
 <li><p>cada constante tiene nombre y un solo valor (<code>valueString</code>,
-<code>valueInteger</code>, etc.);</p></li>
+<code>valueInteger</code>, etc.), y su nombre no es una variable reservada de
+FHIRPath o del motor (<code>resource</code>, <code>rootResource</code>, <code>context</code>, <code>rowIndex</code>,
+<code>ucum</code>, <code>sct</code>, <code>loinc</code>...);</p></li>
 <li><p>todas las expresiones FHIRPath se pueden compilar.</p></li>
 </ul></div>
 

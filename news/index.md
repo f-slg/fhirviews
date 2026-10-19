@@ -4,6 +4,34 @@
 
 - Primera versión.
 
+### Correcciones de la auditoría técnica
+
+- [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md)
+  y
+  [`fhir_everything()`](https://f-slg.github.io/fhirviews/reference/fhir_everything.md)
+  dejan de paginar (con un aviso) si el servidor repite un enlace
+  [`next`](https://rdrr.io/r/base/Control.html), en lugar de entrar en
+  un bucle infinito.
+- [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md)
+  envía los Bundle `transaction` y `batch` a la base del servidor
+  (`POST [base]`), que los procesa, en vez de guardarlos como un recurso
+  Bundle.
+- [`vista_validar()`](https://f-slg.github.io/fhirviews/reference/vista_validar.md)
+  rechaza `column`, `select` y `unionAll` vacíos (antes `unionAll: []`
+  daba un error poco claro) y las constantes con nombres reservados
+  (`resource`, `rowIndex`…), que quedaban ocultas.
+- Las vistas sobre recursos de varios tipos leídos de JSON o NDJSON ya
+  no vuelven a convertirlos a JSON: unas 9 veces más rápidas.
+- `type` ya no trunca ni convierte en `NA` en silencio: si un valor no
+  es compatible, se avisa y se conserva. Las columnas sin `type` y sin
+  valores toman el tipo del modelo de FHIR R4, de modo que la misma
+  vista da siempre los mismos tipos.
+- [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md)
+  avisa si un token viajaría sin cifrar por http.
+- [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md)
+  informa claramente si un archivo no existe y acepta un vector con
+  varias rutas de archivo.
+
 ### Cliente FHIR
 
 - [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md),

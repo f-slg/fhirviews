@@ -75,7 +75,9 @@ muestran el <code>OperationOutcome</code> del servidor.</p>
 
 <dt id="arg-token">token<a class="anchor" aria-label="anchor" href="#arg-token"></a></dt>
 <dd><p>Token de acceso (OAuth2 <em>bearer</em>) opcional. No se muestra al
-imprimir la conexión. Para no escribirlo en el código, guárdalo en una
+imprimir la conexión, solo se envía a URL del propio servidor y, si el
+servidor no usa https (y no es local), se avisa de que viajaría sin
+cifrar. Para no escribirlo en el código, guárdalo en una
 variable de entorno y usa por ejemplo <code>Sys.getenv("FHIR_TOKEN")</code>.</p></dd>
 
 

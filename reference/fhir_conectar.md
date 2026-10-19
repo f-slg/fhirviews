@@ -28,8 +28,10 @@ fhir_conectar(
 - token:
 
   Token de acceso (OAuth2 *bearer*) opcional. No se muestra al imprimir
-  la conexión. Para no escribirlo en el código, guárdalo en una variable
-  de entorno y usa por ejemplo `Sys.getenv("FHIR_TOKEN")`.
+  la conexión, solo se envía a URL del propio servidor y, si el servidor
+  no usa https (y no es local), se avisa de que viajaría sin cifrar.
+  Para no escribirlo en el código, guárdalo en una variable de entorno y
+  usa por ejemplo `Sys.getenv("FHIR_TOKEN")`.
 
 - cabeceras:
 

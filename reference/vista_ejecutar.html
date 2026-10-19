@@ -76,7 +76,11 @@ ejecutarla con <code><a href="vista_validar.html">vista_validar()</a></code>.</p
 el orden que define la especificación. Los tipos de R siguen el <code>type</code>
 de cada columna cuando se indica (<code>boolean</code> a lógico; <code>integer</code>,
 <code>positiveInt</code> y <code>unsignedInt</code> a entero; <code>decimal</code> a numérico; el resto a
-texto) y, si no, el de los valores. Las fechas quedan como texto ISO 8601
+texto); si algún valor no es compatible (por ejemplo 1.7 en una columna
+<code>integer</code>) se avisa y se conserva sin convertir. Sin <code>type</code>, el tipo sale
+de los valores; si la columna no tiene ninguno, se deduce del modelo de
+FHIR R4 (por ejemplo <code>birthDate</code> es texto y <code>active</code>, lógico), para que
+la misma vista dé siempre los mismos tipos. Las fechas quedan como texto ISO 8601
 porque FHIR admite fechas parciales (<code>"2024"</code>, <code>"2024-05"</code>). Las columnas
 con <code>collection: true</code> son listas.</p>
     </div>
