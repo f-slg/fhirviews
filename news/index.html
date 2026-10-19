@@ -57,6 +57,13 @@
 <code><a href="../reference/fhir_smart_configuracion.html">fhir_smart_configuracion()</a></code> descubre el <em>token endpoint</em> y el <em>authorization endpoint</em> en <code>.well-known/smart-configuration</code> o, como respaldo, en las extensiones <code>oauth-uris</code> del <code>CapabilityStatement</code>.</li>
 <li>El token se pide en la primera petición, se renueva solo al expirar (y una vez más si el servidor lo rechaza con 401), solo se envía al servidor de la conexión y nunca se imprime, igual que el secreto y la clave.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="exportación-masiva-fhir-bulk-data-development-version">Exportación masiva (FHIR Bulk Data)<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva-fhir-bulk-data-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/fhir_exportar.html">fhir_exportar()</a></code> implementa el cliente de <a href="https://hl7.org/fhir/uv/bulkdata/" class="external-link">FHIR Bulk Data Access</a>: inicia <code>$export</code> a nivel de sistema, de pacientes o de un <code>Group</code> (con <code>_type</code>, <code>_since</code> y <code>_typeFilter</code>), consulta el estado respetando <code>Retry-After</code> y mostrando <code>X-Progress</code>, y descarga los archivos NDJSON del manifiesto (con el token solo si <code>requiresAccessToken</code> lo pide y solo al mismo servidor). Devuelve las rutas por tipo de recurso, listas para <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code>. Los <code>OperationOutcome</code> del manifiesto se descargan y se avisan.</li>
+<li>
+<code><a href="../reference/fhir_exportar.html">fhir_exportar_estado()</a></code> y <code><a href="../reference/fhir_exportar.html">fhir_exportar_cancelar()</a></code> para el modo asíncrono (<code>esperar = FALSE</code>).</li>
+</ul></div>
 </div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="fhirviews-010">fhirviews 0.1.0<a class="anchor" aria-label="anchor" href="#fhirviews-010"></a></h2>

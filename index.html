@@ -122,7 +122,7 @@
 </tr>
 <tr>
 <td>Trabajar con volúmenes reales</td>
-<td>Evaluación por lotes: unos 7 000 pacientes por segundo desde NDJSON</td>
+<td>Exportación masiva con <code>$export</code> (FHIR Bulk Data) y evaluación por lotes: unos 7 000 pacientes por segundo desde NDJSON</td>
 </tr>
 <tr>
 <td>Analizar con SQL</td>
@@ -384,6 +384,13 @@
 <td>Crear, actualizar, borrar y ejecutar transacciones</td>
 </tr>
 <tr>
+<td>Exportación masiva</td>
+<td>
+<code><a href="reference/fhir_exportar.html">fhir_exportar()</a></code>, <code><a href="reference/fhir_exportar.html">fhir_exportar_estado()</a></code>, <code><a href="reference/fhir_exportar.html">fhir_exportar_cancelar()</a></code>
+</td>
+<td>Operación <code>$export</code> (FHIR Bulk Data): espera al servidor y descarga los NDJSON para el análisis poblacional</td>
+</tr>
+<tr>
 <td>Validación</td>
 <td><code><a href="reference/fhir_validar.html">fhir_validar()</a></code></td>
 <td>Operación <code>$validate</code>, con la tabla de problemas</td>
@@ -492,8 +499,7 @@
 </tr>
 <tr>
 <td>Cliente REST de FHIR</td>
-<td>Sí, en JSON: búsqueda con paginación, escritura, transacciones, <code>$everything</code>, <code>$validate</code>
-</td>
+<td>Sí, en JSON: búsqueda con paginación, escritura, transacciones, <code>$everything</code>, <code>$validate</code>, <em>bulk export</em> (<code>$export</code>)</td>
 <td>Lectura con <em>bulk export</em> (<code>$export</code>)</td>
 <td>Sí, en XML: búsqueda, <code>POST</code>, <code>PUT</code>
 </td>

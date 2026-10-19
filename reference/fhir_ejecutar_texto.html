@@ -84,12 +84,12 @@ addin <em>Ejecutar petición FHIR</em> de RStudio con el texto seleccionado.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">fhir_ejecutar_texto</span><span class="op">(</span><span class="st">"GET Patient?_summary=count"</span>, <span class="va">con</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;fhir_respuesta&gt; 200 · Bundle (searchset, total 6713, 0 entradas)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;fhir_respuesta&gt; 200 · Bundle (searchset, total 6717, 0 entradas)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   "resourceType": "Bundle",</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   "id": "c4c40958-d118-4d42-9534-1229aafc7acd",</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "id": "97fdd3d5-fe36-45c9-bc39-ef9b237542b4",</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   "meta": {</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     "lastUpdated": "2026-10-18T23:43:17.671-04:00",</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     "lastUpdated": "2026-10-19T00:02:45.682-04:00",</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     "tag": [</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       {</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationValue",</span>
@@ -99,7 +99,7 @@ addin <em>Ejecutar petición FHIR</em> de RStudio con el texto seleccionado.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     ]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   },</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   "type": "searchset",</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   "total": 6713</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   "total": 6717</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> }</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">fhir_ejecutar_texto</span><span class="op">(</span><span class="st">'</span></span></span>

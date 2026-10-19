@@ -333,13 +333,51 @@ unirlas con SQL; se explica en la viñeta <em>ViewDefinition en
 detalle</em>.</p>
 </div>
 <div class="section level2">
-<h2 id="subir-el-caso-a-un-servidor">8. Subir el caso a un servidor<a class="anchor" aria-label="anchor" href="#subir-el-caso-a-un-servidor"></a>
+<h2 id="exportación-masiva-para-análisis-poblacional">8. Exportación masiva para análisis poblacional<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva-para-an%C3%A1lisis-poblacional"></a>
+</h2>
+<p>Para una población entera (vigilancia epidemiológica, indicadores)
+buscar página a página es lento. Los servidores que implementan <a href="https://hl7.org/fhir/uv/bulkdata/" class="external-link">FHIR Bulk Data</a> ofrecen la
+operación <code>$export</code>: preparan en segundo plano un archivo
+NDJSON por tipo de recurso y <code><a href="../reference/fhir_exportar.html">fhir_exportar()</a></code> espera
+(respetando <code>Retry-After</code> y mostrando el avance) y los
+descarga a una carpeta. El NDJSON es justo el formato que
+<code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> procesa más rápido:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Servidor de referencia de SMART, con datos sintéticos</span></span>
+<span><span class="va">bulk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://bulk-data.smarthealthit.org/fhir"</span><span class="op">)</span></span>
+<span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar</a></span><span class="op">(</span><span class="va">bulk</span>, <span class="st">"paciente"</span>, tipos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="st">"Condition"</span><span class="op">)</span>,</span>
+<span>                     desde <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2024-01-01"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">exp</span></span>
+<span><span class="co">#&gt; &lt;fhir_exportacion&gt; completada (nivel paciente)</span></span>
+<span><span class="co">#&gt;   Carpeta: /tmp/RtmpkBV5Xn/fhir_export_17a757190dee2</span></span>
+<span><span class="co">#&gt;   Condition                1 archivo, 639 recursos</span></span>
+<span><span class="co">#&gt;   Patient                  1 archivo, 100 recursos</span></span>
+<span></span>
+<span><span class="va">diagnosticos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">exp</span><span class="op">$</span><span class="va">archivos</span><span class="op">$</span><span class="va">Condition</span>, <span class="fu"><a href="../reference/vista_crear.html">vista_crear</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Condition"</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>paciente <span class="op">=</span> <span class="st">"subject.getReferenceKey(Patient)"</span>,</span>
+<span>    codigo <span class="op">=</span> <span class="st">"code.coding.first().code"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><code>nivel</code> elige qué exportar: todo el servidor
+(<code>"sistema"</code>), todos los pacientes (<code>"paciente"</code>)
+o los de un <code>Group</code> (<code>grupo = "id"</code>);
+<code>filtros</code> pasa búsquedas por tipo (<code>_typeFilter</code>).
+Si la exportación tarda, se puede lanzar sin esperar y volver más
+tarde:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">trabajo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar</a></span><span class="op">(</span><span class="va">bulk</span>, grupo <span class="op">=</span> <span class="st">"brote-dengue"</span>, esperar <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">trabajo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar_estado</a></span><span class="op">(</span><span class="va">trabajo</span><span class="op">)</span>   <span class="co"># consulta una vez</span></span>
+<span><span class="va">trabajo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar_estado</a></span><span class="op">(</span><span class="va">trabajo</span>, esperar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar_cancelar</a></span><span class="op">(</span><span class="va">trabajo</span><span class="op">)</span>            <span class="co"># o cancelarla</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="subir-el-caso-a-un-servidor">9. Subir el caso a un servidor<a class="anchor" aria-label="anchor" href="#subir-el-caso-a-un-servidor"></a>
 </h2>
 <p>Los recursos se pueden cargar en un servidor propio (no en el
 público) para practicar con el taller. Como los ids son fijos,
 <code><a href="../reference/fhir_crear.html">fhir_actualizar()</a></code> los crea con ese id en un servidor
 HAPI:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">local</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"http://localhost:8080/fhir"</span><span class="op">)</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">r</span> <span class="kw">in</span> <span class="va">caso</span><span class="op">)</span> <span class="fu"><a href="../reference/fhir_crear.html">fhir_actualizar</a></span><span class="op">(</span><span class="va">local</span>, <span class="va">r</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/fhir_everything.html">fhir_everything</a></span><span class="op">(</span><span class="va">local</span>, <span class="st">"Patient"</span>, <span class="st">"patient"</span><span class="op">)</span></span></code></pre></div>

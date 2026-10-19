@@ -26,6 +26,23 @@
   servidor de la conexión y nunca se imprime, igual que el secreto y la
   clave.
 
+### Exportación masiva (FHIR Bulk Data)
+
+- [`fhir_exportar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md)
+  implementa el cliente de [FHIR Bulk Data
+  Access](https://hl7.org/fhir/uv/bulkdata/): inicia `$export` a nivel
+  de sistema, de pacientes o de un `Group` (con `_type`, `_since` y
+  `_typeFilter`), consulta el estado respetando `Retry-After` y
+  mostrando `X-Progress`, y descarga los archivos NDJSON del manifiesto
+  (con el token solo si `requiresAccessToken` lo pide y solo al mismo
+  servidor). Devuelve las rutas por tipo de recurso, listas para
+  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).
+  Los `OperationOutcome` del manifiesto se descargan y se avisan.
+- [`fhir_exportar_estado()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md)
+  y
+  [`fhir_exportar_cancelar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md)
+  para el modo asíncrono (`esperar = FALSE`).
+
 ## fhirviews 0.1.0
 
 - Primera versión.

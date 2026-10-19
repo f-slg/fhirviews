@@ -53,7 +53,7 @@ Aidbox, Google FHIR Data Pipes…). fhirviews trae ese estándar a R.
 |----|----|
 | Consultar un servidor FHIR sin salir de R | Cliente completo: búsqueda con paginación, lectura, escritura, transacciones, `$everything`, `$validate`, errores legibles |
 | Convertir recursos en tablas de forma reproducible | Motor de `ViewDefinition` conforme al estándar, validado con el banco oficial |
-| Trabajar con volúmenes reales | Evaluación por lotes: unos 7 000 pacientes por segundo desde NDJSON |
+| Trabajar con volúmenes reales | Exportación masiva con `$export` (FHIR Bulk Data) y evaluación por lotes: unos 7 000 pacientes por segundo desde NDJSON |
 | Analizar con SQL | Las vistas se guardan en DuckDB (u otra base DBI) con un comando |
 | Enseñar y explorar | Panel *Connections* y addins de RStudio, peticiones al estilo Postman, datos de ejemplo |
 
@@ -379,6 +379,7 @@ convertirse a JSON.
 | Conexión | [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md), [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md), [`fhir_capacidades()`](https://f-slg.github.io/fhirviews/reference/fhir_capacidades.md) | Conectarse, comprobar que el servidor responde y ver qué admite |
 | Lectura | [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md), [`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md), [`fhir_everything()`](https://f-slg.github.io/fhirviews/reference/fhir_everything.md) | Buscar con paginación, leer un recurso o todo un paciente |
 | Escritura | [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_borrar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md) | Crear, actualizar, borrar y ejecutar transacciones |
+| Exportación masiva | [`fhir_exportar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md), [`fhir_exportar_estado()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md), [`fhir_exportar_cancelar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md) | Operación `$export` (FHIR Bulk Data): espera al servidor y descarga los NDJSON para el análisis poblacional |
 | Validación | [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md) | Operación `$validate`, con la tabla de problemas |
 | Peticiones libres | [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md), [`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md) | Cualquier otra petición, también escrita como en Postman |
 | Recursos | [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md), [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md) | Reunir recursos de cualquier fuente y verlos como tabla rápida |
@@ -402,7 +403,7 @@ ejecuta `ViewDefinition` desde R con `ds_view()`, sobre Spark.
 | Requisitos | Solo paquetes de R (V8) | Java y Spark | Solo paquetes de R |
 | Tablas con `ViewDefinition` (SQL on FHIR) | Sí, [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md) | Sí, `ds_view()` | No: descripciones propias con XPath |
 | Resultado | `data.frame` de R | Spark DataFrame | `data.frame` de R |
-| Cliente REST de FHIR | Sí, en JSON: búsqueda con paginación, escritura, transacciones, `$everything`, `$validate` | Lectura con *bulk export* (`$export`) | Sí, en XML: búsqueda, `POST`, `PUT` |
+| Cliente REST de FHIR | Sí, en JSON: búsqueda con paginación, escritura, transacciones, `$everything`, `$validate`, *bulk export* (`$export`) | Lectura con *bulk export* (`$export`) | Sí, en XML: búsqueda, `POST`, `PUT` |
 | Terminologías (SNOMED CT, LOINC, ValueSet) | No | Sí, funciones `tx_*` con un servidor de terminología | No |
 | Volumen de datos | Memoria de una sesión de R | Distribuido: grandes volúmenes en un clúster | Memoria de una sesión de R |
 | Banco oficial de SQL on FHIR | Incluido en el paquete ([`vista_conformidad()`](https://f-slg.github.io/fhirviews/reference/vista_conformidad.md)) | Pathling figura en la [página de implementaciones](https://sql-on-fhir.org/extra/impls.html) | No aplica |
@@ -498,26 +499,43 @@ Conectarse a un servidor FHIR R4 y hacer peticiones, como en Postman.
 
 - [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md)
   : Conectarse a un servidor FHIR
+
 - [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md)
   : Buscar recursos con paginación automática
+
 - [`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md)
   : Leer un recurso
+
 - [`fhir_everything()`](https://f-slg.github.io/fhirviews/reference/fhir_everything.md)
   : Todos los datos de un paciente u otro compartimento (\$everything)
+
+- [`fhir_exportar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md)
+  [`fhir_exportar_estado()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md)
+  [`fhir_exportar_cancelar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md)
+  :
+
+  Exportación masiva de datos (FHIR Bulk Data, `$export`)
+
 - [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md)
   [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md)
   [`fhir_borrar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md)
   : Crear, actualizar y borrar recursos
+
 - [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
   : Validar un recurso en el servidor (\$validate)
+
 - [`fhir_capacidades()`](https://f-slg.github.io/fhirviews/reference/fhir_capacidades.md)
   : Capacidades del servidor
+
 - [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md)
   : Hacer una petición FHIR cualquiera
+
 - [`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md)
   : Ejecutar una petición escrita como texto
+
 - [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md)
   : Ejecutar una vista contra un servidor FHIR
+
 - [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md)
   : Comprobar si un servidor FHIR responde
 
