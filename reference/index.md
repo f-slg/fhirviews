@@ -1,5 +1,30 @@
 # Package index
 
+## Cliente FHIR
+
+Conectarse a un servidor FHIR R4 y hacer peticiones, como en Postman.
+
+- [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md)
+  : Conectarse a un servidor FHIR
+- [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md)
+  : Buscar recursos con paginación automática
+- [`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md)
+  : Leer un recurso
+- [`fhir_everything()`](https://f-slg.github.io/fhirviews/reference/fhir_everything.md)
+  : Todos los datos de un paciente u otro compartimento (\$everything)
+- [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md)
+  [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md)
+  [`fhir_borrar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md)
+  : Crear, actualizar y borrar recursos
+- [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
+  : Validar un recurso en el servidor (\$validate)
+- [`fhir_capacidades()`](https://f-slg.github.io/fhirviews/reference/fhir_capacidades.md)
+  : Capacidades del servidor
+- [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md)
+  : Hacer una petición FHIR cualquiera
+- [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md)
+  : Comprobar si un servidor FHIR responde
+
 ## Recursos FHIR
 
 - [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md)

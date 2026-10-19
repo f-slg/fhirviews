@@ -46,3 +46,22 @@
   guardar el informe en el formato oficial para la página de
   implementaciones. Las pruebas del paquete exigen todas las
   *shareable*.
+- Cliente FHIR con httr2:
+  [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md),
+  [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md)
+  (sigue los enlaces [`next`](https://rdrr.io/r/base/Control.html) de
+  los Bundles),
+  [`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md),
+  [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md),
+  [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md),
+  [`fhir_borrar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md),
+  [`fhir_everything()`](https://f-slg.github.io/fhirviews/reference/fhir_everything.md),
+  [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md),
+  [`fhir_capacidades()`](https://f-slg.github.io/fhirviews/reference/fhir_capacidades.md),
+  [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md)
+  y
+  [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md).
+  Usa `application/fhir+json`, admite token *bearer*, reintenta ante
+  429/503 y convierte el `OperationOutcome` de los errores en mensajes
+  legibles. Los resultados de búsqueda conservan el JSON original para
+  ejecutar vistas rápidamente.
