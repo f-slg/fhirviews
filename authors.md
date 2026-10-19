@@ -26,7 +26,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/f-slg/fhirviews/blob/main/inst/CITATION)
+[`inst/CITATION`](https://github.com/f-slg/fhirviews/blob/v0.1.0/inst/CITATION)
 
 Salas Guerrero, R. F. (2026). fhirviews: FHIR desde R y vistas tabulares
 con SQL on FHIR. Paquete de R versión 0.1.0.
