@@ -23,7 +23,8 @@ Authors@R:
     )
 Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     paging, read, create, update, delete and the '$everything' and
-    '$validate' operations) and an engine that turns FHIR resources into
+    '$validate' operations, and 'FHIR Bulk Data' export with '$export') and
+    an engine that turns FHIR resources into
     tables following the 'SQL on FHIR' 'ViewDefinition' specification
     <https://sql-on-fhir.org/>. 'FHIRPath' expressions are evaluated with
     the 'fhirpath.js' library through the 'V8' package. Includes the official

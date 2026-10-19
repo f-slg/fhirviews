@@ -58,6 +58,7 @@ reference:
   - fhir_buscar
   - fhir_leer
   - fhir_everything
+  - fhir_exportar
   - fhir_crear
   - fhir_validar
   - fhir_capacidades
