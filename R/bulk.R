@@ -395,7 +395,9 @@ descargar_archivo <- function(con, url, archivo, con_token) {
   if (mismo_origen) {
     req <- httr2::req_headers(req, !!!con$cabeceras)
   }
-  if (con_token && !is.null(con$token)) {
+  # Token fijo o, con autenticación SMART, el token OAuth vigente
+  usa_token <- con_token && (!is.null(con$token) || !is.null(con$auth))
+  if (usa_token) {
     # El token solo se envía a archivos del propio servidor
     if (!mismo_origen) {
       cli::cli_abort(c(
@@ -405,7 +407,8 @@ descargar_archivo <- function(con, url, archivo, con_token) {
                {.url {origen_url(con$url)}}."
       ), class = "fhirviews_error_exportacion", call = NULL)
     }
-    req <- httr2::req_auth_bearer_token(req, con$token)
+    token <- con$token %||% token_acceso(con)
+    req <- httr2::req_auth_bearer_token(req, token)
   }
   # Sin tiempo total: los archivos pueden ser grandes. Se corta si la
   # descarga se detiene durante `con$tiempo` segundos.
