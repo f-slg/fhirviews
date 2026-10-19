@@ -50,6 +50,9 @@ reference:
   - vista_leer
   - vista_validar
   - vista_json
+- title: Conformidad
+  contents:
+  - vista_conformidad
 - title: FHIRPath
   contents:
   - vista_fhirpath

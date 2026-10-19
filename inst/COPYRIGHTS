@@ -1,6 +1,10 @@
-fhirviews includes third-party JavaScript code in inst/js/fhirpath/.
-All files there are copied without modification from the browser build of
-fhirpath.js (release asset 'fhirpath.zip'); see data-raw/fhirpath_js.R.
+fhirviews includes third-party material, copied without modification:
+
+* inst/js/fhirpath/: JavaScript code from the browser build of fhirpath.js
+  (release asset 'fhirpath.zip'); see data-raw/fhirpath_js.R.
+* inst/sof-tests/: the official SQL on FHIR conformance test suite (JSON
+  files from the tests/ folder of FHIR/sql-on-fhir.js); see
+  data-raw/sof_tests.R.
 
 The package code written by the package author is under the MIT license
 (see LICENSE). The bundled code keeps its own licenses, listed below.
@@ -108,6 +112,14 @@ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+=============================================================================
+SQL on FHIR conformance test suite
+https://github.com/FHIR/sql-on-fhir.js (commit recorded in
+inst/sof-tests/FUENTE)
+Files: inst/sof-tests/*.json
+Copyright: the contributors to the SQL on FHIR project (HL7)
+License: MIT; full text in inst/sof-tests/LICENSE.md
 
 =============================================================================
 MIT license text (applies to the libraries marked "MIT" above, each with

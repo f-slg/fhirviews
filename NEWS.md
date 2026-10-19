@@ -29,3 +29,8 @@
   a V8 sin volver a convertirlos, lo que acelera mucho las vistas grandes.
 * Corregido: en Windows fallaba la carga de fhirpath.js, que contiene bytes
   0x1A (Ctrl-Z); ahora los archivos JavaScript se leen en binario.
+* `vista_conformidad()` ejecuta el banco oficial de pruebas de SQL on FHIR
+  (copia incluida en `inst/sof-tests/`, de FHIR/sql-on-fhir.js; o la versión
+  más reciente con `descargar = TRUE`), resume los resultados por perfil y
+  puede guardar el informe en el formato oficial para la página de
+  implementaciones. Las pruebas del paquete exigen todas las *shareable*.
