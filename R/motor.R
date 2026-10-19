@@ -5,6 +5,8 @@
 #
 #   cargar(recursos)                      -> enteros (un nodo por recurso)
 #   evaluar(ids, expresion, variables, por_nodo, modo)
+#                                         (por_nodo: lista con nombre de
+#                                         vectores, un valor por nodo)
 #                                         -> lista, un elemento por nodo:
 #                                            valores (modo "valores") o
 #                                            enteros de nodos (modo "nodos")
@@ -82,7 +84,21 @@ motor_v8 <- function() {
     nombre = "v8",
     version = function() ct$eval("fhirviews.version()"),
     cargar = function(recursos) {
-      ct$assign("fhirviews_entrada", as.character(a_json(unclass(recursos))))
+      fuente <- attr(recursos, "fuente")
+      if (!is.null(fuente)) {
+        # Texto JSON original: V8 lo lee sin pasar por jsonlite::toJSON()
+        inicio <- as.integer(ct$eval("fhirviews.tamano()"))
+        ct$assign("fhirviews_entrada", I(fuente))
+        ids <- llamar("JSON.stringify(fhirviews.cargarTextos(fhirviews_entrada))")
+        ct$eval("fhirviews_entrada = null;")
+        ids <- as.integer(unlist(ids))
+        if (length(ids) == length(recursos)) {
+          return(ids)
+        }
+        ct$eval(sprintf("fhirviews.liberar(%d)", inicio))
+      }
+      ct$assign("fhirviews_entrada",
+                as.character(a_json(unclass(sin_fuente(recursos)))))
       ids <- llamar("JSON.stringify(fhirviews.cargar(fhirviews_entrada))")
       ct$eval("fhirviews_entrada = null;")
       as.integer(unlist(ids))
@@ -98,7 +114,8 @@ motor_v8 <- function() {
         jsonlite::toJSON(as.integer(ids)),
         a_json(expresion, unbox = TRUE),
         a_json_variables(variables),
-        if (is.null(por_nodo)) "null" else a_json(lapply(por_nodo, preparar_variables)),
+        if (is.null(por_nodo)) "null" else
+          jsonlite::toJSON(por_nodo, digits = NA, na = "null"),
         a_json(modo, unbox = TRUE)
       )
       res <- llamar(codigo, expresion)

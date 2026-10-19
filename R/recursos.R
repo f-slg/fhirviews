@@ -31,7 +31,7 @@ fhir_recursos <- function(x) {
     return(nuevo_fhir_recursos(list()))
   }
   if (is.character(x)) {
-    return(nuevo_fhir_recursos(recursos_desde_texto(x)))
+    return(recursos_desde_texto(x))
   }
   if (!is.list(x)) {
     cli::cli_abort(c(
@@ -42,8 +42,16 @@ fhir_recursos <- function(x) {
   nuevo_fhir_recursos(recursos_desde_lista(x))
 }
 
-nuevo_fhir_recursos <- function(x) {
-  structure(unname(x), class = c("fhir_recursos", "list"))
+# `fuente` guarda el texto JSON del que salieron los recursos (si se leyeron
+# de texto o de archivos) para que el motor lo use sin volver a convertirlos
+# a JSON. Cualquier modificación de la lista lo descarta.
+nuevo_fhir_recursos <- function(x, fuente = NULL) {
+  structure(unname(x), class = c("fhir_recursos", "list"), fuente = fuente)
+}
+
+sin_fuente <- function(x) {
+  attr(x, "fuente") <- NULL
+  x
 }
 
 recursos_desde_lista <- function(x) {
@@ -71,23 +79,27 @@ recursos_desde_texto <- function(x) {
     return(recursos_desde_archivo(x))
   }
   if (length(x) > 1L) {
-    x <- x[nzchar(trimws(x))]
-    return(lapply(x, parsear_json))
+    return(recursos_ndjson(x))
   }
   datos <- tryCatch(parsear_json(x), error = function(e) NULL)
   if (is.null(datos)) {
-    lineas <- strsplit(x, "\r?\n")[[1]]
-    lineas <- lineas[nzchar(trimws(lineas))]
-    return(lapply(lineas, parsear_json))
+    return(recursos_ndjson(strsplit(x, "\r?\n")[[1]]))
   }
-  recursos_desde_lista(datos)
+  nuevo_fhir_recursos(recursos_desde_lista(datos), fuente = x)
+}
+
+# Un recurso JSON por elemento (o por línea de NDJSON)
+recursos_ndjson <- function(lineas) {
+  lineas <- lineas[nzchar(trimws(lineas))]
+  recursos <- lapply(lineas, parsear_json)
+  nuevo_fhir_recursos(unlist(lapply(recursos, recursos_desde_lista),
+                             recursive = FALSE), fuente = lineas)
 }
 
 recursos_desde_archivo <- function(ruta) {
   lineas <- readLines(ruta, encoding = "UTF-8", warn = FALSE)
   if (grepl("\\.ndjson$", ruta, ignore.case = TRUE)) {
-    lineas <- lineas[nzchar(trimws(lineas))]
-    return(lapply(lineas, parsear_json))
+    return(recursos_ndjson(lineas))
   }
   recursos_desde_texto(paste(lineas, collapse = "\n"))
 }
@@ -121,11 +133,34 @@ print.fhir_recursos <- function(x, ...) {
 
 #' @export
 `[.fhir_recursos` <- function(x, i) {
-  nuevo_fhir_recursos(unclass(x)[i])
+  nuevo_fhir_recursos(unclass(sin_fuente(x))[i])
+}
+
+#' @export
+`[<-.fhir_recursos` <- function(x, i, value) {
+  x <- unclass(sin_fuente(x))
+  x[i] <- value
+  nuevo_fhir_recursos(x)
+}
+
+#' @export
+`[[<-.fhir_recursos` <- function(x, i, value) {
+  x <- unclass(sin_fuente(x))
+  x[[i]] <- value
+  nuevo_fhir_recursos(x)
+}
+
+#' @export
+`$<-.fhir_recursos` <- function(x, name, value) {
+  cli::cli_abort("Usa {.code [[ ]]} para modificar un recurso de la lista.",
+                 class = "fhirviews_error")
 }
 
 #' @export
 c.fhir_recursos <- function(...) {
-  partes <- lapply(list(...), function(p) unclass(fhir_recursos(p)))
-  nuevo_fhir_recursos(unlist(partes, recursive = FALSE))
+  partes <- lapply(list(...), fhir_recursos)
+  fuentes <- lapply(partes, attr, "fuente")
+  fuente <- if (all(!vapply(fuentes, is.null, logical(1)))) unlist(fuentes)
+  nuevo_fhir_recursos(unlist(lapply(partes, function(p) unclass(sin_fuente(p))),
+                             recursive = FALSE), fuente = fuente)
 }

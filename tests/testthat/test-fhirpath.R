@@ -120,7 +120,7 @@ test_that("el motor encadena nodos sin perder el tipo", {
   expect_identical(m$evaluar(componentes, "%resource.id")[[2]], list("o1"))
   # Variables distintas para cada nodo
   res <- m$evaluar(componentes, "%rowIndex",
-                   por_nodo = list(list(rowIndex = 0L), list(rowIndex = 1L)))
+                   por_nodo = list(rowIndex = c(0L, 1L)))
   expect_identical(res, list(list(0L), list(1L)))
   expect_true(m$validar("name.given"))
   expect_error(m$validar("name.("), class = "fhirviews_error_fhirpath")

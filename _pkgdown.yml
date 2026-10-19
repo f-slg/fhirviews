@@ -42,6 +42,14 @@ reference:
 - title: Recursos FHIR
   contents:
   - fhir_recursos
+- title: Vistas SQL on FHIR
+  desc: Convertir recursos FHIR en tablas con un ViewDefinition.
+  contents:
+  - vista_ejecutar
+  - vista_crear
+  - vista_leer
+  - vista_validar
+  - vista_json
 - title: FHIRPath
   contents:
   - vista_fhirpath

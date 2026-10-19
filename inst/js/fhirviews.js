@@ -98,6 +98,35 @@ var fhirviews = (function () {
       return fhirpath.version;
     },
 
+    // Agrega recursos a partir de los textos JSON originales (recursos,
+    // Bundles o arreglos de ellos) con las mismas reglas que fhir_recursos():
+    // de un Bundle se toman entry[].resource. Devuelve los indices.
+    cargarTextos: function (textos) {
+      var ids = [];
+      function agregarRecurso(r) {
+        ids.push(nodos.length);
+        nodos.push(r);
+        raices.push(r);
+      }
+      function agregar(x) {
+        if (Array.isArray(x)) {
+          x.forEach(agregar);
+        } else if (x && x.resourceType === 'Bundle') {
+          (x.entry || []).forEach(function (e) {
+            if (e && e.resource) {
+              agregarRecurso(e.resource);
+            }
+          });
+        } else {
+          agregarRecurso(x);
+        }
+      }
+      textos.forEach(function (t) {
+        agregar(JSON.parse(t));
+      });
+      return ids;
+    },
+
     // Agrega recursos (texto JSON con un arreglo) y devuelve sus indices.
     cargar: function (json) {
       var recursos = JSON.parse(json);
@@ -114,7 +143,8 @@ var fhirviews = (function () {
     //   ids:        indices de los nodos
     //   expresion:  texto FHIRPath
     //   variables:  variables comunes (constantes de la vista)
-    //   porNodo:    variables distintas para cada nodo (p. ej. rowIndex) o null
+    //   porNodo:    variables distintas para cada nodo, como {nombre: [valor
+    //               por nodo]} (p. ej. rowIndex), o null
     //   modo:       'valores' devuelve los resultados en JSON;
     //               'nodos' los guarda en el almacen y devuelve sus indices
     // Devuelve un arreglo con un arreglo de resultados por nodo.
@@ -124,7 +154,9 @@ var fhirviews = (function () {
       return ids.map(function (id, i) {
         var ctx = Object.assign({}, comunes);
         if (porNodo) {
-          Object.assign(ctx, porNodo[i]);
+          Object.keys(porNodo).forEach(function (k) {
+            ctx[k] = porNodo[k][i];
+          });
         }
         ctx.resource = raices[id];
         ctx.rootResource = raices[id];
