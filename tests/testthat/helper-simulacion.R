@@ -37,7 +37,10 @@ simular <- function(responder, envir = parent.frame()) {
   peticiones$lista <- list()
   httr2::local_mocked_responses(function(req) {
     peticiones$lista[[length(peticiones$lista) + 1L]] <- req
-    responder(req, sub("^https://fhir.test/fhir/?", "", req$url))
+    # La ruta se compara decodificada: según la versión de R y de curl, `$`
+    # puede llegar como %24 (por ejemplo en Patient/$export?...)
+    responder(req, sub("^https://fhir.test/fhir/?", "",
+                       utils::URLdecode(req$url)))
   }, env = envir)
   peticiones
 }
