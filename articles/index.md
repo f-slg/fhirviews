@@ -12,6 +12,9 @@
 - [Primeros pasos con
   fhirviews](https://f-slg.github.io/fhirviews/articles/fhirviews.md):
 
+- [Servidores reales y grandes
+  volúmenes](https://f-slg.github.io/fhirviews/articles/servidores-y-volumen.md):
+
 - [Tasas por cantón con FHIR y
   pobecu](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.md):
 

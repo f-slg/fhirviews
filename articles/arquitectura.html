@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,6 +48,7 @@
 <li><a class="dropdown-item" href="../articles/fhirviews.html">Primeros pasos</a></li>
     <li><a class="dropdown-item" href="../articles/vistas.html">ViewDefinition en detalle</a></li>
     <li><a class="dropdown-item" href="../articles/tasas-pobecu.html">Tasas por cantón con FHIR y pobecu</a></li>
+    <li><a class="dropdown-item" href="../articles/servidores-y-volumen.html">Servidores reales y grandes volúmenes</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/arquitectura.html">Cómo funciona por dentro</a></li>
   </ul>
@@ -127,22 +128,39 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
 <tr class="odd">
 <td>Cliente</td>
 <td><code>R/cliente.R</code></td>
-<td>Peticiones HTTP, paginación, errores, autenticación</td>
+<td>Peticiones HTTP, paginación, errores</td>
 </tr>
 <tr class="even">
+<td>Autenticación</td>
+<td><code>R/autenticacion.R</code></td>
+<td>SMART on FHIR / OAuth2: descubrimiento, tokens y su renovación</td>
+</tr>
+<tr class="odd">
+<td>Exportación masiva</td>
+<td><code>R/bulk.R</code></td>
+<td>FHIR Bulk Data (<code>$export</code>): inicio, espera, manifiesto y
+descarga</td>
+</tr>
+<tr class="even">
+<td>Motor DuckDB</td>
+<td><code>R/sql.R</code></td>
+<td>Traducción de <code>ViewDefinition</code> y FHIRPath a SQL de
+DuckDB</td>
+</tr>
+<tr class="odd">
 <td>Recursos</td>
 <td><code>R/recursos.R</code></td>
 <td>Reunir recursos de cualquier fuente y conservar su JSON
 original</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Motor de vistas</td>
 <td>
 <code>R/vista.R</code>, <code>R/validar.R</code>
 </td>
 <td>Validar y ejecutar <code>ViewDefinition</code>, armar la tabla</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Motor de FHIRPath</td>
 <td>
 <code>R/motor.R</code>, <code>inst/js/fhirviews.js</code>
@@ -183,6 +201,105 @@ también como texto JSON (ver más abajo).</p>
 <code>transaction</code> y <code>batch</code>, que se envían a la base
 del servidor para que los procese, del resto de recursos, que se envían
 a <code>[base]/[tipo]</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="autenticación-smart-on-fhir">Autenticación SMART on FHIR<a class="anchor" aria-label="anchor" href="#autenticaci%C3%B3n-smart-on-fhir"></a>
+</h2>
+<p><code><a href="../reference/fhir_auth.html">fhir_auth_cliente()</a></code>, <code><a href="../reference/fhir_auth.html">fhir_auth_backend()</a></code> y
+<code><a href="../reference/fhir_auth.html">fhir_auth_interactiva()</a></code> solo describen la autenticación;
+<code><a href="../reference/fhir_conectar.html">fhir_conectar()</a></code> la prepara:</p>
+<ol style="list-style-type: decimal">
+<li>Si no se indicaron las URL, las descubre con
+<code><a href="../reference/fhir_smart_configuracion.html">fhir_smart_configuracion()</a></code>: primero
+<code>[base]/.well-known/smart-configuration</code> y, si no existe, las
+extensiones <code>oauth-uris</code> del <code>CapabilityStatement</code>
+(SMART v1).</li>
+<li>Crea un cliente OAuth de httr2 con el método de autenticación
+adecuado: <code>client_secret_basic</code> o
+<code>client_secret_post</code> (según lo que declare el servidor) o
+<code>private_key_jwt</code> con una clave RS384 o ES384.</li>
+<li>En cada petición al propio servidor, <code>peticion_json()</code>
+obtiene el token vigente de la caché en memoria de httr2, que lo pide la
+primera vez y lo renueva cuando le quedan menos de 30 segundos. Si el
+servidor responde 401, descarta el token, pide otro y reintenta una sola
+vez.</li>
+</ol>
+<p>En <em>Backend Services</em>, httr2 firma un JWT nuevo en cada pedido
+de token (<code>iss</code> y <code>sub</code> = id del cliente,
+<code>aud</code> = URL del token, <code>exp</code> a cinco minutos,
+<code>jti</code> aleatorio y <code>kid</code> en la cabecera). Se
+verificó con un servidor de autorización independiente, escrito en
+Python con PyJWT, que comprueba la firma y rechaza un <code>jti</code>
+repetido o una clave que no corresponde.</p>
+</div>
+<div class="section level2">
+<h2 id="exportación-masiva">Exportación masiva<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva"></a>
+</h2>
+<p><code><a href="../reference/fhir_exportar.html">fhir_exportar()</a></code> sigue el protocolo asíncrono de <a href="https://hl7.org/fhir/uv/bulkdata/" class="external-link">FHIR Bulk Data</a>:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Paso</th>
+<th>Petición</th>
+<th>Respuesta esperada</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Inicio</td>
+<td>
+<code>GET [base]/$export</code>, <code>Patient/$export</code> o
+<code>Group/[id]/$export</code>, con
+<code>Prefer: respond-async</code>
+</td>
+<td>
+<code>202 Accepted</code> + <code>Content-Location</code>
+</td>
+</tr>
+<tr class="even">
+<td>Estado</td>
+<td><code>GET [Content-Location]</code></td>
+<td>
+<code>202</code> (en curso, con <code>Retry-After</code> y
+<code>X-Progress</code>) o <code>200</code> con el manifiesto</td>
+</tr>
+<tr class="odd">
+<td>Descarga</td>
+<td>
+<code>GET [archivo]</code> por cada entrada de <code>output</code> y
+<code>error</code>
+</td>
+<td>NDJSON</td>
+</tr>
+<tr class="even">
+<td>Cancelación</td>
+<td><code>DELETE [Content-Location]</code></td>
+<td><code>202</code></td>
+</tr>
+</tbody>
+</table>
+<p>Detalles de diseño:</p>
+<ul>
+<li>
+<strong>Espera.</strong> Respeta <code>Retry-After</code> (en
+segundos o como fecha HTTP); sin él, espera 1, 2, 4… segundos hasta un
+máximo de 60 entre consultas. Al superar <code>max_espera</code>,
+devuelve el trabajo en curso con un aviso, para retomarlo con
+<code><a href="../reference/fhir_exportar.html">fhir_exportar_estado()</a></code>.</li>
+<li>
+<strong>Descarga.</strong> Los archivos se escriben directamente en
+disco, sin pasar por la memoria; sin tiempo total máximo, pero se cortan
+si la transferencia se detiene durante <code>tiempo</code>
+segundos.</li>
+<li>
+<strong>Seguridad.</strong> El token se envía a un archivo solo si
+el manifiesto lo exige (<code>requiresAccessToken</code>) y el archivo
+está en el mismo servidor; si está en otro dominio, se detiene con un
+error en lugar de enviarlo.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="recursos-y-el-texto-json-original">Recursos y el texto JSON original<a class="anchor" aria-label="anchor" href="#recursos-y-el-texto-json-original"></a>
@@ -345,7 +462,7 @@ del número de recursos:</p>
 <span>                     por_cada <span class="op">=</span> <span class="st">"telecom"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="va">vista</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.011   0.001   0.010</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.006   0.000   0.007</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="orden-de-columnas-y-de-filas">Orden de columnas y de filas<a class="anchor" aria-label="anchor" href="#orden-de-columnas-y-de-filas"></a>
@@ -397,6 +514,53 @@ cada expresión FHIRPath compile.</p>
 </div>
 </div>
 <div class="section level2">
+<h2 id="motor-duckdb">Motor DuckDB<a class="anchor" aria-label="anchor" href="#motor-duckdb"></a>
+</h2>
+<p><code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> es un segundo motor,
+experimental, que no usa V8: traduce el <code>ViewDefinition</code>
+completo a <strong>una sola consulta SQL</strong> de DuckDB.</p>
+<ul>
+<li>
+<strong>Lectura sin esquema.</strong> Cada línea del NDJSON se lee
+como un valor <code>JSON</code> con <code>read_json_objects()</code>
+(Parquet con <code>read_parquet()</code> y <code>to_json()</code>). No
+hace falta un esquema FHIR, así que funcionan los elementos de elección,
+las extensiones y los recursos heterogéneos.</li>
+<li>
+<strong>Colecciones como listas.</strong> Cada expresión FHIRPath
+traducida es una lista <code>JSON[]</code>, un valor JSON o un valor de
+SQL tipado. <code>a.b</code> es <code>json_extract</code> sobre cada
+elemento; <code>where()</code> y <code>select()</code> son
+<code>list_filter()</code> y <code>list_transform()</code>; los
+elementos de elección (<code>value</code>, <code>onset</code>…) buscan
+todas sus variantes según el modelo R4.</li>
+<li>
+<strong>Estructura dentro de cada fila.</strong> Cada
+<code>select</code> produce la lista de filas de un recurso;
+<code>forEach</code> usa <code>list_transform()</code> con el índice
+(para <code>%rowIndex</code>), <code>unionAll</code> concatena listas,
+<code>repeat</code> se resuelve por niveles (hasta
+<code>fhirviews.sql_profundidad</code>, 12 por defecto) y la consulta
+final aplica <code>unnest()</code>. Sin subconsultas correlacionadas,
+DuckDB procesa los archivos en paralelo, por bloques.</li>
+<li>
+<strong>Errores.</strong> Lo que no se puede traducir con certeza da
+un error de clase <code>fhirviews_error_sql</code> al traducir; una
+columna con varios valores sin <code>collection</code> o un
+<code>where</code> que no da un lógico son errores al ejecutar.</li>
+<li>
+<strong>Garantía.</strong> Además del banco oficial (133/133
+<em>shareable</em>), una prueba diferencial ejecuta las vistas de todas
+las viñetas con los dos motores y exige tablas idénticas, valores y
+tipos.</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_sql.html">vista_sql</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span>, <span class="fl">300</span><span class="op">)</span>, <span class="st">"..."</span><span class="op">)</span></span>
+<span><span class="co">#&gt; SELECT f."id" AS "id", f."sexo" AS "sexo"</span></span>
+<span><span class="co">#&gt; FROM (</span></span>
+<span><span class="co">#&gt;   SELECT unnest([{'id': json_extract_string(r, '$.id'), 'sexo': json_extract_string(list_extract(list_transform([flatten(list_transform([json_extract(r, '$."gender"')], lambda z1: CASE WHEN z1 IS NULL OR CAST(z1 AS VARCHAR) = 'null' THEN []::JSON[] WH ...</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="seguridad-y-privacidad">Seguridad y privacidad<a class="anchor" aria-label="anchor" href="#seguridad-y-privacidad"></a>
 </h2>
 <ul>
@@ -412,9 +576,10 @@ habilita.</li>
 escapado. Los addins de RStudio convierten el texto seleccionado en una
 cadena de R con <code><a href="https://rdrr.io/r/base/deparse.html" class="external-link">deparse1()</a></code>.</li>
 <li>
-<strong>Token.</strong> No se imprime, solo se envía al servidor de
-la conexión, el código que genera el panel <em>Connections</em> lo toma
-de <code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code> y se avisa si se usaría sin cifrar por
+<strong>Token.</strong> No se imprime (tampoco el secreto ni la
+clave privada), solo se envía al servidor de la conexión, el código que
+genera el panel <em>Connections</em> lo toma de
+<code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code> y se avisa si se usaría sin cifrar por
 http.</li>
 <li>
 <strong>Datos personales.</strong> Los mensajes de error incluyen la

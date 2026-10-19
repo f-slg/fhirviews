@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -22,6 +22,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-art-culos"><li><a class="dropdown-item" href="../articles/fhirviews.html">Primeros pasos</a></li>
     <li><a class="dropdown-item" href="../articles/vistas.html">ViewDefinition en detalle</a></li>
     <li><a class="dropdown-item" href="../articles/tasas-pobecu.html">Tasas por cantón con FHIR y pobecu</a></li>
+    <li><a class="dropdown-item" href="../articles/servidores-y-volumen.html">Servidores reales y grandes volúmenes</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/arquitectura.html">Cómo funciona por dentro</a></li>
   </ul></li>
@@ -41,9 +42,10 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="fhirviews-development-version">fhirviews (development version)<a class="anchor" aria-label="anchor" href="#fhirviews-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.0" id="fhirviews-020">fhirviews 0.2.0<a class="anchor" aria-label="anchor" href="#fhirviews-020"></a></h2>
+<p>Esta versión prepara fhirviews para servidores y volúmenes reales: autenticación SMART on FHIR, exportación masiva con <code>$export</code> y un segundo motor de vistas sobre DuckDB, entre 16 y 37 veces más rápido que el motor V8 (un millón de pacientes en unos 5,5 segundos). No hay cambios incompatibles.</p>
 <div class="section level3">
-<h3 id="autenticación-smart-on-fhir-development-version">Autenticación SMART on FHIR<a class="anchor" aria-label="anchor" href="#autenticaci%C3%B3n-smart-on-fhir-development-version"></a></h3>
+<h3 id="autenticación-smart-on-fhir-0-2-0">Autenticación SMART on FHIR<a class="anchor" aria-label="anchor" href="#autenticaci%C3%B3n-smart-on-fhir-0-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/fhir_conectar.html">fhir_conectar()</a></code> tiene un nuevo argumento <code>autenticacion</code> para servidores protegidos con SMART on FHIR / OAuth2 (<code>token</code> sigue funcionando igual):
 <ul><li>
@@ -58,14 +60,14 @@
 <li>El token se pide en la primera petición, se renueva solo al expirar (y una vez más si el servidor lo rechaza con 401), solo se envía al servidor de la conexión y nunca se imprime, igual que el secreto y la clave.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="exportación-masiva-fhir-bulk-data-development-version">Exportación masiva (FHIR Bulk Data)<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva-fhir-bulk-data-development-version"></a></h3>
+<h3 id="exportación-masiva-fhir-bulk-data-0-2-0">Exportación masiva (FHIR Bulk Data)<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva-fhir-bulk-data-0-2-0"></a></h3>
 <ul><li>
 <code><a href="../reference/fhir_exportar.html">fhir_exportar()</a></code> implementa el cliente de <a href="https://hl7.org/fhir/uv/bulkdata/" class="external-link">FHIR Bulk Data Access</a>: inicia <code>$export</code> a nivel de sistema, de pacientes o de un <code>Group</code> (con <code>_type</code>, <code>_since</code> y <code>_typeFilter</code>), consulta el estado respetando <code>Retry-After</code> y mostrando <code>X-Progress</code>, y descarga los archivos NDJSON del manifiesto (con el token solo si <code>requiresAccessToken</code> lo pide y solo al mismo servidor). Devuelve las rutas por tipo de recurso, listas para <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code>. Los <code>OperationOutcome</code> del manifiesto se descargan y se avisan.</li>
 <li>
 <code><a href="../reference/fhir_exportar.html">fhir_exportar_estado()</a></code> y <code><a href="../reference/fhir_exportar.html">fhir_exportar_cancelar()</a></code> para el modo asíncrono (<code>esperar = FALSE</code>).</li>
 </ul></div>
 <div class="section level3">
-<h3 id="motor-duckdb-experimental-development-version">Motor DuckDB (experimental)<a class="anchor" aria-label="anchor" href="#motor-duckdb-experimental-development-version"></a></h3>
+<h3 id="motor-duckdb-experimental-0-2-0">Motor DuckDB (experimental)<a class="anchor" aria-label="anchor" href="#motor-duckdb-experimental-0-2-0"></a></h3>
 <ul><li>Prototipo de un segundo motor de vistas: <code><a href="../reference/vista_sql.html">vista_sql()</a></code> traduce un <code>ViewDefinition</code> a SQL de DuckDB y <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> lo ejecuta directamente sobre archivos NDJSON o Parquet, sin cargar los recursos en R. Admite un subconjunto de FHIRPath y pasa las 133 pruebas shareable del banco oficial (<code>vista_conformidad(motor = "duckdb")</code>).</li>
 </ul></div>
 </div>

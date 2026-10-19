@@ -366,7 +366,7 @@ el informe en el formato oficial.
 
 vista_conformidad(c("basic.json", "foreach.json", "union.json"))
 #> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) 
-#> fhirviews 0.1.0.9000 · fhirpath.js 5.2.1
+#> fhirviews 0.2.0 · fhirpath.js 5.2.1
 #> 
 #>   shareable       34 de  34 aprobadas
 #>   total           34 de  34 aprobadas
