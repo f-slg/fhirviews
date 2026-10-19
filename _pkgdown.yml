@@ -28,12 +28,21 @@ home:
 navbar:
   bg: primary
   structure:
-    left: [intro, reference, news]
+    left: [intro, reference, articles, news]
     right: [search, github]
   components:
     reference:
       text: Funciones
       href: reference/index.html
+    articles:
+      text: Artículos
+      menu:
+      - text: Primeros pasos
+        href: articles/fhirviews.html
+      - text: ViewDefinition en detalle
+        href: articles/vistas.html
+      - text: Tasas por cantón con FHIR y pobecu
+        href: articles/tasas-pobecu.html
     news:
       text: Novedades
       href: news/index.html

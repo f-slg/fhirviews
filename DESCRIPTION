@@ -2,7 +2,7 @@ Package: fhirviews
 Type: Package
 Title: Query 'HL7 FHIR' Servers and Flatten Resources with 'SQL on FHIR'
     View Definitions
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",
@@ -45,8 +45,12 @@ Imports:
 Suggests:
     DBI,
     duckdb,
+    knitr,
+    pobecu,
+    rmarkdown,
     rstudioapi,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: es

@@ -11,7 +11,7 @@
 #'   * texto JSON con un recurso, un Bundle o un arreglo de recursos;
 #'   * texto NDJSON (un recurso por línea) o un vector de caracteres con un
 #'     recurso JSON por elemento;
-#'   * la ruta a un archivo `.json` o `.ndjson`.
+#'   * la ruta a un archivo `.json`, `.ndjson` o `.ndjson.gz`.
 #'
 #' @return Una lista de recursos (listas de R) de clase `fhir_recursos`.
 #' @export
@@ -107,7 +107,7 @@ recursos_ndjson <- function(lineas) {
 
 recursos_desde_archivo <- function(ruta) {
   lineas <- readLines(ruta, encoding = "UTF-8", warn = FALSE)
-  if (grepl("\\.ndjson$", ruta, ignore.case = TRUE)) {
+  if (grepl("\\.ndjson(\\.gz)?$", ruta, ignore.case = TRUE)) {
     return(recursos_ndjson(lineas))
   }
   recursos_desde_texto(paste(lineas, collapse = "\n"))

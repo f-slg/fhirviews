@@ -28,9 +28,19 @@ jobs:
         with:
           use-public-rspm: true
 
+      # pobecu (Suggests) aún no está en CRAN: se instala desde GitHub.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, local::.
+          dependencies: '"hard"'
+          extra-packages: |
+            any::pkgdown
+            any::knitr
+            any::rmarkdown
+            any::DBI
+            any::duckdb
+            any::rstudioapi
+            github::f-slg/pobecu
+            local::.
           needs: website
 
       - name: Construir el sitio

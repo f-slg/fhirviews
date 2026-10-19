@@ -35,9 +35,22 @@ jobs:
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
 
+      # pobecu (Suggests, viñeta de tasas) aún no está en CRAN: se instalan
+      # las dependencias obligatorias y los Suggests se listan aquí, con
+      # pobecu desde GitHub. Cuando esté en CRAN, basta con volver a la
+      # configuración por defecto.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          dependencies: '"hard"'
+          extra-packages: |
+            any::rcmdcheck
+            any::testthat
+            any::knitr
+            any::rmarkdown
+            any::DBI
+            any::duckdb
+            any::rstudioapi
+            github::f-slg/pobecu
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2

@@ -1,0 +1,159 @@
+---
+title: "Tasas por cantón con FHIR y pobecu"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Tasas por cantón con FHIR y pobecu}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+tiene_pobecu <- requireNamespace("pobecu", quietly = TRUE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
+                      fig.height = 4.5, dpi = 96, eval = tiene_pobecu)
+```
+
+```{r, eval = !tiene_pobecu, echo = FALSE, results = "asis"}
+cat("> Esta viñeta necesita el paquete [pobecu](https://f-slg.github.io/pobecu/),",
+    "que no está instalado: el código se muestra sin ejecutar.\n")
+```
+
+Los sistemas de información en salud guardan cada caso como un recurso FHIR;
+para vigilancia epidemiológica hace falta otra cosa: **cuántos casos hay por
+territorio y cuántos son en relación con la población**. Esta viñeta va de
+recursos FHIR a tasas por 100 000 habitantes por cantón, uniendo las vistas
+de fhirviews con la población oficial del INEC que trae el paquete
+[pobecu](https://f-slg.github.io/pobecu/).
+
+> Los datos son **ficticios**: 755 casos simulados de dengue en 2025 en El
+> Oro, Guayas, Los Ríos y Manabí, generados a partir de la población de cada
+> cantón con un riesgo que varía al azar. No describen la situación real.
+
+```{r}
+library(fhirviews)
+library(pobecu)
+```
+
+## 1. Los recursos
+
+Cada caso es un `Patient` y un `Condition`. La dirección del paciente lleva
+el cantón y la provincia en `district` y `state`, y el código DPA del cantón
+en una extensión (un ejemplo ilustrativo; un sistema real usaría la de su
+guía de implementación):
+
+```{r}
+dengue <- fhir_recursos(system.file("extdata", "dengue_2025.ndjson.gz",
+                                    package = "fhirviews"))
+dengue
+str(dengue[[1]]$address, max.level = 3)
+```
+
+Con un servidor, los mismos recursos se obtendrían con algo como
+`fhir_buscar(con, "Condition", code = "http://snomed.info/sct|38362002",
+"onset-date" = c("ge2025-01-01", "lt2026-01-01"), "_include" = "Condition:subject")`.
+
+## 2. Las vistas
+
+Una vista de pacientes, con el código DPA del cantón:
+
+```{r}
+v_paciente <- vista_leer(r"-({
+  "name": "paciente",
+  "resource": "Patient",
+  "constant": [{"name": "dpa",
+                "valueUri": "https://f-slg.github.io/fhirviews/StructureDefinition/codigo-dpa"}],
+  "select": [{"column": [
+    {"name": "id", "path": "getResourceKey()"},
+    {"name": "sexo", "path": "gender"},
+    {"name": "nacimiento", "path": "birthDate", "type": "date"},
+    {"name": "dpa_canton", "path": "address.where(use = 'home').extension(%dpa).value.first()"},
+    {"name": "canton", "path": "address.where(use = 'home').district.first()"}
+  ]}]
+})-")
+pacientes <- vista_ejecutar(dengue, v_paciente)
+head(pacientes)
+```
+
+Y una de diagnósticos, solo los confirmados (los descartados tienen
+`verificationStatus` = `refuted`):
+
+```{r}
+v_dengue <- vista_leer(r"-({
+  "name": "dengue",
+  "resource": "Condition",
+  "where": [{"path": "verificationStatus.coding.where(code = 'confirmed').exists()"}],
+  "select": [{"column": [
+    {"name": "paciente", "path": "subject.getReferenceKey(Patient)"},
+    {"name": "inicio", "path": "onset.ofType(dateTime)", "type": "date"},
+    {"name": "grave", "path": "code.coding.where(system = 'http://hl7.org/fhir/sid/icd-10').code = 'A91'",
+     "type": "boolean"}
+  ]}]
+})-")
+casos <- vista_ejecutar(dengue, v_dengue)
+nrow(casos)
+```
+
+## 3. De casos a tasas
+
+Se unen las dos vistas y se cuentan los casos por cantón:
+
+```{r}
+casos <- merge(casos, pacientes, by.x = "paciente", by.y = "id")
+por_canton <- aggregate(paciente ~ dpa_canton + canton, data = casos,
+                        FUN = length)
+names(por_canton)[3] <- "casos"
+por_canton$anio <- 2025
+```
+
+`pob_tasa()` de pobecu agrega la población del cantón en 2025 (proyección
+oficial del INEC) y calcula la tasa por 100 000 habitantes:
+
+```{r}
+tasas <- pob_tasa(por_canton, "casos")
+tasas <- tasas[order(-tasas$tasa), ]
+head(tasas[, c("canton", "casos", "poblacion", "tasa")], 10)
+```
+
+```{r grafico-tasas, fig.alt = "Barras horizontales con la tasa de dengue por 100 000 habitantes de los 15 cantones con tasas más altas"}
+top <- utils::head(tasas, 15)
+op <- par(mar = c(4, 13, 1, 1))
+barplot(rev(top$tasa), names.arg = rev(top$canton), horiz = TRUE, las = 1,
+        col = "#F2B705", border = NA,
+        xlab = "Casos por 100 000 habitantes (datos ficticios)")
+par(op)
+```
+
+## 4. Por provincia y sexo
+
+pobecu también da la población por sexo. Se recodifica el sexo de FHIR
+(`female`/`male`) al de pobecu (`mujer`/`hombre`) y se agrega la provincia
+(los dos primeros dígitos del código DPA del cantón):
+
+```{r}
+casos$dpa_provin <- substr(casos$dpa_canton, 1, 2)
+casos$sexo <- c(female = "mujer", male = "hombre")[casos$sexo]
+por_sexo <- aggregate(paciente ~ dpa_provin + sexo, data = casos, FUN = length)
+names(por_sexo)[3] <- "casos"
+por_sexo$anio <- 2025
+tasas_sexo <- pob_tasa(por_sexo, "casos", nivel = "provincia", sexo = TRUE)
+tasas_sexo$tasa <- round(tasas_sexo$tasa, 1)
+tasas_sexo[order(tasas_sexo$dpa_provin, tasas_sexo$sexo),
+           c("dpa_provin", "sexo", "casos", "poblacion", "tasa")]
+```
+
+## 5. Con SQL
+
+Las mismas vistas se pueden guardar en DuckDB con `vista_duckdb()` y contar
+con SQL; la unión con la población se hace después en R:
+
+```{r, eval = tiene_pobecu && requireNamespace("duckdb", quietly = TRUE)}
+db <- vista_duckdb(dengue, list(v_paciente, v_dengue))
+por_mes <- DBI::dbGetQuery(db, "
+  SELECT strftime(CAST(d.inicio AS DATE), '%m') AS mes,
+         count(*) AS casos,
+         sum(CASE WHEN d.grave THEN 1 ELSE 0 END) AS graves
+  FROM dengue d JOIN paciente p ON d.paciente = p.id
+  GROUP BY mes ORDER BY mes")
+por_mes
+DBI::dbDisconnect(db)
+```
