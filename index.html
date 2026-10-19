@@ -6,6 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR • fhirviews</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" sizes="any" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/Source_Sans_3-0.4.10/font.css" rel="stylesheet">
@@ -27,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +41,16 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/fhirviews.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Funciones</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-art-culos" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Artículos</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-art-culos">
+<li><a class="dropdown-item" href="articles/fhirviews.html">Primeros pasos</a></li>
+    <li><a class="dropdown-item" href="articles/vistas.html">ViewDefinition en detalle</a></li>
+    <li><a class="dropdown-item" href="articles/tasas-pobecu.html">Tasas por cantón con FHIR y pobecu</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Novedades</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -59,25 +73,19 @@
 <!-- badges: start -->
 
 <p><strong>fhirviews</strong> permite trabajar con <strong>HL7 FHIR R4</strong> desde R y RStudio como si fuera Postman, y convertir los recursos FHIR en <strong>tablas</strong> con el estándar <strong><a href="https://sql-on-fhir.org/" class="external-link">SQL on FHIR</a></strong> (<code>ViewDefinition</code>). Es la primera implementación de SQL on FHIR en R.</p>
-<blockquote>
-<p><strong>Estado:</strong> paquete en desarrollo. Esta página describe lo que tendrá la versión 0.1.0; las funciones se agregan por etapas.</p>
-</blockquote>
-<div class="section level2">
-<h2 id="qué-hará">¿Qué hará?<a class="anchor" aria-label="anchor" href="#qu%C3%A9-har%C3%A1"></a>
-</h2>
 <ul>
 <li>
-<strong>Cliente FHIR</strong> (<code>fhir_*</code>): conectarse a un servidor, buscar con paginación automática, leer, crear, actualizar y borrar recursos, y ejecutar <code>$everything</code> y <code>$validate</code>, con mensajes de error legibles a partir del <code>OperationOutcome</code>.</li>
+<strong>Cliente FHIR</strong> (<code>fhir_*</code>): buscar con paginación automática, leer, crear, actualizar, borrar, <code>$everything</code> y <code>$validate</code>, con errores legibles a partir del <code>OperationOutcome</code>.</li>
 <li>
-<strong>Vistas SQL on FHIR</strong> (<code>vista_*</code>): ejecutar un <code>ViewDefinition</code> sobre una lista de recursos, un Bundle o un archivo NDJSON y obtener un <code>data.frame</code>. Las expresiones FHIRPath se evalúan con <a href="https://github.com/HL7/fhirpath.js" class="external-link">fhirpath.js</a> a través del paquete V8.</li>
+<strong>Vistas SQL on FHIR</strong> (<code>vista_*</code>): un <code>ViewDefinition</code> aplicado a una lista de recursos, un Bundle o un archivo NDJSON da un <code>data.frame</code>. Pasa <strong>todas las pruebas <em>shareable</em></strong> del banco oficial de conformidad.</li>
 <li>
-<strong>Conformidad</strong>: el banco oficial de pruebas de SQL on FHIR se ejecuta con testthat; la meta es pasar todas las pruebas del perfil <em>shareable</em>.</li>
+<strong>DuckDB</strong>: las vistas se guardan como tablas para consultarlas con SQL.</li>
 <li>
-<strong>DuckDB</strong> (opcional): guardar las vistas para consultarlas con SQL.</li>
-<li>
-<strong>RStudio</strong>: el servidor FHIR como conexión en el panel <em>Connections</em> y addins para ejecutar una petición o un <code>ViewDefinition</code> con un clic.</li>
+<strong>RStudio</strong>: el servidor aparece en el panel <em>Connections</em>, y dos addins ejecutan una petición o un <code>ViewDefinition</code> con un clic.</li>
 </ul>
-</div>
+<blockquote>
+<p><strong>Nota:</strong> fhirviews es un paquete independiente, desarrollado a título personal. No es un producto de HL7 ni de ninguna otra institución.</p>
+</blockquote>
 <div class="section level2">
 <h2 id="instalación">Instalación<a class="anchor" aria-label="anchor" href="#instalaci%C3%B3n"></a>
 </h2>
@@ -85,29 +93,187 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"f-slg/fhirviews"</span><span class="op">)</span></span></code></pre></div>
+<p>fhirviews usa el paquete <a href="https://cran.r-project.org/package=V8" class="external-link">V8</a> para evaluar FHIRPath. En Linux, V8 se instala sin pasos adicionales (descarga una versión estática del motor si no encuentra <code>libv8</code> en el sistema).</p>
+</div>
+<div class="section level2">
+<h2 id="de-un-servidor-fhir-a-una-tabla">De un servidor FHIR a una tabla<a class="anchor" aria-label="anchor" href="#de-un-servidor-fhir-a-una-tabla"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://f-slg.github.io/fhirviews/">fhirviews</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span>
+<span><span class="va">con</span></span>
+<span><span class="co">#&gt; &lt;fhir_conexion&gt; https://hapi.fhir.org/baseR4</span></span>
+<span><span class="co">#&gt;   Servidor:     HAPI FHIR Server 8.13.10-SNAPSHOT/6bd250944e/2026-09-25</span></span>
+<span><span class="co">#&gt;   Versión FHIR: 4.0.1</span></span>
+<span></span>
+<span><span class="co"># Busca y sigue los enlaces "next" de cada página</span></span>
+<span><span class="va">pacientes</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_buscar.html">fhir_buscar</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"female"</span>, `_count` <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>                         max_paginas <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">pacientes</span></span>
+<span><span class="co">#&gt; &lt;fhir_recursos&gt; 150 recursos</span></span>
+<span><span class="co">#&gt;   Patient: 150</span></span>
+<span></span>
+<span><span class="co"># Una vista: una columna por expresión FHIRPath</span></span>
+<span><span class="va">vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  apellido <span class="op">=</span> <span class="st">"name.first().family"</span>,</span>
+<span>  nacimiento <span class="op">=</span> <span class="st">"birthDate"</span>,</span>
+<span>  ciudad <span class="op">=</span> <span class="st">"address.first().city"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">pacientes</span>, <span class="va">vista</span><span class="op">)</span></span></code></pre></div>
+<p>(Los datos del servidor público cambian constantemente; la salida depende del momento.)</p>
+<p>Leer, escribir y otras operaciones:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">paciente</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_leer.html">fhir_leer</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, <span class="st">"123"</span><span class="op">)</span></span>
+<span><span class="va">nuevo</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_crear.html">fhir_crear</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"paciente.json"</span><span class="op">)</span>     <span class="co"># lista de R, texto JSON o archivo</span></span>
+<span><span class="va">nuevo</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_crear.html">fhir_actualizar</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">nuevo</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/fhir_crear.html">fhir_borrar</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">nuevo</span><span class="op">)</span></span>
+<span><span class="va">todo</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_everything.html">fhir_everything</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, <span class="st">"123"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/fhir_validar.html">fhir_validar</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>resourceType <span class="op">=</span> <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"mujer"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; No válido: 1 error y 0 advertencias.</span></span>
+<span><span class="co">#&gt;   severidad codigo     ubicacion mensaje</span></span>
+<span><span class="co">#&gt; 1 error     processing &lt;NA&gt;      HAPI-0450: Failed to parse request body as</span></span>
+<span><span class="co">#&gt;   JSON resource. ... Unknown AdministrativeGender code 'mujer'</span></span>
+<span></span>
+<span><span class="co"># Cualquier otra petición, como en Postman o en un archivo .http</span></span>
+<span><span class="fu"><a href="reference/fhir_ejecutar_texto.html">fhir_ejecutar_texto</a></span><span class="op">(</span><span class="st">"GET Patient/123/_history"</span><span class="op">)</span></span></code></pre></div>
+<p>Los errores muestran lo que dice el servidor:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/fhir_leer.html">fhir_leer</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, <span class="st">"no-existe"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Error:</span></span>
+<span><span class="co">#&gt; ! El servidor respondió 404 Not Found.</span></span>
+<span><span class="co">#&gt; ✖ GET https://hapi.fhir.org/baseR4/Patient/no-existe</span></span>
+<span><span class="co">#&gt; • [error] HAPI-2001: Resource Patient/no-existe is not known</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="viewdefinition">ViewDefinition<a class="anchor" aria-label="anchor" href="#viewdefinition"></a>
+</h2>
+<p>Las vistas se escriben en el JSON estándar de SQL on FHIR, así que se pueden compartir con otras implementaciones (Pathling, Aidbox, Google FHIR Data Pipes…). Con el caso clínico ficticio del taller <a href="https://github.com/f-slg/aprende-fhir" class="external-link">aprende-fhir</a>, incluido en el paquete:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">caso</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_recursos.html">fhir_recursos</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"caso_clinico.ndjson"</span>,</span>
+<span>                                  package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">valores</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_leer.html">vista_leer</a></span><span class="op">(</span><span class="st">r"-({</span></span>
+<span><span class="st">  "resourceType": "ViewDefinition",</span></span>
+<span><span class="st">  "name": "valores",</span></span>
+<span><span class="st">  "resource": "Observation",</span></span>
+<span><span class="st">  "select": [</span></span>
+<span><span class="st">    {"column": [</span></span>
+<span><span class="st">      {"name": "id", "path": "getResourceKey()"},</span></span>
+<span><span class="st">      {"name": "medida", "path": "code.text"}</span></span>
+<span><span class="st">    ]},</span></span>
+<span><span class="st">    {"unionAll": [</span></span>
+<span><span class="st">      {"forEach": "value.ofType(Quantity)", "column": [</span></span>
+<span><span class="st">        {"name": "valor", "path": "value.toString() + ' ' + unit"}]},</span></span>
+<span><span class="st">      {"forEach": "value.ofType(CodeableConcept)", "column": [</span></span>
+<span><span class="st">        {"name": "valor", "path": "text"}]},</span></span>
+<span><span class="st">      {"forEach": "value.ofType(Ratio)", "column": [</span></span>
+<span><span class="st">        {"name": "valor", "path": "numerator.value.toString() + ':' + denominator.value.toString()"}]}</span></span>
+<span><span class="st">    ]}</span></span>
+<span><span class="st">  ]</span></span>
+<span><span class="st">})-"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="va">valores</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"medida"</span>, <span class="st">"valor"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;                                              medida                valor</span></span>
+<span><span class="co">#&gt; 1                              Temperatura corporal              38.4 °C</span></span>
+<span><span class="co">#&gt; 2                           Frecuencia respiratoria 20 respiraciones/min</span></span>
+<span><span class="co">#&gt; 3                               Frecuencia cardíaca      102 latidos/min</span></span>
+<span><span class="co">#&gt; 4                            Sangre oculta en heces             Positivo</span></span>
+<span><span class="co">#&gt; 5 Salmonella typhi O, anticuerpos (título) en suero                1:160</span></span>
+<span><span class="co">#&gt; 6                                  Tamaño del tumor               3.5 cm</span></span>
+<span><span class="co">#&gt; 7                             Receptor de estrógeno             Positivo</span></span>
+<span><span class="co">#&gt; 8                               Superficie corporal              1.77 m2</span></span></code></pre></div>
+<p>Se admiten todos los elementos de la especificación: <code>select</code> anidados, <code>column</code> (con <code>type</code> y <code>collection</code>), <code>forEach</code>, <code>forEachOrNull</code>, <code>repeat</code>, <code>unionAll</code>, <code>where</code>, <code>constant</code> y <code>%rowIndex</code>, con las funciones FHIRPath del perfil <em>shareable</em> (<code>getResourceKey()</code>, <code>getReferenceKey()</code>, <code>ofType()</code>, <code>extension()</code>, <code>join()</code>, <code>first()</code>, <code><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists()</a></code>, <code>empty()</code>…).</p>
+<p>Para explorar los datos y probar expresiones:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/fhir_tabla.html">fhir_tabla</a></span><span class="op">(</span><span class="va">caso</span>, tipo <span class="op">=</span> <span class="st">"Patient"</span><span class="op">)</span>          <span class="co"># tabla rápida, sin vista</span></span>
+<span><span class="fu"><a href="reference/vista_fhirpath.html">vista_fhirpath</a></span><span class="op">(</span><span class="va">caso</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"name.where(use = 'official').text"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Luis Alberto Paredes Cevallos"</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="conformidad">Conformidad<a class="anchor" aria-label="anchor" href="#conformidad"></a>
+</h2>
+<p>El paquete incluye el <a href="https://github.com/FHIR/sql-on-fhir.js/tree/main/tests" class="external-link">banco oficial de pruebas</a> de SQL on FHIR y lo ejecuta en cada comprobación:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09)</span></span>
+<span><span class="co">#&gt; fhirviews 0.1.0 · fhirpath.js 5.2.1</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt;   experimental     7 de  11 aprobadas</span></span>
+<span><span class="co">#&gt;   shareable      133 de 133 aprobadas</span></span>
+<span><span class="co">#&gt;   total          140 de 144 aprobadas</span></span></code></pre></div>
+<p>Las cuatro experimentales que fallan son de <code>lowBoundary()</code> y <code>highBoundary()</code> (precisión decimal y zona horaria). Con <code>vista_conformidad(descargar = TRUE)</code> se usa la versión más reciente del banco, y con <code>informe = "informe.json"</code> se genera el informe en el formato oficial de la <a href="https://sql-on-fhir.org/extra/impls.html" class="external-link">página de implementaciones</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="sql-con-duckdb">SQL con DuckDB<a class="anchor" aria-label="anchor" href="#sql-con-duckdb"></a>
+</h2>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_duckdb.html">vista_duckdb</a></span><span class="op">(</span><span class="va">caso</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  paciente <span class="op">=</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nombre <span class="op">=</span> <span class="st">"name.where(use = 'official').text"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  encuentro <span class="op">=</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Encounter"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>    paciente <span class="op">=</span> <span class="st">"subject.getReferenceKey(Patient)"</span>, tipo <span class="op">=</span> <span class="st">"serviceType.text"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  valores <span class="op">=</span> <span class="va">valores</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">db</span>, <span class="st">"</span></span>
+<span><span class="st">  SELECT p.nombre, e.tipo, v.medida, v.valor</span></span>
+<span><span class="st">  FROM valores v</span></span>
+<span><span class="st">  JOIN encuentro e ON v.encuentro = e.id</span></span>
+<span><span class="st">  JOIN paciente p ON e.paciente = p.id"</span><span class="op">)</span></span></code></pre></div>
+<p>(Para esta consulta, la vista <code>valores</code> necesita además la columna <code>encuentro</code> = <code>encounter.getReferenceKey(Encounter)</code>; la viñeta <a href="https://f-slg.github.io/fhirviews/articles/vistas.html"><em>ViewDefinition en detalle</em></a> tiene el ejemplo completo.)</p>
+</div>
+<div class="section level2">
+<h2 id="tasas-con-pobecu">Tasas con pobecu<a class="anchor" aria-label="anchor" href="#tasas-con-pobecu"></a>
+</h2>
+<p>Las vistas se unen con la población oficial del INEC del paquete <a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a> para calcular tasas por cantón. La viñeta <a href="https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html"><em>Tasas por cantón con FHIR y pobecu</em></a> lo hace con 755 casos ficticios de dengue:</p>
+<p><img src="reference/figures/README-tasas.png" width="100%" alt="Barras horizontales con las tasas ficticias de dengue por 100 000 habitantes de los 15 cantones con tasas más altas de El Oro, Guayas, Los Ríos y Manabí"></p>
+</div>
+<div class="section level2">
+<h2 id="rstudio">RStudio<a class="anchor" aria-label="anchor" href="#rstudio"></a>
+</h2>
+<ul>
+<li>
+<code><a href="reference/fhir_conectar.html">fhir_conectar()</a></code> registra el servidor en el panel <strong>Connections</strong>: tipos de recurso, columnas y vista previa de los datos. También está en el diálogo <em>New Connection</em>.</li>
+<li>Addins <strong>Ejecutar petición FHIR</strong> (selecciona <code>GET Patient?family=Paredes</code>, con cabeceras y cuerpo JSON opcionales) y <strong>Ejecutar ViewDefinition</strong> (selecciona un ViewDefinition o abre su archivo JSON).</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="cómo-funciona">Cómo funciona<a class="anchor" aria-label="anchor" href="#c%C3%B3mo-funciona"></a>
+</h2>
+<p>FHIRPath se evalúa con <a href="https://github.com/HL7/fhirpath.js" class="external-link">fhirpath.js</a> 5.2.1, la biblioteca de la Biblioteca Nacional de Medicina de EE. UU. (NLM) y Health Samurai, incluida sin modificar en el paquete y ejecutada con V8. El motor de vistas está escrito en R y evalúa cada expresión sobre todos los recursos a la vez: una sola llamada a FHIRPath por expresión y nivel. Los recursos que llegan como JSON (de un servidor o un archivo NDJSON) pasan a V8 sin volver a convertirse. La capa de FHIRPath está separada, de modo que en el futuro se podrá cambiar por un motor escrito en R.</p>
+</div>
+<div class="section level2">
+<h2 id="más-información">Más información<a class="anchor" aria-label="anchor" href="#m%C3%A1s-informaci%C3%B3n"></a>
+</h2>
+<ul>
+<li><a href="https://f-slg.github.io/fhirviews/articles/fhirviews.html">Primeros pasos</a></li>
+<li><a href="https://f-slg.github.io/fhirviews/articles/vistas.html">ViewDefinition en detalle</a></li>
+<li><a href="https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html">Tasas por cantón con FHIR y pobecu</a></li>
+<li><a href="https://f-slg.github.io/fhirviews/reference/">Referencia de funciones</a></li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="paquetes-relacionados">Paquetes relacionados<a class="anchor" aria-label="anchor" href="#paquetes-relacionados"></a>
 </h2>
 <ul>
 <li>
-<a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a>: población del Ecuador por provincia, cantón y parroquia, para calcular tasas con datos clínicos.</li>
+<a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a>: población del Ecuador por provincia, cantón y parroquia.</li>
 <li>
 <a href="https://f-slg.github.io/geoecu/" class="external-link">geoecu</a>: límites territoriales del Ecuador.</li>
 <li>
 <a href="https://github.com/f-slg/aprende-fhir" class="external-link">aprende-fhir</a>: taller de HL7 FHIR con un caso clínico ecuatoriano ficticio.</li>
+<li>
+<a href="https://cran.r-project.org/package=fhircrackr" class="external-link">fhircrackr</a>: otro cliente FHIR para R, que aplana recursos con XPath.</li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="contribuir">Contribuir<a class="anchor" aria-label="anchor" href="#contribuir"></a>
 </h2>
-<p>Las preguntas van en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a> y los errores o propuestas en <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issues</a>. Revisa la <a href="CONTRIBUTING.html">guía de contribución</a>. Este proyecto sigue un <a href="CODE_OF_CONDUCT.html">código de conducta</a>; al participar, te comprometes a respetarlo.</p>
+<p>Las preguntas van en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a> y los errores o propuestas en <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issues</a>. Revisa la <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md" class="external-link">guía de contribución</a>. Este proyecto sigue un <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md" class="external-link">código de conducta</a>; al participar, te comprometes a respetarlo.</p>
 </div>
 <div class="section level2">
 <h2 id="licencia">Licencia<a class="anchor" aria-label="anchor" href="#licencia"></a>
 </h2>
-<p>MIT © Ronald Fabricio Salas Guerrero.</p>
-<p>FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo de HL7. fhirviews es un paquete independiente.</p>
+<p>MIT © Ronald Fabricio Salas Guerrero. El paquete incluye fhirpath.js y el banco de pruebas de SQL on FHIR con sus propias licencias (ver <a href="https://github.com/f-slg/fhirviews/blob/main/inst/COPYRIGHTS" class="external-link"><code>inst/COPYRIGHTS</code></a>).</p>
+<p>FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo de HL7.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -149,7 +315,7 @@
 <ul class="list-unstyled">
 <li><a href="https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 <li><a href="https://github.com/f-slg/fhirviews/blob/main/LICENSE.md" class="external-link"><img src="https://img.shields.io/badge/licencia-MIT-blue.svg" alt="Licencia: MIT"></a></li>
-<li><a href="https://github.com/f-slg/fhirviews" class="external-link"><img src="https://img.shields.io/badge/estado-en%20desarrollo-F2B705.svg" alt="Estado: en desarrollo"></a></li>
+<li><a href="https://f-slg.github.io/fhirviews/reference/vista_conformidad.html"><img src="https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-0F2233.svg" alt="SQL on FHIR: 133/133 shareable"></a></li>
 </ul>
 </div>
 

@@ -1,56 +1,15 @@
 # Changelog
 
-## fhirviews 0.0.0.9000
+## fhirviews 0.1.0
 
-- Esqueleto del paquete: licencia MIT, integración continua en Windows,
-  macOS y Ubuntu, sitio pkgdown, plantillas de issues, guía de
-  contribución, código de conducta y logo.
-- Capa de FHIRPath: fhirpath.js 5.2.1 (HL7/fhirpath.js) incluido sin
-  modificar en `inst/js/` y ejecutado con V8. Licencias de la biblioteca
-  y de sus dependencias empaquetadas en `inst/COPYRIGHTS`.
-- [`vista_fhirpath()`](https://f-slg.github.io/fhirviews/reference/vista_fhirpath.md)
-  evalúa expresiones FHIRPath, con las funciones `getResourceKey()` y
-  `getReferenceKey()` de SQL on FHIR y variables (incluidas fechas).
-- [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md)
-  reúne recursos desde listas, Bundles, JSON, NDJSON o archivos.
-- [`fhirviews_motor()`](https://f-slg.github.io/fhirviews/reference/fhirviews_motor.md)
-  y
-  [`fhirviews_version_fhirpath()`](https://f-slg.github.io/fhirviews/reference/fhirviews_motor.md)
-  informan del motor de FHIRPath. El motor de vistas usa una interfaz
-  que permitirá sustituir fhirpath.js por un motor escrito en R.
-- Motor de ViewDefinition:
-  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
-  admite `select` anidados, `column` (con `collection` y `type`),
-  `forEach`, `forEachOrNull`, `repeat`, `unionAll`, `where`, `constant`
-  y `%rowIndex`. Evalúa por lotes: una llamada a FHIRPath por expresión
-  y nivel. Pasa las 133 pruebas del perfil *shareable* del banco oficial
-  de SQL on FHIR (y 7 de las 11 experimentales).
-- [`vista_validar()`](https://f-slg.github.io/fhirviews/reference/vista_validar.md)
-  revisa la estructura, los nombres de columnas, las constantes, las
-  ramas de `unionAll` y las expresiones FHIRPath, y lista todos los
-  problemas encontrados.
-- [`vista_leer()`](https://f-slg.github.io/fhirviews/reference/vista_leer.md),
-  [`vista_crear()`](https://f-slg.github.io/fhirviews/reference/vista_crear.md)
-  y
-  [`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md)
-  para leer, armar y exportar vistas.
-- Los recursos leídos de JSON o NDJSON conservan el texto original y se
-  pasan a V8 sin volver a convertirlos, lo que acelera mucho las vistas
-  grandes.
-- Corregido: en Windows fallaba la carga de fhirpath.js, que contiene
-  bytes 0x1A (Ctrl-Z); ahora los archivos JavaScript se leen en binario.
-- [`vista_conformidad()`](https://f-slg.github.io/fhirviews/reference/vista_conformidad.md)
-  ejecuta el banco oficial de pruebas de SQL on FHIR (copia incluida en
-  `inst/sof-tests/`, de FHIR/sql-on-fhir.js; o la versión más reciente
-  con `descargar = TRUE`), resume los resultados por perfil y puede
-  guardar el informe en el formato oficial para la página de
-  implementaciones. Las pruebas del paquete exigen todas las
-  *shareable*.
-- Cliente FHIR con httr2:
-  [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md),
+- Primera versión.
+
+### Cliente FHIR
+
+- [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md),
   [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md)
-  (sigue los enlaces [`next`](https://rdrr.io/r/base/Control.html) de
-  los Bundles),
+  (paginación automática por los enlaces
+  [`next`](https://rdrr.io/r/base/Control.html)),
   [`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md),
   [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md),
   [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md),
@@ -58,32 +17,60 @@
   [`fhir_everything()`](https://f-slg.github.io/fhirviews/reference/fhir_everything.md),
   [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md),
   [`fhir_capacidades()`](https://f-slg.github.io/fhirviews/reference/fhir_capacidades.md),
-  [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md)
+  [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md),
+  [`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md)
   y
-  [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md).
-  Usa `application/fhir+json`, admite token *bearer*, reintenta ante
-  429/503 y convierte el `OperationOutcome` de los errores en mensajes
-  legibles. Los resultados de búsqueda conservan el JSON original para
-  ejecutar vistas rápidamente.
-- [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
-  guarda una o varias vistas como tablas en DuckDB (o en otra conexión
-  DBI) para consultarlas y unirlas con SQL; las columnas `collection` se
-  guardan como listas de DuckDB. DBI y duckdb van en Suggests.
-- Integración con RStudio:
-  [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md)
-  registra el servidor en el panel *Connections* (tipos de recurso,
-  columnas, vista previa y acciones) y lo deja como conexión activa
-  ([`fhir_conexion_activa()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md),
-  [`fhir_desconectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md));
-  el diálogo *New Connection* ofrece FHIR; addins *Ejecutar petición
-  FHIR* y *Ejecutar ViewDefinition*.
-- [`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md)
-  ejecuta peticiones escritas como en Postman o en archivos `.http`;
-  [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md)
-  descarga del servidor y aplica una vista en un paso;
-  [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md)
-  da una tabla rápida sin ViewDefinition.
+  [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md),
+  con httr2.
+- `application/fhir+json`, token *bearer* (solo se envía al servidor de
+  la conexión), reintentos ante 429/503 y errores legibles a partir del
+  `OperationOutcome`, con una clase por código HTTP.
 - [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md)
-  devuelve un objeto `fhir_respuesta` que se imprime con el estado HTTP
-  y el JSON con sangría.
-- El token de acceso solo se envía a URL del servidor de la conexión.
+  devuelve un objeto `fhir_respuesta` que se imprime con el estado y el
+  JSON con sangría, como Postman.
+
+### Vistas SQL on FHIR
+
+- [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+  aplica un `ViewDefinition` a recursos (listas, Bundles, JSON, NDJSON o
+  archivos `.ndjson.gz`) y devuelve un `data.frame`. Admite `select`
+  anidados, `column` (`type`, `collection`), `forEach`, `forEachOrNull`,
+  `repeat`, `unionAll`, `where`, `constant` y `%rowIndex`. Evalúa por
+  lotes, con una llamada a FHIRPath por expresión y nivel.
+- [`vista_validar()`](https://f-slg.github.io/fhirviews/reference/vista_validar.md),
+  [`vista_leer()`](https://f-slg.github.io/fhirviews/reference/vista_leer.md),
+  [`vista_crear()`](https://f-slg.github.io/fhirviews/reference/vista_crear.md),
+  [`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md),
+  [`vista_fhirpath()`](https://f-slg.github.io/fhirviews/reference/vista_fhirpath.md),
+  [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md),
+  [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md)
+  y
+  [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md)
+  (descargar del servidor y aplicar la vista en un paso).
+- FHIRPath con fhirpath.js 5.2.1 (HL7/fhirpath.js) en V8, con
+  `getResourceKey()` y `getReferenceKey()`. La capa de FHIRPath está
+  separada
+  ([`fhirviews_motor()`](https://f-slg.github.io/fhirviews/reference/fhirviews_motor.md))
+  para poder sustituirla por un motor en R.
+- [`vista_conformidad()`](https://f-slg.github.io/fhirviews/reference/vista_conformidad.md)
+  ejecuta el banco oficial de pruebas de SQL on FHIR (incluido; o el más
+  reciente con `descargar = TRUE`) y genera el informe en el formato
+  oficial. Pasan las 133 pruebas *shareable* y 7 de las 11
+  experimentales.
+- [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
+  guarda vistas como tablas de DuckDB (o de otra conexión DBI) para
+  consultarlas con SQL.
+
+### RStudio
+
+- El servidor se registra en el panel *Connections* (tipos de recurso,
+  columnas, vista previa) y aparece en el diálogo *New Connection*.
+- Addins *Ejecutar petición FHIR* y *Ejecutar ViewDefinition*.
+
+### Datos y documentación
+
+- Caso clínico ficticio del taller aprende-fhir
+  (`inst/extdata/caso_clinico.ndjson`) y casos ficticios de dengue 2025
+  por cantón (`inst/extdata/dengue_2025.ndjson.gz`).
+- Viñetas *Primeros pasos con fhirviews*, *ViewDefinition en detalle* y
+  *Tasas por cantón con FHIR y pobecu*.
