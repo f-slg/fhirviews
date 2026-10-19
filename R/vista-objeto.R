@@ -79,7 +79,7 @@ vista_leer <- function(x, validar = TRUE) {
 #' vista_crear("Patient", c(apellido = "family", nombres = "given.join(' ')"),
 #'             por_cada = "name")
 #'
-#' # Observaciones de presi\u00f3n arterial de un paciente
+#' # Observaciones de presión arterial de un paciente
 #' vista_crear(
 #'   "Observation",
 #'   c(paciente = "subject.getReferenceKey(Patient)",

@@ -2,7 +2,7 @@ Package: fhirviews
 Type: Package
 Title: Query 'HL7 FHIR' Servers and Flatten Resources with 'SQL on FHIR'
     View Definitions
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",

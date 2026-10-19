@@ -1,4 +1,4 @@
-# fhirviews (en desarrollo)
+# fhirviews (development version)
 
 ## Autenticación SMART on FHIR
 
