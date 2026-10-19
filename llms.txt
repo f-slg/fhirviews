@@ -87,6 +87,11 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 - [`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md)
   : Convertir un ViewDefinition en JSON
 
+## Conformidad
+
+- [`vista_conformidad()`](https://f-slg.github.io/fhirviews/reference/vista_conformidad.md)
+  : Banco oficial de pruebas de SQL on FHIR
+
 ## FHIRPath
 
 - [`vista_fhirpath()`](https://f-slg.github.io/fhirviews/reference/vista_fhirpath.md)

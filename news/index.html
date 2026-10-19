@@ -48,6 +48,8 @@
 <code><a href="../reference/vista_leer.html">vista_leer()</a></code>, <code><a href="../reference/vista_crear.html">vista_crear()</a></code> y <code><a href="../reference/vista_json.html">vista_json()</a></code> para leer, armar y exportar vistas.</li>
 <li>Los recursos leídos de JSON o NDJSON conservan el texto original y se pasan a V8 sin volver a convertirlos, lo que acelera mucho las vistas grandes.</li>
 <li>Corregido: en Windows fallaba la carga de fhirpath.js, que contiene bytes 0x1A (Ctrl-Z); ahora los archivos JavaScript se leen en binario.</li>
+<li>
+<code><a href="../reference/vista_conformidad.html">vista_conformidad()</a></code> ejecuta el banco oficial de pruebas de SQL on FHIR (copia incluida en <code>inst/sof-tests/</code>, de FHIR/sql-on-fhir.js; o la versión más reciente con <code>descargar = TRUE</code>), resume los resultados por perfil y puede guardar el informe en el formato oficial para la página de implementaciones. Las pruebas del paquete exigen todas las <em>shareable</em>.</li>
 </ul></div>
   </main></div>
 
