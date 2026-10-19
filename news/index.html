@@ -68,7 +68,21 @@
 </ul></div>
 <div class="section level3">
 <h3 id="motor-duckdb-experimental-0-2-0">Motor DuckDB (experimental)<a class="anchor" aria-label="anchor" href="#motor-duckdb-experimental-0-2-0"></a></h3>
-<ul><li>Prototipo de un segundo motor de vistas: <code><a href="../reference/vista_sql.html">vista_sql()</a></code> traduce un <code>ViewDefinition</code> a SQL de DuckDB y <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> lo ejecuta directamente sobre archivos NDJSON o Parquet, sin cargar los recursos en R. Admite un subconjunto de FHIRPath y pasa las 133 pruebas shareable del banco oficial (<code>vista_conformidad(motor = "duckdb")</code>).</li>
+<ul><li>Segundo motor de vistas: <code><a href="../reference/vista_sql.html">vista_sql()</a></code> traduce un <code>ViewDefinition</code> a una consulta SQL de DuckDB y <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> la ejecuta directamente sobre archivos NDJSON (también comprimidos o con comodines) o Parquet, sin cargar los recursos en R; con <code>tabla</code>, guarda el resultado en una base DuckDB en lugar de traerlo a R. Requiere duckdb 1.3.0 o posterior.</li>
+<li>Admite un subconjunto de FHIRPath: navegación, elementos de elección (<code>value</code>, <code>effective</code>, <code>onset</code>…), <code>where()</code>, <code><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists()</a></code>, <code>empty()</code>, <code>first()</code>, <code>join()</code>, <code>ofType()</code>, <code>extension()</code>, <code>getResourceKey()</code>, <code>getReferenceKey()</code>, comparaciones, lógica y constantes. Lo que no puede traducir con certeza da un error de clase <code>fhirviews_error_sql</code>, nunca un resultado aproximado.</li>
+<li>Pasa las 133 pruebas <em>shareable</em> del banco oficial (<code>vista_conformidad(motor = "duckdb")</code>) y una prueba diferencial exige que dé las mismas tablas (valores y tipos) que <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> con las vistas de todas las viñetas.</li>
+<li>Rendimiento de punta a punta desde NDJSON: 250 000 pacientes en 1,7 s (62 s con el motor V8) y un millón en 5,5 s.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentación-0-2-0">Documentación<a class="anchor" aria-label="anchor" href="#documentaci%C3%B3n-0-2-0"></a></h3>
+<ul><li>Nueva viñeta <em>Servidores reales y grandes volúmenes</em>: autenticación SMART paso a paso, <code>$export</code> (con una exportación real contra el servidor de referencia de SMART Health IT) y el motor DuckDB.</li>
+<li>README con los nuevos casos de uso, la comparación de rendimiento entre motores y la comparación con pathling y fhircrackr; artículo <em>Cómo funciona por dentro</em> ampliado con las tres piezas nuevas.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="pruebas-0-2-0">Pruebas<a class="anchor" aria-label="anchor" href="#pruebas-0-2-0"></a></h3>
+<ul><li>La autenticación se verificó con un servidor SMART local que comprueba la firma de cada JWT con una implementación independiente (Python y PyJWT), incluidos la renovación del token, el reintento tras un 401 y el rechazo de credenciales o claves incorrectas.</li>
+<li>La exportación se verificó contra <a href="https://bulk-data.smarthealthit.org" class="external-link uri">https://bulk-data.smarthealthit.org</a>.</li>
+<li>El servidor simulado de las pruebas decodifica las URL, que según la versión de R y de curl llegan con <code>$</code> codificado como <code>%24</code>.</li>
 </ul></div>
 </div>
     <div class="section level2">

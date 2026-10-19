@@ -39,8 +39,9 @@ fhir_desconectar(con)
 ## Examples
 
 ``` r
+if (FALSE) { # fhir_disponible("https://hapi.fhir.org/baseR4")
 con <- fhir_conectar("https://hapi.fhir.org/baseR4", panel = FALSE)
 identical(fhir_conexion_activa()$url, con$url)
-#> [1] TRUE
 fhir_desconectar(con)
+}
 ```

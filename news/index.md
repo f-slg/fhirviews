@@ -51,14 +51,48 @@ cambios incompatibles.
 
 ### Motor DuckDB (experimental)
 
-- Prototipo de un segundo motor de vistas:
+- Segundo motor de vistas:
   [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md)
-  traduce un `ViewDefinition` a SQL de DuckDB y
+  traduce un `ViewDefinition` a una consulta SQL de DuckDB y
   [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md)
-  lo ejecuta directamente sobre archivos NDJSON o Parquet, sin cargar
-  los recursos en R. Admite un subconjunto de FHIRPath y pasa las 133
-  pruebas shareable del banco oficial
-  (`vista_conformidad(motor = "duckdb")`).
+  la ejecuta directamente sobre archivos NDJSON (también comprimidos o
+  con comodines) o Parquet, sin cargar los recursos en R; con `tabla`,
+  guarda el resultado en una base DuckDB en lugar de traerlo a R.
+  Requiere duckdb 1.3.0 o posterior.
+- Admite un subconjunto de FHIRPath: navegación, elementos de elección
+  (`value`, `effective`, `onset`…), `where()`,
+  [`exists()`](https://rdrr.io/r/base/exists.html), `empty()`,
+  `first()`, `join()`, `ofType()`, `extension()`, `getResourceKey()`,
+  `getReferenceKey()`, comparaciones, lógica y constantes. Lo que no
+  puede traducir con certeza da un error de clase `fhirviews_error_sql`,
+  nunca un resultado aproximado.
+- Pasa las 133 pruebas *shareable* del banco oficial
+  (`vista_conformidad(motor = "duckdb")`) y una prueba diferencial exige
+  que dé las mismas tablas (valores y tipos) que
+  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+  con las vistas de todas las viñetas.
+- Rendimiento de punta a punta desde NDJSON: 250 000 pacientes en 1,7 s
+  (62 s con el motor V8) y un millón en 5,5 s.
+
+### Documentación
+
+- Nueva viñeta *Servidores reales y grandes volúmenes*: autenticación
+  SMART paso a paso, `$export` (con una exportación real contra el
+  servidor de referencia de SMART Health IT) y el motor DuckDB.
+- README con los nuevos casos de uso, la comparación de rendimiento
+  entre motores y la comparación con pathling y fhircrackr; artículo
+  *Cómo funciona por dentro* ampliado con las tres piezas nuevas.
+
+### Pruebas
+
+- La autenticación se verificó con un servidor SMART local que comprueba
+  la firma de cada JWT con una implementación independiente (Python y
+  PyJWT), incluidos la renovación del token, el reintento tras un 401 y
+  el rechazo de credenciales o claves incorrectas.
+- La exportación se verificó contra
+  <https://bulk-data.smarthealthit.org>.
+- El servidor simulado de las pruebas decodifica las URL, que según la
+  versión de R y de curl llegan con `$` codificado como `%24`.
 
 ## fhirviews 0.1.0
 
