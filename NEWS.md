@@ -31,6 +31,14 @@
 * `fhir_exportar_estado()` y `fhir_exportar_cancelar()` para el modo
   asíncrono (`esperar = FALSE`).
 
+## Motor DuckDB (experimental)
+
+* Prototipo de un segundo motor de vistas: `vista_sql()` traduce un
+  `ViewDefinition` a SQL de DuckDB y `vista_ejecutar_duckdb()` lo ejecuta
+  directamente sobre archivos NDJSON o Parquet, sin cargar los recursos en R.
+  Admite un subconjunto de FHIRPath y pasa las 133 pruebas shareable del
+  banco oficial (`vista_conformidad(motor = "duckdb")`).
+
 # fhirviews 0.1.0
 
 * Primera versión.

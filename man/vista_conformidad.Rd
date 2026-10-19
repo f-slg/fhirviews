@@ -9,7 +9,8 @@ vista_conformidad(
   descargar = FALSE,
   ref = "main",
   directorio = NULL,
-  informe = NULL
+  informe = NULL,
+  motor = c("v8", "duckdb")
 )
 }
 \arguments{
@@ -28,6 +29,10 @@ copia propia. Tiene prioridad sobre \code{descargar}.}
 \item{informe}{Ruta opcional de un archivo JSON donde se guarda el
 resultado en el formato oficial de informes de SQL on FHIR (el que usa
 la página de implementaciones).}
+
+\item{motor}{Motor con el que se ejecutan las vistas: \code{"v8"} (por
+defecto, \code{\link[=vista_ejecutar]{vista_ejecutar()}}) o \code{"duckdb"} (\code{\link[=vista_ejecutar_duckdb]{vista_ejecutar_duckdb()}},
+que necesita los paquetes DBI y duckdb).}
 }
 \value{
 Un \code{data.frame} de clase \code{fhir_conformidad} con una fila por

@@ -25,6 +25,9 @@
 #' @param informe Ruta opcional de un archivo JSON donde se guarda el
 #'   resultado en el formato oficial de informes de SQL on FHIR (el que usa
 #'   la página de implementaciones).
+#' @param motor Motor con el que se ejecutan las vistas: `"v8"` (por
+#'   defecto, [vista_ejecutar()]) o `"duckdb"` ([vista_ejecutar_duckdb()],
+#'   que necesita los paquetes DBI y duckdb).
 #'
 #' @return Un `data.frame` de clase `fhir_conformidad` con una fila por
 #'   prueba: `archivo`, `prueba`, `perfil`, `aprobada` (lógico) y `detalle`
@@ -39,7 +42,15 @@
 #' }
 vista_conformidad <- function(archivos = NULL, descargar = FALSE,
                               ref = "main", directorio = NULL,
-                              informe = NULL) {
+                              informe = NULL, motor = c("v8", "duckdb")) {
+  motor <- match.arg(motor)
+  con_db <- NULL
+  if (motor == "duckdb") {
+    rlang::check_installed(c("DBI", "duckdb"),
+                           reason = "para ejecutar vistas con DuckDB.")
+    con_db <- DBI::dbConnect(duckdb::duckdb())
+    on.exit(DBI::dbDisconnect(con_db), add = TRUE)
+  }
   if (is.null(directorio)) {
     if (descargar) {
       directorio <- tempfile("sof-tests-")
@@ -68,8 +79,16 @@ vista_conformidad <- function(archivos = NULL, descargar = FALSE,
     banco <- jsonlite::fromJSON(file.path(directorio, f),
                                 simplifyVector = FALSE)
     recursos <- fhir_recursos(banco$resources)
+    ejecutar <- NULL
+    if (motor == "duckdb") {
+      archivo <- escribir_ndjson_temporal(recursos)
+      on.exit(unlink(archivo), add = TRUE)
+      ejecutar <- function(vista) {
+        vista_ejecutar_duckdb(archivo, vista, con_db = con_db)
+      }
+    }
     res <- lapply(banco$tests, function(t) {
-      r <- ejecutar_prueba_sof(t, recursos)
+      r <- ejecutar_prueba_sof(t, recursos, ejecutar)
       etiquetas <- unlist(t$tags)
       data.frame(
         archivo = f,
@@ -85,6 +104,7 @@ vista_conformidad <- function(archivos = NULL, descargar = FALSE,
   res <- do.call(rbind, filas)
   rownames(res) <- NULL
   attr(res, "fuente") <- leer_fuente_sof(directorio)
+  attr(res, "motor") <- motor
   class(res) <- c("fhir_conformidad", "data.frame")
 
   if (!is.null(informe)) {
@@ -98,8 +118,14 @@ print.fhir_conformidad <- function(x, ...) {
   fuente <- attr(x, "fuente")
   cat("Banco de pruebas de SQL on FHIR",
       if (!is.null(fuente)) paste0("(", fuente, ")"), "\n")
-  cat("fhirviews ", as.character(utils::packageVersion("fhirviews")),
-      " \u00b7 fhirpath.js ", fhirviews_version_fhirpath(), "\n\n", sep = "")
+  if (identical(attr(x, "motor"), "duckdb")) {
+    cat("fhirviews ", as.character(utils::packageVersion("fhirviews")),
+        " \u00b7 motor DuckDB ", as.character(utils::packageVersion("duckdb")),
+        "\n\n", sep = "")
+  } else {
+    cat("fhirviews ", as.character(utils::packageVersion("fhirviews")),
+        " \u00b7 fhirpath.js ", fhirviews_version_fhirpath(), "\n\n", sep = "")
+  }
   perfiles <- sort(unique(x$perfil[!is.na(x$perfil)]))
   for (p in c(perfiles, if (anyNA(x$perfil)) NA)) {
     sel <- if (is.na(p)) is.na(x$perfil) else x$perfil %in% p
@@ -122,13 +148,16 @@ print.fhir_conformidad <- function(x, ...) {
 
 # --- Ejecución y comparación -------------------------------------------------
 
-ejecutar_prueba_sof <- function(t, recursos) {
+ejecutar_prueba_sof <- function(t, recursos, ejecutar = NULL) {
+  if (is.null(ejecutar)) {
+    ejecutar <- function(vista) vista_ejecutar(recursos, vista)
+  }
   resultado <- function(ok, detalle = "") {
     list(aprobada = ok, detalle = detalle)
   }
   if (!is.null(t$expectError)) {
     error <- tryCatch({
-      vista_ejecutar(recursos, t$view)
+      ejecutar(t$view)
       NULL
     }, error = function(e) e)
     if (is.null(error)) {
@@ -136,7 +165,7 @@ ejecutar_prueba_sof <- function(t, recursos) {
     }
     return(resultado(TRUE))
   }
-  df <- tryCatch(vista_ejecutar(recursos, t$view), error = function(e) e)
+  df <- tryCatch(ejecutar(t$view), error = function(e) e)
   if (inherits(df, "error")) {
     return(resultado(FALSE, paste("error:",
                                   limpiar_mensaje(conditionMessage(df)))))
