@@ -60,5 +60,5 @@ con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 r <- fhir_peticion(con, "GET", "Patient", parametros = list(`_count` = 1,
                                                           `_summary` = "count"))
 r$total
-#> [1] 6693
+#> [1] 6697
 ```

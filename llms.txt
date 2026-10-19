@@ -111,6 +111,8 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
   : Validar un ViewDefinition
 - [`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md)
   : Convertir un ViewDefinition en JSON
+- [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
+  : Guardar vistas en DuckDB
 
 ## Conformidad
 
