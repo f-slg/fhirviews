@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Preguntas y ayuda de uso
+    url: https://github.com/f-slg/fhirviews/discussions/categories/q-a
+    about: ¿Cómo hago...? ¿Qué significa...? Pregunta en Discussions; así la respuesta queda disponible para todos.
+  - name: Dudas sobre la especificación SQL on FHIR
+    url: https://sql-on-fhir.org/
+    about: La especificación ViewDefinition, sus perfiles y su banco de pruebas los mantiene HL7.

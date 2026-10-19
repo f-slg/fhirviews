@@ -1,0 +1,23 @@
+name: Proponer una mejora
+description: Una función nueva o un cambio en una existente.
+title: "[Mejora] "
+labels: ["mejora"]
+body:
+  - type: textarea
+    id: necesidad
+    attributes:
+      label: ¿Qué necesitas hacer?
+      description: Cuenta el problema o la tarea; por ejemplo, la consulta FHIR o la tabla que quieres obtener.
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: ¿Cómo te imaginas la solución?
+      description: Si tienes una idea de la función o los argumentos, compártela.
+      render: r
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas o fuentes
+      description: Cómo lo resuelves hoy o cómo lo hace otra herramienta (Postman, otra implementación de SQL on FHIR, etc.).

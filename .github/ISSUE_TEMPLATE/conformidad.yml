@@ -1,0 +1,32 @@
+name: Conformidad con SQL on FHIR
+description: Una vista da un resultado distinto al que exige la especificación.
+title: "[Conformidad] "
+labels: ["conformidad"]
+body:
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: ¿Qué resultado esperabas?
+      description: Indica la sección de la especificación o la prueba oficial (archivo y título) que no se cumple.
+    validations:
+      required: true
+  - type: textarea
+    id: vista
+    attributes:
+      label: ViewDefinition
+      description: El ViewDefinition en JSON.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: recursos
+    attributes:
+      label: Recursos de ejemplo
+      description: Uno o más recursos FHIR mínimos (sin datos reales de pacientes).
+      render: json
+  - type: textarea
+    id: sesion
+    attributes:
+      label: Información de la sesión
+      description: Pega el resultado de `sessionInfo()` y de `fhirviews_version_fhirpath()`.
+      render: text

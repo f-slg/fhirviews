@@ -1,0 +1,44 @@
+name: Reportar un error
+description: Una función falla, da un resultado incorrecto o un mensaje confuso.
+title: "[Error] "
+labels: ["error"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por tomarte el tiempo de reportarlo. Un ejemplo mínimo que se pueda copiar y ejecutar ayuda mucho a resolverlo rápido.
+        **No pegues datos reales de pacientes ni tokens de acceso.**
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: ¿Qué pasó?
+      description: Describe el error y qué esperabas que ocurriera.
+    validations:
+      required: true
+  - type: textarea
+    id: ejemplo
+    attributes:
+      label: Código para reproducirlo
+      description: El código mínimo que muestra el error, con el mensaje completo.
+      render: r
+      placeholder: |
+        library(fhirviews)
+        con <- fhir_conectar("https://hapi.fhir.org/baseR4")
+        pacientes <- fhir_buscar(con, "Patient", family = "Paredes")
+        #> Error ...
+    validations:
+      required: true
+  - type: textarea
+    id: sesion
+    attributes:
+      label: Información de la sesión
+      description: Pega el resultado de `sessionInfo()`.
+      render: text
+  - type: checkboxes
+    id: revision
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Revisé que no exista ya un issue sobre lo mismo.
+          required: true
+        - label: Probé con la última versión del paquete.

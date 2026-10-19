@@ -1,0 +1,14 @@
+bibentry(
+  bibtype = "Manual",
+  title = "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR",
+  author = person("Ronald Fabricio", "Salas Guerrero",
+                  email = "fabriciosalasguerrero@gmail.com"),
+  year = "2026",
+  note = paste("Paquete de R versión", meta$Version),
+  url = "https://github.com/f-slg/fhirviews",
+  textVersion = paste0(
+    "Salas Guerrero, R. F. (2026). fhirviews: FHIR desde R y vistas ",
+    "tabulares con SQL on FHIR. Paquete de R versión ", meta$Version,
+    ". https://github.com/f-slg/fhirviews"
+  )
+)

@@ -1,0 +1,44 @@
+url: https://f-slg.github.io/fhirviews/
+lang: es
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#0F2233"
+    link-color: "#9A6B00"
+    base_font: {google: "Source Sans 3"}
+    heading_font: {google: "Source Sans 3"}
+    code_font: {google: "JetBrains Mono"}
+
+home:
+  title: "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR"
+  description: >
+    Cliente HL7 FHIR R4 para R y RStudio y motor de ViewDefinition (SQL on
+    FHIR) que convierte recursos FHIR en data.frames.
+  sidebar:
+    structure: [links, license, citation, authors, dev]
+  links:
+  - text: Especificación SQL on FHIR
+    href: https://sql-on-fhir.org/
+  - text: HL7 FHIR R4
+    href: https://hl7.org/fhir/R4/
+  - text: Taller aprende-fhir
+    href: https://github.com/f-slg/aprende-fhir
+
+navbar:
+  bg: primary
+  structure:
+    left: [intro, reference, news]
+    right: [search, github]
+  components:
+    reference:
+      text: Funciones
+      href: reference/index.html
+    news:
+      text: Novedades
+      href: news/index.html
+
+reference:
+- title: Paquete
+  contents:
+  - fhirviews-package

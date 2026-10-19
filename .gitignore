@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rcheck/
+fhirviews_*.tar.gz
+docs/
