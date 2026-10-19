@@ -65,6 +65,13 @@ reference:
   - fhir_ejecutar_texto
   - fhir_vista
   - fhir_disponible
+- title: Autenticación SMART on FHIR
+  desc: >
+    OAuth2 para servidores protegidos: client credentials, SMART Backend
+    Services (JWT firmado) e inicio de sesión en el navegador con PKCE.
+  contents:
+  - fhir_auth
+  - fhir_smart_configuracion
 - title: RStudio
   desc: Panel Connections, conexión activa y addins.
   contents:

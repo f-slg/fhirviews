@@ -12,6 +12,14 @@
 #'   servidor no usa https (y no es local), se avisa de que viajaría sin
 #'   cifrar. Para no escribirlo en el código, guárdalo en una
 #'   variable de entorno y usa por ejemplo `Sys.getenv("FHIR_TOKEN")`.
+#'   Para tokens que caducan, usa mejor `autenticacion`.
+#' @param autenticacion Autenticación SMART on FHIR / OAuth2 creada con
+#'   [fhir_auth_cliente()], [fhir_auth_backend()] o
+#'   [fhir_auth_interactiva()]. Las URL del servidor de autorización se
+#'   descubren con [fhir_smart_configuracion()] si no se indican. El token se
+#'   pide en la primera petición, se renueva solo al expirar y, como con
+#'   `token`, solo se envía al propio servidor. No se puede usar junto con
+#'   `token`.
 #' @param cabeceras Lista con nombre de cabeceras HTTP adicionales.
 #' @param tiempo Segundos de espera máxima por petición.
 #' @param verificar Si es `TRUE` (por defecto), consulta el `CapabilityStatement`
@@ -22,27 +30,43 @@
 #'
 #' @return Un objeto de clase `fhir_conexion`, que además queda como conexión
 #'   activa para los addins y [fhir_ejecutar_texto()].
-#' @seealso [fhir_buscar()], [fhir_leer()], [fhir_crear()], [fhir_peticion()].
+#' @seealso [fhir_buscar()], [fhir_leer()], [fhir_crear()], [fhir_peticion()],
+#'   [fhir_auth].
 #' @export
 #' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' con
+#' @examplesIf interactive()
+#' # Servidor protegido con SMART Backend Services
+#' con <- fhir_conectar(
+#'   "https://fhir.ejemplo.org/r4",
+#'   autenticacion = fhir_auth_backend("mi-cliente", "privada.pem",
+#'                                     kid = "clave-2026")
+#' )
 fhir_conectar <- function(url, token = NULL, cabeceras = list(), tiempo = 60,
-                          verificar = TRUE, panel = TRUE) {
+                          verificar = TRUE, panel = TRUE,
+                          autenticacion = NULL) {
   texto_simple(url, "url")
   if (!grepl("^https?://", url)) {
     cli::cli_abort("{.arg url} debe empezar con {.val http://} o {.val https://}.",
                    class = "fhirviews_error")
   }
-  if (!is.null(token)) {
-    texto_simple(token, "token")
-    local <- grepl("^http://(localhost|127\\.0\\.0\\.1|\\[::1\\])([:/]|$)", url)
-    if (grepl("^http://", url) && !local) {
-      cli::cli_warn(c(
-        "El token se enviar\u00e1 sin cifrar: {.url {url}} usa http, no https.",
-        "i" = "Usa la direcci\u00f3n https del servidor si la tiene."
-      ), class = "fhirviews_aviso_seguridad")
+  if (!is.null(token)) texto_simple(token, "token")
+  if (!is.null(autenticacion)) {
+    if (!inherits(autenticacion, "fhir_auth")) {
+      cli::cli_abort(c(
+        "{.arg autenticacion} debe crearse con {.fn fhir_auth_cliente},
+         {.fn fhir_auth_backend} o {.fn fhir_auth_interactiva}.",
+        "x" = "Se recibi\u00f3 un objeto de clase {.cls {class(autenticacion)}}."
+      ), class = "fhirviews_error")
     }
+    if (!is.null(token)) {
+      cli::cli_abort("Usa {.arg token} o {.arg autenticacion}, no ambos.",
+                     class = "fhirviews_error")
+    }
+  }
+  if (!is.null(token) || !is.null(autenticacion)) {
+    avisar_http(url, "El token")
   }
   if (length(cabeceras) > 0L &&
       (is.null(names(cabeceras)) || any(!nzchar(names(cabeceras))))) {
@@ -52,9 +76,13 @@ fhir_conectar <- function(url, token = NULL, cabeceras = list(), tiempo = 60,
   con <- structure(
     list(url = sub("/+$", "", url), token = token,
          cabeceras = as.list(cabeceras), tiempo = tiempo,
-         servidor = NA_character_, version_fhir = NA_character_),
+         servidor = NA_character_, version_fhir = NA_character_,
+         auth = NULL),
     class = "fhir_conexion"
   )
+  if (!is.null(autenticacion)) {
+    con$auth <- preparar_auth(autenticacion, con$url, tiempo)
+  }
   if (verificar) {
     cs <- peticion_json(con, "GET", "metadata")$datos
     software <- cs$software
@@ -78,6 +106,10 @@ print.fhir_conexion <- function(x, ...) {
     cat("  Versi\u00f3n FHIR: ", x$version_fhir, "\n", sep = "")
   }
   if (!is.null(x$token)) cat("  Token:        (oculto)\n")
+  if (!is.null(x$auth)) {
+    cat("  Autenticaci\u00f3n: ", etiqueta_auth(x$auth$tipo), "\n", sep = "")
+    cat("  Cliente:      ", x$auth$id, "\n", sep = "")
+  }
   invisible(x)
 }
 
@@ -462,35 +494,16 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
                           parametros = list(), cabeceras = list(),
                           permitir = integer()) {
   url <- url_completa(con, ruta)
-  req <- httr2::request(url)
-  req <- httr2::req_method(req, metodo)
-  req <- httr2::req_user_agent(req, agente())
-  req <- httr2::req_headers(req, Accept = "application/fhir+json",
-                            !!!con$cabeceras, !!!cabeceras)
   # El token solo se envía al servidor de la conexión, no a otras URL
-  if (!is.null(con$token) && mismo_servidor(con, url)) {
-    req <- httr2::req_auth_bearer_token(req, con$token)
+  oauth <- !is.null(con$auth) && is.null(con$token) && mismo_servidor(con, url)
+  resp <- enviar_peticion(con, metodo, url, cuerpo, parametros, cabeceras,
+                          oauth = oauth)
+  # Token rechazado (revocado o caducado antes de tiempo): se pide otro y se
+  # reintenta una vez
+  if (oauth && httr2::resp_status(resp) == 401L) {
+    resp <- enviar_peticion(con, metodo, url, cuerpo, parametros, cabeceras,
+                            oauth = oauth, renovar = TRUE)
   }
-  if (length(parametros) > 0L) {
-    req <- httr2::req_url_query(req, !!!parametros, .multi = "explode")
-  }
-  if (!is.null(cuerpo)) {
-    req <- httr2::req_body_raw(req, enc2utf8(cuerpo),
-                               type = "application/fhir+json; charset=utf-8")
-  }
-  req <- httr2::req_timeout(req, con$tiempo)
-  req <- httr2::req_retry(req, max_tries = 3L, is_transient = function(resp) {
-    httr2::resp_status(resp) %in% c(429L, 503L)
-  })
-  req <- httr2::req_error(req, is_error = function(resp) FALSE)
-
-  resp <- tryCatch(httr2::req_perform(req), error = function(e) {
-    cli::cli_abort(c(
-      "No se pudo conectar con el servidor FHIR.",
-      "x" = "{metodo} {url}",
-      "i" = "{limpiar_mensaje(conditionMessage(e))}"
-    ), class = c("fhirviews_error_conexion", "fhirviews_error"), call = NULL)
-  })
 
   estado <- httr2::resp_status(resp)
   texto <- if (httr2::resp_has_body(resp)) {
@@ -516,6 +529,40 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
   }
   list(estado = estado, cabeceras = httr2::resp_headers(resp), datos = datos,
        texto = texto)
+}
+
+enviar_peticion <- function(con, metodo, url, cuerpo, parametros, cabeceras,
+                            oauth = FALSE, renovar = FALSE) {
+  req <- httr2::request(url)
+  req <- httr2::req_method(req, metodo)
+  req <- httr2::req_user_agent(req, agente())
+  req <- httr2::req_headers(req, Accept = "application/fhir+json",
+                            !!!con$cabeceras, !!!cabeceras)
+  if (oauth) {
+    req <- httr2::req_auth_bearer_token(req, token_acceso(con, renovar))
+  } else if (!is.null(con$token) && mismo_servidor(con, url)) {
+    req <- httr2::req_auth_bearer_token(req, con$token)
+  }
+  if (length(parametros) > 0L) {
+    req <- httr2::req_url_query(req, !!!parametros, .multi = "explode")
+  }
+  if (!is.null(cuerpo)) {
+    req <- httr2::req_body_raw(req, enc2utf8(cuerpo),
+                               type = "application/fhir+json; charset=utf-8")
+  }
+  req <- httr2::req_timeout(req, con$tiempo)
+  req <- httr2::req_retry(req, max_tries = 3L, is_transient = function(resp) {
+    httr2::resp_status(resp) %in% c(429L, 503L)
+  })
+  req <- httr2::req_error(req, is_error = function(resp) FALSE)
+
+  tryCatch(httr2::req_perform(req), error = function(e) {
+    cli::cli_abort(c(
+      "No se pudo conectar con el servidor FHIR.",
+      "x" = "{metodo} {url}",
+      "i" = "{limpiar_mensaje(conditionMessage(e))}"
+    ), class = c("fhirviews_error_conexion", "fhirviews_error"), call = NULL)
+  })
 }
 
 error_http <- function(metodo, url, estado, descripcion, datos, texto) {

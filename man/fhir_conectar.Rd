@@ -10,7 +10,8 @@ fhir_conectar(
   cabeceras = list(),
   tiempo = 60,
   verificar = TRUE,
-  panel = TRUE
+  panel = TRUE,
+  autenticacion = NULL
 )
 }
 \arguments{
@@ -21,7 +22,8 @@ fhir_conectar(
 imprimir la conexión, solo se envía a URL del propio servidor y, si el
 servidor no usa https (y no es local), se avisa de que viajaría sin
 cifrar. Para no escribirlo en el código, guárdalo en una
-variable de entorno y usa por ejemplo \code{Sys.getenv("FHIR_TOKEN")}.}
+variable de entorno y usa por ejemplo \code{Sys.getenv("FHIR_TOKEN")}.
+Para tokens que caducan, usa mejor \code{autenticacion}.}
 
 \item{cabeceras}{Lista con nombre de cabeceras HTTP adicionales.}
 
@@ -33,6 +35,14 @@ su software y versión de FHIR.}
 
 \item{panel}{Si es \code{TRUE} (por defecto) y se usa RStudio, registra la
 conexión en el panel \emph{Connections} (ver \code{\link[=fhir_conexion_activa]{fhir_conexion_activa()}}).}
+
+\item{autenticacion}{Autenticación SMART on FHIR / OAuth2 creada con
+\code{\link[=fhir_auth_cliente]{fhir_auth_cliente()}}, \code{\link[=fhir_auth_backend]{fhir_auth_backend()}} o
+\code{\link[=fhir_auth_interactiva]{fhir_auth_interactiva()}}. Las URL del servidor de autorización se
+descubren con \code{\link[=fhir_smart_configuracion]{fhir_smart_configuracion()}} si no se indican. El token se
+pide en la primera petición, se renueva solo al expirar y, como con
+\code{token}, solo se envía al propio servidor. No se puede usar junto con
+\code{token}.}
 }
 \value{
 Un objeto de clase \code{fhir_conexion}, que además queda como conexión
@@ -49,7 +59,16 @@ muestran el \code{OperationOutcome} del servidor.
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 con
 \dontshow{\}) # examplesIf}
+\dontshow{if (interactive()) withAutoprint(\{ # examplesIf}
+# Servidor protegido con SMART Backend Services
+con <- fhir_conectar(
+  "https://fhir.ejemplo.org/r4",
+  autenticacion = fhir_auth_backend("mi-cliente", "privada.pem",
+                                    kid = "clave-2026")
+)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=fhir_buscar]{fhir_buscar()}}, \code{\link[=fhir_leer]{fhir_leer()}}, \code{\link[=fhir_crear]{fhir_crear()}}, \code{\link[=fhir_peticion]{fhir_peticion()}}.
+\code{\link[=fhir_buscar]{fhir_buscar()}}, \code{\link[=fhir_leer]{fhir_leer()}}, \code{\link[=fhir_crear]{fhir_crear()}}, \code{\link[=fhir_peticion]{fhir_peticion()}},
+\link{fhir_auth}.
 }
