@@ -17,3 +17,6 @@
 #'
 #' @keywords internal
 "_PACKAGE"
+
+#' @importFrom rlang abort
+NULL

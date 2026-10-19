@@ -4,9 +4,23 @@ Title: Query 'HL7 FHIR' Servers and Flatten Resources with 'SQL on FHIR'
     View Definitions
 Version: 0.0.0.9000
 Authors@R:
-    person("Ronald Fabricio", "Salas Guerrero",
-           email = "fabriciosalasguerrero@gmail.com",
-           role = c("aut", "cre", "cph"))
+    c(
+      person("Ronald Fabricio", "Salas Guerrero",
+             email = "fabriciosalasguerrero@gmail.com",
+             role = c("aut", "cre", "cph")),
+      person("National Library of Medicine", role = "cph",
+             comment = "fhirpath.js and ucum-lhc libraries in inst/js"),
+      person("Health Samurai", role = "cph",
+             comment = "fhirpath.js library in inst/js"),
+      person("The ANTLR Project", role = "cph",
+             comment = "antlr4 runtime bundled in fhirpath.js"),
+      person("Sasha Koss", role = "cph",
+             comment = "date-fns library bundled in fhirpath.js"),
+      person("Michael Mclaughlin", role = "cph",
+             comment = "decimal.js library bundled in fhirpath.js"),
+      person("Regenstrief Institute, Inc.", role = "cph",
+             comment = "UCUM table bundled in fhirpath.js")
+    )
 Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     paging, read, create, update, delete and the '$everything' and
     '$validate' operations) and an engine that turns FHIR resources into
@@ -17,10 +31,16 @@ Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     'DuckDB', and integration with the 'RStudio' Connections pane and
     addins. Documentation is in Spanish.
 License: MIT + file LICENSE
+Copyright: See file inst/COPYRIGHTS for the bundled JavaScript libraries.
 URL: https://f-slg.github.io/fhirviews/, https://github.com/f-slg/fhirviews
 BugReports: https://github.com/f-slg/fhirviews/issues
 Depends:
     R (>= 4.1.0)
+Imports:
+    cli,
+    jsonlite,
+    rlang,
+    V8
 Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

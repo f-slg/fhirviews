@@ -41,5 +41,15 @@ Authors:
   \item Ronald Fabricio Salas Guerrero \email{fabriciosalasguerrero@gmail.com} [copyright holder]
 }
 
+Other contributors:
+\itemize{
+  \item National Library of Medicine (fhirpath.js and ucum-lhc libraries in inst/js) [copyright holder]
+  \item Health Samurai (fhirpath.js library in inst/js) [copyright holder]
+  \item The ANTLR Project (antlr4 runtime bundled in fhirpath.js) [copyright holder]
+  \item Sasha Koss (date-fns library bundled in fhirpath.js) [copyright holder]
+  \item Michael Mclaughlin (decimal.js library bundled in fhirpath.js) [copyright holder]
+  \item Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js) [copyright holder]
+}
+
 }
 \keyword{internal}

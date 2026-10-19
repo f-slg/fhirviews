@@ -39,6 +39,13 @@ navbar:
       href: news/index.html
 
 reference:
+- title: Recursos FHIR
+  contents:
+  - fhir_recursos
+- title: FHIRPath
+  contents:
+  - vista_fhirpath
+  - fhirviews_motor
 - title: Paquete
   contents:
   - fhirviews-package
