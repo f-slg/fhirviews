@@ -1,5 +1,31 @@
 # Changelog
 
+## fhirviews (development version)
+
+### Autenticación SMART on FHIR
+
+- [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md)
+  tiene un nuevo argumento `autenticacion` para servidores protegidos
+  con SMART on FHIR / OAuth2 (`token` sigue funcionando igual):
+  - [`fhir_auth_cliente()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md):
+    *client credentials* con secreto (HTTP Basic o en el cuerpo, según
+    lo que admita el servidor).
+  - [`fhir_auth_backend()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md):
+    SMART Backend Services, con un JWT firmado (RS384 o ES384) a partir
+    de una clave privada y su `kid`. Requiere los paquetes jose y
+    openssl.
+  - [`fhir_auth_interactiva()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md):
+    *authorization code* con PKCE y lanzamiento *standalone* (`aud`),
+    con inicio de sesión en el navegador.
+- [`fhir_smart_configuracion()`](https://f-slg.github.io/fhirviews/reference/fhir_smart_configuracion.md)
+  descubre el *token endpoint* y el *authorization endpoint* en
+  `.well-known/smart-configuration` o, como respaldo, en las extensiones
+  `oauth-uris` del `CapabilityStatement`.
+- El token se pide en la primera petición, se renueva solo al expirar (y
+  una vez más si el servidor lo rechaza con 401), solo se envía al
+  servidor de la conexión y nunca se imprime, igual que el secreto y la
+  clave.
+
 ## fhirviews 0.1.0
 
 - Primera versión.

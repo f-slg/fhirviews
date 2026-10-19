@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,24 @@
       <small>Source: <a href="https://github.com/f-slg/fhirviews/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="fhirviews-development-version">fhirviews (development version)<a class="anchor" aria-label="anchor" href="#fhirviews-development-version"></a></h2>
+<div class="section level3">
+<h3 id="autenticación-smart-on-fhir-development-version">Autenticación SMART on FHIR<a class="anchor" aria-label="anchor" href="#autenticaci%C3%B3n-smart-on-fhir-development-version"></a></h3>
+<ul><li>
+<code><a href="../reference/fhir_conectar.html">fhir_conectar()</a></code> tiene un nuevo argumento <code>autenticacion</code> para servidores protegidos con SMART on FHIR / OAuth2 (<code>token</code> sigue funcionando igual):
+<ul><li>
+<code><a href="../reference/fhir_auth.html">fhir_auth_cliente()</a></code>: <em>client credentials</em> con secreto (HTTP Basic o en el cuerpo, según lo que admita el servidor).</li>
+<li>
+<code><a href="../reference/fhir_auth.html">fhir_auth_backend()</a></code>: SMART Backend Services, con un JWT firmado (RS384 o ES384) a partir de una clave privada y su <code>kid</code>. Requiere los paquetes jose y openssl.</li>
+<li>
+<code><a href="../reference/fhir_auth.html">fhir_auth_interactiva()</a></code>: <em>authorization code</em> con PKCE y lanzamiento <em>standalone</em> (<code>aud</code>), con inicio de sesión en el navegador.</li>
+</ul></li>
+<li>
+<code><a href="../reference/fhir_smart_configuracion.html">fhir_smart_configuracion()</a></code> descubre el <em>token endpoint</em> y el <em>authorization endpoint</em> en <code>.well-known/smart-configuration</code> o, como respaldo, en las extensiones <code>oauth-uris</code> del <code>CapabilityStatement</code>.</li>
+<li>El token se pide en la primera petición, se renueva solo al expirar (y una vez más si el servidor lo rechaza con 401), solo se envía al servidor de la conexión y nunca se imprime, igual que el secreto y la clave.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="fhirviews-010">fhirviews 0.1.0<a class="anchor" aria-label="anchor" href="#fhirviews-010"></a></h2>
 <ul><li>Primera versión.</li>
