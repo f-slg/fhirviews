@@ -41,6 +41,13 @@
 <code><a href="../reference/fhir_recursos.html">fhir_recursos()</a></code> reúne recursos desde listas, Bundles, JSON, NDJSON o archivos.</li>
 <li>
 <code><a href="../reference/fhirviews_motor.html">fhirviews_motor()</a></code> y <code><a href="../reference/fhirviews_motor.html">fhirviews_version_fhirpath()</a></code> informan del motor de FHIRPath. El motor de vistas usa una interfaz que permitirá sustituir fhirpath.js por un motor escrito en R.</li>
+<li>Motor de ViewDefinition: <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> admite <code>select</code> anidados, <code>column</code> (con <code>collection</code> y <code>type</code>), <code>forEach</code>, <code>forEachOrNull</code>, <code>repeat</code>, <code>unionAll</code>, <code>where</code>, <code>constant</code> y <code>%rowIndex</code>. Evalúa por lotes: una llamada a FHIRPath por expresión y nivel. Pasa las 133 pruebas del perfil <em>shareable</em> del banco oficial de SQL on FHIR (y 7 de las 11 experimentales).</li>
+<li>
+<code><a href="../reference/vista_validar.html">vista_validar()</a></code> revisa la estructura, los nombres de columnas, las constantes, las ramas de <code>unionAll</code> y las expresiones FHIRPath, y lista todos los problemas encontrados.</li>
+<li>
+<code><a href="../reference/vista_leer.html">vista_leer()</a></code>, <code><a href="../reference/vista_crear.html">vista_crear()</a></code> y <code><a href="../reference/vista_json.html">vista_json()</a></code> para leer, armar y exportar vistas.</li>
+<li>Los recursos leídos de JSON o NDJSON conservan el texto original y se pasan a V8 sin volver a convertirlos, lo que acelera mucho las vistas grandes.</li>
+<li>Corregido: en Windows fallaba la carga de fhirpath.js, que contiene bytes 0x1A (Ctrl-Z); ahora los archivos JavaScript se leen en binario.</li>
 </ul></div>
   </main></div>
 

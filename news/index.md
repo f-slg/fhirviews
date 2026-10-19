@@ -18,3 +18,24 @@
   [`fhirviews_version_fhirpath()`](https://f-slg.github.io/fhirviews/reference/fhirviews_motor.md)
   informan del motor de FHIRPath. El motor de vistas usa una interfaz
   que permitirá sustituir fhirpath.js por un motor escrito en R.
+- Motor de ViewDefinition:
+  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+  admite `select` anidados, `column` (con `collection` y `type`),
+  `forEach`, `forEachOrNull`, `repeat`, `unionAll`, `where`, `constant`
+  y `%rowIndex`. Evalúa por lotes: una llamada a FHIRPath por expresión
+  y nivel. Pasa las 133 pruebas del perfil *shareable* del banco oficial
+  de SQL on FHIR (y 7 de las 11 experimentales).
+- [`vista_validar()`](https://f-slg.github.io/fhirviews/reference/vista_validar.md)
+  revisa la estructura, los nombres de columnas, las constantes, las
+  ramas de `unionAll` y las expresiones FHIRPath, y lista todos los
+  problemas encontrados.
+- [`vista_leer()`](https://f-slg.github.io/fhirviews/reference/vista_leer.md),
+  [`vista_crear()`](https://f-slg.github.io/fhirviews/reference/vista_crear.md)
+  y
+  [`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md)
+  para leer, armar y exportar vistas.
+- Los recursos leídos de JSON o NDJSON conservan el texto original y se
+  pasan a V8 sin volver a convertirlos, lo que acelera mucho las vistas
+  grandes.
+- Corregido: en Windows fallaba la carga de fhirpath.js, que contiene
+  bytes 0x1A (Ctrl-Z); ahora los archivos JavaScript se leen en binario.
