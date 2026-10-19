@@ -34,3 +34,11 @@
   más reciente con `descargar = TRUE`), resume los resultados por perfil y
   puede guardar el informe en el formato oficial para la página de
   implementaciones. Las pruebas del paquete exigen todas las *shareable*.
+* Cliente FHIR con httr2: `fhir_conectar()`, `fhir_buscar()` (sigue los
+  enlaces `next` de los Bundles), `fhir_leer()`, `fhir_crear()`,
+  `fhir_actualizar()`, `fhir_borrar()`, `fhir_everything()`,
+  `fhir_validar()`, `fhir_capacidades()`, `fhir_peticion()` y
+  `fhir_disponible()`. Usa `application/fhir+json`, admite token *bearer*,
+  reintenta ante 429/503 y convierte el `OperationOutcome` de los errores en
+  mensajes legibles. Los resultados de búsqueda conservan el JSON original
+  para ejecutar vistas rápidamente.

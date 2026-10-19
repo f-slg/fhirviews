@@ -39,6 +39,18 @@ navbar:
       href: news/index.html
 
 reference:
+- title: Cliente FHIR
+  desc: Conectarse a un servidor FHIR R4 y hacer peticiones, como en Postman.
+  contents:
+  - fhir_conectar
+  - fhir_buscar
+  - fhir_leer
+  - fhir_everything
+  - fhir_crear
+  - fhir_validar
+  - fhir_capacidades
+  - fhir_peticion
+  - fhir_disponible
 - title: Recursos FHIR
   contents:
   - fhir_recursos
