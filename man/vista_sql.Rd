@@ -2,7 +2,7 @@
 % Please edit documentation in R/sql.R
 \name{vista_sql}
 \alias{vista_sql}
-\title{Traducir un ViewDefinition a SQL de DuckDB}
+\title{Traducir un ViewDefinition a SQL de DuckDB (experimental)}
 \usage{
 vista_sql(vista, desde = "recursos")
 }
@@ -18,7 +18,7 @@ DuckDB con una columna \code{json} (un recurso FHIR por fila).}
 El texto de la consulta (clase \code{fhir_sql}).
 }
 \description{
-Traduce un \code{ViewDefinition} a una consulta SQL de
+\strong{Experimental}, como \code{\link[=vista_ejecutar_duckdb]{vista_ejecutar_duckdb()}}. Traduce un \code{ViewDefinition} a una consulta SQL de
 \href{https://duckdb.org/}{DuckDB} que lee los recursos FHIR como JSON y
 devuelve la tabla de la vista. Es el motor que usa
 \code{\link[=vista_ejecutar_duckdb]{vista_ejecutar_duckdb()}}; esta función solo genera el texto, para
@@ -29,7 +29,9 @@ comandos de DuckDB).
 El traductor cubre la estructura completa del \code{ViewDefinition} (\code{select}
 anidados, \code{column}, \code{forEach}, \code{forEachOrNull}, \code{repeat}, \code{unionAll},
 \code{where}, \code{constant} y \verb{\%rowIndex}) y un subconjunto de FHIRPath:
-navegación por campos, índices (\code{name[0]}), \code{where()}, \code{select()},
+navegación por campos (los elementos de elección como \code{value} o
+\code{effective} buscan todas sus variantes, \code{valueQuantity},
+\code{valueString}...), índices (\code{name[0]}), \code{where()}, \code{select()},
 \code{exists()}, \code{empty()}, \code{count()}, \code{first()}, \code{last()}, \code{tail()}, \code{skip()},
 \code{take()}, \code{single()}, \code{distinct()}, \code{all()}, \code{not()}, \code{iif()}, \code{join()},
 \code{ofType()} sobre elementos de elección (\code{value.ofType(Quantity)} es

@@ -83,16 +83,27 @@ devuelve varios valores y un `where` que no devuelve un lógico llaman a
 
 | Se traduce | No se traduce (error que sugiere `vista_ejecutar()`) |
 |---|---|
-| Navegación por campos, `Patient.x`, `name[0]`, `$this`, `%resource` | Polimorfismo sin `ofType()` (`value` a secas sobre `value[x]`) |
+| Navegación por campos, `Patient.x`, `name[0]`, `$this`, `%resource` | `ofType()` con un tipo que el elemento de elección no admite |
 | `where`, `select`, `exists`, `all`, `empty`, `hasValue`, `count` | `lowBoundary`, `highBoundary`, `precision` |
 | `first`, `last`, `tail`, `skip`, `take`, `single`, `distinct` | `resolve`, `memberOf`, `conformsTo`, `trace`, `children`, `descendants` |
 | `not`, `iif`, `and`, `or`, `xor`, `implies` | Cantidades con unidades (`5 'mg'`) y aritmética de fechas |
 | `=`, `!=`, `~`, `!~`, `<`, `>`, `<=`, `>=` | `$index`, `$total`, `aggregate`, `repeat()` como función |
 | `+`, `-`, `*`, `/`, `div`, `mod`, `&`, `\|`, `in`, `contains` | `ofType()` de tipos complejos fuera de un elemento de elección |
-| `ofType` (elemento de elección o filtro de primitivos), `is`, `as` | `toDate`, `toDateTime`, `toQuantity`, `convertsTo*` |
+| Elementos de elección sin `ofType()` (`value`, `effective`, `onset`...) | `toDate`, `toDateTime`, `toQuantity`, `convertsTo*` |
+| `ofType` (elemento de elección o filtro de primitivos), `is`, `as` | |
 | `extension(url)`, `getResourceKey()`, `getReferenceKey([tipo])` | |
 | `join`, `startsWith`, `endsWith`, `contains`, `matches`, `upper`, `lower`, `trim`, `length`, `substring`, `replace`, `toString`, `toInteger`, `toDecimal` | |
 | Constantes de todos los tipos de `constant`, `%rowIndex`, literales de fecha | |
+
+**Elementos de elección.** Al navegar a un nombre que en el modelo FHIR R4
+es un elemento de elección en algún recurso (`value`, `effective`, `onset`,
+`deceased`, `multipleBirth`...), se extraen a la vez, con un solo
+`json_extract` de varias rutas, el campo y todas sus variantes
+(`valueQuantity`, `valueString`...); los nombres salen de
+`choiceTypePaths` del modelo de fhirpath.js. `x.ofType(T)` sobre un elemento
+de elección es el campo `xT` solo si `T` es uno de sus tipos; en otro caso,
+o con un tipo complejo fuera de un elemento de elección, la traducción falla
+con `fhirviews_error_sql` en lugar de devolver vacío.
 
 Diferencias semánticas conocidas frente a fhirpath.js (no afectan al banco):
 
@@ -153,6 +164,26 @@ calentamiento.
   este equipo); por el ritmo medido tardaría unos 4 minutos si tuviera la
   memoria.
 
+## Revisión y prueba diferencial
+
+Una revisión comparó los dos motores con 8 vistas reales sobre
+`inst/extdata` y encontró dos columnas que DuckDB devolvía como `NA` sin
+error: `answer.value.first().toString()` en un `repeat` de
+QuestionnaireResponse y `address.extension(%dpa).value.first()` en los
+pacientes de dengue. En ambos casos la causa era `value` sin `ofType()`, que
+el prototipo trataba como un campo normal. Se corrigió con la navegación a
+elementos de elección descrita arriba y con un `ofType()` estricto. Las 8
+vistas coinciden ahora en valores y tipos.
+
+Para que esta clase de errores no vuelva, `tests/testthat/test-sql.R`
+incluye una prueba diferencial: busca en las viñetas (`fhirviews.Rmd`,
+`vistas.Rmd` y `tasas-pobecu.Rmd`) las llamadas a `vista_crear()`,
+`vista_leer()` y `vista_ejecutar(recursos, "json")` (hoy 17 vistas), las
+ejecuta con los dos motores sobre `inst/extdata` y exige tablas idénticas
+(`identical()` de las columnas) o que fallen los dos. Para lograr tablas
+idénticas, las colecciones vacías sin `type` se devuelven como `logical()`,
+como en `vista_ejecutar()`.
+
 ## Comparación con otras implementaciones
 
 * **FlatQuack** (MIT, JavaScript/Bun) también compila ViewDefinition a SQL de
@@ -166,9 +197,12 @@ calentamiento.
 ## Limitaciones
 
 * Requiere la extensión `json` de DuckDB, que el paquete duckdb de CRAN no
-  trae incorporada: DuckDB la descarga la primera vez (`INSTALL json`). Sin
-  internet ese primer uso falla con un mensaje claro. Por eso las pruebas que
-  ejecutan SQL se saltan en CRAN.
+  trae incorporada: DuckDB la descarga con `INSTALL json`. Para no escribir
+  en `~/.duckdb` (CRAN no lo permite), la conexión se crea con
+  `conectar_duckdb()` (`shared_home = FALSE`), así que las extensiones van a
+  la carpeta temporal y la descarga se repite en cada sesión de R. Sin
+  internet falla con un mensaje claro. Por eso las pruebas que ejecutan SQL
+  se saltan en CRAN.
 * Necesita duckdb 1.3.0 o posterior (sintaxis `lambda x: ...`).
 * El SQL generado es largo (cada navegación se expande en línea para que la
   consulta funcione sin macros); `vista_sql()` sirve para revisarlo, no para
@@ -187,7 +221,8 @@ Incorporarlo como segundo motor, marcado como experimental:
 2. Mantener `vista_ejecutar()` como motor por defecto y de referencia
    (FHIRPath completo); el error de traducción ya dirige a él.
 3. Próximos pasos: un argumento `motor = "duckdb"` en `vista_duckdb()`;
-   usar el modelo FHIR R4 para resolver elementos de elección sin `ofType()`
-   y para comparar fechas con precisión; macros opcionales para un SQL más
+   seguir el tipo FHIR de cada expresión con el modelo R4 (para elegir solo
+   las variantes posibles de cada elemento de elección y comparar fechas con
+   su precisión); macros opcionales para un SQL más
    legible; probar con datos de Synthea (Observation, Encounter) y con
    Parquet de otras herramientas.

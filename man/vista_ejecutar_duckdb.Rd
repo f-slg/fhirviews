@@ -2,7 +2,7 @@
 % Please edit documentation in R/sql.R
 \name{vista_ejecutar_duckdb}
 \alias{vista_ejecutar_duckdb}
-\title{Ejecutar un ViewDefinition con DuckDB}
+\title{Ejecutar un ViewDefinition con DuckDB (experimental)}
 \usage{
 vista_ejecutar_duckdb(archivos, vista, con_db = NULL, tabla = NULL)
 }
@@ -27,21 +27,27 @@ Un \code{data.frame} como el de \code{\link[=vista_ejecutar]{vista_ejecutar()}} 
 \code{tabla}, la conexión DBI de forma invisible.
 }
 \description{
+\strong{Experimental.} Este motor es un prototipo: su interfaz y el
+subconjunto de FHIRPath que admite pueden cambiar. Para resultados de
+referencia usa \code{\link[=vista_ejecutar]{vista_ejecutar()}}.
+}
+\details{
 Traduce el \code{ViewDefinition} a SQL con \code{\link[=vista_sql]{vista_sql()}} y lo ejecuta en
 \href{https://duckdb.org/}{DuckDB} directamente sobre archivos NDJSON o
 Parquet, sin cargar los recursos en R ni en el motor de FHIRPath. DuckDB
 lee los archivos en paralelo y por partes, de modo que se pueden
 procesar millones de recursos con poca memoria.
-}
-\details{
+
 Es un motor alternativo a \code{\link[=vista_ejecutar]{vista_ejecutar()}}, que evalúa FHIRPath
 completo con \code{fhirpath.js}. Este motor admite un subconjunto de FHIRPath
 (ver \code{\link[=vista_sql]{vista_sql()}}); si la vista usa algo que no se puede traducir, el
 error lo indica y sugiere usar \code{\link[=vista_ejecutar]{vista_ejecutar()}}.
 
 Requiere los paquetes DBI y duckdb (versión 1.3.0 o posterior) y la
-extensión \code{json} de DuckDB, que DuckDB descarga la primera vez que se
-usa (hace falta conexión a internet esa vez).
+extensión \code{json} de DuckDB, que el paquete duckdb no trae incorporada:
+DuckDB la descarga la primera vez que se usa en cada sesión de R (hace
+falta conexión a internet). La conexión que crea esta función guarda las
+extensiones en la carpeta temporal de la sesión, no en \verb{~/.duckdb}.
 }
 \examples{
 \dontshow{if (requireNamespace("duckdb", quietly = TRUE) && interactive()) withAutoprint(\{ # examplesIf}

@@ -1,6 +1,6 @@
-#' Traducir un ViewDefinition a SQL de DuckDB
+#' Traducir un ViewDefinition a SQL de DuckDB (experimental)
 #'
-#' Traduce un `ViewDefinition` a una consulta SQL de
+#' **Experimental**, como [vista_ejecutar_duckdb()]. Traduce un `ViewDefinition` a una consulta SQL de
 #' [DuckDB](https://duckdb.org/) que lee los recursos FHIR como JSON y
 #' devuelve la tabla de la vista. Es el motor que usa
 #' [vista_ejecutar_duckdb()]; esta función solo genera el texto, para
@@ -10,7 +10,9 @@
 #' El traductor cubre la estructura completa del `ViewDefinition` (`select`
 #' anidados, `column`, `forEach`, `forEachOrNull`, `repeat`, `unionAll`,
 #' `where`, `constant` y `%rowIndex`) y un subconjunto de FHIRPath:
-#' navegación por campos, índices (`name[0]`), `where()`, `select()`,
+#' navegación por campos (los elementos de elección como `value` o
+#' `effective` buscan todas sus variantes, `valueQuantity`,
+#' `valueString`...), índices (`name[0]`), `where()`, `select()`,
 #' `exists()`, `empty()`, `count()`, `first()`, `last()`, `tail()`, `skip()`,
 #' `take()`, `single()`, `distinct()`, `all()`, `not()`, `iif()`, `join()`,
 #' `ofType()` sobre elementos de elección (`value.ofType(Quantity)` es
@@ -57,7 +59,11 @@ print.fhir_sql <- function(x, ...) {
   invisible(x)
 }
 
-#' Ejecutar un ViewDefinition con DuckDB
+#' Ejecutar un ViewDefinition con DuckDB (experimental)
+#'
+#' **Experimental.** Este motor es un prototipo: su interfaz y el
+#' subconjunto de FHIRPath que admite pueden cambiar. Para resultados de
+#' referencia usa [vista_ejecutar()].
 #'
 #' Traduce el `ViewDefinition` a SQL con [vista_sql()] y lo ejecuta en
 #' [DuckDB](https://duckdb.org/) directamente sobre archivos NDJSON o
@@ -71,8 +77,10 @@ print.fhir_sql <- function(x, ...) {
 #' error lo indica y sugiere usar [vista_ejecutar()].
 #'
 #' Requiere los paquetes DBI y duckdb (versión 1.3.0 o posterior) y la
-#' extensión `json` de DuckDB, que DuckDB descarga la primera vez que se
-#' usa (hace falta conexión a internet esa vez).
+#' extensión `json` de DuckDB, que el paquete duckdb no trae incorporada:
+#' DuckDB la descarga la primera vez que se usa en cada sesión de R (hace
+#' falta conexión a internet). La conexión que crea esta función guarda las
+#' extensiones en la carpeta temporal de la sesión, no en `~/.duckdb`.
 #'
 #' @param archivos Rutas de archivos `.ndjson`, `.ndjson.gz` o `.parquet`
 #'   (se pueden usar comodines como `"datos/*.ndjson"`), el nombre de una
@@ -107,7 +115,7 @@ vista_ejecutar_duckdb <- function(archivos, vista, con_db = NULL,
   vista <- vista_leer(vista)
   propia <- is.null(con_db)
   if (propia) {
-    con_db <- DBI::dbConnect(duckdb::duckdb())
+    con_db <- conectar_duckdb()
     if (is.null(tabla)) {
       on.exit(DBI::dbDisconnect(con_db), add = TRUE)
     }
@@ -211,6 +219,11 @@ ejecutar_traduccion <- function(con, trad, tabla) {
   for (nm in names(df)) {
     if (identical(trad$tipos[[nm]], "JSON")) {
       df[[nm]] <- json_a_r(df[[nm]], trad$colecciones[[nm]])
+    }
+    # Como en vista_ejecutar(): una colección vacía sin `type` es logical()
+    if (isTRUE(trad$colecciones[[nm]]) && isTRUE(trad$sin_tipo[[nm]])) {
+      vacias <- lengths(df[[nm]]) == 0L
+      df[[nm]][vacias] <- list(logical())
     }
   }
   df
@@ -639,13 +652,41 @@ a_bool <- function(x, ctx) {
   }, ctx)
 }
 
-# Hijos `nombre` de cada elemento (los arreglos se aplanan)
+# Tipos posibles de cada elemento de elección (value[x], effective[x]...)
+# según el modelo FHIR R4 de fhirpath.js, juntando todos los recursos:
+# list(value = c("Quantity", "CodeableConcept", "string", ...), ...)
+elementos_eleccion <- function() {
+  if (is.null(.fhirviews$elecciones)) {
+    ct <- V8::v8()
+    ct$eval("var window = globalThis;")
+    cargar_js(ct, ruta_js("fhirpath", "fhirpath.r4.min.js"))
+    texto <- ct$eval(paste0(
+      "(function () { var m = fhirpath_r4_model.choiceTypePaths, r = {};",
+      " Object.keys(m).forEach(function (k) {",
+      "   var b = k.split('.').pop(); r[b] = r[b] || [];",
+      "   m[k].forEach(function (t) { if (r[b].indexOf(t) < 0) r[b].push(t); });",
+      " }); return JSON.stringify(r); })()"))
+    .fhirviews$elecciones <- lapply(jsonlite::fromJSON(texto), as.character)
+  }
+  .fhirviews$elecciones
+}
+
+con_sufijo <- function(nombre, tipo) {
+  paste0(nombre, toupper(substr(tipo, 1, 1)), substring(tipo, 2))
+}
+
+ruta_json <- function(nombre) {
+  texto_sql(paste0("$.\"", gsub("\"", "\\\"", nombre, fixed = TRUE), "\""))
+}
+
+# Hijos `nombre` de cada elemento (los arreglos se aplanan). Si `nombre` es
+# un elemento de elección (como `value`), se buscan a la vez el campo y
+# todas sus variantes (valueQuantity, valueString...), como hace FHIRPath.
 hijo <- function(base, nombre, ctx) {
   if (base$k == "val") {
     no_traducible("No se puede navegar a {.field {nombre}} desde un valor simple.")
   }
-  ruta <- texto_sql(paste0("$.\"", gsub("\"", "\\\"", nombre, fixed = TRUE),
-                           "\""))
+  variantes <- elementos_eleccion()[[nombre]]
   v <- nueva_var(ctx)
   w <- nueva_var(ctx)
   caso <- sprintf(paste0(
@@ -653,12 +694,22 @@ hijo <- function(base, nombre, ctx) {
     "WHEN starts_with(CAST(%1$s AS VARCHAR), '[') THEN list_filter(CAST(%1$s AS JSON[]), ",
     "lambda %2$s: %2$s IS NOT NULL AND CAST(%2$s AS VARCHAR) <> 'null') ",
     "ELSE [%1$s] END"), v, w)
+  if (is.null(variantes)) {
+    extraer <- function(u) sprintf("[json_extract(%s, %s)]", u, ruta_json(nombre))
+  } else {
+    rutas <- paste0("[", paste(vapply(c(nombre, con_sufijo(nombre, variantes)),
+                                      ruta_json, character(1)),
+                               collapse = ", "), "]")
+    extraer <- function(u) {
+      sprintf("coalesce(json_extract(%s, %s), []::JSON[])", u, rutas)
+    }
+  }
   if (base$k == "uno") {
-    valores <- sprintf("[json_extract(%s, %s)]", base$sql, ruta)
+    valores <- extraer(base$sql)
   } else {
     u <- nueva_var(ctx)
-    valores <- sprintf("list_transform(%s, lambda %s: json_extract(%s, %s))",
-                       base$sql, u, u, ruta)
+    valores <- sprintf("flatten(list_transform(%s, lambda %s: %s))",
+                       base$sql, u, extraer(u))
   }
   coll(sprintf("flatten(list_transform(%s, lambda %s: %s))", valores, v, caso))
 }
@@ -867,16 +918,20 @@ primitivos_json <- list(
 # filtra por el tipo JSON de los valores primitivos.
 fp_oftype <- function(base_nodo, tipo, ctx) {
   tipo <- sub("^(FHIR|System)\\.", "", tipo)
-  if (identical(base_nodo$t, "campo")) {
-    concreto <- paste0(base_nodo$nombre, toupper(substr(tipo, 1, 1)),
-                       substring(tipo, 2))
-    nodo <- base_nodo
-    nodo$nombre <- concreto
-    return(fp_sql(nodo, ctx))
-  }
   tipos_json <- primitivos_json[[tipo]]
+  if (identical(base_nodo$t, "campo")) {
+    variantes <- elementos_eleccion()[[base_nodo$nombre]]
+    if (!is.null(variantes)) {
+      if (!con_sufijo("", tipo) %in% variantes) {
+        no_traducible("{.field {base_nodo$nombre}[x]} no admite el tipo {.code {tipo}}.")
+      }
+      nodo <- base_nodo
+      nodo$nombre <- con_sufijo(base_nodo$nombre, tipo)
+      return(fp_sql(nodo, ctx))
+    }
+  }
   if (is.null(tipos_json)) {
-    no_traducible("{.code ofType({tipo})} solo se traduce sobre elementos de elecci\u00f3n (como {.code value.ofType({tipo})}).")
+    no_traducible("{.code ofType({tipo})} solo se traduce sobre elementos de elecci\u00f3n (como {.code value.ofType({tipo})}) o con tipos primitivos.")
   }
   base <- if (is.null(base_nodo)) ctx$foco else fp_sql(base_nodo, ctx)
   v <- nueva_var(ctx)
@@ -1176,8 +1231,9 @@ traducir_vista <- function(vista, desde) {
     filas_sql, desde, paste(condiciones, collapse = "\n    AND "))
   tipos <- tipos[nombres]
   names(tipos) <- nombres
+  sin_tipo <- vapply(defs, function(d) is.null(d$type), logical(1))
   list(sql = structure(sql, class = "fhir_sql"), tipos = tipos,
-       colecciones = colecciones[nombres])
+       colecciones = colecciones[nombres], sin_tipo = sin_tipo[nombres])
 }
 
 condicion_where <- function(x, expresion, ctx) {
