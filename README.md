@@ -11,9 +11,9 @@
 **fhirviews** lleva **HL7 FHIR R4** a R: un cliente para hablar con cualquier
 servidor FHIR desde R y RStudio, como harías con Postman, y un motor que
 convierte los recursos FHIR en **tablas** con el estándar
-**[SQL on FHIR](https://sql-on-fhir.org/)** (`ViewDefinition`). Es la primera
-implementación de SQL on FHIR en R y pasa **todas las pruebas *shareable*** del
-banco oficial de conformidad.
+**[SQL on FHIR](https://sql-on-fhir.org/)** (`ViewDefinition`). El motor de
+vistas funciona dentro de R, sin Java ni Spark, devuelve `data.frame` y pasa
+**todas las pruebas *shareable*** del banco oficial de conformidad.
 
 <img src="man/figures/README-json-tabla.png" width="100%" alt="Tres paneles: un recurso Patient en JSON, un ViewDefinition con column y forEach, y el data.frame resultante con una fila por cada nombre del paciente" />
 
@@ -364,16 +364,36 @@ R son unas cuatro veces más lentos porque deben convertirse a JSON.
 
 ## Comparación con otras herramientas
 
-| | fhirviews | [fhircrackr](https://cran.r-project.org/package=fhircrackr) | Implementaciones de SQL on FHIR en otros lenguajes ([Pathling](https://pathling.csiro.au/), [sof-js](https://github.com/FHIR/sql-on-fhir.js), ...) |
-|---|---|---|---|
-| Lenguaje | R | R | Java, Python, JavaScript, SQL |
-| Cliente FHIR | Sí, en JSON (búsqueda, escritura, transacciones, `$everything`, `$validate`) | Sí, en XML (búsqueda, `POST`, `PUT`) | Según la implementación |
-| Cómo se definen las tablas | `ViewDefinition` estándar (FHIRPath) | Descripciones propias con XPath | `ViewDefinition` estándar |
-| Vistas portables entre herramientas | Sí | No | Sí |
-| Banco oficial de conformidad | Incluido, 133/133 *shareable* | No aplica | Según la implementación |
-| Integración con RStudio | Panel *Connections* y addins | No | No aplica |
+fhirviews no es la única forma de usar FHIR o SQL on FHIR desde R. En
+particular, el paquete [pathling](https://cran.r-project.org/package=pathling)
+(CSIRO) también ejecuta `ViewDefinition` desde R con `ds_view()`, sobre Spark.
 
-fhirviews y fhircrackr pueden convivir: sus funciones no comparten nombres.
+| | fhirviews | [pathling](https://cran.r-project.org/package=pathling) | [fhircrackr](https://cran.r-project.org/package=fhircrackr) |
+|---|---|---|---|
+| Base técnica | R + fhirpath.js en V8 | Biblioteca Java de Pathling sobre Apache Spark (vía sparklyr) | R |
+| Requisitos | Solo paquetes de R (V8) | Java y Spark | Solo paquetes de R |
+| Tablas con `ViewDefinition` (SQL on FHIR) | Sí, `vista_ejecutar()` | Sí, `ds_view()` | No: descripciones propias con XPath |
+| Resultado | `data.frame` de R | Spark DataFrame | `data.frame` de R |
+| Cliente REST de FHIR | Sí, en JSON: búsqueda con paginación, escritura, transacciones, `$everything`, `$validate` | Lectura con *bulk export* (`$export`) | Sí, en XML: búsqueda, `POST`, `PUT` |
+| Terminologías (SNOMED CT, LOINC, ValueSet) | No | Sí, funciones `tx_*` con un servidor de terminología | No |
+| Volumen de datos | Memoria de una sesión de R | Distribuido: grandes volúmenes en un clúster | Memoria de una sesión de R |
+| Banco oficial de SQL on FHIR | Incluido en el paquete (`vista_conformidad()`) | Pathling figura en la [página de implementaciones](https://sql-on-fhir.org/extra/impls.html) | No aplica |
+| RStudio | Panel *Connections* y addins | Conexión de Spark | No |
+| Documentación | Español | Inglés | Inglés |
+
+**¿Cuál elegir?**
+
+- **pathling**, para grandes volúmenes en Spark o en un clúster, o si
+  necesitas operaciones de terminología.
+- **fhirviews**, para análisis en una sesión de R sin instalar Java ni Spark,
+  para hablar con un servidor FHIR (leer, escribir, validar) y llevar los
+  resultados a `data.frame`, DuckDB o pobecu, y para enseñar.
+- **fhircrackr**, si ya trabajas con su formato de diseño de tablas o con
+  recursos en XML.
+
+Las vistas de SQL on FHIR son portables: un mismo `ViewDefinition` en JSON se
+puede ejecutar en fhirviews y en pathling. Los tres paquetes pueden convivir,
+porque sus funciones no comparten nombres.
 
 ## Hoja de ruta
 
