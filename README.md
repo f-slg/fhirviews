@@ -57,7 +57,7 @@ FHIR Data Pipes...). fhirviews trae ese estándar a R.
 |---|---|
 | Consultar un servidor FHIR sin salir de R | Cliente completo: búsqueda con paginación, lectura, escritura, transacciones, `$everything`, `$validate`, errores legibles |
 | Convertir recursos en tablas de forma reproducible | Motor de `ViewDefinition` conforme al estándar, validado con el banco oficial |
-| Trabajar con volúmenes reales | Evaluación por lotes: unos 7 000 pacientes por segundo desde NDJSON |
+| Trabajar con volúmenes reales | Exportación masiva con `$export` (FHIR Bulk Data) y evaluación por lotes: unos 7 000 pacientes por segundo desde NDJSON |
 | Analizar con SQL | Las vistas se guardan en DuckDB (u otra base DBI) con un comando |
 | Enseñar y explorar | Panel *Connections* y addins de RStudio, peticiones al estilo Postman, datos de ejemplo |
 
@@ -352,6 +352,7 @@ R son unas cuatro veces más lentos porque deben convertirse a JSON.
 | Conexión | `fhir_conectar()`, `fhir_disponible()`, `fhir_capacidades()` | Conectarse, comprobar que el servidor responde y ver qué admite |
 | Lectura | `fhir_buscar()`, `fhir_leer()`, `fhir_everything()` | Buscar con paginación, leer un recurso o todo un paciente |
 | Escritura | `fhir_crear()`, `fhir_actualizar()`, `fhir_borrar()` | Crear, actualizar, borrar y ejecutar transacciones |
+| Exportación masiva | `fhir_exportar()`, `fhir_exportar_estado()`, `fhir_exportar_cancelar()` | Operación `$export` (FHIR Bulk Data): espera al servidor y descarga los NDJSON para el análisis poblacional |
 | Validación | `fhir_validar()` | Operación `$validate`, con la tabla de problemas |
 | Peticiones libres | `fhir_peticion()`, `fhir_ejecutar_texto()` | Cualquier otra petición, también escrita como en Postman |
 | Recursos | `fhir_recursos()`, `fhir_tabla()` | Reunir recursos de cualquier fuente y verlos como tabla rápida |
@@ -374,7 +375,7 @@ particular, el paquete [pathling](https://cran.r-project.org/package=pathling)
 | Requisitos | Solo paquetes de R (V8) | Java y Spark | Solo paquetes de R |
 | Tablas con `ViewDefinition` (SQL on FHIR) | Sí, `vista_ejecutar()` | Sí, `ds_view()` | No: descripciones propias con XPath |
 | Resultado | `data.frame` de R | Spark DataFrame | `data.frame` de R |
-| Cliente REST de FHIR | Sí, en JSON: búsqueda con paginación, escritura, transacciones, `$everything`, `$validate` | Lectura con *bulk export* (`$export`) | Sí, en XML: búsqueda, `POST`, `PUT` |
+| Cliente REST de FHIR | Sí, en JSON: búsqueda con paginación, escritura, transacciones, `$everything`, `$validate`, *bulk export* (`$export`) | Lectura con *bulk export* (`$export`) | Sí, en XML: búsqueda, `POST`, `PUT` |
 | Terminologías (SNOMED CT, LOINC, ValueSet) | No | Sí, funciones `tx_*` con un servidor de terminología | No |
 | Volumen de datos | Memoria de una sesión de R | Distribuido: grandes volúmenes en un clúster | Memoria de una sesión de R |
 | Banco oficial de SQL on FHIR | Incluido en el paquete (`vista_conformidad()`) | Pathling figura en la [página de implementaciones](https://sql-on-fhir.org/extra/impls.html) | No aplica |

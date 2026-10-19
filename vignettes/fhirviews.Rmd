@@ -206,7 +206,47 @@ fhir_vista(con, signos, subject = "Patient/123", category = "vital-signs")
 Y `vista_duckdb()` guarda varias vistas en DuckDB para unirlas con SQL; se
 explica en la viñeta *ViewDefinition en detalle*.
 
-## 8. Subir el caso a un servidor
+## 8. Exportación masiva para análisis poblacional
+
+Para una población entera (vigilancia epidemiológica, indicadores) buscar
+página a página es lento. Los servidores que implementan
+[FHIR Bulk Data](https://hl7.org/fhir/uv/bulkdata/) ofrecen la operación
+`$export`: preparan en segundo plano un archivo NDJSON por tipo de recurso y
+`fhir_exportar()` espera (respetando `Retry-After` y mostrando el avance) y
+los descarga a una carpeta. El NDJSON es justo el formato que
+`vista_ejecutar()` procesa más rápido:
+
+```{r, eval = FALSE}
+# Servidor de referencia de SMART, con datos sintéticos
+bulk <- fhir_conectar("https://bulk-data.smarthealthit.org/fhir")
+exp <- fhir_exportar(bulk, "paciente", tipos = c("Patient", "Condition"),
+                     desde = as.Date("2024-01-01"))
+exp
+#> <fhir_exportacion> completada (nivel paciente)
+#>   Carpeta: /tmp/RtmpkBV5Xn/fhir_export_17a757190dee2
+#>   Condition                1 archivo, 639 recursos
+#>   Patient                  1 archivo, 100 recursos
+
+diagnosticos <- vista_ejecutar(exp$archivos$Condition, vista_crear(
+  "Condition",
+  c(paciente = "subject.getReferenceKey(Patient)",
+    codigo = "code.coding.first().code")
+))
+```
+
+`nivel` elige qué exportar: todo el servidor (`"sistema"`), todos los
+pacientes (`"paciente"`) o los de un `Group` (`grupo = "id"`); `filtros`
+pasa búsquedas por tipo (`_typeFilter`). Si la exportación tarda, se puede
+lanzar sin esperar y volver más tarde:
+
+```{r, eval = FALSE}
+trabajo <- fhir_exportar(bulk, grupo = "brote-dengue", esperar = FALSE)
+trabajo <- fhir_exportar_estado(trabajo)   # consulta una vez
+trabajo <- fhir_exportar_estado(trabajo, esperar = TRUE)
+fhir_exportar_cancelar(trabajo)            # o cancelarla
+```
+
+## 9. Subir el caso a un servidor
 
 Los recursos se pueden cargar en un servidor propio (no en el público) para
 practicar con el taller. Como los ids son fijos, `fhir_actualizar()` los crea
