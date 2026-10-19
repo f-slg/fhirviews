@@ -93,6 +93,16 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 - [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
   : Guardar vistas en DuckDB
 
+## Motor DuckDB (experimental)
+
+Traducir vistas a SQL y ejecutarlas sobre NDJSON o Parquet sin cargar
+los recursos en R.
+
+- [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md)
+  : Ejecutar un ViewDefinition con DuckDB (experimental)
+- [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md)
+  : Traducir un ViewDefinition a SQL de DuckDB (experimental)
+
 ## Conformidad
 
 - [`vista_conformidad()`](https://f-slg.github.io/fhirviews/reference/vista_conformidad.md)

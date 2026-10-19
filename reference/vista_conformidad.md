@@ -14,7 +14,8 @@ vista_conformidad(
   descargar = FALSE,
   ref = "main",
   directorio = NULL,
-  informe = NULL
+  informe = NULL,
+  motor = c("v8", "duckdb")
 )
 ```
 
@@ -45,6 +46,14 @@ vista_conformidad(
   Ruta opcional de un archivo JSON donde se guarda el resultado en el
   formato oficial de informes de SQL on FHIR (el que usa la página de
   implementaciones).
+
+- motor:
+
+  Motor con el que se ejecutan las vistas: `"v8"` (por defecto,
+  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md))
+  o `"duckdb"`
+  ([`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md),
+  que necesita los paquetes DBI y duckdb).
 
 ## Value
 

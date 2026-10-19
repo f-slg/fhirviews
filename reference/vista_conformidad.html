@@ -58,7 +58,8 @@ tests/) con vista_ejecutar() e informa cuántas pasan."><meta property="og:image
 <span>  descargar <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ref <span class="op">=</span> <span class="st">"main"</span>,</span>
 <span>  directorio <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  informe <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  informe <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  motor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"v8"</span>, <span class="st">"duckdb"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -90,6 +91,12 @@ copia propia. Tiene prioridad sobre <code>descargar</code>.</p></dd>
 <dd><p>Ruta opcional de un archivo JSON donde se guarda el
 resultado en el formato oficial de informes de SQL on FHIR (el que usa
 la página de implementaciones).</p></dd>
+
+
+<dt id="arg-motor">motor<a class="anchor" aria-label="anchor" href="#arg-motor"></a></dt>
+<dd><p>Motor con el que se ejecutan las vistas: <code>"v8"</code> (por
+defecto, <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>) o <code>"duckdb"</code> (<code><a href="vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>,
+que necesita los paquetes DBI y duckdb).</p></dd>
 
 </dl></div>
     <div class="section level2">
