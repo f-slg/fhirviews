@@ -52,7 +52,8 @@ muestran el <code>OperationOutcome</code> del servidor.</p>
 <span>  token <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cabeceras <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  tiempo <span class="op">=</span> <span class="fl">60</span>,</span>
-<span>  verificar <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  verificar <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  panel <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -84,10 +85,16 @@ variable de entorno y usa por ejemplo <code>Sys.getenv("FHIR_TOKEN")</code>.</p>
 (<code>GET [base]/metadata</code>) para comprobar que el servidor responde y anotar
 su software y versión de FHIR.</p></dd>
 
+
+<dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
+<dd><p>Si es <code>TRUE</code> (por defecto) y se usa RStudio, registra la
+conexión en el panel <em>Connections</em> (ver <code><a href="fhir_conexion_activa.html">fhir_conexion_activa()</a></code>).</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Un objeto de clase <code>fhir_conexion</code>.</p>
+    <p>Un objeto de clase <code>fhir_conexion</code>, que además queda como conexión
+activa para los addins y <code><a href="fhir_ejecutar_texto.html">fhir_ejecutar_texto()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

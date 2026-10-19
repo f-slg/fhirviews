@@ -91,8 +91,11 @@ repite el parámetro (equivale a un <em>Y</em> en búsquedas FHIR).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>El cuerpo de la respuesta como lista de R (o <code>NULL</code> si viene
-vacío), con los atributos <code>estado</code> (código HTTP) y <code>cabeceras</code>.</p>
+    <p>El cuerpo de la respuesta como lista de R de clase
+<code>fhir_respuesta</code> (vacía si el servidor no devolvió cuerpo), con los
+atributos <code>estado</code> (código HTTP) y <code>cabeceras</code>. Al imprimirla muestra el
+estado y el JSON con sangría, como Postman. Si es un Bundle, se puede
+pasar a <code><a href="fhir_recursos.html">fhir_recursos()</a></code>, <code><a href="fhir_tabla.html">fhir_tabla()</a></code> o <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>.</p>
     </div>
 
     <div class="section level2">

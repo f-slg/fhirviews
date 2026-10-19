@@ -13,7 +13,8 @@ fhir_conectar(
   token = NULL,
   cabeceras = list(),
   tiempo = 60,
-  verificar = TRUE
+  verificar = TRUE,
+  panel = TRUE
 )
 ```
 
@@ -44,9 +45,17 @@ fhir_conectar(
   (`GET [base]/metadata`) para comprobar que el servidor responde y
   anotar su software y versión de FHIR.
 
+- panel:
+
+  Si es `TRUE` (por defecto) y se usa RStudio, registra la conexión en
+  el panel *Connections* (ver
+  [`fhir_conexion_activa()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md)).
+
 ## Value
 
-Un objeto de clase `fhir_conexion`.
+Un objeto de clase `fhir_conexion`, que además queda como conexión
+activa para los addins y
+[`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md).
 
 ## See also
 

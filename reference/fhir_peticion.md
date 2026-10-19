@@ -50,8 +50,14 @@ fhir_peticion(
 
 ## Value
 
-El cuerpo de la respuesta como lista de R (o `NULL` si viene vacío), con
-los atributos `estado` (código HTTP) y `cabeceras`.
+El cuerpo de la respuesta como lista de R de clase `fhir_respuesta`
+(vacía si el servidor no devolvió cuerpo), con los atributos `estado`
+(código HTTP) y `cabeceras`. Al imprimirla muestra el estado y el JSON
+con sangría, como Postman. Si es un Bundle, se puede pasar a
+[`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md),
+[`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md)
+o
+[`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).
 
 ## Examples
 

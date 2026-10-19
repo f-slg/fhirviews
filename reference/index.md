@@ -22,13 +22,30 @@ Conectarse a un servidor FHIR R4 y hacer peticiones, como en Postman.
   : Capacidades del servidor
 - [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md)
   : Hacer una petición FHIR cualquiera
+- [`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md)
+  : Ejecutar una petición escrita como texto
+- [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md)
+  : Ejecutar una vista contra un servidor FHIR
 - [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md)
   : Comprobar si un servidor FHIR responde
+
+## RStudio
+
+Panel Connections, conexión activa y addins.
+
+- [`fhir_conexion_activa()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md)
+  [`fhir_desconectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md)
+  : Conexión activa y panel Connections de RStudio
+- [`addin_peticion()`](https://f-slg.github.io/fhirviews/reference/addin_peticion.md)
+  [`addin_vista()`](https://f-slg.github.io/fhirviews/reference/addin_peticion.md)
+  : Addins de RStudio
 
 ## Recursos FHIR
 
 - [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md)
   : Reunir recursos FHIR en una lista
+- [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md)
+  : Tabla rápida de recursos FHIR
 
 ## Vistas SQL on FHIR
 

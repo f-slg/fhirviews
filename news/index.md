@@ -69,3 +69,21 @@
   guarda una o varias vistas como tablas en DuckDB (o en otra conexión
   DBI) para consultarlas y unirlas con SQL; las columnas `collection` se
   guardan como listas de DuckDB. DBI y duckdb van en Suggests.
+- Integración con RStudio:
+  [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md)
+  registra el servidor en el panel *Connections* (tipos de recurso,
+  columnas, vista previa y acciones) y lo deja como conexión activa
+  ([`fhir_conexion_activa()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md),
+  [`fhir_desconectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md));
+  el diálogo *New Connection* ofrece FHIR; addins *Ejecutar petición
+  FHIR* y *Ejecutar ViewDefinition*.
+- [`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md)
+  ejecuta peticiones escritas como en Postman o en archivos `.http`;
+  [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md)
+  descarga del servidor y aplica una vista en un paso;
+  [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md)
+  da una tabla rápida sin ViewDefinition.
+- [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md)
+  devuelve un objeto `fhir_respuesta` que se imprime con el estado HTTP
+  y el JSON con sangría.
+- El token de acceso solo se envía a URL del servidor de la conexión.
