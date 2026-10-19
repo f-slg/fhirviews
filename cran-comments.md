@@ -37,6 +37,18 @@ This is the first submission of 'fhirviews'.
     (<https://github.com/FHIR/sql-on-fhir.js>, MIT), unmodified, used by
     `vista_conformidad()` and the package tests.
 
+* Optional features use packages in Suggests, always checked with
+  `rlang::check_installed()` or `requireNamespace()`: 'duckdb' and 'DBI'
+  (views as 'DuckDB' tables and the experimental 'DuckDB' SQL engine),
+  'jose' and 'openssl' ('SMART on FHIR' Backend Services, signing a JWT with
+  the user's private key), 'httpuv' (interactive 'OAuth2' login) and
+  'rstudioapi' (addins). Tests and vignette chunks that need them are skipped
+  when they are not installed.
+
+* Authentication tokens are kept in memory only (on disk only if the user
+  asks for it explicitly with `cache_disco = TRUE`, through 'httr2'), are never
+  printed and are only sent to the URL of the connected FHIR server.
+
 * Examples that need a FHIR server are wrapped in
   `@examplesIf fhir_disponible(...)`, which checks quickly whether the public
   test server <https://hapi.fhir.org/baseR4> responds, so they are skipped
