@@ -62,6 +62,7 @@ reference:
   - vista_leer
   - vista_validar
   - vista_json
+  - vista_duckdb
 - title: Conformidad
   contents:
   - vista_conformidad

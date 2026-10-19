@@ -42,3 +42,7 @@
   reintenta ante 429/503 y convierte el `OperationOutcome` de los errores en
   mensajes legibles. Los resultados de búsqueda conservan el JSON original
   para ejecutar vistas rápidamente.
+* `vista_duckdb()` guarda una o varias vistas como tablas en DuckDB (o en
+  otra conexión DBI) para consultarlas y unirlas con SQL; las columnas
+  `collection` se guardan como listas de DuckDB. DBI y duckdb van en
+  Suggests.
