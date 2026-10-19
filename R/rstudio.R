@@ -150,7 +150,21 @@ icono_fhir <- function() {
 codigo_conexion <- function(con) {
   paste0("library(fhirviews)\ncon <- fhir_conectar(\"", con$url, "\"",
          if (!is.null(con$token)) ", token = Sys.getenv(\"FHIR_TOKEN\")",
+         if (!is.null(con$auth)) codigo_auth(con$auth),
          ")")
+}
+
+# Código para reconectar sin escribir el secreto ni la clave
+codigo_auth <- function(a) {
+  id <- encodeString(a$id, quote = "\"")
+  paste0(",\n  autenticacion = ", switch(
+    a$tipo,
+    cliente = paste0("fhir_auth_cliente(", id,
+                     ", Sys.getenv(\"FHIR_SECRETO\")"),
+    backend = paste0("fhir_auth_backend(", id,
+                     ", Sys.getenv(\"FHIR_CLAVE_PRIVADA\")"),
+    interactiva = paste0("fhir_auth_interactiva(", id)
+  ), ", alcances = ", encodeString(a$alcances, quote = "\""), ")")
 }
 
 abrir_panel <- function(con) {

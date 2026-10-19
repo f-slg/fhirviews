@@ -45,7 +45,10 @@ Imports:
 Suggests:
     DBI,
     duckdb,
+    httpuv,
+    jose,
     knitr,
+    openssl,
     pobecu,
     rmarkdown,
     rstudioapi,
