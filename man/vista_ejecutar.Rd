@@ -21,7 +21,11 @@ Un \code{data.frame} con una columna por cada \code{column} de la vista, en
 el orden que define la especificación. Los tipos de R siguen el \code{type}
 de cada columna cuando se indica (\code{boolean} a lógico; \code{integer},
 \code{positiveInt} y \code{unsignedInt} a entero; \code{decimal} a numérico; el resto a
-texto) y, si no, el de los valores. Las fechas quedan como texto ISO 8601
+texto); si algún valor no es compatible (por ejemplo 1.7 en una columna
+\code{integer}) se avisa y se conserva sin convertir. Sin \code{type}, el tipo sale
+de los valores; si la columna no tiene ninguno, se deduce del modelo de
+FHIR R4 (por ejemplo \code{birthDate} es texto y \code{active}, lógico), para que
+la misma vista dé siempre los mismos tipos. Las fechas quedan como texto ISO 8601
 porque FHIR admite fechas parciales (\code{"2024"}, \code{"2024-05"}). Las columnas
 con \code{collection: true} son listas.
 }

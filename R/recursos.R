@@ -11,7 +11,8 @@
 #'   * texto JSON con un recurso, un Bundle o un arreglo de recursos;
 #'   * texto NDJSON (un recurso por línea) o un vector de caracteres con un
 #'     recurso JSON por elemento;
-#'   * la ruta a un archivo `.json`, `.ndjson` o `.ndjson.gz`.
+#'   * la ruta a un archivo `.json`, `.ndjson` o `.ndjson.gz`, o un vector de
+#'     rutas (los recursos de todos los archivos se juntan).
 #'
 #' @return Una lista de recursos (listas de R) de clase `fhir_recursos`.
 #' @export
@@ -84,10 +85,27 @@ recursos_desde_lista <- function(x) {
 }
 
 recursos_desde_texto <- function(x) {
-  if (length(x) == 1L && !grepl("^\\s*[[{]", x) && file.exists(x)) {
-    return(recursos_desde_archivo(x))
+  x <- x[!is.na(x)]
+  es_json <- grepl("^\\s*[[{]", x)
+  # Rutas de archivo: todo lo que no empieza como JSON
+  if (length(x) > 0L && !any(es_json)) {
+    faltan <- x[!file.exists(x)]
+    if (length(faltan) > 0L) {
+      cli::cli_abort(c(
+        "No se encontr\u00f3 {cli::qty(length(faltan))}el archivo{?s} {.file {faltan}}.",
+        "i" = "Directorio de trabajo: {.file {getwd()}}."
+      ), class = "fhirviews_error", call = NULL)
+    }
+    partes <- lapply(x, recursos_desde_archivo)
+    return(do.call(c.fhir_recursos, partes))
   }
   if (length(x) > 1L) {
+    if (!all(es_json | !nzchar(trimws(x)))) {
+      cli::cli_abort(c(
+        "El vector mezcla texto JSON con otras cosas.",
+        "i" = "Pasa rutas de archivo o un recurso JSON por elemento, no ambos."
+      ), class = "fhirviews_error", call = NULL)
+    }
     return(recursos_ndjson(x))
   }
   datos <- tryCatch(parsear_json(x), error = function(e) NULL)
@@ -107,6 +125,9 @@ recursos_ndjson <- function(lineas) {
 
 recursos_desde_archivo <- function(ruta) {
   lineas <- readLines(ruta, encoding = "UTF-8", warn = FALSE)
+  if (!any(nzchar(trimws(lineas)))) {
+    return(nuevo_fhir_recursos(list(), fuente = character()))
+  }
   if (grepl("\\.ndjson(\\.gz)?$", ruta, ignore.case = TRUE)) {
     return(recursos_ndjson(lineas))
   }

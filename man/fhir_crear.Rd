@@ -23,13 +23,17 @@ JSON o ruta a un archivo JSON. Para borrar: el tipo de recurso
 }
 \value{
 \code{fhir_crear()} y \code{fhir_actualizar()} devuelven el recurso tal como
-lo guardó el servidor (con su id y \code{meta.versionId}). \code{fhir_borrar()}
-devuelve \code{TRUE} de forma invisible.
+lo guardó el servidor (con su id y \code{meta.versionId}); para un Bundle
+\code{transaction} o \code{batch}, el Bundle de respuesta del servidor
+(\code{transaction-response} o \code{batch-response}). \code{fhir_borrar()} devuelve
+\code{TRUE} de forma invisible.
 }
 \description{
 \itemize{
 \item \code{fhir_crear()} envía un recurso nuevo (\verb{POST [base]/[tipo]}); el
-servidor le asigna el id.
+servidor le asigna el id. Un Bundle de tipo \code{transaction} o \code{batch} se
+envía a la base del servidor (\code{POST [base]}), que lo procesa: crea,
+actualiza o borra cada entrada según su \code{request}.
 \item \code{fhir_actualizar()} reemplaza un recurso existente
 (\verb{PUT [base]/[tipo]/[id]}), o lo crea con ese id si el servidor lo
 permite.

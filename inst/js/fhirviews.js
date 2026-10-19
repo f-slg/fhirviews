@@ -74,8 +74,143 @@ var fhirviews = (function () {
     return fhirpath.resolveInternalTypes(valores);
   }
 
-  // Variables: {nombre: valor} o {nombre: {tipo: 'date', valor: '...'}} para
-  // las constantes que deben compararse como fechas u horas.
+  // --- Inferencia estatica de tipos ----------------------------------------
+  //
+  // Para expresiones de navegacion simples (name.where(...).family,
+  // value.ofType(Quantity).value, exists(), join(), ...) deduce el tipo FHIR
+  // del resultado con el modelo R4 (path2Type), sin datos. Devuelve null si
+  // la expresion es mas compleja (operadores, funciones desconocidas).
+
+  var tiposSistema = {
+    'System.String': 'string', 'System.Boolean': 'boolean',
+    'System.Integer': 'integer', 'System.Decimal': 'decimal',
+    'System.Date': 'date', 'System.DateTime': 'dateTime',
+    'System.Time': 'time'
+  };
+  var mismoTipo = ['first', 'last', 'single', 'distinct', 'tail', 'where',
+                   'take', 'skip', 'trace', 'intersect', 'exclude'];
+  var booleanas = ['exists', 'empty', 'not', 'hasValue', 'all', 'allTrue',
+                   'anyTrue', 'allFalse', 'anyFalse', 'isDistinct',
+                   'subsetOf', 'supersetOf', 'contains', 'startsWith',
+                   'endsWith', 'matches', 'is', 'memberOf', 'htmlChecks',
+                   'conformsTo'];
+  var enteras = ['count', 'length', 'indexOf'];
+  var textos = ['join', 'toString', 'getResourceKey', 'getReferenceKey',
+                'substring', 'upper', 'lower', 'replace', 'replaceMatches',
+                'trim', 'encode', 'decode', 'escape', 'unescape'];
+
+  function normalizarTipo(t) {
+    if (!t) {
+      return null;
+    }
+    t = tiposSistema[t] || t;
+    return t.replace(/^(FHIR|System)\./, '');
+  }
+
+  // Divide en pasos por los puntos que no estan entre parentesis o comillas
+  function partirExpresion(e) {
+    var partes = [];
+    var actual = '';
+    var nivel = 0;
+    var comilla = null;
+    for (var i = 0; i < e.length; i++) {
+      var c = e[i];
+      if (comilla) {
+        actual += c;
+        if (c === comilla && e[i - 1] !== '\\') {
+          comilla = null;
+        }
+        continue;
+      }
+      if (c === "'" || c === '`') {
+        comilla = c;
+      } else if (c === '(') {
+        nivel++;
+      } else if (c === ')') {
+        nivel--;
+      } else if (c === '.' && nivel === 0) {
+        partes.push(actual.trim());
+        actual = '';
+        continue;
+      }
+      actual += c;
+    }
+    partes.push(actual.trim());
+    return partes;
+  }
+
+  function hijo(ctx, nombre) {
+    var claves = [ctx.ruta + '.' + nombre];
+    var t = ctx.tipo;
+    for (var n = 0; t && n < 20; n++) {
+      claves.push(t + '.' + nombre);
+      t = modelo.type2Parent[t];
+    }
+    for (var i = 0; i < claves.length; i++) {
+      var tt = normalizarTipo(modelo.path2Type[claves[i]]);
+      if (tt) {
+        if (tt === 'BackboneElement' || tt === 'Element') {
+          return { tipo: tt, ruta: claves[i] };
+        }
+        return { tipo: tt, ruta: tt };
+      }
+      if (modelo.choiceTypePaths[claves[i]]) {
+        return { tipo: '(eleccion)', ruta: claves[i] };
+      }
+      // Elementos recursivos (QuestionnaireResponse.item.item, ...)
+      var otra = modelo.pathsDefinedElsewhere[claves[i]];
+      if (otra) {
+        return { tipo: 'BackboneElement', ruta: otra };
+      }
+    }
+    return null;
+  }
+
+  function tipoExpresion(ctx, expresion) {
+    if (/^\s*%rowIndex\s*$/.test(expresion)) {
+      return { tipo: 'integer', ruta: 'integer' };
+    }
+    var partes = partirExpresion(expresion);
+    for (var i = 0; i < partes.length; i++) {
+      var p = partes[i];
+      if (p === '$this' || (i === 0 && p === ctx.tipo)) {
+        continue;
+      }
+      var m = /^([A-Za-z_][A-Za-z0-9_]*)(\(([\s\S]*)\))?$/.exec(p);
+      if (!m) {
+        return null;
+      }
+      var nombre = m[1];
+      if (m[2] === undefined) {
+        if (ctx.tipo === '(eleccion)') {
+          return null;
+        }
+        ctx = hijo(ctx, nombre);
+        if (!ctx) {
+          return null;
+        }
+      } else if (nombre === 'ofType') {
+        var t = normalizarTipo(m[3].trim());
+        ctx = { tipo: t, ruta: t };
+      } else if (nombre === 'extension') {
+        ctx = { tipo: 'Extension', ruta: 'Extension' };
+      } else if (mismoTipo.indexOf(nombre) >= 0) {
+        continue;
+      } else if (booleanas.indexOf(nombre) >= 0) {
+        ctx = { tipo: 'boolean', ruta: 'boolean' };
+      } else if (enteras.indexOf(nombre) >= 0) {
+        ctx = { tipo: 'integer', ruta: 'integer' };
+      } else if (textos.indexOf(nombre) >= 0) {
+        ctx = { tipo: 'string', ruta: 'string' };
+      } else {
+        return null;
+      }
+    }
+    return ctx.tipo === '(eleccion)' ? null : ctx;
+  }
+
+  // Variables: {nombre: valor} o {nombre: {literal: '@2020-01-01'}} para las
+  // constantes que deben compararse como fechas u horas.
   function prepararVariables(variables) {
     var salida = {};
     if (!variables) {
@@ -170,6 +305,16 @@ var fhirviews = (function () {
         }
         return aJSON(r);
       });
+    },
+
+    // Tipo FHIR del resultado de una expresion en un contexto {tipo, ruta}, o
+    // null si no se puede deducir.
+    tipo: function (ctx, expresion) {
+      try {
+        return tipoExpresion(ctx, expresion);
+      } catch (e) {
+        return null;
+      }
     },
 
     // Comprueba que una expresion sea valida; lanza un error si no lo es.

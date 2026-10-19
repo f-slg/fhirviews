@@ -18,7 +18,9 @@ fhir_conectar(
 \code{"https://hapi.fhir.org/baseR4"} o \code{"http://localhost:8080/fhir"}.}
 
 \item{token}{Token de acceso (OAuth2 \emph{bearer}) opcional. No se muestra al
-imprimir la conexión. Para no escribirlo en el código, guárdalo en una
+imprimir la conexión, solo se envía a URL del propio servidor y, si el
+servidor no usa https (y no es local), se avisa de que viajaría sin
+cifrar. Para no escribirlo en el código, guárdalo en una
 variable de entorno y usa por ejemplo \code{Sys.getenv("FHIR_TOKEN")}.}
 
 \item{cabeceras}{Lista con nombre de cabeceras HTTP adicionales.}

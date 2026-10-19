@@ -23,7 +23,11 @@
 #'   el orden que define la especificación. Los tipos de R siguen el `type`
 #'   de cada columna cuando se indica (`boolean` a lógico; `integer`,
 #'   `positiveInt` y `unsignedInt` a entero; `decimal` a numérico; el resto a
-#'   texto) y, si no, el de los valores. Las fechas quedan como texto ISO 8601
+#'   texto); si algún valor no es compatible (por ejemplo 1.7 en una columna
+#'   `integer`) se avisa y se conserva sin convertir. Sin `type`, el tipo sale
+#'   de los valores; si la columna no tiene ninguno, se deduce del modelo de
+#'   FHIR R4 (por ejemplo `birthDate` es texto y `active`, lógico), para que
+#'   la misma vista dé siempre los mismos tipos. Las fechas quedan como texto ISO 8601
 #'   porque FHIR admite fechas parciales (`"2024"`, `"2024-05"`). Las columnas
 #'   con `collection: true` son listas.
 #' @seealso [vista_crear()] y [vista_leer()] para definir la vista y
@@ -78,9 +82,14 @@ vista_ejecutar <- function(recursos, vista, validar = TRUE) {
 
   ids <- integer()
   if (any(usar)) {
-    # Si todos son del tipo de la vista se cargan tal cual (y se aprovecha
-    # el texto JSON original, si lo hay)
-    ids <- if (all(usar)) m$cargar(recursos) else m$cargar(recursos[usar])
+    # Con el texto JSON original se cargan todos (JSON.parse es rápido) y se
+    # filtran los índices: subdividir la lista descartaría ese texto y
+    # obligaría a volver a convertir los recursos con jsonlite.
+    if (all(usar) || !is.null(attr(recursos, "fuente"))) {
+      ids <- m$cargar(recursos)[usar]
+    } else {
+      ids <- m$cargar(recursos[usar])
+    }
   }
   ctx <- list(nodo = ids, fila = rep(0L, length(ids)))
 
@@ -102,7 +111,7 @@ vista_ejecutar <- function(recursos, vista, validar = TRUE) {
   }
 
   filas <- ejecutar_partes(list(select = vista$select), ctx, entorno)
-  armar_tabla(filas, vista)
+  armar_tabla(filas, vista, m)
 }
 
 # --- Evaluación por lotes ----------------------------------------------------
@@ -284,11 +293,21 @@ tipos_logicos <- "boolean"
 tipos_enteros <- c("integer", "positiveInt", "unsignedInt")
 tipos_decimales <- "decimal"
 
-armar_tabla <- function(filas, vista) {
+armar_tabla <- function(filas, vista, motor) {
   defs <- definiciones_columnas(vista)
   nombres <- names(filas$cols)
+  inferidos <- NULL
   cols <- lapply(nombres, function(nm) {
-    convertir_columna(filas$cols[[nm]], defs[[nm]])
+    def <- defs[[nm]]
+    valores <- filas$cols[[nm]]
+    # Sin `type` y sin ningún valor, el tipo se deduce del modelo FHIR para
+    # que la columna no dependa de los datos (vacía sería lógica)
+    if (is.null(def$type) && !isTRUE(def$collection) &&
+        all(vapply(valores, is.null, logical(1)))) {
+      if (is.null(inferidos)) inferidos <<- inferir_tipos(vista, motor)
+      def$type <- inferidos[[nm]]
+    }
+    convertir_columna(valores, def, nm)
   })
   names(cols) <- nombres
   structure(cols, row.names = .set_row_names(length(filas$origen)),
@@ -306,7 +325,32 @@ definiciones_columnas <- function(vista) {
   defs
 }
 
-convertir_columna <- function(valores, def) {
+# Tipo FHIR de cada columna sin `type`, deducido con el modelo R4 siguiendo
+# los forEach/repeat de la vista (NULL si no se puede deducir o si no es un
+# tipo primitivo)
+inferir_tipos <- function(vista, motor) {
+  tipos <- list()
+  visitar <- function(s, ctx) {
+    iteracion <- s$forEach %||% s$forEachOrNull %||% s[["repeat"]][[1]]
+    if (!is.null(ctx) && !is.null(iteracion)) {
+      ctx <- motor$tipo(ctx, iteracion)
+    }
+    for (cl in s$column) {
+      if (!is.null(ctx) && is.null(cl$type) && !isTRUE(cl$collection)) {
+        t <- motor$tipo(ctx, cl$path)$tipo
+        if (!is.null(t) && grepl("^[a-z]", t)) tipos[[cl$name]] <<- t
+      }
+    }
+    for (sub in s$select) visitar(sub, ctx)
+    for (sub in s$unionAll) visitar(sub, ctx)
+  }
+  for (s in vista$select) {
+    visitar(s, list(tipo = vista$resource, ruta = vista$resource))
+  }
+  tipos
+}
+
+convertir_columna <- function(valores, def, nombre = def$name) {
   if (isTRUE(def$collection)) {
     return(lapply(valores, function(x) {
       if (length(x) == 0L) return(vector_tipo(def$type))
@@ -321,21 +365,49 @@ convertir_columna <- function(valores, def) {
   }
   vec <- unlist(lapply(valores, function(x) if (is.null(x)) NA else x))
   if (is.null(vec)) vec <- logical()
-  tipo <- def$type
-  if (is.null(tipo)) {
+  if (is.null(def$type)) {
     return(vec)
   }
-  if (tipo %in% tipos_logicos) {
-    as.logical(vec)
-  } else if (tipo %in% tipos_enteros) {
-    as.integer(vec)
-  } else if (tipo %in% tipos_decimales) {
-    as.numeric(vec)
-  } else if (is.logical(vec) && all(is.na(vec))) {
-    as.character(vec)
-  } else {
-    vec
+  convertir_tipo(vec, def$type, nombre)
+}
+
+# Convierte al tipo de R del `type` FHIR. Si algún valor no es compatible
+# (por ejemplo 1.7 en una columna integer) avisa y conserva los valores en
+# lugar de truncarlos o convertirlos en NA.
+convertir_tipo <- function(vec, tipo, nombre) {
+  avisar <- function(detalle) {
+    cli::cli_warn(c(
+      "La columna {.field {nombre}} tiene {.code type: {tipo}}, pero {detalle}.",
+      "i" = "Se conservan los valores sin convertir."
+    ), class = "fhirviews_aviso_tipo", call = NULL)
   }
+  presentes <- !is.na(vec)
+  if (tipo %in% tipos_logicos) {
+    if (is.logical(vec)) return(vec)
+    nuevo <- as.logical(vec)
+    if (any(presentes & is.na(nuevo))) {
+      avisar("hay valores que no son l\u00f3gicos")
+      return(vec)
+    }
+    return(nuevo)
+  }
+  if (tipo %in% c(tipos_enteros, tipos_decimales)) {
+    num <- suppressWarnings(as.numeric(vec))
+    if (any(presentes & is.na(num))) {
+      avisar("hay valores que no son num\u00e9ricos")
+      return(vec)
+    }
+    if (tipo %in% tipos_decimales) return(num)
+    no_enteros <- presentes & (num != round(num) | abs(num) > .Machine$integer.max)
+    if (any(no_enteros)) {
+      avisar(paste0("hay valores que no son enteros (por ejemplo ",
+                    num[no_enteros][1], ")"))
+      return(num)
+    }
+    return(as.integer(num))
+  }
+  # Tipos de texto (string, code, date, dateTime, uri...)
+  if (is.logical(vec) && all(!presentes)) as.character(vec) else vec
 }
 
 vector_tipo <- function(tipo) {

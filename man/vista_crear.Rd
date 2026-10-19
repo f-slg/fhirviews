@@ -60,7 +60,7 @@ vista_crear(
   "Observation",
   c(paciente = "subject.getReferenceKey(Patient)",
     valor = "value.ofType(Quantity).value"),
-  where = "code.coding.where(code = \%loinc).exists()",
-  constantes = list(loinc = "85354-9")
+  where = "code.coding.where(code = \%codigo_pa).exists()",
+  constantes = list(codigo_pa = "85354-9")
 )
 }

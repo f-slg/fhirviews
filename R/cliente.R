@@ -8,7 +8,9 @@
 #' @param url Dirección base del servidor, por ejemplo
 #'   `"https://hapi.fhir.org/baseR4"` o `"http://localhost:8080/fhir"`.
 #' @param token Token de acceso (OAuth2 *bearer*) opcional. No se muestra al
-#'   imprimir la conexión. Para no escribirlo en el código, guárdalo en una
+#'   imprimir la conexión, solo se envía a URL del propio servidor y, si el
+#'   servidor no usa https (y no es local), se avisa de que viajaría sin
+#'   cifrar. Para no escribirlo en el código, guárdalo en una
 #'   variable de entorno y usa por ejemplo `Sys.getenv("FHIR_TOKEN")`.
 #' @param cabeceras Lista con nombre de cabeceras HTTP adicionales.
 #' @param tiempo Segundos de espera máxima por petición.
@@ -32,7 +34,16 @@ fhir_conectar <- function(url, token = NULL, cabeceras = list(), tiempo = 60,
     cli::cli_abort("{.arg url} debe empezar con {.val http://} o {.val https://}.",
                    class = "fhirviews_error")
   }
-  if (!is.null(token)) texto_simple(token, "token")
+  if (!is.null(token)) {
+    texto_simple(token, "token")
+    local <- grepl("^http://(localhost|127\\.0\\.0\\.1|\\[::1\\])([:/]|$)", url)
+    if (grepl("^http://", url) && !local) {
+      cli::cli_warn(c(
+        "El token se enviar\u00e1 sin cifrar: {.url {url}} usa http, no https.",
+        "i" = "Usa la direcci\u00f3n https del servidor si la tiene."
+      ), class = "fhirviews_aviso_seguridad")
+    }
+  }
   if (length(cabeceras) > 0L &&
       (is.null(names(cabeceras)) || any(!nzchar(names(cabeceras))))) {
     cli::cli_abort("{.arg cabeceras} debe ser una lista con nombre.",
@@ -249,7 +260,9 @@ fhir_everything <- function(con, recurso = "Patient", id, parametros = list(),
 #' Crear, actualizar y borrar recursos
 #'
 #' * `fhir_crear()` envía un recurso nuevo (`POST [base]/[tipo]`); el
-#'   servidor le asigna el id.
+#'   servidor le asigna el id. Un Bundle de tipo `transaction` o `batch` se
+#'   envía a la base del servidor (`POST [base]`), que lo procesa: crea,
+#'   actualiza o borra cada entrada según su `request`.
 #' * `fhir_actualizar()` reemplaza un recurso existente
 #'   (`PUT [base]/[tipo]/[id]`), o lo crea con ese id si el servidor lo
 #'   permite.
@@ -262,8 +275,10 @@ fhir_everything <- function(con, recurso = "Patient", id, parametros = list(),
 #' @param id Para borrar, el id del recurso, si `recurso` es solo el tipo.
 #'
 #' @return `fhir_crear()` y `fhir_actualizar()` devuelven el recurso tal como
-#'   lo guardó el servidor (con su id y `meta.versionId`). `fhir_borrar()`
-#'   devuelve `TRUE` de forma invisible.
+#'   lo guardó el servidor (con su id y `meta.versionId`); para un Bundle
+#'   `transaction` o `batch`, el Bundle de respuesta del servidor
+#'   (`transaction-response` o `batch-response`). `fhir_borrar()` devuelve
+#'   `TRUE` de forma invisible.
 #' @export
 #' @examplesIf interactive() && fhir_disponible("http://localhost:8080/fhir")
 #' # Con un servidor HAPI local (por ejemplo, el del taller aprende-fhir)
@@ -283,6 +298,12 @@ fhir_everything <- function(con, recurso = "Patient", id, parametros = list(),
 fhir_crear <- function(con, recurso) {
   comprobar_conexion(con)
   datos <- leer_recurso(recurso)
+  if (identical(datos$tipo, "Bundle") &&
+      isTRUE(datos$tipo_bundle %in% c("transaction", "batch"))) {
+    # Las transacciones se procesan en la base, no en [base]/Bundle (que
+    # guardaría el Bundle como un recurso más)
+    return(peticion_json(con, "POST", "", cuerpo = datos$json)$datos)
+  }
   res <- peticion_json(con, "POST", datos$tipo, cuerpo = datos$json,
                        cabeceras = list(Prefer = "return=representation"))
   representacion(con, res)
@@ -416,7 +437,17 @@ comprobar_conexion <- function(con) {
 }
 
 url_completa <- function(con, ruta) {
-  if (grepl("^https?://", ruta)) ruta else paste0(con$url, "/", sub("^/+", "", ruta))
+  if (grepl("^https?://", ruta)) {
+    return(ruta)
+  }
+  ruta <- sub("^/+", "", ruta)
+  if (!nzchar(ruta)) con$url else paste0(con$url, "/", ruta)
+}
+
+# El token solo se envía a la base del servidor o a rutas bajo ella
+mismo_servidor <- function(con, url) {
+  identical(url, con$url) || startsWith(url, paste0(con$url, "/")) ||
+    startsWith(url, paste0(con$url, "?"))
 }
 
 agente <- function() {
@@ -437,7 +468,7 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
   req <- httr2::req_headers(req, Accept = "application/fhir+json",
                             !!!con$cabeceras, !!!cabeceras)
   # El token solo se envía al servidor de la conexión, no a otras URL
-  if (!is.null(con$token) && startsWith(url, paste0(con$url, "/"))) {
+  if (!is.null(con$token) && mismo_servidor(con, url)) {
     req <- httr2::req_auth_bearer_token(req, con$token)
   }
   if (length(parametros) > 0L) {
@@ -555,6 +586,7 @@ paginar <- function(con, ruta, parametros, max_paginas, progreso) {
   recursos <- list()
   total <- NULL
   siguiente <- NULL
+  visitadas <- character()
   pagina <- 0L
   if (progreso) {
     cli::cli_progress_bar(format = paste(
@@ -580,7 +612,17 @@ paginar <- function(con, ruta, parametros, max_paginas, progreso) {
     textos <- c(textos, res$texto)
     recursos <- c(recursos, recursos_desde_lista(bundle))
     if (progreso) cli::cli_progress_update()
+    if (!is.null(siguiente)) visitadas <- c(visitadas, siguiente)
     siguiente <- enlace_siguiente(bundle, con)
+    if (!is.null(siguiente) && siguiente %in% visitadas) {
+      cli::cli_warn(c(
+        "El servidor repiti\u00f3 un enlace {.field next} ya visitado; se
+         detiene la paginaci\u00f3n para no entrar en un bucle.",
+        "i" = "Se reunieron {length(recursos)} recurso{?s} en {pagina}
+               p\u00e1gina{?s}."
+      ), class = "fhirviews_aviso")
+      break
+    }
     if (is.null(siguiente) || pagina >= max_paginas) break
   }
   if (progreso) cli::cli_progress_done()
@@ -635,7 +677,10 @@ leer_recurso <- function(recurso) {
     cli::cli_abort("El recurso no tiene {.field resourceType}.",
                    class = "fhirviews_error", call = NULL)
   }
-  list(tipo = datos$resourceType, id = datos$id, json = json)
+  tipo_bundle <- datos$type
+  list(tipo = datos$resourceType, id = datos$id,
+       tipo_bundle = if (is.character(tipo_bundle)) tipo_bundle,
+       json = json)
 }
 
 cuerpo_json <- function(cuerpo) {

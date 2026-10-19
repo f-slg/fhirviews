@@ -84,8 +84,8 @@ vista_leer <- function(x, validar = TRUE) {
 #'   "Observation",
 #'   c(paciente = "subject.getReferenceKey(Patient)",
 #'     valor = "value.ofType(Quantity).value"),
-#'   where = "code.coding.where(code = %loinc).exists()",
-#'   constantes = list(loinc = "85354-9")
+#'   where = "code.coding.where(code = %codigo_pa).exists()",
+#'   constantes = list(codigo_pa = "85354-9")
 #' )
 vista_crear <- function(recurso, columnas, por_cada = NULL,
                         incluir_vacios = FALSE,

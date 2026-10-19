@@ -15,7 +15,8 @@ fhir_recursos(x)
 \item texto JSON con un recurso, un Bundle o un arreglo de recursos;
 \item texto NDJSON (un recurso por línea) o un vector de caracteres con un
 recurso JSON por elemento;
-\item la ruta a un archivo \code{.json}, \code{.ndjson} o \code{.ndjson.gz}.
+\item la ruta a un archivo \code{.json}, \code{.ndjson} o \code{.ndjson.gz}, o un vector de
+rutas (los recursos de todos los archivos se juntan).
 }}
 }
 \value{

@@ -11,8 +11,12 @@
 #'   repiten;
 #' * los `select` de un `unionAll` producen las mismas columnas, en el mismo
 #'   orden;
+#' * `column`, `select` y `unionAll`, si aparecen, tienen al menos un
+#'   elemento;
 #' * cada constante tiene nombre y un solo valor (`valueString`,
-#'   `valueInteger`, etc.);
+#'   `valueInteger`, etc.), y su nombre no es una variable reservada de
+#'   FHIRPath o del motor (`resource`, `rootResource`, `context`, `rowIndex`,
+#'   `ucum`, `sct`, `loinc`...);
 #' * todas las expresiones FHIRPath se pueden compilar.
 #'
 #' @param vista Un `ViewDefinition` en cualquier forma que acepte
@@ -59,6 +63,11 @@ tipos_constante <- c(
   "valueUrl", "valueUuid"
 )
 patron_nombre <- "^[A-Za-z][A-Za-z0-9_]*$"
+# Variables de entorno que define FHIRPath o el motor; una constante con estos
+# nombres quedaría oculta
+nombres_reservados <- c("resource", "rootResource", "context", "rowIndex",
+                        "ucum", "sct", "loinc", "factory", "terminologies",
+                        "questionnaire")
 
 problemas_vista <- function(v) {
   p <- character()
@@ -90,6 +99,10 @@ problemas_vista <- function(v) {
     donde <- paste0("constant[", i, "]")
     if (!es_texto(k$name) || !grepl(patron_nombre, k$name)) {
       agregar("{.field ", donde, ".name} falta o no es un nombre v\u00e1lido.")
+    } else if (k$name %in% nombres_reservados) {
+      agregar("La constante {.val ", k$name, "} usa un nombre reservado de ",
+              "FHIRPath o de SQL on FHIR ({.code %", k$name, "}); ",
+              "elige otro nombre.")
     } else {
       nombres_const <- c(nombres_const, k$name)
     }
@@ -140,7 +153,14 @@ problemas_vista <- function(v) {
         ruta(s[["repeat"]][[j]], paste0(donde, ".repeat[", j, "]"))
       }
     }
-    if (is.null(s$column) && is.null(s$select) && is.null(s$unionAll)) {
+    for (e in intersect(c("column", "select", "unionAll"), names(s))) {
+      if (!is.list(s[[e]]) || length(s[[e]]) == 0L) {
+        agregar("{.field ", donde, ".", e, "} debe ser una lista con al ",
+                "menos un elemento.")
+      }
+    }
+    if (length(s$column) == 0L && length(s$select) == 0L &&
+        length(s$unionAll) == 0L) {
       agregar("{.field ", donde, "} no tiene column, select ni unionAll.")
     }
     cols <- character()
@@ -179,7 +199,7 @@ problemas_vista <- function(v) {
       cols <- c(cols, revisar_select(s$select[[j]],
                                      paste0(donde, ".select[", j, "]")))
     }
-    if (!is.null(s$unionAll)) {
+    if (length(s$unionAll) > 0L) {
       ramas <- lapply(seq_along(s$unionAll), function(j) {
         revisar_select(s$unionAll[[j]], paste0(donde, ".unionAll[", j, "]"))
       })

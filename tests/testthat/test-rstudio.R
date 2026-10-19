@@ -92,7 +92,7 @@ test_that("registra el servidor en el panel Connections", {
   expect_identical(a$type, "FHIR")
   expect_identical(a$host, base)
   expect_true(file.exists(a$icon))
-  expect_match(a$connectCode, "fhir_conectar\\(\"http://fhir.test/fhir\"")
+  expect_match(a$connectCode, "fhir_conectar\\(\"https://fhir.test/fhir\"")
   expect_match(a$connectCode, "Sys.getenv")
   expect_false(grepl("secreto", a$connectCode))
   expect_identical(a$listObjectTypes()$recurso$contains, "data")

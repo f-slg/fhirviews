@@ -28,8 +28,12 @@ de ejecutarlo:
 repiten;
 \item los \code{select} de un \code{unionAll} producen las mismas columnas, en el mismo
 orden;
+\item \code{column}, \code{select} y \code{unionAll}, si aparecen, tienen al menos un
+elemento;
 \item cada constante tiene nombre y un solo valor (\code{valueString},
-\code{valueInteger}, etc.);
+\code{valueInteger}, etc.), y su nombre no es una variable reservada de
+FHIRPath o del motor (\code{resource}, \code{rootResource}, \code{context}, \code{rowIndex},
+\code{ucum}, \code{sct}, \code{loinc}...);
 \item todas las expresiones FHIRPath se pueden compilar.
 }
 }

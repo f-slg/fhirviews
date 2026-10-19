@@ -11,6 +11,9 @@
 #                                            valores (modo "valores") o
 #                                            enteros de nodos (modo "nodos")
 #   validar(expresion)                    -> TRUE o error
+#   tipo(contexto, expresion)             -> list(tipo, ruta) con el tipo FHIR
+#                                            del resultado, o NULL si no se
+#                                            puede deducir sin datos
 #   tamano()                              -> nodos guardados
 #   liberar(desde)                        -> descarta los nodos desde `desde`
 #   version()                             -> versión de la biblioteca
@@ -123,6 +126,12 @@ motor_v8 <- function() {
         res <- lapply(res, function(x) as.integer(unlist(x)))
       }
       res
+    },
+    tipo = function(contexto, expresion) {
+      res <- llamar(sprintf("JSON.stringify(fhirviews.tipo(%s, %s))",
+                            a_json(contexto, unbox = TRUE),
+                            a_json(expresion, unbox = TRUE)), expresion)
+      if (is.null(res$tipo)) NULL else res
     },
     validar = function(expresion) {
       llamar(sprintf("JSON.stringify(fhirviews.validar(%s))",

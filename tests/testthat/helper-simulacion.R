@@ -1,6 +1,6 @@
 # Servidor FHIR simulado con httr2 (sin red)
 
-base <- "http://fhir.test/fhir"
+base <- "https://fhir.test/fhir"
 
 respuesta_fhir <- function(datos, estado = 200L, cabeceras = list()) {
   cuerpo <- if (is.null(datos)) raw() else
@@ -37,7 +37,7 @@ simular <- function(responder, envir = parent.frame()) {
   peticiones$lista <- list()
   httr2::local_mocked_responses(function(req) {
     peticiones$lista[[length(peticiones$lista) + 1L]] <- req
-    responder(req, sub("^http://fhir.test/fhir/?", "", req$url))
+    responder(req, sub("^https://fhir.test/fhir/?", "", req$url))
   }, env = envir)
   peticiones
 }
