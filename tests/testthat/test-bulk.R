@@ -270,3 +270,41 @@ test_that("exportaci\u00f3n real contra el servidor de referencia de SMART", {
   pacientes <- fhir_recursos(exp$archivos$Patient)
   expect_gt(length(pacientes), 0L)
 })
+
+test_that("con autenticaci\u00f3n SMART, los archivos reciben el token OAuth", {
+  url_tok <- "https://auth.test/token"
+  p <- simular(function(req, ruta) {
+    if (identical(req$url, url_tok)) {
+      return(httr2::response_json(body = list(
+        access_token = "oauth-1", token_type = "bearer", expires_in = 3600)))
+    }
+    if (ruta == ".well-known/smart-configuration") {
+      return(httr2::response_json(body = list(token_endpoint = url_tok)))
+    }
+    if (grepl("\\$export", ruta)) {
+      return(respuesta_fhir(NULL, 202L, list(
+        `Content-Location` = paste0(base, "/estado/7"))))
+    }
+    if (ruta == "estado/7") return(respuesta_fhir(manifiesto(token = TRUE)))
+    if (ruta == "archivos/p.ndjson") {
+      return(ndjson(list(resourceType = "Patient", id = "p1")))
+    }
+    if (ruta == "archivos/c.ndjson") {
+      return(ndjson(list(resourceType = "Condition", id = "c1")))
+    }
+    respuesta_fhir(oo("no encontrado"), 404L)
+  })
+  con <- con_simulada(autenticacion = fhir_auth_cliente("c", "s"),
+                      panel = FALSE)
+  exp <- fhir_exportar(con, "paciente", carpeta = withr_tempfile(),
+                       progreso = FALSE)
+  expect_identical(exp$estado, "completada")
+  archivos <- Filter(function(r) grepl("archivos/", r$url), p$lista)
+  expect_length(archivos, 2L)
+  for (r in archivos) {
+    expect_identical(httr2::req_get_headers(r, "reveal")$Authorization,
+                     "Bearer oauth-1")
+  }
+  expect_identical(vapply(fhir_recursos(unlist(exp$archivos)), `[[`, "", "id"),
+                   c("p1", "c1"))
+})
