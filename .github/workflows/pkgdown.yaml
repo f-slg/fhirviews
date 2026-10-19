@@ -47,6 +47,14 @@ jobs:
         run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
+      # Informe de conformidad de SQL on FHIR en el formato oficial, para la
+      # página de implementaciones (https://sql-on-fhir.org/extra/impls.html).
+      # GitHub Pages lo sirve con CORS abierto.
+      - name: Informe de conformidad de SQL on FHIR
+        run: |
+          fhirviews::vista_conformidad(informe = "docs/sof-test-results.json")
+        shell: Rscript {0}
+
       - name: Publicar en GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.5.0
         with:
