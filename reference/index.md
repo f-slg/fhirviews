@@ -29,6 +29,18 @@ Conectarse a un servidor FHIR R4 y hacer peticiones, como en Postman.
 - [`fhir_disponible()`](https://f-slg.github.io/fhirviews/reference/fhir_disponible.md)
   : Comprobar si un servidor FHIR responde
 
+## Autenticación SMART on FHIR
+
+OAuth2 para servidores protegidos: client credentials, SMART Backend
+Services (JWT firmado) e inicio de sesión en el navegador con PKCE.
+
+- [`fhir_auth_cliente()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md)
+  [`fhir_auth_backend()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md)
+  [`fhir_auth_interactiva()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md)
+  : Autenticación SMART on FHIR (OAuth2)
+- [`fhir_smart_configuracion()`](https://f-slg.github.io/fhirviews/reference/fhir_smart_configuracion.md)
+  : Descubrir la configuración SMART de un servidor
+
 ## RStudio
 
 Panel Connections, conexión activa y addins.

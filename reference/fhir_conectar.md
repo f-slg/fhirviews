@@ -14,7 +14,8 @@ fhir_conectar(
   cabeceras = list(),
   tiempo = 60,
   verificar = TRUE,
-  panel = TRUE
+  panel = TRUE,
+  autenticacion = NULL
 )
 ```
 
@@ -31,7 +32,8 @@ fhir_conectar(
   la conexión, solo se envía a URL del propio servidor y, si el servidor
   no usa https (y no es local), se avisa de que viajaría sin cifrar.
   Para no escribirlo en el código, guárdalo en una variable de entorno y
-  usa por ejemplo `Sys.getenv("FHIR_TOKEN")`.
+  usa por ejemplo `Sys.getenv("FHIR_TOKEN")`. Para tokens que caducan,
+  usa mejor `autenticacion`.
 
 - cabeceras:
 
@@ -53,6 +55,19 @@ fhir_conectar(
   el panel *Connections* (ver
   [`fhir_conexion_activa()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md)).
 
+- autenticacion:
+
+  Autenticación SMART on FHIR / OAuth2 creada con
+  [`fhir_auth_cliente()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md),
+  [`fhir_auth_backend()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md)
+  o
+  [`fhir_auth_interactiva()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md).
+  Las URL del servidor de autorización se descubren con
+  [`fhir_smart_configuracion()`](https://f-slg.github.io/fhirviews/reference/fhir_smart_configuracion.md)
+  si no se indican. El token se pide en la primera petición, se renueva
+  solo al expirar y, como con `token`, solo se envía al propio servidor.
+  No se puede usar junto con `token`.
+
 ## Value
 
 Un objeto de clase `fhir_conexion`, que además queda como conexión
@@ -64,7 +79,8 @@ activa para los addins y
 [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md),
 [`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md),
 [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md),
-[`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md).
+[`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md),
+[fhir_auth](https://f-slg.github.io/fhirviews/reference/fhir_auth.md).
 
 ## Examples
 
@@ -74,4 +90,12 @@ con
 #> <fhir_conexion> https://hapi.fhir.org/baseR4
 #>   Servidor:     HAPI FHIR Server 8.13.10-SNAPSHOT/6bd250944e/2026-09-25
 #>   Versión FHIR: 4.0.1
+if (FALSE) { # interactive()
+# Servidor protegido con SMART Backend Services
+con <- fhir_conectar(
+  "https://fhir.ejemplo.org/r4",
+  autenticacion = fhir_auth_backend("mi-cliente", "privada.pem",
+                                    kid = "clave-2026")
+)
+}
 ```

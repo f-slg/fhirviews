@@ -62,7 +62,8 @@ muestran el <code>OperationOutcome</code> del servidor.</p>
 <span>  cabeceras <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  tiempo <span class="op">=</span> <span class="fl">60</span>,</span>
 <span>  verificar <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  panel <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  panel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  autenticacion <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -80,7 +81,8 @@ muestran el <code>OperationOutcome</code> del servidor.</p>
 imprimir la conexión, solo se envía a URL del propio servidor y, si el
 servidor no usa https (y no es local), se avisa de que viajaría sin
 cifrar. Para no escribirlo en el código, guárdalo en una
-variable de entorno y usa por ejemplo <code>Sys.getenv("FHIR_TOKEN")</code>.</p></dd>
+variable de entorno y usa por ejemplo <code>Sys.getenv("FHIR_TOKEN")</code>.
+Para tokens que caducan, usa mejor <code>autenticacion</code>.</p></dd>
 
 
 <dt id="arg-cabeceras">cabeceras<a class="anchor" aria-label="anchor" href="#arg-cabeceras"></a></dt>
@@ -101,6 +103,16 @@ su software y versión de FHIR.</p></dd>
 <dd><p>Si es <code>TRUE</code> (por defecto) y se usa RStudio, registra la
 conexión en el panel <em>Connections</em> (ver <code><a href="fhir_conexion_activa.html">fhir_conexion_activa()</a></code>).</p></dd>
 
+
+<dt id="arg-autenticacion">autenticacion<a class="anchor" aria-label="anchor" href="#arg-autenticacion"></a></dt>
+<dd><p>Autenticación SMART on FHIR / OAuth2 creada con
+<code><a href="fhir_auth.html">fhir_auth_cliente()</a></code>, <code><a href="fhir_auth.html">fhir_auth_backend()</a></code> o
+<code><a href="fhir_auth.html">fhir_auth_interactiva()</a></code>. Las URL del servidor de autorización se
+descubren con <code><a href="fhir_smart_configuracion.html">fhir_smart_configuracion()</a></code> si no se indican. El token se
+pide en la primera petición, se renueva solo al expirar y, como con
+<code>token</code>, solo se envía al propio servidor. No se puede usar junto con
+<code>token</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -109,7 +121,8 @@ activa para los addins y <code><a href="fhir_ejecutar_texto.html">fhir_ejecutar_
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="fhir_buscar.html">fhir_buscar()</a></code>, <code><a href="fhir_leer.html">fhir_leer()</a></code>, <code><a href="fhir_crear.html">fhir_crear()</a></code>, <code><a href="fhir_peticion.html">fhir_peticion()</a></code>.</p></div>
+    <div class="dont-index"><p><code><a href="fhir_buscar.html">fhir_buscar()</a></code>, <code><a href="fhir_leer.html">fhir_leer()</a></code>, <code><a href="fhir_crear.html">fhir_crear()</a></code>, <code><a href="fhir_peticion.html">fhir_peticion()</a></code>,
+<a href="fhir_auth.html">fhir_auth</a>.</p></div>
     </div>
 
     <div class="section level2">
@@ -119,6 +132,14 @@ activa para los addins y <code><a href="fhir_ejecutar_texto.html">fhir_ejecutar_
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;fhir_conexion&gt; https://hapi.fhir.org/baseR4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Servidor:     HAPI FHIR Server 8.13.10-SNAPSHOT/6bd250944e/2026-09-25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Versión FHIR: 4.0.1</span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># interactive()</span></span></span>
+<span class="r-in"><span><span class="co"># Servidor protegido con SMART Backend Services</span></span></span>
+<span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">fhir_conectar</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"https://fhir.ejemplo.org/r4"</span>,</span></span>
+<span class="r-in"><span>  autenticacion <span class="op">=</span> <span class="fu"><a href="fhir_auth.html">fhir_auth_backend</a></span><span class="op">(</span><span class="st">"mi-cliente"</span>, <span class="st">"privada.pem"</span>,</span></span>
+<span class="r-in"><span>                                    kid <span class="op">=</span> <span class="st">"clave-2026"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
