@@ -85,10 +85,11 @@ activa para los addins y
 ## Examples
 
 ``` r
-if (FALSE) { # fhir_disponible("https://hapi.fhir.org/baseR4")
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 con
-}
+#> <fhir_conexion> https://hapi.fhir.org/baseR4
+#>   Servidor:     HAPI FHIR Server 8.13.10-SNAPSHOT/6bd250944e/2026-09-25
+#>   Versión FHIR: 4.0.1
 if (FALSE) { # interactive()
 # Servidor protegido con SMART Backend Services
 con <- fhir_conectar(
