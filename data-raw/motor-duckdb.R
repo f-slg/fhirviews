@@ -47,7 +47,7 @@ vista <- vista_leer('{
 }')
 
 segundos <- function(expr) system.time(force(expr))[["elapsed"]]
-con <- DBI::dbConnect(duckdb::duckdb())
+con <- fhirviews:::conectar_duckdb()
 res <- do.call(rbind, lapply(tamanos, function(n) {
   archivo <- tempfile(fileext = ".ndjson")
   writeLines(pacientes(n), archivo)

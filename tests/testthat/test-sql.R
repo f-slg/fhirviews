@@ -48,7 +48,12 @@ test_that("lo que no se traduce da un error que sugiere vista_ejecutar()", {
   expect_error(vista_sql(vista_crear("Patient", c(x = "%nada"))),
                class = "fhirviews_error_sql")
   expect_error(vista_sql(vista_crear("Patient", c(x = "name.ofType(Foo)"))),
-               NA)
+               class = "fhirviews_error_sql")
+  expect_error(vista_sql(vista_crear("Observation",
+                                     c(x = "value.ofType(Foo)"))),
+               class = "fhirviews_error_sql")
+  expect_match(vista_sql(vista_crear("Observation", c(x = "value"))),
+               "valueQuantity", fixed = TRUE)
   expect_error(vista_sql(vista_crear("Patient", c(x = "ofType(Foo)"))),
                class = "fhirviews_error_sql")
   expect_error(vista_sql(vista_crear("Patient", c(x = "first(1)"))),
@@ -61,7 +66,7 @@ skip_on_cran()
 skip_if_not_installed("DBI")
 skip_if_not_installed("duckdb", "1.3.0")
 json_disponible <- tryCatch({
-  con <- DBI::dbConnect(duckdb::duckdb())
+  con <- conectar_duckdb()
   cargar_json_duckdb(con)
   DBI::dbDisconnect(con)
   TRUE
@@ -70,21 +75,23 @@ skip_if_not(json_disponible, "la extensi\u00f3n json de DuckDB no est\u00e1 disp
 
 caso <- system.file("extdata", "caso_clinico.ndjson", package = "fhirviews")
 
-# Las colecciones vacias sin `type` son logical() en vista_ejecutar() y del
-# tipo del modelo FHIR en DuckDB: se comparan como NULL
-sin_vacios <- function(df) {
-  for (nm in names(df)) {
-    if (is.list(df[[nm]])) {
-      df[[nm]] <- lapply(df[[nm]], function(x) if (length(x)) x)
-    }
-  }
-  df
-}
+dengue <- system.file("extdata", "dengue_2025.ndjson.gz", package = "fhirviews")
 
-comparar_motores <- function(vista, recursos = caso) {
-  v8 <- vista_ejecutar(recursos, vista)
-  db <- vista_ejecutar_duckdb(recursos, vista)
-  expect_equal(sin_vacios(db), sin_vacios(v8), ignore_attr = TRUE)
+# Los dos motores deben dar la misma tabla (valores y tipos) o fallar los dos
+comparar_motores <- function(vista, recursos = caso, etiqueta = "") {
+  v8 <- tryCatch(vista_ejecutar(recursos, vista), error = function(e) e)
+  db <- tryCatch(vista_ejecutar_duckdb(recursos, vista), error = function(e) e)
+  if (inherits(v8, "error")) {
+    expect(inherits(db, "error"),
+           sprintf("%s: V8 falla y DuckDB no", etiqueta))
+    return(invisible())
+  }
+  if (inherits(db, "error")) {
+    fail(sprintf("%s: DuckDB falla: %s", etiqueta,
+                 cli::ansi_strip(conditionMessage(db))))
+    return(invisible())
+  }
+  expect_identical(as.list(db), as.list(v8), label = etiqueta)
 }
 
 test_that("da lo mismo que vista_ejecutar() con el caso clinico", {
@@ -115,6 +122,81 @@ test_that("da lo mismo que vista_ejecutar() con el caso clinico", {
   }'))
 })
 
+test_that("elementos de eleccion sin ofType() y extension(%constante)", {
+  comparar_motores(vista_leer(r"-({"resource": "QuestionnaireResponse",
+    "select": [{"column": [{"name": "r", "path": "getResourceKey()"}]},
+    {"repeat": ["item"], "column": [
+      {"name": "pregunta", "path": "linkId"},
+      {"name": "i", "path": "%rowIndex"},
+      {"name": "valor", "path": "answer.value.first().toString()"}]}]})-"),
+    etiqueta = "repeat con answer.value")
+  comparar_motores(vista_leer(r"-({"resource": "Patient",
+    "constant": [{"name": "dpa",
+      "valueUri": "https://f-slg.github.io/fhirviews/StructureDefinition/codigo-dpa"}],
+    "select": [{"column": [
+      {"name": "id", "path": "getResourceKey()"},
+      {"name": "dpa", "path": "address.where(use = 'home').extension(%dpa).value.first()"}
+    ]}]})-"), dengue, etiqueta = "extension(%dpa).value")
+  comparar_motores(vista_crear("Observation", c(
+    valor = "value", fecha = "effective", texto = "value.text")),
+    etiqueta = "value y effective")
+})
+
+# Vistas de las viñetas: se buscan las llamadas a vista_crear(),
+# vista_leer() y vista_ejecutar(recursos, "json") en sus bloques de R
+vistas_vinetas <- function() {
+  carpeta <- test_path("..", "..", "vignettes")
+  if (!dir.exists(carpeta)) {
+    carpeta <- system.file("doc", package = "fhirviews")
+  }
+  archivos <- file.path(carpeta, c("fhirviews.Rmd", "vistas.Rmd",
+                                   "tasas-pobecu.Rmd"))
+  archivos <- archivos[file.exists(archivos)]
+  vistas <- list()
+  for (a in archivos) {
+    lineas <- readLines(a, encoding = "UTF-8", warn = FALSE)
+    inicio <- grep("^```\\{r", lineas)
+    fin <- grep("^```\\s*$", lineas)
+    codigo <- unlist(lapply(inicio, function(i) {
+      f <- min(fin[fin > i])
+      if (f > i + 1L) lineas[(i + 1L):(f - 1L)]
+    }))
+    expresiones <- tryCatch(parse(text = codigo, keep.source = FALSE),
+                            error = function(e) expression())
+    recursos <- if (basename(a) == "tasas-pobecu.Rmd") dengue else caso
+    recorrer <- function(e) {
+      if (!is.call(e)) return()
+      fn <- if (is.symbol(e[[1]])) as.character(e[[1]]) else ""
+      v <- NULL
+      if (fn %in% c("vista_crear", "vista_leer")) {
+        v <- tryCatch(eval(e, asNamespace("fhirviews")), error = function(x) NULL)
+      } else if (fn == "vista_ejecutar" && length(e) >= 3L &&
+                 is.character(e[[3]])) {
+        v <- tryCatch(vista_leer(e[[3]]), error = function(x) NULL)
+      }
+      if (!is.null(v)) {
+        vistas[[length(vistas) + 1L]] <<- list(
+          vista = v, recursos = recursos,
+          etiqueta = paste(basename(a), v$resource, length(vistas) + 1L))
+      }
+      for (i in seq_along(e)[-1]) {
+        if (is.call(e[[i]])) recorrer(e[[i]])
+      }
+    }
+    for (e in expresiones) recorrer(e)
+  }
+  vistas
+}
+
+test_that("los dos motores dan las mismas tablas con las vistas de las vi\u00f1etas", {
+  vistas <- vistas_vinetas()
+  skip_if(length(vistas) == 0L, "no se encontraron las vi\u00f1etas")
+  expect_gte(length(vistas), 15L)
+  for (v in vistas) {
+    comparar_motores(v$vista, v$recursos, v$etiqueta)
+  }
+})
+
 test_that("tipos, colecciones y objetos", {
   pacientes <- list(
     list(resourceType = "Patient", id = "p1", active = TRUE,
@@ -133,7 +215,7 @@ test_that("tipos, colecciones y objetos", {
   ]}]}')
   df <- vista_ejecutar_duckdb(pacientes, vista)
   expect_identical(df$activo, c(TRUE, NA))
-  expect_identical(df$dados, list(c("x", "y"), character()))
+  expect_identical(df$dados, list(c("x", "y"), logical()))
   expect_identical(df$nombre[[1]], list(family = "A", given = list("x", "y")))
   expect_null(df$nombre[[2]])
   expect_identical(df$ext, c(NA, 3L))
@@ -152,7 +234,7 @@ test_that("tipos, colecciones y objetos", {
 })
 
 test_that("guarda en una tabla y lee Parquet", {
-  con <- DBI::dbConnect(duckdb::duckdb())
+  con <- conectar_duckdb()
   on.exit(DBI::dbDisconnect(con), add = TRUE)
   vista <- vista_crear("Observation", c(
     valor = "value.ofType(Quantity).value",

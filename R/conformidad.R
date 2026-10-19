@@ -48,7 +48,7 @@ vista_conformidad <- function(archivos = NULL, descargar = FALSE,
   if (motor == "duckdb") {
     rlang::check_installed(c("DBI", "duckdb"),
                            reason = "para ejecutar vistas con DuckDB.")
-    con_db <- DBI::dbConnect(duckdb::duckdb())
+    con_db <- conectar_duckdb()
     on.exit(DBI::dbDisconnect(con_db), add = TRUE)
   }
   if (is.null(directorio)) {
