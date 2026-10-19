@@ -44,8 +44,12 @@ writeLines(version, file.path(destino, "VERSION"))
 # Comprobación: la biblioteca carga en V8 y reporta la versión esperada
 ct <- V8::v8()
 ct$eval("var window = globalThis;")
-invisible(ct$source(file.path(destino, "fhirpath.min.js")))
-invisible(ct$source(file.path(destino, "fhirpath.r4.min.js")))
+for (f in c("fhirpath.min.js", "fhirpath.r4.min.js")) {
+  ruta <- file.path(destino, f)
+  codigo <- rawToChar(readBin(ruta, "raw", file.size(ruta)))
+  Encoding(codigo) <- "UTF-8"
+  invisible(ct$eval(codigo))
+}
 stopifnot(identical(ct$eval("fhirpath.version"), version))
 
 message("fhirpath.js ", version, " copiado en ", destino)

@@ -48,6 +48,15 @@ motor_crear <- function(nombre) {
   )
 }
 
+# Lee el archivo en binario: fhirpath.min.js contiene bytes 0x1A (Ctrl-Z) en
+# las tablas del analizador ANTLR, y en Windows la lectura en modo texto
+# (como la de V8::source()) los toma como fin de archivo y corta el script.
+cargar_js <- function(ct, ruta) {
+  codigo <- rawToChar(readBin(ruta, "raw", file.size(ruta)))
+  Encoding(codigo) <- "UTF-8"
+  invisible(ct$eval(codigo))
+}
+
 ruta_js <- function(...) {
   system.file("js", ..., package = "fhirviews", mustWork = TRUE)
 }
@@ -57,9 +66,9 @@ ruta_js <- function(...) {
 motor_v8 <- function() {
   ct <- V8::v8()
   ct$eval("var window = globalThis;")
-  ct$source(ruta_js("fhirpath", "fhirpath.min.js"))
-  ct$source(ruta_js("fhirpath", "fhirpath.r4.min.js"))
-  ct$source(ruta_js("fhirviews.js"))
+  cargar_js(ct, ruta_js("fhirpath", "fhirpath.min.js"))
+  cargar_js(ct, ruta_js("fhirpath", "fhirpath.r4.min.js"))
+  cargar_js(ct, ruta_js("fhirviews.js"))
 
   llamar <- function(codigo, expresion = NULL) {
     texto <- tryCatch(
