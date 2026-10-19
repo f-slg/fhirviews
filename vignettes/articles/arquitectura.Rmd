@@ -47,7 +47,10 @@ El paquete tiene cuatro piezas con responsabilidades separadas:
 
 | Pieza | Archivo | Responsabilidad |
 |---|---|---|
-| Cliente | `R/cliente.R` | Peticiones HTTP, paginación, errores, autenticación |
+| Cliente | `R/cliente.R` | Peticiones HTTP, paginación, errores |
+| Autenticación | `R/autenticacion.R` | SMART on FHIR / OAuth2: descubrimiento, tokens y su renovación |
+| Exportación masiva | `R/bulk.R` | FHIR Bulk Data (`$export`): inicio, espera, manifiesto y descarga |
+| Motor DuckDB | `R/sql.R` | Traducción de `ViewDefinition` y FHIRPath a SQL de DuckDB |
 | Recursos | `R/recursos.R` | Reunir recursos de cualquier fuente y conservar su JSON original |
 | Motor de vistas | `R/vista.R`, `R/validar.R` | Validar y ejecutar `ViewDefinition`, armar la tabla |
 | Motor de FHIRPath | `R/motor.R`, `inst/js/fhirviews.js` | Evaluar expresiones FHIRPath por lotes |
@@ -79,6 +82,53 @@ enlace. Cada página se guarda también como texto JSON (ver más abajo).
 `fhir_crear()` distingue los Bundle `transaction` y `batch`, que se envían a
 la base del servidor para que los procese, del resto de recursos, que se
 envían a `[base]/[tipo]`.
+
+## Autenticación SMART on FHIR
+
+`fhir_auth_cliente()`, `fhir_auth_backend()` y `fhir_auth_interactiva()` solo
+describen la autenticación; `fhir_conectar()` la prepara:
+
+1. Si no se indicaron las URL, las descubre con `fhir_smart_configuracion()`:
+   primero `[base]/.well-known/smart-configuration` y, si no existe, las
+   extensiones `oauth-uris` del `CapabilityStatement` (SMART v1).
+2. Crea un cliente OAuth de httr2 con el método de autenticación adecuado:
+   `client_secret_basic` o `client_secret_post` (según lo que declare el
+   servidor) o `private_key_jwt` con una clave RS384 o ES384.
+3. En cada petición al propio servidor, `peticion_json()` obtiene el token
+   vigente de la caché en memoria de httr2, que lo pide la primera vez y lo
+   renueva cuando le quedan menos de 30 segundos. Si el servidor responde 401,
+   descarta el token, pide otro y reintenta una sola vez.
+
+En *Backend Services*, httr2 firma un JWT nuevo en cada pedido de token
+(`iss` y `sub` = id del cliente, `aud` = URL del token, `exp` a cinco minutos,
+`jti` aleatorio y `kid` en la cabecera). Se verificó con un servidor de
+autorización independiente, escrito en Python con PyJWT, que comprueba la firma
+y rechaza un `jti` repetido o una clave que no corresponde.
+
+## Exportación masiva
+
+`fhir_exportar()` sigue el protocolo asíncrono de
+[FHIR Bulk Data](https://hl7.org/fhir/uv/bulkdata/):
+
+| Paso | Petición | Respuesta esperada |
+|---|---|---|
+| Inicio | `GET [base]/$export`, `Patient/$export` o `Group/[id]/$export`, con `Prefer: respond-async` | `202 Accepted` + `Content-Location` |
+| Estado | `GET [Content-Location]` | `202` (en curso, con `Retry-After` y `X-Progress`) o `200` con el manifiesto |
+| Descarga | `GET [archivo]` por cada entrada de `output` y `error` | NDJSON |
+| Cancelación | `DELETE [Content-Location]` | `202` |
+
+Detalles de diseño:
+
+- **Espera.** Respeta `Retry-After` (en segundos o como fecha HTTP); sin él,
+  espera 1, 2, 4... segundos hasta un máximo de 60 entre consultas. Al superar
+  `max_espera`, devuelve el trabajo en curso con un aviso, para retomarlo con
+  `fhir_exportar_estado()`.
+- **Descarga.** Los archivos se escriben directamente en disco, sin pasar por
+  la memoria; sin tiempo total máximo, pero se cortan si la transferencia se
+  detiene durante `tiempo` segundos.
+- **Seguridad.** El token se envía a un archivo solo si el manifiesto lo exige
+  (`requiresAccessToken`) y el archivo está en el mismo servidor; si está en
+  otro dominio, se detiene con un error en lugar de enviarlo.
 
 ## Recursos y el texto JSON original
 
@@ -242,6 +292,37 @@ en SQL y sin repetir, ramas de `unionAll` con las mismas columnas, constantes
 con un solo valor y sin nombres reservados, y que cada expresión FHIRPath
 compile.
 
+## Motor DuckDB
+
+`vista_ejecutar_duckdb()` es un segundo motor, experimental, que no usa V8:
+traduce el `ViewDefinition` completo a **una sola consulta SQL** de DuckDB.
+
+- **Lectura sin esquema.** Cada línea del NDJSON se lee como un valor `JSON`
+  con `read_json_objects()` (Parquet con `read_parquet()` y `to_json()`). No
+  hace falta un esquema FHIR, así que funcionan los elementos de elección, las
+  extensiones y los recursos heterogéneos.
+- **Colecciones como listas.** Cada expresión FHIRPath traducida es una lista
+  `JSON[]`, un valor JSON o un valor de SQL tipado. `a.b` es `json_extract` sobre
+  cada elemento; `where()` y `select()` son `list_filter()` y
+  `list_transform()`; los elementos de elección (`value`, `onset`...) buscan
+  todas sus variantes según el modelo R4.
+- **Estructura dentro de cada fila.** Cada `select` produce la lista de filas
+  de un recurso; `forEach` usa `list_transform()` con el índice (para
+  `%rowIndex`), `unionAll` concatena listas, `repeat` se resuelve por niveles
+  (hasta `fhirviews.sql_profundidad`, 12 por defecto) y la consulta final
+  aplica `unnest()`. Sin subconsultas correlacionadas, DuckDB procesa los
+  archivos en paralelo, por bloques.
+- **Errores.** Lo que no se puede traducir con certeza da un error de clase
+  `fhirviews_error_sql` al traducir; una columna con varios valores sin
+  `collection` o un `where` que no da un lógico son errores al ejecutar.
+- **Garantía.** Además del banco oficial (133/133 *shareable*), una prueba
+  diferencial ejecuta las vistas de todas las viñetas con los dos motores y
+  exige tablas idénticas, valores y tipos.
+
+```{r, eval = requireNamespace("duckdb", quietly = TRUE)}
+cat(substr(vista_sql(vista_crear("Patient", c(sexo = "gender"))), 1, 300), "...")
+```
+
 ## Seguridad y privacidad
 
 - **FHIRPath aislado.** fhirpath.js corre en V8 sin acceso a red ni a
@@ -251,9 +332,9 @@ compile.
 - **Sin evaluación de código.** Los recursos se leen con `JSON.parse()` y las
   expresiones viajan a V8 como texto JSON escapado. Los addins de RStudio
   convierten el texto seleccionado en una cadena de R con `deparse1()`.
-- **Token.** No se imprime, solo se envía al servidor de la conexión, el
-  código que genera el panel *Connections* lo toma de `Sys.getenv()` y se
-  avisa si se usaría sin cifrar por http.
+- **Token.** No se imprime (tampoco el secreto ni la clave privada), solo se
+  envía al servidor de la conexión, el código que genera el panel *Connections*
+  lo toma de `Sys.getenv()` y se avisa si se usaría sin cifrar por http.
 - **Datos personales.** Los mensajes de error incluyen la URL de la petición,
   con sus parámetros de búsqueda: si buscas por cédula u otro identificador,
   aparecerá en el error. Tenlo en cuenta al compartir registros o capturas.

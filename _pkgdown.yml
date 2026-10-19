@@ -43,6 +43,8 @@ navbar:
         href: articles/vistas.html
       - text: Tasas por cantón con FHIR y pobecu
         href: articles/tasas-pobecu.html
+      - text: Servidores reales y grandes volúmenes
+        href: articles/servidores-y-volumen.html
       - text: -------
       - text: Cómo funciona por dentro
         href: articles/arquitectura.html

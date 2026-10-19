@@ -2,7 +2,7 @@ Package: fhirviews
 Type: Package
 Title: Query 'HL7 FHIR' Servers and Flatten Resources with 'SQL on FHIR'
     View Definitions
-Version: 0.1.0.9000
+Version: 0.2.0
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",
@@ -22,15 +22,17 @@ Authors@R:
              comment = "UCUM table bundled in fhirpath.js")
     )
 Description: A client for 'HL7 FHIR' R4 servers (search with automatic
-    paging, read, create, update, delete and the '$everything' and
-    '$validate' operations, and 'FHIR Bulk Data' export with '$export') and
-    an engine that turns FHIR resources into
+    paging, read, create, update, delete, transactions and the '$everything',
+    '$validate' and bulk data '$export' operations, with 'SMART on FHIR'
+    'OAuth2' authentication) and an engine that turns FHIR resources into
     tables following the 'SQL on FHIR' 'ViewDefinition' specification
     <https://sql-on-fhir.org/>. 'FHIRPath' expressions are evaluated with
-    the 'fhirpath.js' library through the 'V8' package. Includes the official
-    'SQL on FHIR' conformance test suite, optional export of views to
-    'DuckDB', and integration with the 'RStudio' Connections pane and
-    addins. Documentation is in Spanish.
+    the 'fhirpath.js' library through the 'V8' package; an experimental
+    second engine translates views to 'DuckDB' SQL to process millions of
+    resources from 'NDJSON' or 'Parquet' files. Includes the official 'SQL on
+    FHIR' conformance test suite, export of views to 'DuckDB', and
+    integration with the 'RStudio' Connections pane and addins.
+    Documentation is in Spanish.
 License: MIT + file LICENSE
 Copyright: See file inst/COPYRIGHTS for the bundled JavaScript libraries.
 URL: https://f-slg.github.io/fhirviews/, https://github.com/f-slg/fhirviews

@@ -1,4 +1,9 @@
-# fhirviews (development version)
+# fhirviews 0.2.0
+
+Esta versión prepara fhirviews para servidores y volúmenes reales:
+autenticación SMART on FHIR, exportación masiva con `$export` y un segundo
+motor de vistas sobre DuckDB, entre 16 y 37 veces más rápido que el motor V8
+(un millón de pacientes en unos 5,5 segundos). No hay cambios incompatibles.
 
 ## Autenticación SMART on FHIR
 
