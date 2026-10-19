@@ -85,7 +85,7 @@ test_that("fhir_exportar sigue el ciclo de Bulk Data y descarga los NDJSON", {
 
   # Inicio: Patient/$export, Prefer respond-async, Accept fhir+json
   inicio <- p$lista[[1]]
-  expect_match(inicio$url, "/Patient/\\$export\\?")
+  expect_match(inicio$url, "/Patient/(\\$|%24)export\\?")
   expect_match(inicio$url, "_type=Patient%2CCondition")
   expect_match(inicio$url, "_since=2025-01-01T00%3A00%3A00Z")
   expect_match(inicio$url, "_typeFilter=Condition.*_typeFilter=Patient")
@@ -120,7 +120,7 @@ test_that("sin requiresAccessToken no se env\u00eda el token a los archivos", {
   exp <- fhir_exportar(con_simulada(token = "abc"), carpeta = withr_tempfile(),
                        progreso = FALSE)
   expect_identical(exp$nivel, "sistema")
-  expect_match(p$lista[[1]]$url, "/fhir/\\$export$")
+  expect_match(p$lista[[1]]$url, "/fhir/(\\$|%24)export$")
   descarga <- p$lista[[length(p$lista)]]
   expect_match(descarga$url, "archivos/c.ndjson$")
   expect_null(httr2::req_get_headers(descarga, "reveal")$Authorization)
@@ -134,7 +134,7 @@ test_that("el modo as\u00edncrono consulta el estado y cancela", {
                            carpeta = withr_tempfile())
   expect_identical(trabajo$estado, "en_curso")
   expect_identical(trabajo$nivel, "grupo")
-  expect_match(p$lista[[1]]$url, "/Group/brote-2025/\\$export$")
+  expect_match(p$lista[[1]]$url, "/Group/brote-2025/(\\$|%24)export$")
   expect_identical(trabajo$url_estado, paste0(base, "/estado/42"))
   expect_match(capture.output(print(trabajo))[1], "en curso")
 
