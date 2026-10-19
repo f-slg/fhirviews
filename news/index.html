@@ -34,6 +34,13 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9000" id="fhirviews-0009000">fhirviews 0.0.0.9000<a class="anchor" aria-label="anchor" href="#fhirviews-0009000"></a></h2>
 <ul><li>Esqueleto del paquete: licencia MIT, integración continua en Windows, macOS y Ubuntu, sitio pkgdown, plantillas de issues, guía de contribución, código de conducta y logo.</li>
+<li>Capa de FHIRPath: fhirpath.js 5.2.1 (HL7/fhirpath.js) incluido sin modificar en <code>inst/js/</code> y ejecutado con V8. Licencias de la biblioteca y de sus dependencias empaquetadas en <code>inst/COPYRIGHTS</code>.</li>
+<li>
+<code><a href="../reference/vista_fhirpath.html">vista_fhirpath()</a></code> evalúa expresiones FHIRPath, con las funciones <code>getResourceKey()</code> y <code>getReferenceKey()</code> de SQL on FHIR y variables (incluidas fechas).</li>
+<li>
+<code><a href="../reference/fhir_recursos.html">fhir_recursos()</a></code> reúne recursos desde listas, Bundles, JSON, NDJSON o archivos.</li>
+<li>
+<code><a href="../reference/fhirviews_motor.html">fhirviews_motor()</a></code> y <code><a href="../reference/fhirviews_motor.html">fhirviews_version_fhirpath()</a></code> informan del motor de FHIRPath. El motor de vistas usa una interfaz que permitirá sustituir fhirpath.js por un motor escrito en R.</li>
 </ul></div>
   </main></div>
 

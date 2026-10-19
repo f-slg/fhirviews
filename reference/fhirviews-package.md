@@ -37,3 +37,22 @@ Authors:
 
 - Ronald Fabricio Salas Guerrero <fabriciosalasguerrero@gmail.com>
   \[copyright holder\]
+
+Other contributors:
+
+- National Library of Medicine (fhirpath.js and ucum-lhc libraries in
+  inst/js) \[copyright holder\]
+
+- Health Samurai (fhirpath.js library in inst/js) \[copyright holder\]
+
+- The ANTLR Project (antlr4 runtime bundled in fhirpath.js) \[copyright
+  holder\]
+
+- Sasha Koss (date-fns library bundled in fhirpath.js) \[copyright
+  holder\]
+
+- Michael Mclaughlin (decimal.js library bundled in fhirpath.js)
+  \[copyright holder\]
+
+- Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js)
+  \[copyright holder\]
