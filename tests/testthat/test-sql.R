@@ -42,7 +42,8 @@ test_that("vista_sql genera la consulta", {
 })
 
 test_that("lo que no se traduce da un error que sugiere vista_ejecutar()", {
-  v <- vista_crear("Patient", c(x = "birthDate.lowBoundary()"))
+  v <- vista_crear("Observation",
+                   c(x = "value.ofType(Quantity).value.lowBoundary()"))
   expect_error(vista_sql(v), class = "fhirviews_error_sql")
   expect_error(vista_sql(v), "vista_ejecutar")
   expect_error(vista_sql(vista_crear("Patient", c(x = "%nada"))),
@@ -274,4 +275,192 @@ test_that("pasan las pruebas shareable del banco oficial", {
            sprintf("%s / %s: %s", shareable$archivo[i], shareable$prueba[i],
                    shareable$detalle[i]))
   }
+})
+
+# Recursos con casos límite para comparar las funciones de FHIRPath
+recursos_fhirpath <- function() {
+  archivo <- withr_tempfile(".ndjson")
+  writeLines(enc2utf8(c(
+    '{"resourceType":"Patient","id":"p1","active":true,"gender":"female","birthDate":"1970-06-15","multipleBirthInteger":2,"name":[{"use":"official","family":"P\u00e9rez","given":["Ana","Mar\u00eda"]},{"use":"usual","given":["Anita"]}],"telecom":[{"system":"phone","value":"+593 99 123 4567","rank":1},{"system":"email","value":"ana@x.org","rank":2}],"address":[{"use":"home","city":"Quito","line":["Av. 10 de Agosto"," N12 "],"postalCode":"170150","period":{"start":"2001-03","end":"2020-12-31T10:00:00Z"}}],"deceasedBoolean":false}',
+    '{"resourceType":"Patient","id":"p2","gender":"male","birthDate":"1985","name":[{"family":"O\'Neil","given":["Jo"]}],"address":[{"use":"work","city":"guayaquil","postalCode":"0901"}],"deceasedDateTime":"2021-05-04T08:30:00-05:00"}',
+    '{"resourceType":"Patient","id":"p3","birthDate":"2001-02","name":[{"use":"official","family":"\u00d1and\u00fa  ","given":["\u00c9mile","","Zo\u00eb"]}],"telecom":[{"system":"phone","value":"123"}],"multipleBirthBoolean":true}',
+    '{"resourceType":"Patient","id":"p4"}',
+    '{"resourceType":"Observation","id":"o1","status":"final","code":{"coding":[{"system":"http://loinc.org","code":"8480-6"}],"text":"PAS"},"valueQuantity":{"value":120.50,"unit":"mmHg"},"effectiveDateTime":"2024-03-01T10:15:00Z","subject":{"reference":"Patient/p1"}}',
+    '{"resourceType":"Observation","id":"o2","status":"amended","code":{"text":"x"},"valueString":"positivo 12","effectivePeriod":{"start":"2024-01","end":"2024-02-15"},"subject":{"reference":"Patient/p2"}}',
+    '{"resourceType":"Observation","id":"o3","status":"final","code":{"text":"y"},"valueInteger":-7,"effectiveDateTime":"2024-06-01T23:30:00+05:00","subject":{"reference":"Patient/p3"}}',
+    '{"resourceType":"Observation","id":"o4","status":"final","code":{"text":"z"},"valueQuantity":{"value":3,"unit":"kg"},"effectiveDateTime":"2024-03-01T00:00:00.000Z"}'
+  )), archivo, useBytes = TRUE)
+  archivo
+}
+
+comparar_expresiones <- function(recurso, expresiones, recursos) {
+  for (e in expresiones) {
+    coleccion <- startsWith(e, "*")
+    e <- sub("^\\*", "", e)
+    vista <- vista_leer(list(
+      resourceType = "ViewDefinition", resource = recurso, status = "active",
+      select = list(list(column = list(
+        list(name = "id", path = "id"),
+        c(list(name = "x", path = e), if (coleccion) list(collection = TRUE)))))))
+    comparar_motores(vista, recursos, paste(recurso, e))
+  }
+}
+
+test_that("las funciones de FHIRPath dan lo mismo que vista_ejecutar()", {
+  r <- recursos_fhirpath()
+  comparar_expresiones("Patient", c(
+    # Colecciones
+    "name.given.count()", "name.given.distinct().count()", "name.given.last()",
+    "name.given.tail().first()", "name.given.skip(1).first()",
+    "*name.given.take(1)", "*name.given.combine(name.family)",
+    "*name.given | name.family", "*name.given.union(name.family)",
+    "*name.given.intersect('Ana' | 'Jo')", "*name.given.exclude('Ana')",
+    "name.given.isDistinct()", "'Ana' in name.given",
+    "name.given contains 'Jo'", "(1 | 1.0 | '1').count()",
+    "name.given.subsetOf(name.given | 'x')", "(true | true).allTrue()",
+    "name.exists().not()", "name.where(family).count()",
+    "*name.select(given.first())", "name.all(given.exists())",
+    # Lógica
+    "active.not()", "iif(active, 'si', 'no')", "iif(gender = 'male', 1, 2)",
+    "iif(gender, 1, 2)", "iif(active, 'si')",
+    # Conversiones
+    "id.toString()", "multipleBirth.toString()", "active.toString()",
+    "address.postalCode.toInteger()", "address.postalCode.toDecimal()",
+    "'1.5'.toInteger()", "1.5.toInteger()", "(1.5 * 2).toInteger()",
+    "'T'.toBoolean()", "telecom.rank.first().toBoolean()",
+    "'abc'.convertsToInteger()", "{}.convertsToInteger()",
+    "(telecom.rank.first() / 3).toString()", "1.0.toString()",
+    # Texto
+    "name.family.first().substring(1)", "name.family.first().substring(1, 2)",
+    "name.family.first().substring(10)", "name.family.first().substring(-1)",
+    "name.family.first().startsWith('P')", "name.family.first().endsWith('z')",
+    "name.family.first().contains('e')", "name.family.first().matches('^P')",
+    "name.family.first().matches('[^a-c]+$')",
+    "name.family.first().replace('e', 'E')",
+    "name.family.first().replace('', '-')", "name.family.first().upper()",
+    "name.family.first().lower()", "name.family.first().length()",
+    "name.family.first().trim()", "address.line.first().trim()",
+    "name.given.first().indexOf('n')",
+    "name.given.first().replaceMatches('[aeiou]', '<$&>')",
+    "*telecom.value.first().split(' ')", "*'abc'.toChars()",
+    "name.family.first() ~ 'p\u00c9REZ'", "name.given.last() ~ 'anita'",
+    "name.family.first() & '-' & gender",
+    # Aritmética
+    "1 + 2 * 3", "7 / 2", "7 div 2", "-7 mod 2", "0.1 + 0.2", "0.1 + 0.2 = 0.3",
+    "multipleBirth.ofType(integer) + 1", "'a' + 'b'",
+    "2.power(10)", "2.5.round()", "(-2.5).round()", "3.14159.round(2)",
+    "16.sqrt()", "(-5.5).abs()", "1.5.ceiling()", "(-1.5).floor()",
+    "(-1.7).truncate()",
+    # Fechas
+    "birthDate > @1980-01-01", "birthDate < @1980", "birthDate = @1970-06-15",
+    "birthDate >= @2001-02-01", "birthDate = '1970-06-15'",
+    "birthDate ~ @1970-06", "address.period.start < @2001-03-02",
+    "deceased.ofType(dateTime) > @2021-05-04T08:00:00-05:00",
+    "deceased.ofType(dateTime) = @2021-05-04T13:30:00Z",
+    "address.period.end > @2020-12-31T05:00:00-05:00",
+    "birthDate.lowBoundary()", "birthDate.highBoundary()",
+    "deceased.ofType(dateTime).lowBoundary()",
+    "deceased.ofType(dateTime).highBoundary()",
+    "multipleBirth is boolean", "multipleBirth.is(integer)"
+  ), r)
+  comparar_expresiones("Observation", c(
+    "value.ofType(Quantity).value", "value.ofType(Quantity).value * 2",
+    "value.ofType(Quantity).value > 100", "value.ofType(integer) < 0",
+    "value.ofType(Quantity).value.round()",
+    "value.ofType(Quantity).value.toString()",
+    "value.ofType(Quantity).value.toInteger()",
+    "value.ofType(string).length()", "value.ofType(string).matches('\\\\d+')",
+    "status = 'final' and value.exists()", "code.text ~ 'pas'",
+    "subject.reference.substring(8)",
+    "effective.ofType(dateTime) >= @2024-03-01T00:00:00Z",
+    "effective.ofType(dateTime) < @2024-06-01T18:30:00Z",
+    "effective.ofType(dateTime) = @2024-06-01T18:30:00Z"
+  ), r)
+})
+
+test_that("lo que no se puede traducir con certeza da error", {
+  r <- recursos_fhirpath()
+  traduccion <- function(recurso, e) {
+    expect_error(vista_sql(vista_crear(recurso, c(x = e))),
+                 class = "fhirviews_error_sql", label = e)
+  }
+  ejecucion <- function(recurso, e) {
+    expect_error(vista_ejecutar_duckdb(r, vista_crear(recurso, c(x = e))),
+                 class = "fhirviews_error_vista", label = e)
+  }
+  # Decimales: su precisión se pierde al leer el JSON
+  traduccion("Observation", "value.ofType(Quantity).value.lowBoundary()")
+  # Expresiones regulares que JavaScript y RE2 leen distinto
+  traduccion("Patient", "gender.matches('\\\\s')")
+  traduccion("Patient", "gender.matches('(?<n>a)')")
+  traduccion("Patient", "gender.matches(id)")
+  traduccion("Patient", "1.0 ~ 1")
+  traduccion("Patient", "1.exp()")
+  traduccion("Patient", "birthDate + 1")
+  traduccion("Patient", "name.ofType(HumanName)")
+  # Valores que dependen de la zona horaria del equipo o de un tipo
+  # desconocido
+  ejecucion("Observation", "effective.ofType(dateTime) > @2024-03-01")
+  ejecucion("Patient", "birthDate < @2000-01-01T00:00:00Z")
+  ejecucion("Patient", "name.given.skip(-1).first()")
+  ejecucion("Patient", "name.first() = name.last()")
+  ejecucion("Patient", "multipleBirth + 1")
+  ejecucion("Patient", "name.family.first().replace('e', '$&')")
+  ejecucion("Patient", "deceased > @2021-01-01")
+  # Caracteres que DuckDB y JavaScript tratan distinto
+  raros <- list(list(resourceType = "Patient", id = "x",
+                     name = list(list(family = "Stra\u00dfe",
+                                      given = list("a\U0001F600b")))))
+  expect_error(vista_ejecutar_duckdb(raros, vista_crear("Patient", c(
+    x = "name.family.first().upper()"))), class = "fhirviews_error_vista")
+  expect_error(vista_ejecutar_duckdb(raros, vista_crear("Patient", c(
+    x = "name.given.first().length()"))), class = "fhirviews_error_vista")
+})
+
+test_that("las mayusculas dudosas cubren las diferencias entre DuckDB y V8", {
+  # Recorre el plano básico hasta U+2FFF (data-raw/mayusculas.R lo hace con
+  # todo Unicode)
+  ct <- V8::v8()
+  js <- jsonlite::fromJSON(ct$eval(paste0(
+    "(function(){var u=[],l=[];for(var c=1;c<=0x2FFF;c++){",
+    "var s=String.fromCharCode(c);u.push(s.toUpperCase());l.push(s.toLowerCase());}",
+    "return JSON.stringify({u:u,l:l});})()")))
+  con <- conectar_duckdb()
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  db <- DBI::dbGetQuery(con, paste0(
+    "SELECT c, upper(chr(c::INTEGER)) AS u, lower(chr(c::INTEGER)) AS l, ",
+    "regexp_matches(chr(c::INTEGER), ", texto_sql(re_mayusculas_dudosas), ") AS du, ",
+    "regexp_matches(chr(c::INTEGER), ", texto_sql(re_minusculas_dudosas), ") AS dl ",
+    "FROM range(1, 12288) t(c) ORDER BY c"))
+  expect_true(all(db$du[js$u != db$u]))
+  expect_true(all(db$dl[js$l != db$l]))
+})
+
+test_that("diferido devuelve una tabla de dbplyr", {
+  skip_if_not_installed("dbplyr")
+  skip_if_not_installed("dplyr")
+  vista <- vista_crear("Observation", c(
+    codigo = "code.coding.first().code",
+    valor = "value.ofType(Quantity).value", valor_x = "value"))
+  t <- vista_ejecutar_duckdb(caso, vista, diferido = TRUE)
+  on.exit(DBI::dbDisconnect(dbplyr::remote_con(t)), add = TRUE)
+  expect_s3_class(t, "tbl_dbi")
+  v8 <- vista_ejecutar(caso, vista)
+  local <- dplyr::collect(t)
+  expect_identical(local$id, v8$id)
+  expect_identical(local$valor, v8$valor)
+  n <- dplyr::collect(dplyr::summarise(dplyr::filter(t, !is.na(valor)),
+                                       n = dplyr::n()))$n
+  expect_equal(n, sum(!is.na(v8$valor)))
+
+  # Con recursos de R y una conexión propia
+  con <- conectar_duckdb()
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  t2 <- vista_ejecutar_duckdb(fhir_recursos(caso), vista, con_db = con,
+                              diferido = TRUE)
+  expect_identical(dplyr::collect(t2)$valor, v8$valor)
+  expect_error(vista_ejecutar_duckdb(caso, vista, tabla = "x", diferido = TRUE),
+               class = "fhirviews_error")
+  expect_error(vista_ejecutar_duckdb(caso, vista, diferido = NA),
+               class = "fhirviews_error")
 })

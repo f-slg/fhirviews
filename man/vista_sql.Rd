@@ -28,21 +28,32 @@ comandos de DuckDB).
 \details{
 El traductor cubre la estructura completa del \code{ViewDefinition} (\code{select}
 anidados, \code{column}, \code{forEach}, \code{forEachOrNull}, \code{repeat}, \code{unionAll},
-\code{where}, \code{constant} y \verb{\%rowIndex}) y un subconjunto de FHIRPath:
+\code{where}, \code{constant} y \verb{\%rowIndex}) y buena parte de FHIRPath:
 navegación por campos (los elementos de elección como \code{value} o
-\code{effective} buscan todas sus variantes, \code{valueQuantity},
-\code{valueString}...), índices (\code{name[0]}), \code{where()}, \code{select()},
-\code{exists()}, \code{empty()}, \code{count()}, \code{first()}, \code{last()}, \code{tail()}, \code{skip()},
-\code{take()}, \code{single()}, \code{distinct()}, \code{all()}, \code{not()}, \code{iif()}, \code{join()},
-\code{ofType()} sobre elementos de elección (\code{value.ofType(Quantity)} es
-\code{valueQuantity}), \code{extension(url)}, \code{getResourceKey()},
-\code{getReferenceKey()}, funciones de texto (\code{startsWith()}, \code{endsWith()},
-\code{contains()}, \code{upper()}, \code{lower()}, \code{length()}, \code{substring()},
-\code{replace()}, \code{trim()}, \code{matches()}, \code{toString()}), conversiones
-(\code{toInteger()}, \code{toDecimal()}), comparaciones, aritmética, \code{and}, \code{or},
-\code{xor}, \code{implies}, \code{|}, \verb{in} y \code{contains}. Si una expresión usa algo
-fuera de ese subconjunto, se produce un error de clase
-\code{fhirviews_error_sql} que sugiere usar \code{\link[=vista_ejecutar]{vista_ejecutar()}}.
+\code{effective} buscan sus variantes \code{valueQuantity}, \code{valueString}...),
+índices (\code{name[0]}), \code{where()}, \code{select()}, \code{exists()}, \code{empty()},
+\code{all()}, \code{allTrue()} y afines, \code{count()}, \code{first()}, \code{last()}, \code{tail()},
+\code{skip()}, \code{take()}, \code{single()}, \code{distinct()}, \code{isDistinct()},
+\code{union()}/\code{|}, \code{combine()}, \code{intersect()}, \code{exclude()}, \code{subsetOf()},
+\code{supersetOf()}, \verb{in}, \code{contains}, \code{not()}, \code{iif()}, \code{trace()}, \code{is},
+\code{as}, \code{ofType()}, \code{extension(url)}, \code{getResourceKey()},
+\code{getReferenceKey()}, funciones de texto (\code{join()}, \code{startsWith()},
+\code{endsWith()}, \code{contains()}, \code{indexOf()}, \code{substring()}, \code{upper()},
+\code{lower()}, \code{trim()}, \code{length()}, \code{replace()}, \code{matches()},
+\code{replaceMatches()}, \code{split()}, \code{toChars()}), conversiones (\code{toString()},
+\code{toInteger()}, \code{toDecimal()}, \code{toBoolean()} y sus \code{convertsTo...()}),
+aritmética, \code{abs()}, \code{ceiling()}, \code{floor()}, \code{round()}, \code{truncate()},
+\code{sqrt()}, \code{power()} exacta, comparaciones de fechas y horas con su
+precisión y \code{lowBoundary()}/\code{highBoundary()} de fechas y horas.
+
+La traducción reproduce el resultado de \code{fhirpath.js}
+(\code{\link[=vista_ejecutar]{vista_ejecutar()}}). Si una expresión usa algo que no se puede traducir
+con certeza, se produce un error de clase \code{fhirviews_error_sql} que
+sugiere usar \code{\link[=vista_ejecutar]{vista_ejecutar()}}; lo que solo se puede decidir con los
+datos (por ejemplo, comparar una fecha sin hora con una fecha y hora, que
+depende de la zona horaria del equipo, o textos con caracteres que DuckDB
+y JavaScript pasan a mayúsculas de forma distinta) da un error al
+ejecutar la consulta, nunca un resultado distinto.
 
 Los elementos \code{repeat} se traducen hasta una profundidad fija (por
 defecto 12 niveles; la opción \code{fhirviews.sql_profundidad} la cambia); si

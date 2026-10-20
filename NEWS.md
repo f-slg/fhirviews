@@ -1,3 +1,41 @@
+# fhirviews (development version)
+
+## Motor DuckDB
+
+* El motor DuckDB (`vista_ejecutar_duckdb()`, `vista_sql()`) traduce muchas
+  más funciones de FHIRPath: `union()`, `combine()`, `intersect()`,
+  `exclude()`, `isDistinct()`, `subsetOf()`, `supersetOf()`, `allTrue()`,
+  `anyTrue()`, `allFalse()`, `anyFalse()`, `indexOf()`, `replaceMatches()`,
+  `split()`, `toChars()`, `toBoolean()`, `convertsToInteger()`,
+  `convertsToDecimal()`, `convertsToBoolean()`, `convertsToString()`,
+  `abs()`, `ceiling()`, `floor()`, `round()`, `truncate()`, `sqrt()`,
+  `power()` (exacta), `trace()`, `is()`/`as()` como funciones y
+  `lowBoundary()`/`highBoundary()` de fechas y horas. Pasa 7 de las 11
+  pruebas experimentales del banco oficial, como el motor V8 (antes 3).
+* Las funciones que ya traducía siguen ahora la semántica de fhirpath.js en
+  los casos límite que antes daban otro resultado sin aviso: comparaciones de
+  fechas con distinta precisión y zona horaria, igualdad entre valores de
+  distinto tipo (`birthDate = '1970-06-15'` es falso), números comparados
+  con 8 decimales (`0.1 + 0.2 = 0.3`), `toInteger()`/`toDecimal()` de
+  textos, `substring()` fuera de rango, `replace()` con patrón vacío,
+  `trim()` con espacios de Unicode, `iif()` con condiciones no lógicas, el
+  orden de `|` y `toString()` de números.
+* Sigue el tipo FHIR de cada expresión con el modelo R4 (el mismo de
+  fhirpath.js), lo que permite elegir solo las variantes de cada elemento de
+  elección y comparar fechas, textos y horas según su tipo.
+* Lo que no se puede traducir con certeza da un error: `fhirviews_error_sql`
+  al traducir (por ejemplo, expresiones regulares con construcciones que
+  JavaScript y RE2 interpretan distinto, o `lowBoundary()` de decimales) y
+  `fhirviews_error_vista` al ejecutar cuando depende de los datos (una fecha
+  sin hora frente a una fecha y hora, textos con caracteres que DuckDB pasa a
+  mayúsculas de otra forma, `skip()` con un número negativo...).
+* Nuevo argumento `diferido` de `vista_ejecutar_duckdb()`: con
+  `diferido = TRUE` devuelve una tabla de dplyr (dbplyr) sobre la consulta,
+  para filtrar y resumir en DuckDB y traer a R solo el resultado. dplyr y
+  dbplyr se agregan a Suggests.
+* Una columna sin tipo cuyos valores son todos números enteros llega a R como
+  entero, como en `vista_ejecutar()`.
+
 # fhirviews 0.2.0
 
 Esta versión prepara fhirviews para servidores y volúmenes reales:
