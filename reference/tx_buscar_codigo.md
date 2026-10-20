@@ -53,10 +53,13 @@ atributo `respuesta`.
 ## Examples
 
 ``` r
-if (FALSE) { # fhir_disponible("https://tx.fhir.org/r4")
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 glucosa <- tx_buscar_codigo(tx, "http://loinc.org", "2345-7")
+#> Error: El servidor respondió 404 Not Found.
+#> ✖ GET https://tx.fhir.org/r4/CodeSystem/$lookup
+#> • [error] Unknown operation: $lookup
 glucosa$display
+#> Error: object 'glucosa' not found
 head(glucosa$propiedades)
-}
+#> Error: object 'glucosa' not found
 ```

@@ -84,12 +84,15 @@ el `OperationOutcome` del servidor.
 ## Examples
 
 ``` r
-if (FALSE) { # fhir_disponible("https://tx.fhir.org/r4")
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 
 # Un ValueSet publicado, por su URL canónica
 sexo <- tx_expandir(tx, "http://hl7.org/fhir/ValueSet/administrative-gender")
+#> Error: El servidor respondió 404 Not Found.
+#> ✖ GET https://tx.fhir.org/r4/ValueSet/$expand
+#> • [error] Unknown operation: $expand
 sexo
+#> Error: object 'sexo' not found
 
 # Un ValueSet propio: los descendientes de "diabetes mellitus" en SNOMED CT
 diabetes <- tx_expandir(tx, list(
@@ -101,5 +104,18 @@ diabetes <- tx_expandir(tx, list(
   )))
 ), max = 200)
 head(diabetes)
-}
+#>                   system     code
+#> 1 http://snomed.info/sct 73211009
+#> 2 http://snomed.info/sct  2751001
+#> 3 http://snomed.info/sct  4783006
+#> 4 http://snomed.info/sct  5368009
+#> 5 http://snomed.info/sct  5969009
+#> 6 http://snomed.info/sct  8801005
+#>                                                                   display
+#> 1                                                       Diabetes mellitus
+#> 2                                      Fibrocalculous pancreatic diabetes
+#> 3 Maternal diabetes mellitus with hypoglycemia affecting fetus OR newborn
+#> 4                                          Drug-induced diabetes mellitus
+#> 5                      Diabetes mellitus associated with genetic syndrome
+#> 6                                             Secondary diabetes mellitus
 ```
