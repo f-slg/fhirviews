@@ -1,6 +1,7 @@
-# Motor DuckDB para fhirviews: informe del prototipo
+# Motor DuckDB para fhirviews: informe
 
-Rama `motor-duckdb`. Código en `R/sql.R`, pruebas en
+Código en `R/sql.R` (estructura del `ViewDefinition` y ejecución) y
+`R/sql-fhirpath.R` (traductor de FHIRPath), pruebas en
 `tests/testthat/test-sql.R`, medición en `data-raw/motor-duckdb.R` (resultados
 en `data-raw/motor-duckdb.csv`).
 
@@ -13,13 +14,21 @@ en `data-raw/motor-duckdb.csv`).
 * **Conformidad: 133 de 133 pruebas shareable** del banco oficial
   (`vista_conformidad(motor = "duckdb")`), las mismas que el motor V8,
   incluidos `repeat`, `%rowIndex`, `unionAll` anidado y los errores
-  esperados. De las 11 experimentales pasan 3 (las de `join()`); fallan las 8
-  de `lowBoundary()`/`highBoundary()`, que no se traducen.
-* **Rendimiento:** con 50 000 pacientes en NDJSON, 0,6 s frente a 10,8 s de
-  `vista_ejecutar()` (17 veces más rápido); con 250 000, 1,3 s frente a 55 s
-  (41 veces); con 1 000 000 (271 MB, 1,8 millones de filas), 4,5 s y 1,3 GB
-  de memoria máxima del proceso, un volumen que el motor V8 no alcanza en
+  esperados, y **7 de las 11 experimentales**, también las mismas que V8
+  (fallan las de `lowBoundary()`/`highBoundary()` de decimales y de fechas y
+  horas con precisión de día; ver más abajo).
+* **FHIRPath:** traduce todo lo que exige el perfil shareable y la mayor
+  parte de FHIRPath N1 (inventario abajo), con la semántica de fhirpath.js.
+  Una prueba diferencial compara los dos motores con unas 110 expresiones con
+  casos límite (fechas parciales y zonas horarias, Unicode, tipos mezclados) y
+  con las vistas de todas las viñetas, y otras 19 comprueban que lo dudoso da
+  error.
+* **Rendimiento:** con 250 000 pacientes en NDJSON, 1,6 s frente a 59 s de
+  `vista_ejecutar()` (38 veces más rápido); con 1 000 000 (271 MB,
+  1,8 millones de filas), 5,8 s, un volumen que el motor V8 no alcanza en
   este portátil.
+* **Resultado diferido:** `vista_ejecutar_duckdb(..., diferido = TRUE)`
+  devuelve una tabla de dplyr sobre DuckDB.
 * Lo que no se puede traducir da un error de clase `fhirviews_error_sql` que
   nombra la expresión y sugiere `vista_ejecutar()`.
 * **Recomendación: incorporarlo** como motor opcional y experimental (DuckDB
@@ -41,9 +50,9 @@ de tres clases: colección (`JSON[]`, vacía si no hay valores), un valor JSON
 `DOUBLE`). La navegación `a.b` es `json_extract` sobre cada elemento, y los
 arreglos se aplanan; `where()`, `select()`, `exists(criterio)` y `all()` son
 `list_filter`/`list_transform` con una lambda cuyo foco es el elemento. Las
-comparaciones convierten al tipo del literal (texto, número, lógico); si
-ambos lados son rutas, comparan como números cuando los dos lo son y como
-texto en otro caso. Las fechas se comparan como texto ISO 8601.
+comparaciones miran el tipo de cada lado (del literal, del modelo FHIR o del
+valor JSON) y siguen las reglas de fhirpath.js descritas en
+[Semántica](#semántica-cómo-se-asegura-el-mismo-resultado-que-fhirpathjs).
 
 **Estructura del ViewDefinition como listas de filas.** Cada `select` se
 traduce en una expresión que da la lista de filas (`STRUCT` con una clave por
@@ -79,60 +88,174 @@ devuelve varios valores y un `where` que no devuelve un lógico llaman a
 `error()` de DuckDB, con un mensaje en español; llegan a R como
 `fhirviews_error_vista`.
 
-## Cobertura de FHIRPath
+## Inventario de FHIRPath
 
-| Se traduce | No se traduce (error que sugiere `vista_ejecutar()`) |
-|---|---|
-| Navegación por campos, `Patient.x`, `name[0]`, `$this`, `%resource` | `ofType()` con un tipo que el elemento de elección no admite |
-| `where`, `select`, `exists`, `all`, `empty`, `hasValue`, `count` | `lowBoundary`, `highBoundary`, `precision` |
-| `first`, `last`, `tail`, `skip`, `take`, `single`, `distinct` | `resolve`, `memberOf`, `conformsTo`, `trace`, `children`, `descendants` |
-| `not`, `iif`, `and`, `or`, `xor`, `implies` | Cantidades con unidades (`5 'mg'`) y aritmética de fechas |
-| `=`, `!=`, `~`, `!~`, `<`, `>`, `<=`, `>=` | `$index`, `$total`, `aggregate`, `repeat()` como función |
-| `+`, `-`, `*`, `/`, `div`, `mod`, `&`, `\|`, `in`, `contains` | `ofType()` de tipos complejos fuera de un elemento de elección |
-| Elementos de elección sin `ofType()` (`value`, `effective`, `onset`...) | `toDate`, `toDateTime`, `toQuantity`, `convertsTo*` |
-| `ofType` (elemento de elección o filtro de primitivos), `is`, `as` | |
-| `extension(url)`, `getResourceKey()`, `getReferenceKey([tipo])` | |
-| `join`, `startsWith`, `endsWith`, `contains`, `matches`, `upper`, `lower`, `trim`, `length`, `substring`, `replace`, `toString`, `toInteger`, `toDecimal` | |
-| Constantes de todos los tipos de `constant`, `%rowIndex`, literales de fecha | |
+Funciones y operadores de la especificación
+[FHIRPath N1 (2.0.0)](https://hl7.org/fhirpath/N1/), las que agrega FHIR R4
+y SQL on FHIR, y las de FHIRPath 3.0 que usa el banco (`lowBoundary()`,
+`highBoundary()`). La columna *shareable* marca lo que el perfil
+[*Shareable View Definition*](https://sql-on-fhir.org/ig/latest/StructureDefinition-ShareableViewDefinition.html)
+exige a toda implementación (literales, `=`, `!=`, `<`, `<=`, `>`, `>=`,
+`and`, `or`, `not()`, aritmética, `[]`, `exists()`, `empty()`,
+`extension()`, `first()`, `join()`, `lowBoundary()`, `highBoundary()`,
+`ofType()`, `where()`, `getResourceKey()` y `getReferenceKey()`).
 
-**Elementos de elección.** Al navegar a un nombre que en el modelo FHIR R4
-es un elemento de elección en algún recurso (`value`, `effective`, `onset`,
-`deceased`, `multipleBirth`...), se extraen a la vez, con un solo
-`json_extract` de varias rutas, el campo y todas sus variantes
-(`valueQuantity`, `valueString`...); los nombres salen de
-`choiceTypePaths` del modelo de fhirpath.js. `x.ofType(T)` sobre un elemento
-de elección es el campo `xT` solo si `T` es uno de sus tipos; en otro caso,
-o con un tipo complejo fuera de un elemento de elección, la traducción falla
-con `fhirviews_error_sql` en lugar de devolver vacío.
+Sí: se traduce y da lo mismo que fhirpath.js. Parcial: se traduce en los
+casos indicados y en los demás da error (nunca otro resultado). No: error
+`fhirviews_error_sql` al traducir.
 
-Diferencias semánticas conocidas frente a fhirpath.js (no afectan al banco):
+| Sección | Función u operador | Shareable | DuckDB |
+|---|---|:-:|---|
+| 5.1 Existencia | `empty()`, `exists([criterio])`, `count()` | sí | Sí |
+| | `all()`, `allTrue()`, `anyTrue()`, `allFalse()`, `anyFalse()` | | Sí |
+| | `subsetOf()`, `supersetOf()`, `distinct()`, `isDistinct()` | | Sí (los elementos complejos no se comparan: error) |
+| 5.2 Filtros | `where()` | sí | Sí |
+| | `select()` | | Sí |
+| | `ofType()` | sí | Parcial: elementos de elección, tipos del modelo y `boolean` |
+| | `repeat()` (función) | | No (el `repeat` del ViewDefinition sí) |
+| 5.3 Subconjuntos | `[i]` | sí | Sí |
+| | `first()` | sí | Sí |
+| | `single()`, `last()`, `tail()` | | Sí |
+| | `skip()`, `take()` | | Sí (número negativo: error, fhirpath.js usa `slice()`) |
+| | `intersect()`, `exclude()` | | Sí |
+| 5.4 Combinación | `union()`, `\|`, `combine()` | | Sí, conservando el orden |
+| 5.5 Conversión | `iif()` | | Sí |
+| | `toBoolean()`, `toInteger()`, `toDecimal()`, `toString()` y sus `convertsTo...()` | | Sí (`toString()` de elementos complejos: error) |
+| | `toDate()`, `toDateTime()`, `toTime()`, `toQuantity()` y sus `convertsTo...()` | | No |
+| 5.6 Texto | `startsWith()`, `endsWith()`, `contains()`, `substring()`, `indexOf()`, `length()`, `toChars()` | | Sí (caracteres fuera del plano básico: error) |
+| | `upper()`, `lower()` | | Sí (los ~500 caracteres que DuckDB convierte distinto, como `ß`: error) |
+| | `replace()` | | Sí (`$` en el reemplazo: error) |
+| | `matches()`, `replaceMatches()` | | Parcial: expresión regular literal sin construcciones que JavaScript y RE2 lean distinto (`\s`, grupos con nombre, referencias...) |
+| | `trim()`, `split()`, `join()` | sí (`join`) | Sí |
+| 5.7 Matemática | `abs()`, `ceiling()`, `floor()`, `round()`, `truncate()`, `sqrt()` | | Sí |
+| | `power()` | | Parcial: enteros con resultado exacto |
+| | `exp()`, `ln()`, `log()` | | No (libm y V8 pueden diferir en el último bit) |
+| 5.8 Árbol | `children()`, `descendants()` | | No |
+| 5.9 Utilidad | `trace()` | | Sí (no escribe nada) |
+| | `now()`, `today()`, `timeOfDay()` | | No |
+| 6.1 Igualdad | `=`, `!=` | sí | Sí (elementos complejos: error) |
+| | `~`, `!~` | | Sí con textos, lógicos y fechas; con números, no |
+| 6.2 Comparación | `<`, `<=`, `>`, `>=` | sí | Sí, con la regla de precisión de fechas y horas |
+| 6.3 Tipos | `is`, `as`, `is()`, `as()` | | Como `ofType()` |
+| 6.4 Colecciones | `in`, `contains` | | Sí |
+| 6.5 Lógica | `and`, `or`, `not()` | sí | Sí |
+| | `xor`, `implies` | | Sí |
+| 6.6 Aritmética | `+`, `-`, `*`, `/`, `div`, `mod` | sí | Sí con números y textos (`+`) |
+| | `&` | | Sí |
+| 6.6 Fechas | `fecha + cantidad` | | No |
+| Literales | texto, entero, decimal, lógico, `{}` | sí | Sí |
+| | `@fecha`, `@fechaThora`, `@Thora` | sí | Sí |
+| | cantidades (`5 'mg'`) | | No |
+| 7 Agregados | `aggregate()`, `$index`, `$total` | | No |
+| FHIR | `extension(url)` | sí | Sí |
+| | `hasValue()` | | Sí |
+| | `resolve()`, `memberOf()`, `conformsTo()`, `htmlChecks()` | | No |
+| SQL on FHIR | `getResourceKey()`, `getReferenceKey([tipo])` | sí | Sí |
+| FHIRPath 3.0 | `lowBoundary()`, `highBoundary()` | sí | Parcial: fechas, horas y fechas y horas con hora y zona; decimales y fechas y horas con precisión de día, no |
+| | `precision()` | | No |
+| Variables | `%resource`, `%rootResource`, `%rowIndex`, constantes | sí | Sí |
 
-* Las fechas y horas se comparan como texto: `birthDate > @1940-01-01` es
-  correcto con fechas de la misma precisión, pero `@2020` frente a
-  `@2020-05-01` no da vacío como en FHIRPath.
-* Los decimales son `DOUBLE` (0.1 + 0.2 no es exactamente 0.3).
-* `|` no conserva el orden de los elementos.
-* `~` solo ignora mayúsculas y espacios de los extremos.
-* Las extensiones de primitivos (`_birthDate`) no se ven.
+Antes de esta versión el motor no traducía los conjuntos (`union()`,
+`intersect()`...), `allTrue()` y afines, `indexOf()`, `replaceMatches()`,
+`split()`, `toChars()`, `toBoolean()`, `convertsTo...()`, las funciones
+matemáticas ni `lowBoundary()`/`highBoundary()`; y varias de las que sí (`toInteger()`, `substring()`, `replace()`, `|`, `iif()`, las
+comparaciones de fechas y entre tipos distintos) daban en casos límite un
+resultado distinto del de fhirpath.js sin avisar. La prueba diferencial
+nueva los encontró y se corrigieron.
+
+## Semántica: cómo se asegura el mismo resultado que fhirpath.js
+
+**Tipos del modelo FHIR.** Cada expresión traducida lleva el tipo FHIR que da
+el modelo R4 de fhirpath.js (`path2Type`, `choiceTypePaths`...), seguido al
+navegar como lo hace `fhirviews.tipo()`. Con él se eligen solo las variantes
+posibles de cada elemento de elección (`Observation.value` busca 11 campos,
+no los 50 de todos los recursos) y se sabe si un texto es un `string`, una
+fecha o una hora. Si el tipo no se conoce (por ejemplo, `extension.value`
+sin `ofType()`) y un texto parece una fecha, la consulta da error.
+
+**Igualdad y orden.** Como en fhirpath.js: valores de tipos distintos no son
+iguales (`'1' = 1` y `birthDate = '1970-06-15'` son falsos) y no se pueden
+ordenar (error); los números se comparan redondeados a 8 decimales
+(`0.1 + 0.2 = 0.3` es verdadero) y los enteros, como enteros; `~` entre
+textos pasa a mayúsculas y cambia los espacios de Unicode por espacios; los
+elementos complejos no se comparan (error).
+
+**Fechas y horas.** Se compara la forma canónica de cada valor (en UTC si
+tiene zona horaria) en la precisión común: si difieren, decide el orden; si
+coinciden y tienen la misma precisión, son iguales; si no, el resultado es
+vacío (`@2024 < @2024-06` no es verdadero ni falso). Segundos y milisegundos
+son la misma precisión, como en fhirpath.js, y otros números de decimales dan
+error. Dos casos dependen en fhirpath.js de la zona horaria del equipo y por
+eso solo se traducen si el resultado sería el mismo en cualquier zona (de
+−12 a +14 horas): una fecha con hora sin zona frente a una con zona, y una
+fecha sin hora frente a una fecha y hora. Así,
+`effective.ofType(dateTime) > @2024-03-01` da error con las observaciones
+cercanas a la medianoche de ese día; la forma segura es
+`effective.ofType(dateTime) > @2024-03-01T00:00:00Z`.
+
+**Conjuntos.** `|`, `union()`, `distinct()`, `intersect()`, `in`... usan una
+clave de igualdad por elemento (tipo y valor; números redondeados como en la
+igualdad; fechas con hora en UTC) y conservan el orden de la primera
+aparición, como fhirpath.js. Dos elementos complejos distintos no se pueden
+comparar con certeza (fhirpath.js los compara campo a campo): error.
+
+**Texto.** JavaScript cuenta los caracteres fuera del plano básico (emojis)
+como dos, así que `length()`, `substring()`, `indexOf()` y `toChars()` dan
+error con ellos. `upper()`, `lower()` y `~` dan error con los caracteres que
+DuckDB convierte distinto (`data-raw/mayusculas.R` los calcula recorriendo
+Unicode; una prueba revisa el plano básico hasta U+2FFF). `trim()` quita los
+mismos espacios que JavaScript. `matches()` y `replaceMatches()` traducen la
+expresión regular (con las banderas `su` de fhirpath.js) solo si usa
+construcciones que significan lo mismo en RE2; `\d`, `\w` y `\b` son ASCII
+en los dos.
+
+**Números.** Los decimales son `DOUBLE`, como los números de JavaScript.
+`toString()` escribe los números como JavaScript (`3.0` es `"3"`, salvo un
+literal decimal, que conserva su texto como en fhirpath.js). `round()`
+redondea las mitades hacia +∞ como `Math.round()`. Una columna sin tipo cuyos
+valores son todos enteros llega a R como entero, como en `vista_ejecutar()`.
+
+## Resultado diferido
+
+`vista_ejecutar_duckdb(archivos, vista, diferido = TRUE)` devuelve
+`dplyr::tbl(con, dplyr::sql(consulta))` (dplyr y dbplyr en Suggests): los
+filtros, agrupaciones y resúmenes de dplyr se traducen a SQL y se calculan en
+DuckDB sobre los archivos, sin traer las filas a R.
+
+```r
+casos <- vista_ejecutar_duckdb("exportacion/*.ndjson", vista, diferido = TRUE)
+casos |> dplyr::filter(sexo == "female") |> dplyr::count(canton) |> dplyr::collect()
+DBI::dbDisconnect(dbplyr::remote_con(casos))
+```
+
+Las columnas sin tipo deducible se resuelven al crear la tabla (una lectura
+de los datos); la conexión queda abierta mientras se use la tabla. Al hacer
+`collect()`, los elementos complejos llegan como texto JSON y las colecciones
+como listas de DuckDB.
 
 ## Conformidad
 
 ```
 vista_conformidad(motor = "duckdb")
 Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09)
-fhirviews 0.1.0 · motor DuckDB 1.5.6
+fhirviews 0.2.0.9000 · motor DuckDB 1.5.6
 
-  experimental     3 de  11 aprobadas
+  experimental     7 de  11 aprobadas
   shareable      133 de 133 aprobadas
-  total          136 de 144 aprobadas
+  total          140 de 144 aprobadas
 ```
 
 Pasan todos los archivos shareable: basic (11), collection (4), combinations
 (6), constant (8), constant_types (14), fhirpath (9), fhirpath_numbers (1),
 fn_empty (1), fn_extension (2), fn_first (2), fn_oftype (2),
 fn_reference_keys (3), foreach (13), logic (3), repeat (19), row_index (9),
-union (10), validate (5), view_resource (3) y where (8). El motor V8 pasa
-7 de las 11 experimentales.
+union (10), validate (5), view_resource (3) y where (8). De las
+experimentales pasan las 3 de `join()` y 4 de `fn_boundary.json` (fecha y
+hora), las mismas que el motor V8. Las otras 4 esperan lo que fhirpath.js no
+da: `1.0.lowBoundary()` = 0.95 (la precisión del decimal se pierde al leer el
+JSON en los dos motores) y la zona +14:00/−12:00 en los límites de una fecha
+y hora con precisión de día (fhirpath.js no la agrega); el motor DuckDB da
+error en esos casos en lugar de copiar el resultado de fhirpath.js.
 
 ## Rendimiento
 
@@ -145,9 +268,17 @@ el mismo `data.frame` (comprobado con `all.equal()`).
 
 | Pacientes | NDJSON | Filas | DuckDB, tabla | DuckDB, `data.frame` | V8 (`fhir_recursos()` + `vista_ejecutar()`) |
 |---:|---:|---:|---:|---:|---:|
-| 50 000 | 13 MB | 89 180 | 0,65 s | 0,64 s | 10,8 s |
-| 250 000 | 67 MB | 444 942 | 1,16 s | 1,34 s | 55,4 s |
-| 1 000 000 | 271 MB | 1 781 318 | 4,43 s | 4,53 s | no medido |
+| 10 000 | 3 MB | 17 824 | 0,42 s | 0,22 s | 2,3 s |
+| 50 000 | 13 MB | 89 128 | 0,89 s | 0,92 s | 11,0 s |
+| 100 000 | 27 MB | 178 062 | 1,18 s | 1,18 s | 23,2 s |
+| 250 000 | 67 MB | 444 912 | 1,63 s | 1,56 s | 58,9 s |
+| 1 000 000 | 271 MB | 1 780 958 | 5,71 s | 5,85 s | no medido |
+
+Medición de la versión 0.2.0.9000 (`Rscript data-raw/motor-duckdb.R
+10000,50000,100000,250000,1000000 250000`). Frente a la 0.2.0 (5,5 s con un
+millón), las comparaciones de fechas con su precisión y la conversión de
+tipos cuestan unas décimas de segundo; con 10 000 recursos pesa más la carga
+del modelo FHIR, que se hace una vez por sesión.
 
 Equipo: Linux, 8 núcleos, 14 GB de RAM (unos 4 GB libres), R 4.5.2,
 duckdb 1.5.6. Una corrida de cada motor; DuckDB después de una de
@@ -184,6 +315,18 @@ ejecuta con los dos motores sobre `inst/extdata` y exige tablas idénticas
 idénticas, las colecciones vacías sin `type` se devuelven como `logical()`,
 como en `vista_ejecutar()`.
 
+En la versión 0.2.0.9000 la prueba diferencial se amplió con unas 110
+expresiones de FHIRPath sobre recursos con casos límite (fechas de distinta
+precisión y zona, decimales, textos con `ñ`, `ß`, `Σ` y emojis, valores de
+tipos mezclados) y 19 casos que deben dar error. Al escribirla aparecieron
+divergencias silenciosas en funciones que el motor ya traducía, por ejemplo:
+`'0901'.toInteger()` daba vacío (fhirpath.js: 901) y `1.5.toInteger()` daba 2
+(vacío); `substring(10)` daba `""` (vacío); `name.given | name.family`
+cambiaba el orden; `birthDate = '1970-06-15'` daba verdadero (falso: fecha
+frente a texto); `@2024-03-01 = effective` con `"2024-03-01T10:15:00Z"` daba
+falso (vacío por la precisión); `iif('a', 1, 2)` daba 1 (2). Todas siguen ahora
+a fhirpath.js o dan error.
+
 ## Comparación con otras implementaciones
 
 * **FlatQuack** (MIT, JavaScript/Bun) también compila ViewDefinition a SQL de
@@ -214,15 +357,15 @@ como en `vista_ejecutar()`.
 Incorporarlo como segundo motor, marcado como experimental:
 
 1. Cumple la especificación en el mismo grado que el motor V8 en las pruebas
-   shareable y es de 17 a 41 veces más rápido en lo medido, con memoria acotada por
+   shareable y experimentales y es de 11 a 38 veces más rápido en lo medido, con memoria acotada por
    DuckDB y no por la sesión de R. Es el diferenciador que buscaba el
    paquete: SQL on FHIR para millones de recursos en un portátil, desde CRAN
    y sin Spark.
 2. Mantener `vista_ejecutar()` como motor por defecto y de referencia
    (FHIRPath completo); el error de traducción ya dirige a él.
 3. Próximos pasos: un argumento `motor = "duckdb"` en `vista_duckdb()`;
-   seguir el tipo FHIR de cada expresión con el modelo R4 (para elegir solo
-   las variantes posibles de cada elemento de elección y comparar fechas con
-   su precisión); macros opcionales para un SQL más
-   legible; probar con datos de Synthea (Observation, Encounter) y con
-   Parquet de otras herramientas.
+   distinguir el tipo de los elementos de elección por el campo JSON del que
+   salen (para comparar `extension.value` sin `ofType()`); `toDate()`,
+   `toDateTime()`, `today()` y aritmética de fechas con cantidades; macros
+   opcionales para un SQL más legible; probar con datos de Synthea
+   (Observation, Encounter) y con Parquet de otras herramientas.

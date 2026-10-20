@@ -10,7 +10,13 @@
 # V8 solo se mide hasta 250 000 recursos por defecto: con 1 millón necesita
 # más memoria de la que tiene un portátil típico.
 # -----------------------------------------------------------------------------
-library(fhirviews)
+# Con devtools se mide el código de la carpeta (la rama en curso); si no, el
+# paquete instalado
+if (requireNamespace("devtools", quietly = TRUE) && file.exists("DESCRIPTION")) {
+  devtools::load_all(quiet = TRUE)
+} else {
+  library(fhirviews)
+}
 args <- commandArgs(TRUE)
 tamanos <- if (length(args) >= 1) as.numeric(strsplit(args[1], ",")[[1]]) else
   c(50000, 1000000)

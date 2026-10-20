@@ -409,8 +409,7 @@ El paquete incluye el
 [banco oficial de pruebas](https://github.com/FHIR/sql-on-fhir.js/tree/main/tests)
 de SQL on FHIR, que se ejecuta en cada comprobación de integración continua.
 Pasan **las 133 pruebas del perfil *shareable*** (el que debe cumplir toda
-implementación) con los dos motores, y 7 de las 11 experimentales con el motor
-V8 (3 con el motor DuckDB).
+implementación) y 7 de las 11 experimentales con los dos motores.
 
 <img src="man/figures/README-conformidad.png" width="80%" alt="Barras por archivo del banco de pruebas: todas las pruebas shareable aprobadas; en fn_boundary, 4 de 8 pruebas experimentales fallan" />
 
@@ -436,21 +435,25 @@ fhirviews tiene dos motores para ejecutar la misma vista:
   y la ejecuta directamente sobre los archivos, en paralelo y sin cargarlos en
   R. Es el que conviene para volúmenes grandes.
 
-<img src="man/figures/README-rendimiento.png" width="90%" alt="Barras agrupadas por número de pacientes: el motor DuckDB tarda 0,16 s con 10 000 pacientes, 1,67 s con 250 000 y 5,5 s con un millón; el motor V8 tarda 2,6 s, 62,4 s y no se midió con un millón" />
+<img src="man/figures/README-rendimiento.png" width="90%" alt="Barras agrupadas por número de pacientes: el motor DuckDB tarda 0,22 s con 10 000 pacientes, 1,56 s con 250 000 y 5,8 s con un millón; el motor V8 tarda 2,3 s, 58,9 s y no se midió con un millón" />
 
 | Pacientes | Filas | Motor V8 | Motor DuckDB | Veces más rápido |
 |---:|---:|---:|---:|---:|
-| 10 000 | 17 824 | 2,6 s | 0,16 s | 16 |
-| 50 000 | 89 128 | 11,8 s | 0,72 s | 16 |
-| 100 000 | 178 062 | 24,2 s | 0,94 s | 26 |
-| 250 000 | 444 912 | 62,4 s | 1,67 s | 37 |
-| 1 000 000 | 1 780 958 | — | 5,5 s | — |
+| 10 000 | 17 824 | 2,3 s | 0,22 s | 11 |
+| 50 000 | 89 128 | 11,0 s | 0,92 s | 12 |
+| 100 000 | 178 062 | 23,2 s | 1,18 s | 20 |
+| 250 000 | 444 912 | 58,9 s | 1,56 s | 38 |
+| 1 000 000 | 1 780 958 | — | 5,8 s | — |
 
 Tiempo de punta a punta, desde el archivo NDJSON hasta el `data.frame`, con
 pacientes sintéticos y una vista con `where`, cuatro columnas y `forEach` sobre
 `name` (`data-raw/motor-duckdb.R`; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6).
 Ambos motores dan tablas idénticas: las pruebas del paquete los comparan con
-las vistas de todas las viñetas. Con el motor V8, los recursos que llegan como
+las vistas de todas las viñetas y con más de 100 expresiones de FHIRPath, y lo
+que el motor DuckDB no puede traducir con certeza da un error en lugar de un
+resultado distinto. Con `vista_ejecutar_duckdb(..., diferido = TRUE)` el
+resultado queda como tabla de dplyr sobre DuckDB, para filtrar y resumir sin
+traer todas las filas a R. Con el motor V8, los recursos que llegan como
 JSON (de un servidor, de `$export` o de un archivo) pasan el texto original
 directamente a V8; los armados como listas de R son unas cuatro veces más
 lentos porque deben convertirse a JSON.

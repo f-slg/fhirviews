@@ -9,21 +9,32 @@
 #'
 #' El traductor cubre la estructura completa del `ViewDefinition` (`select`
 #' anidados, `column`, `forEach`, `forEachOrNull`, `repeat`, `unionAll`,
-#' `where`, `constant` y `%rowIndex`) y un subconjunto de FHIRPath:
+#' `where`, `constant` y `%rowIndex`) y buena parte de FHIRPath:
 #' navegación por campos (los elementos de elección como `value` o
-#' `effective` buscan todas sus variantes, `valueQuantity`,
-#' `valueString`...), índices (`name[0]`), `where()`, `select()`,
-#' `exists()`, `empty()`, `count()`, `first()`, `last()`, `tail()`, `skip()`,
-#' `take()`, `single()`, `distinct()`, `all()`, `not()`, `iif()`, `join()`,
-#' `ofType()` sobre elementos de elección (`value.ofType(Quantity)` es
-#' `valueQuantity`), `extension(url)`, `getResourceKey()`,
-#' `getReferenceKey()`, funciones de texto (`startsWith()`, `endsWith()`,
-#' `contains()`, `upper()`, `lower()`, `length()`, `substring()`,
-#' `replace()`, `trim()`, `matches()`, `toString()`), conversiones
-#' (`toInteger()`, `toDecimal()`), comparaciones, aritmética, `and`, `or`,
-#' `xor`, `implies`, `|`, `in` y `contains`. Si una expresión usa algo
-#' fuera de ese subconjunto, se produce un error de clase
-#' `fhirviews_error_sql` que sugiere usar [vista_ejecutar()].
+#' `effective` buscan sus variantes `valueQuantity`, `valueString`...),
+#' índices (`name[0]`), `where()`, `select()`, `exists()`, `empty()`,
+#' `all()`, `allTrue()` y afines, `count()`, `first()`, `last()`, `tail()`,
+#' `skip()`, `take()`, `single()`, `distinct()`, `isDistinct()`,
+#' `union()`/`|`, `combine()`, `intersect()`, `exclude()`, `subsetOf()`,
+#' `supersetOf()`, `in`, `contains`, `not()`, `iif()`, `trace()`, `is`,
+#' `as`, `ofType()`, `extension(url)`, `getResourceKey()`,
+#' `getReferenceKey()`, funciones de texto (`join()`, `startsWith()`,
+#' `endsWith()`, `contains()`, `indexOf()`, `substring()`, `upper()`,
+#' `lower()`, `trim()`, `length()`, `replace()`, `matches()`,
+#' `replaceMatches()`, `split()`, `toChars()`), conversiones (`toString()`,
+#' `toInteger()`, `toDecimal()`, `toBoolean()` y sus `convertsTo...()`),
+#' aritmética, `abs()`, `ceiling()`, `floor()`, `round()`, `truncate()`,
+#' `sqrt()`, `power()` exacta, comparaciones de fechas y horas con su
+#' precisión y `lowBoundary()`/`highBoundary()` de fechas y horas.
+#'
+#' La traducción reproduce el resultado de `fhirpath.js`
+#' ([vista_ejecutar()]). Si una expresión usa algo que no se puede traducir
+#' con certeza, se produce un error de clase `fhirviews_error_sql` que
+#' sugiere usar [vista_ejecutar()]; lo que solo se puede decidir con los
+#' datos (por ejemplo, comparar una fecha sin hora con una fecha y hora, que
+#' depende de la zona horaria del equipo, o textos con caracteres que DuckDB
+#' y JavaScript pasan a mayúsculas de forma distinta) da un error al
+#' ejecutar la consulta, nunca un resultado distinto.
 #'
 #' Los elementos `repeat` se traducen hasta una profundidad fija (por
 #' defecto 12 niveles; la opción `fhirviews.sql_profundidad` la cambia); si
@@ -93,19 +104,53 @@ print.fhir_sql <- function(x, ...) {
 #'   una base en memoria.
 #' @param tabla Nombre opcional de una tabla de `con_db` donde guardar el
 #'   resultado en lugar de traerlo a R; útil con resultados muy grandes.
+#' @param diferido Si es `TRUE`, no ejecuta la vista: devuelve una tabla
+#'   diferida de dplyr (`tbl_dbi` de dbplyr) sobre la consulta, para filtrar,
+#'   agrupar y resumir con dplyr dentro de DuckDB y traer a R solo el
+#'   resultado con [dplyr::collect()]. Requiere los paquetes dplyr y dbplyr.
+#'   Cada vez que se usa la tabla, DuckDB vuelve a leer los archivos.
 #'
-#' @return Un `data.frame` como el de [vista_ejecutar()] o, si se indica
-#'   `tabla`, la conexión DBI de forma invisible.
+#' @details
+#' Con `diferido = TRUE` la tabla queda unida a la conexión: si `con_db` es
+#' `NULL` se crea una que sigue abierta mientras exista la tabla (ciérrala
+#' con `DBI::dbDisconnect(dbplyr::remote_con(tabla))` al terminar), y si
+#' `archivos` son recursos de R, el archivo temporal se borra al cerrar la
+#' sesión de R. Las columnas sin tipo deducible se convierten según los
+#' valores, lo que obliga a recorrer los datos una vez al crear la tabla.
+#' Al traer los datos con [dplyr::collect()], los elementos complejos (como
+#' `name.first()`) llegan como texto JSON y las colecciones como listas de
+#' DuckDB, no como las listas de R de [vista_ejecutar()].
+#'
+#' @return Un `data.frame` como el de [vista_ejecutar()]; si se indica
+#'   `tabla`, la conexión DBI de forma invisible; con `diferido = TRUE`, una
+#'   tabla diferida de dbplyr.
 #' @export
 #' @examplesIf requireNamespace("duckdb", quietly = TRUE) && interactive()
 #' archivo <- system.file("extdata", "caso_clinico.ndjson",
 #'                        package = "fhirviews")
-#' vista_ejecutar_duckdb(archivo, vista_crear("Patient", c(
-#'   sexo = "gender", nacimiento = "birthDate")))
+#' vista <- vista_crear("Patient", c(sexo = "gender", nacimiento = "birthDate"))
+#' vista_ejecutar_duckdb(archivo, vista)
+#' @examplesIf requireNamespace("duckdb", quietly = TRUE) && requireNamespace("dbplyr", quietly = TRUE) && interactive()
+#' # Resultado diferido: el resumen se calcula en DuckDB
+#' pacientes <- vista_ejecutar_duckdb(archivo, vista, diferido = TRUE)
+#' dplyr::count(pacientes, sexo) |> dplyr::collect()
+#' DBI::dbDisconnect(dbplyr::remote_con(pacientes))
 vista_ejecutar_duckdb <- function(archivos, vista, con_db = NULL,
-                                  tabla = NULL) {
+                                  tabla = NULL, diferido = FALSE) {
   rlang::check_installed(c("DBI", "duckdb"),
                          reason = "para ejecutar vistas con DuckDB.")
+  if (!rlang::is_bool(diferido)) {
+    cli::cli_abort("{.arg diferido} debe ser {.code TRUE} o {.code FALSE}.",
+                   class = "fhirviews_error")
+  }
+  if (diferido) {
+    rlang::check_installed(c("dplyr", "dbplyr"),
+                           reason = "para devolver una tabla diferida.")
+    if (!is.null(tabla)) {
+      cli::cli_abort("Usa {.arg tabla} o {.code diferido = TRUE}, no los dos.",
+                     class = "fhirviews_error")
+    }
+  }
   if (utils::packageVersion("duckdb") < "1.3.0") {
     cli::cli_abort(c(
       "El motor DuckDB necesita el paquete {.pkg duckdb} 1.3.0 o posterior.",
@@ -116,16 +161,20 @@ vista_ejecutar_duckdb <- function(archivos, vista, con_db = NULL,
   propia <- is.null(con_db)
   if (propia) {
     con_db <- conectar_duckdb()
-    if (is.null(tabla)) {
+    if (is.null(tabla) && !diferido) {
       on.exit(DBI::dbDisconnect(con_db), add = TRUE)
     }
   }
   cargar_json_duckdb(con_db)
   if (!is.character(archivos)) {
     archivos <- escribir_ndjson_temporal(archivos)
-    on.exit(unlink(archivos), add = TRUE)
+    if (!diferido) on.exit(unlink(archivos), add = TRUE)
   }
   trad <- traducir_vista(vista, origen_sql(archivos))
+  if (diferido) {
+    final <- sql_final(con_db, trad, sprintf("(%s)", unclass(trad$sql)))
+    return(dplyr::tbl(con_db, dplyr::sql(final$sql)))
+  }
   ejecutar_traduccion(con_db, trad, tabla)
 }
 
@@ -181,10 +230,8 @@ ejecutar_traduccion <- function(con, trad, tabla) {
       ), class = c("fhirviews_error_vista", "fhirviews_error"), call = NULL)
     })
   }
-  desconocidas <- names(trad$tipos)[vapply(trad$tipos, is.na, logical(1))]
   sql <- unclass(trad$sql)
-  temporal <- NULL
-  if (length(desconocidas) > 0L) {
+  if (any(vapply(trad$tipos, is.na, logical(1)))) {
     # Columnas sin tipo deducible: se guarda el resultado y se decide el tipo
     # según los valores
     temporal <- paste0("fhirviews_tmp_", paste(sample(letters, 10),
@@ -192,19 +239,9 @@ ejecutar_traduccion <- function(con, trad, tabla) {
     ejecutar(sprintf("CREATE TEMP TABLE %s AS %s", temporal, sql), FALSE)
     on.exit(DBI::dbExecute(con, paste("DROP TABLE IF EXISTS", temporal)),
             add = TRUE)
-    for (nm in desconocidas) {
-      trad$tipos[[nm]] <- detectar_tipo(con, temporal, nm,
-                                        trad$colecciones[[nm]])
-    }
-    sql <- sprintf("SELECT %s FROM %s", paste(vapply(names(trad$tipos),
-      function(nm) {
-        expr <- comillas(nm)
-        if (nm %in% desconocidas) {
-          expr <- convertir_final(expr, trad$tipos[[nm]],
-                                  trad$colecciones[[nm]])
-        }
-        paste(expr, "AS", comillas(nm))
-      }, character(1)), collapse = ", "), temporal)
+    final <- sql_final(con, trad, temporal)
+    sql <- final$sql
+    trad$tipos <- final$tipos
   }
   if (!is.null(tabla)) {
     if (!grepl(patron_nombre, tabla)) {
@@ -225,8 +262,44 @@ ejecutar_traduccion <- function(con, trad, tabla) {
       vacias <- lengths(df[[nm]]) == 0L
       df[[nm]][vacias] <- list(logical())
     }
+    # y una columna sin tipo del `type` ni del modelo, toda vacía, es lógica
+    if (!isTRUE(trad$colecciones[[nm]]) && isTRUE(trad$sin_tipo[[nm]]) &&
+        !nm %in% trad$con_modelo && is.atomic(df[[nm]]) &&
+        all(is.na(df[[nm]]))) {
+      df[[nm]] <- as.logical(df[[nm]])
+    }
   }
   df
+}
+
+# Consulta final: las columnas sin tipo deducible se convierten según los
+# valores de `fuente` (una tabla o una subconsulta entre paréntesis).
+# Devuelve list(sql, tipos).
+sql_final <- function(con, trad, fuente) {
+  desconocidas <- names(trad$tipos)[vapply(trad$tipos, is.na, logical(1))]
+  if (length(desconocidas) == 0L) {
+    return(list(sql = unclass(trad$sql), tipos = trad$tipos))
+  }
+  if (startsWith(fuente, "(")) fuente <- paste(fuente, "AS fhirviews_vista")
+  for (nm in desconocidas) {
+    trad$tipos[[nm]] <- tryCatch(
+      detectar_tipo(con, fuente, nm, trad$colecciones[[nm]]),
+      error = function(e) {
+        cli::cli_abort(c(
+          "DuckDB no pudo ejecutar la vista.",
+          "x" = "{limpiar_mensaje(conditionMessage(e))}"
+        ), class = c("fhirviews_error_vista", "fhirviews_error"), call = NULL)
+      })
+  }
+  sql <- sprintf("SELECT %s FROM %s", paste(vapply(names(trad$tipos),
+    function(nm) {
+      expr <- comillas(nm)
+      if (nm %in% desconocidas) {
+        expr <- convertir_final(expr, trad$tipos[[nm]], trad$colecciones[[nm]])
+      }
+      paste(expr, "AS", comillas(nm))
+    }, character(1)), collapse = ", "), fuente)
+  list(sql = sql, tipos = trad$tipos)
 }
 
 detectar_tipo <- function(con, tabla, columna, coleccion) {
@@ -245,7 +318,20 @@ detectar_tipo <- function(con, tabla, columna, coleccion) {
   if (all(t %in% "VARCHAR")) return("VARCHAR")
   if (all(t %in% "BOOLEAN")) return("BOOLEAN")
   if (all(t %in% enteros)) return("INTEGER")
-  if (all(t %in% c(enteros, "DOUBLE"))) return("DOUBLE")
+  if (all(t %in% c(enteros, "DOUBLE"))) {
+    # Como en vista_ejecutar(): si todos son enteros (3.0 es 3), entero
+    valores <- if (coleccion) {
+      sprintf("SELECT CAST(x AS DOUBLE) AS v FROM (SELECT unnest(%s) AS x FROM %s)",
+              col, tabla)
+    } else {
+      sprintf("SELECT CAST(%s AS DOUBLE) AS v FROM %s", col, tabla)
+    }
+    enteros_sql <- sprintf(
+      "SELECT coalesce(bool_and(v = trunc(v) AND abs(v) <= 2147483647), true) AS e FROM (%s) WHERE v IS NOT NULL",
+      valores)
+    return(if (isTRUE(DBI::dbGetQuery(con, enteros_sql)$e)) "INTEGER" else
+      "DOUBLE")
+  }
   if (any(t %in% c("OBJECT", "ARRAY"))) return("JSON")
   "VARCHAR"
 }
@@ -375,7 +461,10 @@ fp_tokens <- function(x) {
       i <- j + 1L
     } else if (c1 == "@") {
       j <- i + 1L
-      while (j <= n && grepl("[0-9T:.+Z-]", ch[j])) j <- j + 1L
+      while (j <= n && grepl("[0-9T:.+Z-]", ch[j]) &&
+             !(ch[j] == "." && (j == n || !grepl("[0-9]", ch[j + 1L])))) {
+        j <- j + 1L
+      }
       if (j == i + 1L) error("Fecha mal escrita despu\u00e9s de {.code @}.")
       agregar("fecha", paste(ch[(i + 1L):(j - 1L)], collapse = ""))
       i <- j
@@ -485,8 +574,16 @@ fp_analizar <- function(x) {
       num = list(t = "lit", tipo = if (grepl(".", t$valor, fixed = TRUE))
         "DOUBLE" else "BIGINT", valor = t$valor),
       str = list(t = "lit", tipo = "VARCHAR", valor = t$valor),
-      fecha = list(t = "lit", tipo = "VARCHAR",
-                   valor = sub("^T", "", t$valor)),
+      fecha = {
+        hora <- startsWith(t$valor, "T")
+        valor <- sub("T$", "", sub("^T", "", t$valor))
+        patron <- if (hora) re_hora else re_fecha
+        if (!grepl(patron, valor, perl = TRUE)) {
+          error(paste0("Fecha u hora mal escrita: {.code @", t$valor, "}."))
+        }
+        list(t = "lit", tipo = "VARCHAR", valor = valor,
+             clase = if (hora) "hora" else "fecha")
+      },
       var = list(t = "var", nombre = t$valor),
       dolar = {
         if (t$valor != "this") {
@@ -569,607 +666,6 @@ fp_analizar <- function(x) {
   arbol
 }
 
-# --- Traductor de FHIRPath ----------------------------------------------------
-#
-# Cada expresión traducida es una lista con `sql` y `k` (clase):
-#   coll: lista JSON[] (la colección de FHIRPath; vacía si no hay valores);
-#   uno:  un valor JSON, o NULL si la colección está vacía;
-#   val:  un valor de SQL del tipo `tipo` (BOOLEAN, VARCHAR, BIGINT o
-#         DOUBLE), o NULL si está vacía.
-# El contexto (ctx) tiene el foco (expresión `uno` o `coll`), el recurso
-# (`r`), el índice de fila (%rowIndex), las constantes y un contador para
-# nombrar variables de las funciones lambda.
-
-coll <- function(sql) list(sql = sql, k = "coll")
-uno <- function(sql) list(sql = sql, k = "uno")
-val <- function(sql, tipo) list(sql = sql, k = "val", tipo = tipo)
-
-numericos <- c("BIGINT", "DOUBLE", "INTEGER")
-
-no_traducible <- function(detalle, .envir = parent.frame()) {
-  cli::cli_abort(detalle, class = c("fhirviews_error_sql", "fhirviews_error"),
-                 call = NULL, .envir = .envir)
-}
-
-nueva_var <- function(ctx) {
-  ctx$n$i <- ctx$n$i + 1L
-  paste0("z", ctx$n$i)
-}
-
-# Usa `sql` varias veces sin repetir su cálculo (si no es un nombre simple)
-ligar <- function(sql, f, ctx) {
-  if (grepl("^[A-Za-z_][A-Za-z0-9_.]*$", sql)) {
-    return(f(sql))
-  }
-  v <- nueva_var(ctx)
-  sprintf("list_extract(list_transform([%s], lambda %s: %s), 1)", sql, v, f(v))
-}
-
-a_lista <- function(x, ctx) {
-  if (x$k == "coll") return(x$sql)
-  v <- nueva_var(ctx)
-  valor <- if (x$k == "val") sprintf("to_json(%s)", x$sql) else x$sql
-  sprintf("list_filter([%s], lambda %s: %s IS NOT NULL)", valor, v, v)
-}
-
-a_uno <- function(x, ctx, mensaje = NULL) {
-  if (x$k == "uno") return(x$sql)
-  if (x$k == "val") return(sprintf("to_json(%s)", x$sql))
-  mensaje <- mensaje %||%
-    "FHIRPath: se esperaba un solo valor y la colecci\u00f3n tiene varios"
-  ligar(x$sql, function(v) {
-    sprintf("CASE WHEN len(%s) > 1 THEN error(%s) ELSE %s[1] END", v,
-            texto_sql(mensaje), v)
-  }, ctx)
-}
-
-json_a_tipo <- function(u, tipo) {
-  switch(tipo,
-    VARCHAR = sprintf("json_extract_string(%s, '$')", u),
-    JSON = u,
-    sprintf("TRY_CAST(%s AS %s)", u, tipo)
-  )
-}
-
-a_val <- function(x, tipo, ctx) {
-  if (x$k == "val") {
-    if (identical(x$tipo, tipo)) return(x$sql)
-    return(sprintf("TRY_CAST(%s AS %s)", x$sql, tipo))
-  }
-  json_a_tipo(a_uno(x, ctx), tipo)
-}
-
-# Evaluación de una colección como lógico (FHIRPath: un valor que no es
-# lógico cuenta como verdadero)
-a_bool <- function(x, ctx) {
-  if (x$k == "val") {
-    if (x$tipo == "BOOLEAN") return(x$sql)
-    return(sprintf("(%s IS NOT NULL OR NULL)", x$sql))
-  }
-  ligar(a_uno(x, ctx), function(u) {
-    sprintf("CASE WHEN %1$s IS NULL THEN NULL WHEN json_type(%1$s) = 'BOOLEAN' THEN CAST(%1$s AS BOOLEAN) ELSE true END",
-            u)
-  }, ctx)
-}
-
-# Tipos posibles de cada elemento de elección (value[x], effective[x]...)
-# según el modelo FHIR R4 de fhirpath.js, juntando todos los recursos:
-# list(value = c("Quantity", "CodeableConcept", "string", ...), ...)
-elementos_eleccion <- function() {
-  if (is.null(.fhirviews$elecciones)) {
-    ct <- V8::v8()
-    ct$eval("var window = globalThis;")
-    cargar_js(ct, ruta_js("fhirpath", "fhirpath.r4.min.js"))
-    texto <- ct$eval(paste0(
-      "(function () { var m = fhirpath_r4_model.choiceTypePaths, r = {};",
-      " Object.keys(m).forEach(function (k) {",
-      "   var b = k.split('.').pop(); r[b] = r[b] || [];",
-      "   m[k].forEach(function (t) { if (r[b].indexOf(t) < 0) r[b].push(t); });",
-      " }); return JSON.stringify(r); })()"))
-    .fhirviews$elecciones <- lapply(jsonlite::fromJSON(texto), as.character)
-  }
-  .fhirviews$elecciones
-}
-
-con_sufijo <- function(nombre, tipo) {
-  paste0(nombre, toupper(substr(tipo, 1, 1)), substring(tipo, 2))
-}
-
-ruta_json <- function(nombre) {
-  texto_sql(paste0("$.\"", gsub("\"", "\\\"", nombre, fixed = TRUE), "\""))
-}
-
-# Hijos `nombre` de cada elemento (los arreglos se aplanan). Si `nombre` es
-# un elemento de elección (como `value`), se buscan a la vez el campo y
-# todas sus variantes (valueQuantity, valueString...), como hace FHIRPath.
-hijo <- function(base, nombre, ctx) {
-  if (base$k == "val") {
-    no_traducible("No se puede navegar a {.field {nombre}} desde un valor simple.")
-  }
-  variantes <- elementos_eleccion()[[nombre]]
-  v <- nueva_var(ctx)
-  w <- nueva_var(ctx)
-  caso <- sprintf(paste0(
-    "CASE WHEN %1$s IS NULL OR CAST(%1$s AS VARCHAR) = 'null' THEN []::JSON[] ",
-    "WHEN starts_with(CAST(%1$s AS VARCHAR), '[') THEN list_filter(CAST(%1$s AS JSON[]), ",
-    "lambda %2$s: %2$s IS NOT NULL AND CAST(%2$s AS VARCHAR) <> 'null') ",
-    "ELSE [%1$s] END"), v, w)
-  if (is.null(variantes)) {
-    extraer <- function(u) sprintf("[json_extract(%s, %s)]", u, ruta_json(nombre))
-  } else {
-    rutas <- paste0("[", paste(vapply(c(nombre, con_sufijo(nombre, variantes)),
-                                      ruta_json, character(1)),
-                               collapse = ", "), "]")
-    extraer <- function(u) {
-      sprintf("coalesce(json_extract(%s, %s), []::JSON[])", u, rutas)
-    }
-  }
-  if (base$k == "uno") {
-    valores <- extraer(base$sql)
-  } else {
-    u <- nueva_var(ctx)
-    valores <- sprintf("flatten(list_transform(%s, lambda %s: %s))",
-                       base$sql, u, extraer(u))
-  }
-  coll(sprintf("flatten(list_transform(%s, lambda %s: %s))", valores, v, caso))
-}
-
-# Literal de una constante del ViewDefinition
-literal_constante <- function(k) {
-  campo <- intersect(names(k), tipos_constante)[1]
-  valor <- k[[campo]]
-  tipo <- switch(campo,
-    valueBoolean = "BOOLEAN",
-    valueInteger = , valuePositiveInt = , valueUnsignedInt = ,
-    valueInteger64 = "BIGINT",
-    valueDecimal = "DOUBLE",
-    "VARCHAR"
-  )
-  valor <- if (tipo == "BOOLEAN") tolower(as.character(valor)) else
-    format(valor, scientific = FALSE, digits = 15)
-  list(t = "lit", tipo = tipo, valor = valor)
-}
-
-traducir_literal <- function(n) {
-  switch(n$tipo,
-    VARCHAR = val(texto_sql(n$valor), "VARCHAR"),
-    BOOLEAN = val(toupper(n$valor), "BOOLEAN"),
-    val(sprintf("CAST(%s AS %s)", n$valor, n$tipo), n$tipo)
-  )
-}
-
-fp_sql <- function(n, ctx) {
-  switch(n$t,
-    lit = traducir_literal(n),
-    vacio = coll("[]::JSON[]"),
-    this = ctx$foco,
-    var = {
-      nombre <- n$nombre
-      if (nombre == "rowIndex") {
-        val(ctx$indice, "BIGINT")
-      } else if (nombre %in% c("resource", "rootResource")) {
-        uno(ctx$recurso)
-      } else if (!is.null(ctx$constantes[[nombre]])) {
-        traducir_literal(ctx$constantes[[nombre]])
-      } else {
-        no_traducible("La variable {.code %{nombre}} no est\u00e1 definida.")
-      }
-    },
-    campo = {
-      if (is.null(n$base)) {
-        if (identical(n$nombre, ctx$tipo_recurso) && ctx$en_recurso) {
-          return(ctx$foco)
-        }
-        base <- ctx$foco
-      } else {
-        base <- fp_sql(n$base, ctx)
-      }
-      hijo(base, n$nombre, ctx)
-    },
-    indice = {
-      base <- a_lista(fp_sql(n$base, ctx), ctx)
-      i <- a_val(fp_sql(n$i, ctx), "BIGINT", ctx)
-      uno(sprintf("list_extract(%s, %s + 1)", base, i))
-    },
-    neg = {
-      a <- fp_sql(n$a, ctx)
-      tipo <- if (a$k == "val" && a$tipo %in% numericos) a$tipo else "DOUBLE"
-      val(sprintf("(-%s)", a_val(a, tipo, ctx)), tipo)
-    },
-    es = {
-      tipo <- n$tipo
-      filtrado <- fp_oftype(n$a, tipo, ctx)
-      if (n$op == "as") filtrado else
-        val(sprintf("(len(%s) > 0)", filtrado$sql), "BOOLEAN")
-    },
-    op = fp_operador(n, ctx),
-    llamada = fp_funcion(n, ctx),
-    no_traducible("Elemento de FHIRPath no reconocido.")
-  )
-}
-
-fp_operador <- function(n, ctx) {
-  op <- n$op
-  a <- fp_sql(n$a, ctx)
-  b <- fp_sql(n$b, ctx)
-  if (op %in% c("and", "or", "xor", "implies")) {
-    x <- a_bool(a, ctx)
-    y <- a_bool(b, ctx)
-    sql <- switch(op,
-      and = sprintf("(%s AND %s)", x, y),
-      or = sprintf("(%s OR %s)", x, y),
-      xor = sprintf("(%s <> %s)", x, y),
-      implies = sprintf("((NOT %s) OR %s)", x, y)
-    )
-    return(val(sql, "BOOLEAN"))
-  }
-  if (op %in% c("=", "!=", "<", ">", "<=", ">=", "~", "!~")) {
-    return(comparar(a, b, op, ctx))
-  }
-  if (op == "|") {
-    return(coll(sprintf("list_distinct(list_concat(%s, %s))",
-                        a_lista(a, ctx), a_lista(b, ctx))))
-  }
-  if (op %in% c("in", "contains")) {
-    if (op == "contains") {
-      tmp <- a
-      a <- b
-      b <- tmp
-    }
-    v <- nueva_var(ctx)
-    lista <- sprintf("list_transform(%s, lambda %s: json_extract_string(%s, '$'))",
-                     a_lista(b, ctx), v, v)
-    return(val(sprintf("list_contains(%s, %s)", lista,
-                       a_val(a, "VARCHAR", ctx)), "BOOLEAN"))
-  }
-  if (op == "&") {
-    return(val(sprintf("concat(coalesce(%s, ''), coalesce(%s, ''))",
-                       a_val(a, "VARCHAR", ctx), a_val(b, "VARCHAR", ctx)),
-               "VARCHAR"))
-  }
-  texto <- (a$k == "val" && a$tipo == "VARCHAR") ||
-    (b$k == "val" && b$tipo == "VARCHAR")
-  if (op == "+" && texto) {
-    return(val(sprintf("(%s || %s)", a_val(a, "VARCHAR", ctx),
-                       a_val(b, "VARCHAR", ctx)), "VARCHAR"))
-  }
-  enteros <- a$k == "val" && b$k == "val" && a$tipo == "BIGINT" &&
-    b$tipo == "BIGINT"
-  tipo <- if (enteros && op != "/") "BIGINT" else "DOUBLE"
-  simbolo <- switch(op, div = "//", mod = "%", op)
-  if (op == "div") tipo <- "BIGINT"
-  x <- a_val(a, if (op == "div") "DOUBLE" else tipo, ctx)
-  y <- a_val(b, if (op == "div") "DOUBLE" else tipo, ctx)
-  sql <- if (op == "div") {
-    sprintf("CAST(trunc(%s / NULLIF(%s, 0)) AS BIGINT)", x, y)
-  } else if (op %in% c("/", "mod")) {
-    sprintf("(%s %s NULLIF(%s, 0))", x, simbolo, y)
-  } else {
-    sprintf("(%s %s %s)", x, simbolo, y)
-  }
-  val(sql, tipo)
-}
-
-comparar <- function(a, b, op, ctx) {
-  simbolo <- switch(op, "!=" = "<>", "~" = "=", "!~" = "<>", op)
-  insensible <- op %in% c("~", "!~")
-  ta <- if (a$k == "val") a$tipo
-  tb <- if (b$k == "val") b$tipo
-  if (!is.null(ta) || !is.null(tb)) {
-    tipos <- c(ta, tb)
-    tipo <- if (all(tipos %in% numericos)) {
-      if (length(unique(tipos)) == 1L) tipos[1] else "DOUBLE"
-    } else if (length(tipos) == 2L && ta != tb) {
-      "VARCHAR"
-    } else {
-      tipos[1]
-    }
-    x <- a_val(a, tipo, ctx)
-    y <- a_val(b, tipo, ctx)
-    if (insensible && tipo == "VARCHAR") {
-      x <- sprintf("lower(trim(%s))", x)
-      y <- sprintf("lower(trim(%s))", y)
-    }
-    return(val(sprintf("(%s %s %s)", x, simbolo, y), "BOOLEAN"))
-  }
-  # Dos rutas sin tipo conocido: números como números, el resto como texto
-  numero <- "('BIGINT', 'UBIGINT', 'DOUBLE')"
-  par <- sprintf("{'a': %s, 'b': %s}", a_uno(a, ctx), a_uno(b, ctx))
-  sql <- ligar(par, function(v) {
-    texto_a <- sprintf("json_extract_string(%s.a, '$')", v)
-    texto_b <- sprintf("json_extract_string(%s.b, '$')", v)
-    if (insensible) {
-      texto_a <- sprintf("lower(trim(%s))", texto_a)
-      texto_b <- sprintf("lower(trim(%s))", texto_b)
-    }
-    sprintf(paste0(
-      "CASE WHEN json_type(%1$s.a) IN %2$s AND json_type(%1$s.b) IN %2$s ",
-      "THEN TRY_CAST(%1$s.a AS DOUBLE) %3$s TRY_CAST(%1$s.b AS DOUBLE) ",
-      "ELSE %4$s %3$s %5$s END"), v, numero, simbolo, texto_a, texto_b)
-  }, ctx)
-  val(sql, "BOOLEAN")
-}
-
-# Nombre de tipo de un argumento como `Patient` o `FHIR.Quantity`
-nombre_tipo_arg <- function(arg) {
-  if (identical(arg$t, "campo")) {
-    return(arg$nombre)
-  }
-  if (identical(arg$t, "lit") && arg$tipo == "VARCHAR") {
-    return(arg$valor)
-  }
-  no_traducible("Se esperaba un nombre de tipo.")
-}
-
-primitivos_json <- list(
-  string = "'VARCHAR'", code = "'VARCHAR'", id = "'VARCHAR'",
-  uri = "'VARCHAR'", url = "'VARCHAR'", canonical = "'VARCHAR'",
-  markdown = "'VARCHAR'", date = "'VARCHAR'", dateTime = "'VARCHAR'",
-  instant = "'VARCHAR'", time = "'VARCHAR'", oid = "'VARCHAR'",
-  uuid = "'VARCHAR'", base64Binary = "'VARCHAR'",
-  boolean = "'BOOLEAN'",
-  integer = "'BIGINT', 'UBIGINT'", positiveInt = "'BIGINT', 'UBIGINT'",
-  unsignedInt = "'BIGINT', 'UBIGINT'",
-  decimal = "'DOUBLE', 'BIGINT', 'UBIGINT'"
-)
-
-# ofType(): sobre un elemento de elección (value.ofType(Quantity)) se
-# traduce como el campo concreto (valueQuantity); sobre otras colecciones
-# filtra por el tipo JSON de los valores primitivos.
-fp_oftype <- function(base_nodo, tipo, ctx) {
-  tipo <- sub("^(FHIR|System)\\.", "", tipo)
-  tipos_json <- primitivos_json[[tipo]]
-  if (identical(base_nodo$t, "campo")) {
-    variantes <- elementos_eleccion()[[base_nodo$nombre]]
-    if (!is.null(variantes)) {
-      if (!con_sufijo("", tipo) %in% variantes) {
-        no_traducible("{.field {base_nodo$nombre}[x]} no admite el tipo {.code {tipo}}.")
-      }
-      nodo <- base_nodo
-      nodo$nombre <- con_sufijo(base_nodo$nombre, tipo)
-      return(fp_sql(nodo, ctx))
-    }
-  }
-  if (is.null(tipos_json)) {
-    no_traducible("{.code ofType({tipo})} solo se traduce sobre elementos de elecci\u00f3n (como {.code value.ofType({tipo})}) o con tipos primitivos.")
-  }
-  base <- if (is.null(base_nodo)) ctx$foco else fp_sql(base_nodo, ctx)
-  v <- nueva_var(ctx)
-  coll(sprintf("list_filter(%s, lambda %s: json_type(%s) IN (%s))",
-               a_lista(base, ctx), v, v, tipos_json))
-}
-
-fp_funcion <- function(n, ctx) {
-  fn <- n$fn
-  args <- n$args
-  narg <- length(args)
-  aridad <- function(validas) {
-    if (!narg %in% validas) {
-      no_traducible("La funci\u00f3n {.code {fn}()} no admite {narg} argumento{?s}.")
-    }
-  }
-  if (fn == "ofType") {
-    aridad(1)
-    return(fp_oftype(n$base, nombre_tipo_arg(args[[1]]), ctx))
-  }
-  base <- if (is.null(n$base)) ctx$foco else fp_sql(n$base, ctx)
-  # Contexto de las funciones que evalúan su argumento en cada elemento
-  lambda <- function(cuerpo) {
-    v <- nueva_var(ctx)
-    ctx2 <- ctx
-    ctx2$foco <- uno(v)
-    ctx2$en_recurso <- FALSE
-    list(v = v, x = cuerpo(ctx2))
-  }
-  arg <- function(i, tipo) a_val(fp_sql(args[[i]], ctx), tipo, ctx)
-  texto <- function() a_val(base, "VARCHAR", ctx)
-  lista <- function() a_lista(base, ctx)
-  switch(fn,
-    where = {
-      aridad(1)
-      l <- lambda(function(c2) a_bool(fp_sql(args[[1]], c2), c2))
-      coll(sprintf("list_filter(%s, lambda %s: coalesce(%s, false))", lista(),
-                   l$v, l$x))
-    },
-    select = {
-      aridad(1)
-      l <- lambda(function(c2) a_lista(fp_sql(args[[1]], c2), c2))
-      coll(sprintf("flatten(list_transform(%s, lambda %s: %s))", lista(), l$v,
-                   l$x))
-    },
-    exists = {
-      aridad(0:1)
-      if (narg == 0L) {
-        return(val(sprintf("(len(%s) > 0)", lista()), "BOOLEAN"))
-      }
-      l <- lambda(function(c2) a_bool(fp_sql(args[[1]], c2), c2))
-      val(sprintf("(len(list_filter(%s, lambda %s: coalesce(%s, false))) > 0)",
-                  lista(), l$v, l$x), "BOOLEAN")
-    },
-    all = {
-      aridad(1)
-      l <- lambda(function(c2) a_bool(fp_sql(args[[1]], c2), c2))
-      val(sprintf("(len(list_filter(%s, lambda %s: NOT coalesce(%s, false))) = 0)",
-                  lista(), l$v, l$x), "BOOLEAN")
-    },
-    empty = {
-      aridad(0)
-      val(sprintf("(len(%s) = 0)", lista()), "BOOLEAN")
-    },
-    hasValue = {
-      aridad(0)
-      val(sprintf("(len(%s) = 1)", lista()), "BOOLEAN")
-    },
-    count = {
-      aridad(0)
-      val(sprintf("CAST(len(%s) AS BIGINT)", lista()), "BIGINT")
-    },
-    first = {
-      aridad(0)
-      if (base$k != "coll") return(base)
-      uno(sprintf("list_extract(%s, 1)", base$sql))
-    },
-    last = {
-      aridad(0)
-      if (base$k != "coll") return(base)
-      uno(sprintf("list_extract(%s, -1)", base$sql))
-    },
-    single = {
-      aridad(0)
-      if (base$k != "coll") return(base)
-      uno(a_uno(base, ctx))
-    },
-    tail = {
-      aridad(0)
-      coll(sprintf("list_slice(%s, 2, 2147483647)", lista()))
-    },
-    skip = {
-      aridad(1)
-      coll(sprintf("list_slice(%s, %s + 1, 2147483647)", lista(),
-                   arg(1, "BIGINT")))
-    },
-    take = {
-      aridad(1)
-      coll(sprintf("list_slice(%s, 1, %s)", lista(), arg(1, "BIGINT")))
-    },
-    distinct = {
-      aridad(0)
-      coll(sprintf("list_distinct(%s)", lista()))
-    },
-    not = {
-      aridad(0)
-      val(sprintf("(NOT %s)", a_bool(base, ctx)), "BOOLEAN")
-    },
-    iif = {
-      aridad(2:3)
-      condicion <- a_bool(fp_sql(args[[1]], ctx), ctx)
-      si <- a_lista(fp_sql(args[[2]], ctx), ctx)
-      no <- if (narg == 3L) a_lista(fp_sql(args[[3]], ctx), ctx) else
-        "[]::JSON[]"
-      coll(sprintf("CASE WHEN coalesce(%s, false) THEN %s ELSE %s END",
-                   condicion, si, no))
-    },
-    join = {
-      aridad(0:1)
-      separador <- if (narg == 1L) arg(1, "VARCHAR") else "''"
-      sql <- ligar(lista(), function(l) {
-        w <- nueva_var(ctx)
-        sprintf(paste0(
-          "CASE WHEN len(%1$s) = 0 THEN NULL ELSE array_to_string(",
-          "list_transform(%1$s, lambda %2$s: json_extract_string(%2$s, '$')), %3$s) END"),
-          l, w, separador)
-      }, ctx)
-      val(sql, "VARCHAR")
-    },
-    extension = {
-      aridad(1)
-      url <- arg(1, "VARCHAR")
-      v <- nueva_var(ctx)
-      coll(sprintf("list_filter(%s, lambda %s: json_extract_string(%s, '$.url') = %s)",
-                   hijo(base, "extension", ctx)$sql, v, v, url))
-    },
-    getResourceKey = {
-      aridad(0)
-      if (base$k == "uno") {
-        return(val(sprintf("json_extract_string(%s, '$.id')", base$sql),
-                   "VARCHAR"))
-      }
-      hijo(base, "id", ctx)
-    },
-    getReferenceKey = {
-      aridad(0:1)
-      v <- nueva_var(ctx)
-      p <- nueva_var(ctx)
-      q <- nueva_var(ctx)
-      condicion <- sprintf("len(%s) >= 2", p)
-      if (narg == 1L) {
-        condicion <- sprintf("%s AND %s[-2] = %s", condicion, p,
-                             texto_sql(nombre_tipo_arg(args[[1]])))
-      }
-      partes <- sprintf(
-        "list_transform(%s, lambda %s: string_split(split_part(json_extract_string(%s, '$.reference'), '/_history', 1), '/'))",
-        lista(), v, v)
-      coll(sprintf("list_transform(list_filter(%s, lambda %s: %s), lambda %s: to_json(%s[-1]))",
-                   partes, p, condicion, q, q))
-    },
-    startsWith = {
-      aridad(1)
-      val(sprintf("starts_with(%s, %s)", texto(), arg(1, "VARCHAR")),
-          "BOOLEAN")
-    },
-    endsWith = {
-      aridad(1)
-      val(sprintf("suffix(%s, %s)", texto(), arg(1, "VARCHAR")), "BOOLEAN")
-    },
-    contains = {
-      aridad(1)
-      val(sprintf("contains(%s, %s)", texto(), arg(1, "VARCHAR")), "BOOLEAN")
-    },
-    matches = {
-      aridad(1)
-      val(sprintf("regexp_matches(%s, %s)", texto(), arg(1, "VARCHAR")),
-          "BOOLEAN")
-    },
-    upper = {
-      aridad(0)
-      val(sprintf("upper(%s)", texto()), "VARCHAR")
-    },
-    lower = {
-      aridad(0)
-      val(sprintf("lower(%s)", texto()), "VARCHAR")
-    },
-    trim = {
-      aridad(0)
-      val(sprintf("trim(%s)", texto()), "VARCHAR")
-    },
-    length = {
-      aridad(0)
-      val(sprintf("CAST(length(%s) AS BIGINT)", texto()), "BIGINT")
-    },
-    toString = {
-      aridad(0)
-      val(texto(), "VARCHAR")
-    },
-    toInteger = {
-      aridad(0)
-      val(a_val(base, "BIGINT", ctx), "BIGINT")
-    },
-    toDecimal = {
-      aridad(0)
-      val(a_val(base, "DOUBLE", ctx), "DOUBLE")
-    },
-    substring = {
-      aridad(1:2)
-      inicio <- arg(1, "BIGINT")
-      sql <- if (narg == 1L) {
-        sprintf("substring(%s, %s + 1)", texto(), inicio)
-      } else {
-        sprintf("substring(%s, %s + 1, %s)", texto(), inicio, arg(2, "BIGINT"))
-      }
-      val(sql, "VARCHAR")
-    },
-    replace = {
-      aridad(2)
-      val(sprintf("replace(%s, %s, %s)", texto(), arg(1, "VARCHAR"),
-                  arg(2, "VARCHAR")), "VARCHAR")
-    },
-    no_traducible("La funci\u00f3n {.code {fn}()} no est\u00e1 en el subconjunto de FHIRPath que se traduce a SQL.")
-  )
-}
-
-# Traduce una expresión del ViewDefinition, con un error que indica cuál
-traducir_expresion <- function(expresion, ctx) {
-  tryCatch(fp_sql(fp_analizar(expresion), ctx),
-    fhirviews_error_sql = function(e) {
-      cli::cli_abort(c(
-        "No se puede traducir {.code {expresion}} a SQL.",
-        "x" = "{limpiar_mensaje(conditionMessage(e))}",
-        "i" = "Usa {.fn vista_ejecutar}, que eval\u00faa FHIRPath completo con
-               fhirpath.js."
-      ), class = c("fhirviews_error_sql", "fhirviews_error"), call = NULL)
-    })
-}
-
 # --- Traductor del ViewDefinition --------------------------------------------
 #
 # Cada select se traduce en una expresión que da la lista de filas (una
@@ -1188,7 +684,9 @@ traducir_vista <- function(vista, desde) {
   colecciones <- lapply(defs, function(d) isTRUE(d$collection))
   modelo <- tipos_modelo(vista)
   nuevo_ctx <- function() {
-    list(foco = uno("r"), recurso = "r", indice = "0",
+    list(foco = uno("r", info = list(tipos = vista$resource,
+                                     ruta = vista$resource)),
+         recurso = "r", indice = "0",
          constantes = constantes, tipo_recurso = vista$resource,
          en_recurso = TRUE, n = new.env(parent = emptyenv()))
   }
@@ -1232,8 +730,12 @@ traducir_vista <- function(vista, desde) {
   tipos <- tipos[nombres]
   names(tipos) <- nombres
   sin_tipo <- vapply(defs, function(d) is.null(d$type), logical(1))
+  # Columnas a las que vista_ejecutar() da el tipo del modelo
+  con_modelo <- names(modelo)[vapply(modelo, function(t) grepl("^[a-z]", t),
+                                     logical(1))]
   list(sql = structure(sql, class = "fhir_sql"), tipos = tipos,
-       colecciones = colecciones[nombres], sin_tipo = sin_tipo[nombres])
+       colecciones = colecciones[nombres], sin_tipo = sin_tipo[nombres],
+       con_modelo = con_modelo)
 }
 
 condicion_where <- function(x, expresion, ctx) {
@@ -1268,6 +770,11 @@ tipo_sql_fhir <- function(tipo) {
 tipo_columna <- function(cl, x, modelo) {
   if (!is.null(cl$type)) return(tipo_sql_fhir(cl$type))
   if (x$k == "val") {
+    if (x$tipo == "DOUBLE") {
+      # vista_ejecutar() deja como enteros los números sin decimales si el
+      # modelo no da el tipo: se decide según los valores
+      return(tipo_sql_fhir(modelo[[cl$name]]))
+    }
     return(if (x$tipo == "BIGINT") "INTEGER" else x$tipo)
   }
   tipo_sql_fhir(modelo[[cl$name]])
@@ -1340,10 +847,14 @@ traducir_select <- function(s, ctx, tipos, anotar, modelo) {
   if (is.null(expresion) && is.null(repetir)) {
     return(traducir_partes(s, ctx, tipos, anotar, modelo))
   }
+  foco <- uno("")
   if (!is.null(repetir)) {
     coleccion <- descendientes_sql(unlist(repetir), ctx)
+    foco$info <- info_repeat(unlist(repetir), ctx)
   } else {
-    coleccion <- a_lista(traducir_expresion(expresion, ctx), ctx)
+    x <- traducir_expresion(expresion, ctx)
+    foco <- uno("", info = x$info, cadena = clase_cadena(x))
+    coleccion <- a_lista(x, ctx)
     if (!is.null(s$forEachOrNull)) {
       coleccion <- sprintf("coalesce(nullif(%s, []::JSON[]), [NULL::JSON])",
                            coleccion)
@@ -1352,13 +863,32 @@ traducir_select <- function(s, ctx, tipos, anotar, modelo) {
   v <- nueva_var(ctx)
   i <- nueva_var(ctx)
   ctx2 <- ctx
-  ctx2$foco <- uno(v)
+  foco$sql <- v
+  ctx2$foco <- foco
   ctx2$en_recurso <- FALSE
   ctx2$indice <- sprintf("(%s - 1)", i)
   interior <- traducir_partes(s, ctx2, tipos, anotar, modelo)
   list(lista = sprintf("flatten(list_transform(%s, lambda %s, %s: %s))",
                        coleccion, v, i, partes_a_lista(interior)),
        nombres = interior$nombres)
+}
+
+# Tipo FHIR de los nodos de repeat: el que dan las rutas desde el foco, si
+# es el mismo en el primer nivel y en el siguiente
+info_repeat <- function(rutas, ctx) {
+  ctx_tmp <- ctx
+  ctx_tmp$n <- new.env(parent = emptyenv())
+  ctx_tmp$n$i <- 0L
+  ctx_tmp$en_recurso <- FALSE
+  infos <- tryCatch(lapply(rutas, function(r) {
+    arbol <- fp_analizar(r)
+    uno_nivel <- fp_sql(arbol, ctx_tmp)$info
+    ctx_tmp$foco <- uno("x", info = uno_nivel)
+    list(uno_nivel, fp_sql(arbol, ctx_tmp)$info)
+  }), error = function(e) NULL)
+  if (is.null(infos)) return(NULL)
+  todas <- unlist(infos, recursive = FALSE)
+  if (all(vapply(todas, identical, logical(1), todas[[1]]))) todas[[1]]
 }
 
 # Recorrido en preorden de repeat. Se calcula por niveles (cada nivel
@@ -1368,10 +898,11 @@ traducir_select <- function(s, ctx, tipos, anotar, modelo) {
 descendientes_sql <- function(rutas, ctx) {
   limite <- getOption("fhirviews.sql_profundidad", 12L)
   arboles <- lapply(rutas, fp_analizar)
-  hijos <- function(nivel) {
+  info_nodos <- info_repeat(rutas, ctx)
+  hijos <- function(nivel, info = info_nodos) {
     p <- nueva_var(ctx)
     ctx2 <- ctx
-    ctx2$foco <- uno(sprintf("%s.n", p))
+    ctx2$foco <- uno(sprintf("%s.n", p), info = info)
     ctx2$en_recurso <- FALSE
     por_ruta <- vapply(seq_along(arboles), function(j) {
       c1 <- nueva_var(ctx)
@@ -1392,7 +923,7 @@ descendientes_sql <- function(rutas, ctx) {
   anterior <- inicio
   todos <- tryCatch({
     for (d in seq_len(limite)) {
-      anterior <- hijos(anterior)
+      anterior <- hijos(anterior, if (d == 1L) ctx$foco$info else info_nodos)
       niveles <- c(niveles, anterior)
     }
     control <- sprintf("CASE WHEN len(%s) > 0 THEN error(%s) ELSE [] END",
