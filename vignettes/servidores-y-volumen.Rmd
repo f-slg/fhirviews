@@ -247,9 +247,9 @@ duckdb 1.5.6):
 ```{r, echo = FALSE}
 rendimiento <- data.frame(
   Pacientes = c("10 000", "50 000", "100 000", "250 000", "1 000 000"),
-  `Motor V8 (s)` = c("2,6", "11,8", "24,2", "62,4", "no medido"),
-  `Motor DuckDB (s)` = c("0,16", "0,72", "0,94", "1,67", "5,5"),
-  `Veces más rápido` = c("16", "16", "26", "37", ""),
+  `Motor V8 (s)` = c("2,3", "11,0", "23,2", "58,9", "no medido"),
+  `Motor DuckDB (s)` = c("0,22", "0,92", "1,18", "1,56", "5,8"),
+  `Veces más rápido` = c("11", "12", "20", "38", ""),
   check.names = FALSE
 )
 knitr::kable(rendimiento, align = "rrrr")
@@ -270,21 +270,38 @@ vista_conformidad(c("basic.json", "foreach.json", "union.json", "repeat.json"),
 
 Es un motor **experimental**:
 
-- Traduce un subconjunto de FHIRPath: navegación, elementos de elección
-  (`value`, `effective`, `onset`...), `where()`, `exists()`, `empty()`,
-  `first()`, `join()`, `ofType()`, `extension()`, `getResourceKey()`,
-  `getReferenceKey()`, comparaciones, lógica y constantes.
+- Traduce un subconjunto amplio de FHIRPath: navegación, elementos de elección
+  (`value`, `effective`, `onset`...), filtros y subconjuntos (`where()`,
+  `select()`, `first()`, `last()`, `skip()`, `take()`, `distinct()`...),
+  conjuntos (`|`, `union()`, `combine()`, `intersect()`, `exclude()`, `in`),
+  conversiones (`toString()`, `toInteger()`, `toDecimal()`, `toBoolean()`),
+  funciones de texto, aritmética, redondeo, fechas con su precisión y
+  `lowBoundary()`/`highBoundary()` de fechas y horas. El inventario completo
+  está en `data-raw/motor-duckdb.md` del repositorio.
 - Lo que no sabe traducir no lo adivina: da un error de clase
-  `fhirviews_error_sql` que sugiere usar `vista_ejecutar()`.
+  `fhirviews_error_sql` que sugiere usar `vista_ejecutar()`. Lo que solo se
+  sabe al ver los datos (por ejemplo, comparar una fecha sin hora con una
+  fecha y hora, que en fhirpath.js depende de la zona horaria del equipo)
+  da un error al ejecutar la consulta.
 - `repeat` recorre hasta 12 niveles de anidamiento (opción
   `fhirviews.sql_profundidad`).
-- No calcula `lowBoundary()` ni `highBoundary()` (pruebas experimentales del
-  banco).
 
 En la práctica: **desarrolla y valida la vista con `vista_ejecutar()`** sobre
 una muestra y **ejecútala a escala con `vista_ejecutar_duckdb()`**. Las pruebas
 del paquete comparan ambos motores con las vistas de todas las viñetas y exigen
 tablas idénticas.
+
+Con `diferido = TRUE`, el resultado es una tabla de dplyr sobre DuckDB (requiere
+dplyr y dbplyr): los filtros y resúmenes se calculan en DuckDB y solo el
+resultado llega a R.
+
+```{r, eval = FALSE}
+casos <- vista_ejecutar_duckdb("exportacion/Condition.ndjson", confirmados,
+                               diferido = TRUE)
+casos |>
+  dplyr::count(grave) |>
+  dplyr::collect()
+```
 
 Con una base DuckDB propia, el resultado se puede guardar como tabla en lugar
 de traerlo a R:
