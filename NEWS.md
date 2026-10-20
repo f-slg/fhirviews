@@ -1,4 +1,10 @@
-# fhirviews (development version)
+# fhirviews 0.3.0
+
+Esta versión amplía el motor DuckDB a todo el perfil *shareable* y la mayor
+parte de FHIRPath N1, con la misma semántica que fhirpath.js; agrega las
+operaciones de terminología (`$expand`, `$lookup`, `$validate-code`) y un
+catálogo de vistas listas para salud pública, y corrige el envío de las
+operaciones (`$`) a servidores reales. No hay cambios incompatibles.
 
 ## Motor DuckDB
 

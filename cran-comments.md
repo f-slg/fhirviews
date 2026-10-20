@@ -5,7 +5,7 @@ This is the first submission of 'fhirviews'.
 ## Test environments
 
 * Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran`)
-* GitHub Actions: windows-latest, macos-latest and ubuntu-latest (R release)
+* GitHub Actions: R 4.6.1 on Windows, macOS and Ubuntu
 
 ## R CMD check results
 
@@ -41,13 +41,18 @@ This is the first submission of 'fhirviews'.
   `rlang::check_installed()` or `requireNamespace()`: 'duckdb' and 'DBI'
   (views as 'DuckDB' tables and the experimental 'DuckDB' SQL engine),
   'jose' and 'openssl' ('SMART on FHIR' Backend Services, signing a JWT with
-  the user's private key), 'httpuv' (interactive 'OAuth2' login) and
-  'rstudioapi' (addins). Tests and vignette chunks that need them are skipped
+  the user's private key), 'httpuv' (interactive 'OAuth2' login),
+  'rstudioapi' (addins), and 'dplyr' and 'dbplyr' (lazy 'DuckDB' results with
+  `diferido = TRUE`). Tests and vignette chunks that need them are skipped
   when they are not installed.
 
 * Authentication tokens are kept in memory only (on disk only if the user
   asks for it explicitly with `cache_disco = TRUE`, through 'httr2'), are never
   printed and are only sent to the URL of the connected FHIR server.
+
+* Terminology functions (`tx_*`) talk to a FHIR terminology server chosen by
+  the user; their examples use <https://tx.fhir.org/r4> and are wrapped in
+  `@examplesIf fhir_disponible(...)` as below.
 
 * Examples that need a FHIR server are wrapped in
   `@examplesIf fhir_disponible(...)`, which checks quickly whether the public
