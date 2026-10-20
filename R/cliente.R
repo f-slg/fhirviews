@@ -531,8 +531,37 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
        texto = texto)
 }
 
+# Agrega los parametros de busqueda a la URL sin reconstruirla. Con
+# httr2::req_url_query() la URL pasa por curl::curl_modify_url(), que con
+# algunas versiones de libcurl codifica el `$` de las operaciones como `%24`
+# (por ejemplo `ValueSet/%24expand`), y muchos servidores responden 404.
+# Cada elemento de un vector se envia como un parametro repetido.
+agregar_consulta <- function(url, parametros) {
+  parametros <- parametros[!vapply(parametros, is.null, logical(1))]
+  if (length(parametros) == 0L) {
+    return(url)
+  }
+  pares <- unlist(Map(function(nombre, valor) {
+    if (is.logical(valor)) {
+      valor <- tolower(as.character(valor))
+    } else if (is.numeric(valor)) {
+      valor <- format(valor, scientific = FALSE, trim = TRUE)
+    }
+    paste0(codificar(nombre), "=", codificar(as.character(valor)))
+  }, names(parametros), parametros), use.names = FALSE)
+  paste0(url, if (grepl("?", url, fixed = TRUE)) "&" else "?",
+         paste(pares, collapse = "&"))
+}
+
+codificar <- function(x) {
+  vapply(enc2utf8(x), utils::URLencode, "", reserved = TRUE, USE.NAMES = FALSE)
+}
+
 enviar_peticion <- function(con, metodo, url, cuerpo, parametros, cabeceras,
                             oauth = FALSE, renovar = FALSE) {
+  if (length(parametros) > 0L) {
+    url <- agregar_consulta(url, parametros)
+  }
   req <- httr2::request(url)
   req <- httr2::req_method(req, metodo)
   req <- httr2::req_user_agent(req, agente())
@@ -542,9 +571,6 @@ enviar_peticion <- function(con, metodo, url, cuerpo, parametros, cabeceras,
     req <- httr2::req_auth_bearer_token(req, token_acceso(con, renovar))
   } else if (!is.null(con$token) && mismo_servidor(con, url)) {
     req <- httr2::req_auth_bearer_token(req, con$token)
-  }
-  if (length(parametros) > 0L) {
-    req <- httr2::req_url_query(req, !!!parametros, .multi = "explode")
   }
   if (!is.null(cuerpo)) {
     req <- httr2::req_body_raw(req, enc2utf8(cuerpo),

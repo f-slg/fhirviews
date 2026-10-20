@@ -205,3 +205,25 @@ test_that("un servidor inalcanzable da un error de conexion", {
   expect_error(fhir_conectar("http://127.0.0.1:9", tiempo = 2),
                class = "fhirviews_error_conexion")
 })
+
+test_that("las operaciones se envian con `$` sin codificar", {
+  # Con req_url_query() y algunas versiones de libcurl el `$` llegaba como
+  # %24 y servidores como tx.fhir.org respondian 404 (Unknown operation)
+  expect_identical(
+    agregar_consulta("https://x.org/r4/ValueSet/$expand",
+                     list(url = "http://a.org/vs b", count = 1000,
+                          activo = TRUE, nada = NULL, code = c("a|b", "\u00f1"))),
+    paste0("https://x.org/r4/ValueSet/$expand?url=http%3A%2F%2Fa.org%2Fvs%20b",
+           "&count=1000&activo=true&code=a%7Cb&code=%C3%B1"))
+  expect_identical(agregar_consulta("https://x.org/r4/Patient?_count=5",
+                                    list(family = "Le\u00f3n")),
+                   "https://x.org/r4/Patient?_count=5&family=Le%C3%B3n")
+  expect_identical(agregar_consulta("https://x.org/r4/metadata", list()),
+                   "https://x.org/r4/metadata")
+
+  p <- simular(function(req, ruta) respuesta_fhir(list(
+    resourceType = "Bundle", type = "searchset", entry = list())))
+  con <- con_simulada()
+  fhir_everything(con, "Patient", "p1")
+  expect_match(p$lista[[1]]$url, "/Patient/p1/$everything", fixed = TRUE)
+})
