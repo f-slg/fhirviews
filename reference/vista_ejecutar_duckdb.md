@@ -8,7 +8,13 @@ referencia usa
 ## Usage
 
 ``` r
-vista_ejecutar_duckdb(archivos, vista, con_db = NULL, tabla = NULL)
+vista_ejecutar_duckdb(
+  archivos,
+  vista,
+  con_db = NULL,
+  tabla = NULL,
+  diferido = FALSE
+)
 ```
 
 ## Arguments
@@ -36,11 +42,20 @@ vista_ejecutar_duckdb(archivos, vista, con_db = NULL, tabla = NULL)
   Nombre opcional de una tabla de `con_db` donde guardar el resultado en
   lugar de traerlo a R; útil con resultados muy grandes.
 
+- diferido:
+
+  Si es `TRUE`, no ejecuta la vista: devuelve una tabla diferida de
+  dplyr (`tbl_dbi` de dbplyr) sobre la consulta, para filtrar, agrupar y
+  resumir con dplyr dentro de DuckDB y traer a R solo el resultado con
+  `dplyr::collect()`. Requiere los paquetes dplyr y dbplyr. Cada vez que
+  se usa la tabla, DuckDB vuelve a leer los archivos.
+
 ## Value
 
 Un `data.frame` como el de
-[`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
-o, si se indica `tabla`, la conexión DBI de forma invisible.
+[`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md);
+si se indica `tabla`, la conexión DBI de forma invisible; con
+`diferido = TRUE`, una tabla diferida de dbplyr.
 
 ## Details
 
@@ -66,13 +81,30 @@ DuckDB la descarga la primera vez que se usa en cada sesión de R (hace
 falta conexión a internet). La conexión que crea esta función guarda las
 extensiones en la carpeta temporal de la sesión, no en `~/.duckdb`.
 
+Con `diferido = TRUE` la tabla queda unida a la conexión: si `con_db` es
+`NULL` se crea una que sigue abierta mientras exista la tabla (ciérrala
+con `DBI::dbDisconnect(dbplyr::remote_con(tabla))` al terminar), y si
+`archivos` son recursos de R, el archivo temporal se borra al cerrar la
+sesión de R. Las columnas sin tipo deducible se convierten según los
+valores, lo que obliga a recorrer los datos una vez al crear la tabla.
+Al traer los datos con `dplyr::collect()`, los elementos complejos (como
+`name.first()`) llegan como texto JSON y las colecciones como listas de
+DuckDB, no como las listas de R de
+[`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).
+
 ## Examples
 
 ``` r
 if (FALSE) { # requireNamespace("duckdb", quietly = TRUE) && interactive()
 archivo <- system.file("extdata", "caso_clinico.ndjson",
                        package = "fhirviews")
-vista_ejecutar_duckdb(archivo, vista_crear("Patient", c(
-  sexo = "gender", nacimiento = "birthDate")))
+vista <- vista_crear("Patient", c(sexo = "gender", nacimiento = "birthDate"))
+vista_ejecutar_duckdb(archivo, vista)
+}
+if (FALSE) { # requireNamespace("duckdb", quietly = TRUE) && requireNamespace("dbplyr", quietly = TRUE) && interactive()
+# Resultado diferido: el resumen se calcula en DuckDB
+pacientes <- vista_ejecutar_duckdb(archivo, vista, diferido = TRUE)
+dplyr::count(pacientes, sexo) |> dplyr::collect()
+DBI::dbDisconnect(dbplyr::remote_con(pacientes))
 }
 ```

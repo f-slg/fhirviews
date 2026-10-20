@@ -1,5 +1,113 @@
 # Changelog
 
+## fhirviews (development version)
+
+### Motor DuckDB
+
+- El motor DuckDB
+  ([`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md),
+  [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md))
+  traduce muchas más funciones de FHIRPath:
+  [`union()`](https://rdrr.io/r/base/sets.html), `combine()`,
+  [`intersect()`](https://rdrr.io/r/base/sets.html), `exclude()`,
+  `isDistinct()`, `subsetOf()`, `supersetOf()`, `allTrue()`,
+  `anyTrue()`, `allFalse()`, `anyFalse()`, `indexOf()`,
+  `replaceMatches()`, [`split()`](https://rdrr.io/r/base/split.html),
+  `toChars()`, `toBoolean()`, `convertsToInteger()`,
+  `convertsToDecimal()`, `convertsToBoolean()`, `convertsToString()`,
+  [`abs()`](https://rdrr.io/r/base/MathFun.html),
+  [`ceiling()`](https://rdrr.io/r/base/Round.html),
+  [`floor()`](https://rdrr.io/r/base/Round.html),
+  [`round()`](https://rdrr.io/r/base/Round.html),
+  [`truncate()`](https://rdrr.io/r/base/seek.html),
+  [`sqrt()`](https://rdrr.io/r/base/MathFun.html),
+  [`power()`](https://rdrr.io/r/stats/power.html) (exacta),
+  [`trace()`](https://rdrr.io/r/base/trace.html), `is()`/`as()` como
+  funciones y `lowBoundary()`/`highBoundary()` de fechas y horas. Pasa 7
+  de las 11 pruebas experimentales del banco oficial, como el motor V8
+  (antes 3).
+- Las funciones que ya traducía siguen ahora la semántica de fhirpath.js
+  en los casos límite que antes daban otro resultado sin aviso:
+  comparaciones de fechas con distinta precisión y zona horaria,
+  igualdad entre valores de distinto tipo (`birthDate = '1970-06-15'` es
+  falso), números comparados con 8 decimales (`0.1 + 0.2 = 0.3`),
+  `toInteger()`/`toDecimal()` de textos,
+  [`substring()`](https://rdrr.io/r/base/substr.html) fuera de rango,
+  [`replace()`](https://rdrr.io/r/base/replace.html) con patrón vacío,
+  `trim()` con espacios de Unicode, `iif()` con condiciones no lógicas,
+  el orden de `|` y [`toString()`](https://rdrr.io/r/base/toString.html)
+  de números.
+- Sigue el tipo FHIR de cada expresión con el modelo R4 (el mismo de
+  fhirpath.js), lo que permite elegir solo las variantes de cada
+  elemento de elección y comparar fechas, textos y horas según su tipo.
+- Lo que no se puede traducir con certeza da un error:
+  `fhirviews_error_sql` al traducir (por ejemplo, expresiones regulares
+  con construcciones que JavaScript y RE2 interpretan distinto, o
+  `lowBoundary()` de decimales) y `fhirviews_error_vista` al ejecutar
+  cuando depende de los datos (una fecha sin hora frente a una fecha y
+  hora, textos con caracteres que DuckDB pasa a mayúsculas de otra
+  forma, `skip()` con un número negativo…).
+- Nuevo argumento `diferido` de
+  [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md):
+  con `diferido = TRUE` devuelve una tabla de dplyr (dbplyr) sobre la
+  consulta, para filtrar y resumir en DuckDB y traer a R solo el
+  resultado. dplyr y dbplyr se agregan a Suggests.
+- Una columna sin tipo cuyos valores son todos números enteros llega a R
+  como entero, como en
+  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).
+
+### Terminologías
+
+- Nuevas funciones para trabajar con un servidor de terminología FHIR
+  (por ejemplo, [tx.fhir.org](https://tx.fhir.org/r4) o un Snowstorm),
+  con la misma conexión de
+  [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md),
+  su token o su autenticación SMART on FHIR:
+  - [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md):
+    operación `ValueSet/$expand` con paginación (`offset` y `count`)
+    para expansiones grandes; acepta la URL canónica del `ValueSet` o un
+    `ValueSet` propio (lista, JSON o archivo) y devuelve un `data.frame`
+    con `system`, `code`, `display` y `version`.
+  - [`tx_buscar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_buscar_codigo.md):
+    operación `CodeSystem/$lookup`, con el nombre, las designaciones y
+    las propiedades del código.
+  - [`tx_validar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.md):
+    operación `ValueSet/$validate-code` para un vector de códigos.
+- [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md)
+  agrega a un `ViewDefinition` los códigos de una expansión (como
+  constantes y un `where`, o como columna lógica), de modo que un
+  indicador definido con un `ValueSet` se calcula con
+  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+  o
+  [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md)
+  sin red. La forma de la condición mantiene la expresión corta con
+  miles de códigos.
+- Nueva sección sobre terminologías en la viñeta *Servidores reales y
+  grandes volúmenes*.
+
+### Catálogo de vistas para salud pública
+
+- Nuevas
+  [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md)
+  y
+  [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md):
+  una biblioteca de `ViewDefinition` listos para usar (JSON estándar de
+  SQL on FHIR en `inst/vistas`) con las tablas más comunes en vigilancia
+  y salud pública: `pacientes` (sexo, nacimiento, fallecimiento, cantón
+  y provincia de residencia), `signos_vitales` (una fila por medición,
+  con la presión sistólica y diastólica separadas), `diagnosticos`
+  (CIE-10 y SNOMED CT), `notificacion_obligatoria` (dengue, malaria y
+  tuberculosis por defecto, con la lista de categorías CIE-10 como
+  constante), `inmunizaciones`, `encuentros` y `medicamentos`. Todas
+  usan `getResourceKey()` y `getReferenceKey()` para unir las tablas, y
+  dan los mismos resultados con
+  [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+  y
+  [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md).
+- [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md)
+  permite cambiar las constantes de una vista con el argumento
+  `constantes`.
+
 ## fhirviews 0.2.0
 
 Esta versión prepara fhirviews para servidores y volúmenes reales:

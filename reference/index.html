@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -254,6 +254,29 @@
         </dt>
         <dd>Guardar vistas en DuckDB</dd>
       </dl></div><div class="section level2">
+      <h2 id="cat-logo-de-vistas">Catálogo de vistas<a class="anchor" aria-label="anchor" href="#cat-logo-de-vistas"></a></h2>
+
+      <div class="section-desc"><p>ViewDefinition listos para vigilancia y salud pública.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="vista_catalogo.html">vista_catalogo()</a></code>
+
+        </dt>
+        <dd>Catálogo de vistas listas para usar</dd>
+
+        <dt>
+
+          <code><a href="vista_plantilla.html">vista_plantilla()</a></code>
+
+        </dt>
+        <dd>Obtener una vista del catálogo</dd>
+      </dl></div><div class="section level2">
       <h2 id="motor-duckdb-experimental-">Motor DuckDB (experimental)<a class="anchor" aria-label="anchor" href="#motor-duckdb-experimental-"></a></h2>
 
       <div class="section-desc"><p>Traducir vistas a SQL y ejecutarlas sobre NDJSON o Parquet sin cargar los recursos en R.</p></div>
@@ -276,6 +299,43 @@
 
         </dt>
         <dd>Traducir un ViewDefinition a SQL de DuckDB (experimental)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="terminolog-as">Terminologías<a class="anchor" aria-label="anchor" href="#terminolog-as"></a></h2>
+
+      <div class="section-desc"><p>Expandir ValueSets, buscar y validar códigos en un servidor de terminología, y usar las expansiones en las vistas.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="tx_expandir.html">tx_expandir()</a></code>
+
+        </dt>
+        <dd>Expandir un ValueSet en un servidor de terminología ($expand)</dd>
+
+        <dt>
+
+          <code><a href="tx_buscar_codigo.html">tx_buscar_codigo()</a></code>
+
+        </dt>
+        <dd>Buscar un código en un sistema de codificación ($lookup)</dd>
+
+        <dt>
+
+          <code><a href="tx_validar_codigo.html">tx_validar_codigo()</a></code>
+
+        </dt>
+        <dd>Validar códigos contra un ValueSet ($validate-code)</dd>
+
+        <dt>
+
+          <code><a href="vista_con_valueset.html">vista_con_valueset()</a></code>
+
+        </dt>
+        <dd>Filtrar una vista con los códigos de un ValueSet</dd>
       </dl></div><div class="section level2">
       <h2 id="conformidad">Conformidad<a class="anchor" aria-label="anchor" href="#conformidad"></a></h2>
 

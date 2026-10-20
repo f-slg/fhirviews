@@ -11,7 +11,7 @@ referencia usa vista_ejecutar()."><meta property="og:image" content="https://f-s
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,13 @@ referencia usa <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>.<
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vista_ejecutar_duckdb</span><span class="op">(</span><span class="va">archivos</span>, <span class="va">vista</span>, con_db <span class="op">=</span> <span class="cn">NULL</span>, tabla <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vista_ejecutar_duckdb</span><span class="op">(</span></span>
+<span>  <span class="va">archivos</span>,</span>
+<span>  <span class="va">vista</span>,</span>
+<span>  con_db <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tabla <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  diferido <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -83,11 +89,20 @@ una base en memoria.</p></dd>
 <dd><p>Nombre opcional de una tabla de <code>con_db</code> donde guardar el
 resultado en lugar de traerlo a R; útil con resultados muy grandes.</p></dd>
 
+
+<dt id="arg-diferido">diferido<a class="anchor" aria-label="anchor" href="#arg-diferido"></a></dt>
+<dd><p>Si es <code>TRUE</code>, no ejecuta la vista: devuelve una tabla
+diferida de dplyr (<code>tbl_dbi</code> de dbplyr) sobre la consulta, para filtrar,
+agrupar y resumir con dplyr dentro de DuckDB y traer a R solo el
+resultado con <code>dplyr::collect()</code>. Requiere los paquetes dplyr y dbplyr.
+Cada vez que se usa la tabla, DuckDB vuelve a leer los archivos.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Un <code>data.frame</code> como el de <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code> o, si se indica
-<code>tabla</code>, la conexión DBI de forma invisible.</p>
+    <p>Un <code>data.frame</code> como el de <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>; si se indica
+<code>tabla</code>, la conexión DBI de forma invisible; con <code>diferido = TRUE</code>, una
+tabla diferida de dbplyr.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -105,6 +120,15 @@ extensión <code>json</code> de DuckDB, que el paquete duckdb no trae incorporad
 DuckDB la descarga la primera vez que se usa en cada sesión de R (hace
 falta conexión a internet). La conexión que crea esta función guarda las
 extensiones en la carpeta temporal de la sesión, no en <code>~/.duckdb</code>.</p>
+<p>Con <code>diferido = TRUE</code> la tabla queda unida a la conexión: si <code>con_db</code> es
+<code>NULL</code> se crea una que sigue abierta mientras exista la tabla (ciérrala
+con <code>DBI::dbDisconnect(dbplyr::remote_con(tabla))</code> al terminar), y si
+<code>archivos</code> son recursos de R, el archivo temporal se borra al cerrar la
+sesión de R. Las columnas sin tipo deducible se convierten según los
+valores, lo que obliga a recorrer los datos una vez al crear la tabla.
+Al traer los datos con <code>dplyr::collect()</code>, los elementos complejos (como
+<code>name.first()</code>) llegan como texto JSON y las colecciones como listas de
+DuckDB, no como las listas de R de <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>.</p>
     </div>
 
     <div class="section level2">
@@ -112,8 +136,14 @@ extensiones en la carpeta temporal de la sesión, no en <code>~/.duckdb</code>.<
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># requireNamespace("duckdb", quietly = TRUE) &amp;&amp; interactive()</span></span></span>
 <span class="r-in"><span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"caso_clinico.ndjson"</span>,</span></span>
 <span class="r-in"><span>                       package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">vista_ejecutar_duckdb</span><span class="op">(</span><span class="va">archivo</span>, <span class="fu"><a href="vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  sexo <span class="op">=</span> <span class="st">"gender"</span>, nacimiento <span class="op">=</span> <span class="st">"birthDate"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span>, nacimiento <span class="op">=</span> <span class="st">"birthDate"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">vista_ejecutar_duckdb</span><span class="op">(</span><span class="va">archivo</span>, <span class="va">vista</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># requireNamespace("duckdb", quietly = TRUE) &amp;&amp; requireNamespace("dbplyr", quietly = TRUE) &amp;&amp; interactive()</span></span></span>
+<span class="r-in"><span><span class="co"># Resultado diferido: el resumen se calcula en DuckDB</span></span></span>
+<span class="r-in"><span><span class="va">pacientes</span> <span class="op">&lt;-</span> <span class="fu">vista_ejecutar_duckdb</span><span class="op">(</span><span class="va">archivo</span>, <span class="va">vista</span>, diferido <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu">count</span><span class="op">(</span><span class="va">pacientes</span>, <span class="va">sexo</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="fu">dbplyr</span><span class="fu">::</span><span class="fu">remote_con</span><span class="op">(</span><span class="va">pacientes</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>

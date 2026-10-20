@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,38 @@
       <small>Source: <a href="https://github.com/f-slg/fhirviews/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="fhirviews-development-version">fhirviews (development version)<a class="anchor" aria-label="anchor" href="#fhirviews-development-version"></a></h2>
+<div class="section level3">
+<h3 id="motor-duckdb-development-version">Motor DuckDB<a class="anchor" aria-label="anchor" href="#motor-duckdb-development-version"></a></h3>
+<ul><li>El motor DuckDB (<code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>, <code><a href="../reference/vista_sql.html">vista_sql()</a></code>) traduce muchas más funciones de FHIRPath: <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">union()</a></code>, <code>combine()</code>, <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect()</a></code>, <code>exclude()</code>, <code>isDistinct()</code>, <code>subsetOf()</code>, <code>supersetOf()</code>, <code>allTrue()</code>, <code>anyTrue()</code>, <code>allFalse()</code>, <code>anyFalse()</code>, <code>indexOf()</code>, <code>replaceMatches()</code>, <code><a href="https://rdrr.io/r/base/split.html" class="external-link">split()</a></code>, <code>toChars()</code>, <code>toBoolean()</code>, <code>convertsToInteger()</code>, <code>convertsToDecimal()</code>, <code>convertsToBoolean()</code>, <code>convertsToString()</code>, <code><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">round()</a></code>, <code><a href="https://rdrr.io/r/base/seek.html" class="external-link">truncate()</a></code>, <code><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt()</a></code>, <code><a href="https://rdrr.io/r/stats/power.html" class="external-link">power()</a></code> (exacta), <code><a href="https://rdrr.io/r/base/trace.html" class="external-link">trace()</a></code>, <code>is()</code>/<code>as()</code> como funciones y <code>lowBoundary()</code>/<code>highBoundary()</code> de fechas y horas. Pasa 7 de las 11 pruebas experimentales del banco oficial, como el motor V8 (antes 3).</li>
+<li>Las funciones que ya traducía siguen ahora la semántica de fhirpath.js en los casos límite que antes daban otro resultado sin aviso: comparaciones de fechas con distinta precisión y zona horaria, igualdad entre valores de distinto tipo (<code>birthDate = '1970-06-15'</code> es falso), números comparados con 8 decimales (<code>0.1 + 0.2 = 0.3</code>), <code>toInteger()</code>/<code>toDecimal()</code> de textos, <code><a href="https://rdrr.io/r/base/substr.html" class="external-link">substring()</a></code> fuera de rango, <code><a href="https://rdrr.io/r/base/replace.html" class="external-link">replace()</a></code> con patrón vacío, <code>trim()</code> con espacios de Unicode, <code>iif()</code> con condiciones no lógicas, el orden de <code>|</code> y <code><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString()</a></code> de números.</li>
+<li>Sigue el tipo FHIR de cada expresión con el modelo R4 (el mismo de fhirpath.js), lo que permite elegir solo las variantes de cada elemento de elección y comparar fechas, textos y horas según su tipo.</li>
+<li>Lo que no se puede traducir con certeza da un error: <code>fhirviews_error_sql</code> al traducir (por ejemplo, expresiones regulares con construcciones que JavaScript y RE2 interpretan distinto, o <code>lowBoundary()</code> de decimales) y <code>fhirviews_error_vista</code> al ejecutar cuando depende de los datos (una fecha sin hora frente a una fecha y hora, textos con caracteres que DuckDB pasa a mayúsculas de otra forma, <code>skip()</code> con un número negativo…).</li>
+<li>Nuevo argumento <code>diferido</code> de <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>: con <code>diferido = TRUE</code> devuelve una tabla de dplyr (dbplyr) sobre la consulta, para filtrar y resumir en DuckDB y traer a R solo el resultado. dplyr y dbplyr se agregan a Suggests.</li>
+<li>Una columna sin tipo cuyos valores son todos números enteros llega a R como entero, como en <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="terminologías-development-version">Terminologías<a class="anchor" aria-label="anchor" href="#terminolog%C3%ADas-development-version"></a></h3>
+<ul><li>Nuevas funciones para trabajar con un servidor de terminología FHIR (por ejemplo, <a href="https://tx.fhir.org/r4" class="external-link">tx.fhir.org</a> o un Snowstorm), con la misma conexión de <code><a href="../reference/fhir_conectar.html">fhir_conectar()</a></code>, su token o su autenticación SMART on FHIR:
+<ul><li>
+<code><a href="../reference/tx_expandir.html">tx_expandir()</a></code>: operación <code>ValueSet/$expand</code> con paginación (<code>offset</code> y <code>count</code>) para expansiones grandes; acepta la URL canónica del <code>ValueSet</code> o un <code>ValueSet</code> propio (lista, JSON o archivo) y devuelve un <code>data.frame</code> con <code>system</code>, <code>code</code>, <code>display</code> y <code>version</code>.</li>
+<li>
+<code><a href="../reference/tx_buscar_codigo.html">tx_buscar_codigo()</a></code>: operación <code>CodeSystem/$lookup</code>, con el nombre, las designaciones y las propiedades del código.</li>
+<li>
+<code><a href="../reference/tx_validar_codigo.html">tx_validar_codigo()</a></code>: operación <code>ValueSet/$validate-code</code> para un vector de códigos.</li>
+</ul></li>
+<li>
+<code><a href="../reference/vista_con_valueset.html">vista_con_valueset()</a></code> agrega a un <code>ViewDefinition</code> los códigos de una expansión (como constantes y un <code>where</code>, o como columna lógica), de modo que un indicador definido con un <code>ValueSet</code> se calcula con <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> o <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> sin red. La forma de la condición mantiene la expresión corta con miles de códigos.</li>
+<li>Nueva sección sobre terminologías en la viñeta <em>Servidores reales y grandes volúmenes</em>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="catálogo-de-vistas-para-salud-pública-development-version">Catálogo de vistas para salud pública<a class="anchor" aria-label="anchor" href="#cat%C3%A1logo-de-vistas-para-salud-p%C3%BAblica-development-version"></a></h3>
+<ul><li>Nuevas <code><a href="../reference/vista_catalogo.html">vista_catalogo()</a></code> y <code><a href="../reference/vista_plantilla.html">vista_plantilla()</a></code>: una biblioteca de <code>ViewDefinition</code> listos para usar (JSON estándar de SQL on FHIR en <code>inst/vistas</code>) con las tablas más comunes en vigilancia y salud pública: <code>pacientes</code> (sexo, nacimiento, fallecimiento, cantón y provincia de residencia), <code>signos_vitales</code> (una fila por medición, con la presión sistólica y diastólica separadas), <code>diagnosticos</code> (CIE-10 y SNOMED CT), <code>notificacion_obligatoria</code> (dengue, malaria y tuberculosis por defecto, con la lista de categorías CIE-10 como constante), <code>inmunizaciones</code>, <code>encuentros</code> y <code>medicamentos</code>. Todas usan <code>getResourceKey()</code> y <code>getReferenceKey()</code> para unir las tablas, y dan los mismos resultados con <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> y <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>.</li>
+<li>
+<code><a href="../reference/vista_plantilla.html">vista_plantilla()</a></code> permite cambiar las constantes de una vista con el argumento <code>constantes</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="fhirviews-020">fhirviews 0.2.0<a class="anchor" aria-label="anchor" href="#fhirviews-020"></a></h2>
 <p>Esta versión prepara fhirviews para servidores y volúmenes reales: autenticación SMART on FHIR, exportación masiva con <code>$export</code> y un segundo motor de vistas sobre DuckDB, entre 16 y 37 veces más rápido que el motor V8 (un millón de pacientes en unos 5,5 segundos). No hay cambios incompatibles.</p>

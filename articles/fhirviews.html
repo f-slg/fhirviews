@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -322,19 +322,88 @@ vista toma las observaciones con valor numérico y, gracias a
 <span><span class="co">#&gt; 3 2025-04-03T10:10:00-05:00                                           &lt;NA&gt;</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="del-servidor-a-la-tabla-en-un-paso">7. Del servidor a la tabla en un paso<a class="anchor" aria-label="anchor" href="#del-servidor-a-la-tabla-en-un-paso"></a>
+<h2 id="vistas-listas-para-usar">7. Vistas listas para usar<a class="anchor" aria-label="anchor" href="#vistas-listas-para-usar"></a>
+</h2>
+<p>No hace falta escribir cada vista desde cero: el paquete trae un
+catálogo de <code>ViewDefinition</code> para las tablas más comunes en
+vigilancia y salud pública. Todas usan <code>getResourceKey()</code> en
+la columna <code>id</code> y <code>getReferenceKey()</code> en las
+claves de otros recursos (<code>paciente</code>,
+<code>encuentro</code>…), así que las tablas se unen entre sí, y dan lo
+mismo con <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> que con el motor DuckDB.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/vista_catalogo.html">vista_catalogo</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nombre"</span>, <span class="st">"recurso"</span>, <span class="st">"titulo"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;                     nombre           recurso</span></span>
+<span><span class="co">#&gt; 1             diagnosticos         Condition</span></span>
+<span><span class="co">#&gt; 2               encuentros         Encounter</span></span>
+<span><span class="co">#&gt; 3           inmunizaciones      Immunization</span></span>
+<span><span class="co">#&gt; 4             medicamentos MedicationRequest</span></span>
+<span><span class="co">#&gt; 5 notificacion_obligatoria         Condition</span></span>
+<span><span class="co">#&gt; 6                pacientes           Patient</span></span>
+<span><span class="co">#&gt; 7           signos_vitales       Observation</span></span>
+<span><span class="co">#&gt;                                     titulo</span></span>
+<span><span class="co">#&gt; 1                             Diagnósticos</span></span>
+<span><span class="co">#&gt; 2                               Encuentros</span></span>
+<span><span class="co">#&gt; 3                           Inmunizaciones</span></span>
+<span><span class="co">#&gt; 4           Prescripciones de medicamentos</span></span>
+<span><span class="co">#&gt; 5 Enfermedades de notificación obligatoria</span></span>
+<span><span class="co">#&gt; 6                                Pacientes</span></span>
+<span><span class="co">#&gt; 7                           Signos vitales</span></span></code></pre></div>
+<p><code><a href="../reference/vista_plantilla.html">vista_plantilla()</a></code> devuelve una de ellas, lista para
+ejecutar:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="fu"><a href="../reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"signos_vitales"</span><span class="op">)</span><span class="op">)</span><span class="op">[</span></span>
+<span>  , <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"codigo"</span>, <span class="st">"descripcion"</span>, <span class="st">"valor"</span>, <span class="st">"unidad"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;         id codigo             descripcion  valor            unidad</span></span>
+<span><span class="co">#&gt; 1   obs-pa 8480-6       Presión sistólica 128.00              mmHg</span></span>
+<span><span class="co">#&gt; 2   obs-pa 8462-4      Presión diastólica  84.00              mmHg</span></span>
+<span><span class="co">#&gt; 3 obs-temp 8310-5    Temperatura corporal  38.40                °C</span></span>
+<span><span class="co">#&gt; 4   obs-fr 9279-1 Frecuencia respiratoria  20.00 respiraciones/min</span></span>
+<span><span class="co">#&gt; 5   obs-fc 8867-4     Frecuencia cardíaca 102.00       latidos/min</span></span>
+<span><span class="co">#&gt; 6  obs-bsa 8277-6     Superficie corporal   1.77                m2</span></span></code></pre></div>
+<p>La presión arterial se registra como un panel con dos componentes; la
+vista <code>signos_vitales</code> los separa con <code>unionAll</code>
+en una fila para la sistólica (8480-6) y otra para la diastólica
+(8462-4).</p>
+<p>La vista <code>notificacion_obligatoria</code> filtra los
+diagnósticos con una lista de categorías CIE-10 guardada en la constante
+<code>codigos</code> (por defecto dengue, malaria y tuberculosis). Con
+los 755 casos de dengue simulados de 2025 y la vista
+<code>pacientes</code>, que trae el cantón y la provincia de residencia,
+se arma la tabla de casos por provincia:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dengue</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dengue_2025.ndjson.gz"</span>,</span>
+<span>                      package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
+<span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="fu"><a href="../reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"notificacion_obligatoria"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">pacientes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="fu"><a href="../reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"pacientes"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">casos</span>, <span class="va">pacientes</span>, by.x <span class="op">=</span> <span class="st">"paciente"</span>, by.y <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">casos</span><span class="op">$</span><span class="va">provincia</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Guayas   Manabí Los Ríos   El Oro </span></span>
+<span><span class="co">#&gt;      371      159      130       95</span></span></code></pre></div>
+<p>Para otras enfermedades se cambia la constante, y
+<code><a href="../reference/vista_json.html">vista_json()</a></code> muestra el JSON de cualquier vista para
+copiarlo y adaptarlo:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">solo_a91</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"notificacion_obligatoria"</span>,</span>
+<span>                            constantes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>codigos <span class="op">=</span> <span class="st">"A91"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="va">solo_a91</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 54</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="del-servidor-a-la-tabla-en-un-paso">8. Del servidor a la tabla en un paso<a class="anchor" aria-label="anchor" href="#del-servidor-a-la-tabla-en-un-paso"></a>
 </h2>
 <p>Con un servidor, <code><a href="../reference/fhir_vista.html">fhir_vista()</a></code> busca los recursos del
 tipo de la vista y la aplica; los parámetros de búsqueda filtran en el
 servidor:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/fhir_vista.html">fhir_vista</a></span><span class="op">(</span><span class="va">con</span>, <span class="va">signos</span>, subject <span class="op">=</span> <span class="st">"Patient/123"</span>, category <span class="op">=</span> <span class="st">"vital-signs"</span><span class="op">)</span></span></code></pre></div>
 <p>Y <code><a href="../reference/vista_duckdb.html">vista_duckdb()</a></code> guarda varias vistas en DuckDB para
 unirlas con SQL; se explica en la viñeta <em>ViewDefinition en
 detalle</em>.</p>
 </div>
 <div class="section level2">
-<h2 id="exportación-masiva-para-análisis-poblacional">8. Exportación masiva para análisis poblacional<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva-para-an%C3%A1lisis-poblacional"></a>
+<h2 id="exportación-masiva-para-análisis-poblacional">9. Exportación masiva para análisis poblacional<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva-para-an%C3%A1lisis-poblacional"></a>
 </h2>
 <p>Para una población entera (vigilancia epidemiológica, indicadores)
 buscar página a página es lento. Los servidores que implementan <a href="https://hl7.org/fhir/uv/bulkdata/" class="external-link">FHIR Bulk Data</a> ofrecen la
@@ -343,7 +412,7 @@ NDJSON por tipo de recurso y <code><a href="../reference/fhir_exportar.html">fhi
 (respetando <code>Retry-After</code> y mostrando el avance) y los
 descarga a una carpeta. El NDJSON es justo el formato que
 <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> procesa más rápido:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Servidor de referencia de SMART, con datos sintéticos</span></span>
 <span><span class="va">bulk</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://bulk-data.smarthealthit.org/fhir"</span><span class="op">)</span></span>
 <span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar</a></span><span class="op">(</span><span class="va">bulk</span>, <span class="st">"paciente"</span>, tipos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="st">"Condition"</span><span class="op">)</span>,</span>
@@ -365,20 +434,20 @@ o los de un <code>Group</code> (<code>grupo = "id"</code>);
 <code>filtros</code> pasa búsquedas por tipo (<code>_typeFilter</code>).
 Si la exportación tarda, se puede lanzar sin esperar y volver más
 tarde:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">trabajo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar</a></span><span class="op">(</span><span class="va">bulk</span>, grupo <span class="op">=</span> <span class="st">"brote-dengue"</span>, esperar <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">trabajo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar_estado</a></span><span class="op">(</span><span class="va">trabajo</span><span class="op">)</span>   <span class="co"># consulta una vez</span></span>
 <span><span class="va">trabajo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar_estado</a></span><span class="op">(</span><span class="va">trabajo</span>, esperar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/fhir_exportar.html">fhir_exportar_cancelar</a></span><span class="op">(</span><span class="va">trabajo</span><span class="op">)</span>            <span class="co"># o cancelarla</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="subir-el-caso-a-un-servidor">9. Subir el caso a un servidor<a class="anchor" aria-label="anchor" href="#subir-el-caso-a-un-servidor"></a>
+<h2 id="subir-el-caso-a-un-servidor">10. Subir el caso a un servidor<a class="anchor" aria-label="anchor" href="#subir-el-caso-a-un-servidor"></a>
 </h2>
 <p>Los recursos se pueden cargar en un servidor propio (no en el
 público) para practicar con el taller. Como los ids son fijos,
 <code><a href="../reference/fhir_crear.html">fhir_actualizar()</a></code> los crea con ese id en un servidor
 HAPI:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">local</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"http://localhost:8080/fhir"</span><span class="op">)</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">r</span> <span class="kw">in</span> <span class="va">caso</span><span class="op">)</span> <span class="fu"><a href="../reference/fhir_crear.html">fhir_actualizar</a></span><span class="op">(</span><span class="va">local</span>, <span class="va">r</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/fhir_everything.html">fhir_everything</a></span><span class="op">(</span><span class="va">local</span>, <span class="st">"Patient"</span>, <span class="st">"patient"</span><span class="op">)</span></span></code></pre></div>

@@ -17,7 +17,7 @@ comandos de DuckDB)."><meta property="og:image" content="https://f-slg.github.io
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,21 +89,31 @@ DuckDB con una columna <code>json</code> (un recurso FHIR por fila).</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>El traductor cubre la estructura completa del <code>ViewDefinition</code> (<code>select</code>
 anidados, <code>column</code>, <code>forEach</code>, <code>forEachOrNull</code>, <code>repeat</code>, <code>unionAll</code>,
-<code>where</code>, <code>constant</code> y <code>%rowIndex</code>) y un subconjunto de FHIRPath:
+<code>where</code>, <code>constant</code> y <code>%rowIndex</code>) y buena parte de FHIRPath:
 navegación por campos (los elementos de elección como <code>value</code> o
-<code>effective</code> buscan todas sus variantes, <code>valueQuantity</code>,
-<code>valueString</code>...), índices (<code>name[0]</code>), <code>where()</code>, <code>select()</code>,
-<code><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists()</a></code>, <code>empty()</code>, <code>count()</code>, <code>first()</code>, <code>last()</code>, <code><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail()</a></code>, <code>skip()</code>,
-<code>take()</code>, <code><a href="https://rdrr.io/r/base/double.html" class="external-link">single()</a></code>, <code>distinct()</code>, <code><a href="https://rdrr.io/r/base/all.html" class="external-link">all()</a></code>, <code>not()</code>, <code>iif()</code>, <code>join()</code>,
-<code>ofType()</code> sobre elementos de elección (<code>value.ofType(Quantity)</code> es
-<code>valueQuantity</code>), <code>extension(url)</code>, <code>getResourceKey()</code>,
-<code>getReferenceKey()</code>, funciones de texto (<code><a href="https://rdrr.io/r/base/startsWith.html" class="external-link">startsWith()</a></code>, <code><a href="https://rdrr.io/r/base/startsWith.html" class="external-link">endsWith()</a></code>,
-<code>contains()</code>, <code>upper()</code>, <code>lower()</code>, <code><a href="https://rdrr.io/r/base/length.html" class="external-link">length()</a></code>, <code><a href="https://rdrr.io/r/base/substr.html" class="external-link">substring()</a></code>,
-<code><a href="https://rdrr.io/r/base/replace.html" class="external-link">replace()</a></code>, <code>trim()</code>, <code>matches()</code>, <code><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString()</a></code>), conversiones
-(<code>toInteger()</code>, <code>toDecimal()</code>), comparaciones, aritmética, <code>and</code>, <code>or</code>,
-<code>xor</code>, <code>implies</code>, <code>|</code>, <code>in</code> y <code>contains</code>. Si una expresión usa algo
-fuera de ese subconjunto, se produce un error de clase
-<code>fhirviews_error_sql</code> que sugiere usar <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>.</p>
+<code>effective</code> buscan sus variantes <code>valueQuantity</code>, <code>valueString</code>...),
+índices (<code>name[0]</code>), <code>where()</code>, <code>select()</code>, <code><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists()</a></code>, <code>empty()</code>,
+<code><a href="https://rdrr.io/r/base/all.html" class="external-link">all()</a></code>, <code>allTrue()</code> y afines, <code>count()</code>, <code>first()</code>, <code>last()</code>, <code><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail()</a></code>,
+<code>skip()</code>, <code>take()</code>, <code><a href="https://rdrr.io/r/base/double.html" class="external-link">single()</a></code>, <code>distinct()</code>, <code>isDistinct()</code>,
+<code><a href="https://rdrr.io/r/base/sets.html" class="external-link">union()</a></code>/<code>|</code>, <code>combine()</code>, <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect()</a></code>, <code>exclude()</code>, <code>subsetOf()</code>,
+<code>supersetOf()</code>, <code>in</code>, <code>contains</code>, <code>not()</code>, <code>iif()</code>, <code><a href="https://rdrr.io/r/base/trace.html" class="external-link">trace()</a></code>, <code>is</code>,
+<code>as</code>, <code>ofType()</code>, <code>extension(url)</code>, <code>getResourceKey()</code>,
+<code>getReferenceKey()</code>, funciones de texto (<code>join()</code>, <code><a href="https://rdrr.io/r/base/startsWith.html" class="external-link">startsWith()</a></code>,
+<code><a href="https://rdrr.io/r/base/startsWith.html" class="external-link">endsWith()</a></code>, <code>contains()</code>, <code>indexOf()</code>, <code><a href="https://rdrr.io/r/base/substr.html" class="external-link">substring()</a></code>, <code>upper()</code>,
+<code>lower()</code>, <code>trim()</code>, <code><a href="https://rdrr.io/r/base/length.html" class="external-link">length()</a></code>, <code><a href="https://rdrr.io/r/base/replace.html" class="external-link">replace()</a></code>, <code>matches()</code>,
+<code>replaceMatches()</code>, <code><a href="https://rdrr.io/r/base/split.html" class="external-link">split()</a></code>, <code>toChars()</code>), conversiones (<code><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString()</a></code>,
+<code>toInteger()</code>, <code>toDecimal()</code>, <code>toBoolean()</code> y sus <code>convertsTo...()</code>),
+aritmética, <code><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">round()</a></code>, <code><a href="https://rdrr.io/r/base/seek.html" class="external-link">truncate()</a></code>,
+<code><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt()</a></code>, <code><a href="https://rdrr.io/r/stats/power.html" class="external-link">power()</a></code> exacta, comparaciones de fechas y horas con su
+precisión y <code>lowBoundary()</code>/<code>highBoundary()</code> de fechas y horas.</p>
+<p>La traducción reproduce el resultado de <code>fhirpath.js</code>
+(<code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>). Si una expresión usa algo que no se puede traducir
+con certeza, se produce un error de clase <code>fhirviews_error_sql</code> que
+sugiere usar <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>; lo que solo se puede decidir con los
+datos (por ejemplo, comparar una fecha sin hora con una fecha y hora, que
+depende de la zona horaria del equipo, o textos con caracteres que DuckDB
+y JavaScript pasan a mayúsculas de forma distinta) da un error al
+ejecutar la consulta, nunca un resultado distinto.</p>
 <p>Los elementos <code>repeat</code> se traducen hasta una profundidad fija (por
 defecto 12 niveles; la opción <code>fhirviews.sql_profundidad</code> la cambia); si
 los datos tienen más niveles, la consulta produce un error en lugar de
@@ -125,7 +135,7 @@ convierte después según los valores.</p>
 <span class="r-in"><span><span class="fu">vista_sql</span><span class="op">(</span><span class="va">vista</span>, <span class="st">"pacientes.ndjson"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> SELECT f."id" AS "id", f."sexo" AS "sexo", f."apellido" AS "apellido"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> FROM (</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   SELECT unnest([{'id': json_extract_string(r, '$.id'), 'sexo': json_extract_string(list_extract(list_transform([flatten(list_transform([json_extract(r, '$."gender"')], lambda z1: CASE WHEN z1 IS NULL OR CAST(z1 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z1 AS VARCHAR), '[') THEN list_filter(CAST(z1 AS JSON[]), lambda z2: z2 IS NOT NULL AND CAST(z2 AS VARCHAR) &lt;&gt; 'null') ELSE [z1] END))], lambda z3: CASE WHEN len(z3) &gt; 1 THEN error('La columna sexo devolvió varios valores para una fila; usa collection: true o first()') ELSE z3[1] END), 1), '$'), 'apellido': json_extract_string(list_extract(list_transform([flatten(list_transform([json_extract(list_extract(flatten(list_transform(coalesce(json_extract(r, ['$."name"', '$."nameUrl"', '$."nameReference"']), []::JSON[]), lambda z4: CASE WHEN z4 IS NULL OR CAST(z4 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z4 AS VARCHAR), '[') THEN list_filter(CAST(z4 AS JSON[]), lambda z5: z5 IS NOT NULL AND CAST(z5 AS VARCHAR) &lt;&gt; 'null') ELSE [z4] END)), 1), '$."family"')], lambda z6: CASE WHEN z6 IS NULL OR CAST(z6 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z6 AS VARCHAR), '[') THEN list_filter(CAST(z6 AS JSON[]), lambda z7: z7 IS NOT NULL AND CAST(z7 AS VARCHAR) &lt;&gt; 'null') ELSE [z6] END))], lambda z8: CASE WHEN len(z8) &gt; 1 THEN error('La columna apellido devolvió varios valores para una fila; usa collection: true o first()') ELSE z8[1] END), 1), '$')}]) AS f</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SELECT unnest([{'id': json_extract_string(r, '$.id'), 'sexo': json_extract_string(list_extract(list_transform([flatten(list_transform([json_extract(r, '$."gender"')], lambda z1: CASE WHEN z1 IS NULL OR CAST(z1 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z1 AS VARCHAR), '[') THEN list_filter(CAST(z1 AS JSON[]), lambda z2: z2 IS NOT NULL AND CAST(z2 AS VARCHAR) &lt;&gt; 'null') ELSE [z1] END))], lambda z3: CASE WHEN len(z3) &gt; 1 THEN error('La columna sexo devolvió varios valores para una fila; usa collection: true o first()') ELSE z3[1] END), 1), '$'), 'apellido': json_extract_string(list_extract(list_transform([flatten(list_transform([json_extract(list_extract(flatten(list_transform([json_extract(r, '$."name"')], lambda z4: CASE WHEN z4 IS NULL OR CAST(z4 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z4 AS VARCHAR), '[') THEN list_filter(CAST(z4 AS JSON[]), lambda z5: z5 IS NOT NULL AND CAST(z5 AS VARCHAR) &lt;&gt; 'null') ELSE [z4] END)), 1), '$."family"')], lambda z6: CASE WHEN z6 IS NULL OR CAST(z6 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z6 AS VARCHAR), '[') THEN list_filter(CAST(z6 AS JSON[]), lambda z7: z7 IS NOT NULL AND CAST(z7 AS VARCHAR) &lt;&gt; 'null') ELSE [z6] END))], lambda z8: CASE WHEN len(z8) &gt; 1 THEN error('La columna apellido devolvió varios valores para una fila; usa collection: true o first()') ELSE z8[1] END), 1), '$')}]) AS f</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   FROM (SELECT json AS r FROM read_json_objects(['pacientes.ndjson'], format = 'newline_delimited'))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   WHERE json_extract_string(r, '$.resourceType') = 'Patient'</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> )</span>

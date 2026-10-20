@@ -33,7 +33,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -128,6 +128,11 @@
 <tr>
 <td>Trabajar con volúmenes reales</td>
 <td>Exportación masiva con <code>$export</code> (FHIR Bulk Data); motor V8 por lotes y motor DuckDB que traduce la vista a SQL: un millón de pacientes en segundos</td>
+</tr>
+<tr>
+<td>Definir indicadores con <code>ValueSet</code>
+</td>
+<td>Expansión de <code>ValueSet</code> con paginación, <code>$lookup</code> y <code>$validate-code</code> en un servidor de terminología; los códigos quedan dentro de la vista, sin red al ejecutarla</td>
 </tr>
 <tr>
 <td>Analizar con SQL</td>
@@ -421,7 +426,7 @@
 <div class="section level2">
 <h2 id="conformidad-con-sql-on-fhir">Conformidad con SQL on FHIR<a class="anchor" aria-label="anchor" href="#conformidad-con-sql-on-fhir"></a>
 </h2>
-<p>El paquete incluye el <a href="https://github.com/FHIR/sql-on-fhir.js/tree/main/tests" class="external-link">banco oficial de pruebas</a> de SQL on FHIR, que se ejecuta en cada comprobación de integración continua. Pasan <strong>las 133 pruebas del perfil <em>shareable</em></strong> (el que debe cumplir toda implementación) con los dos motores, y 7 de las 11 experimentales con el motor V8 (3 con el motor DuckDB).</p>
+<p>El paquete incluye el <a href="https://github.com/FHIR/sql-on-fhir.js/tree/main/tests" class="external-link">banco oficial de pruebas</a> de SQL on FHIR, que se ejecuta en cada comprobación de integración continua. Pasan <strong>las 133 pruebas del perfil <em>shareable</em></strong> (el que debe cumplir toda implementación) y 7 de las 11 experimentales con los dos motores.</p>
 <p><img src="reference/figures/README-conformidad.png" width="80%" alt="Barras por archivo del banco de pruebas: todas las pruebas shareable aprobadas; en fn_boundary, 4 de 8 pruebas experimentales fallan"></p>
 <p>Las cuatro que fallan son de <code>lowBoundary()</code> y <code>highBoundary()</code>, funciones experimentales de FHIRPath que dependen de la precisión decimal original del JSON y de la zona horaria. Para comprobarlo en tu equipo, o con la versión más reciente del banco:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
@@ -439,7 +444,7 @@
 <li>
 <strong>DuckDB</strong> (<code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>, experimental): traduce la vista a SQL y la ejecuta directamente sobre los archivos, en paralelo y sin cargarlos en R. Es el que conviene para volúmenes grandes.</li>
 </ul>
-<p><img src="reference/figures/README-rendimiento.png" width="90%" alt="Barras agrupadas por número de pacientes: el motor DuckDB tarda 0,16 s con 10 000 pacientes, 1,67 s con 250 000 y 5,5 s con un millón; el motor V8 tarda 2,6 s, 62,4 s y no se midió con un millón"></p>
+<p><img src="reference/figures/README-rendimiento.png" width="90%" alt="Barras agrupadas por número de pacientes: el motor DuckDB tarda 0,22 s con 10 000 pacientes, 1,56 s con 250 000 y 5,8 s con un millón; el motor V8 tarda 2,3 s, 58,9 s y no se midió con un millón"></p>
 <table class="table">
 <thead><tr>
 <th align="right">Pacientes</th>
@@ -452,41 +457,41 @@
 <tr>
 <td align="right">10 000</td>
 <td align="right">17 824</td>
-<td align="right">2,6 s</td>
-<td align="right">0,16 s</td>
-<td align="right">16</td>
+<td align="right">2,3 s</td>
+<td align="right">0,22 s</td>
+<td align="right">11</td>
 </tr>
 <tr>
 <td align="right">50 000</td>
 <td align="right">89 128</td>
-<td align="right">11,8 s</td>
-<td align="right">0,72 s</td>
-<td align="right">16</td>
+<td align="right">11,0 s</td>
+<td align="right">0,92 s</td>
+<td align="right">12</td>
 </tr>
 <tr>
 <td align="right">100 000</td>
 <td align="right">178 062</td>
-<td align="right">24,2 s</td>
-<td align="right">0,94 s</td>
-<td align="right">26</td>
+<td align="right">23,2 s</td>
+<td align="right">1,18 s</td>
+<td align="right">20</td>
 </tr>
 <tr>
 <td align="right">250 000</td>
 <td align="right">444 912</td>
-<td align="right">62,4 s</td>
-<td align="right">1,67 s</td>
-<td align="right">37</td>
+<td align="right">58,9 s</td>
+<td align="right">1,56 s</td>
+<td align="right">38</td>
 </tr>
 <tr>
 <td align="right">1 000 000</td>
 <td align="right">1 780 958</td>
 <td align="right">—</td>
-<td align="right">5,5 s</td>
+<td align="right">5,8 s</td>
 <td align="right">—</td>
 </tr>
 </tbody>
 </table>
-<p>Tiempo de punta a punta, desde el archivo NDJSON hasta el <code>data.frame</code>, con pacientes sintéticos y una vista con <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code> (<code>data-raw/motor-duckdb.R</code>; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6). Ambos motores dan tablas idénticas: las pruebas del paquete los comparan con las vistas de todas las viñetas. Con el motor V8, los recursos que llegan como JSON (de un servidor, de <code>$export</code> o de un archivo) pasan el texto original directamente a V8; los armados como listas de R son unas cuatro veces más lentos porque deben convertirse a JSON.</p>
+<p>Tiempo de punta a punta, desde el archivo NDJSON hasta el <code>data.frame</code>, con pacientes sintéticos y una vista con <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code> (<code>data-raw/motor-duckdb.R</code>; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6). Ambos motores dan tablas idénticas: las pruebas del paquete los comparan con las vistas de todas las viñetas y con más de 100 expresiones de FHIRPath, y lo que el motor DuckDB no puede traducir con certeza da un error en lugar de un resultado distinto. Con <code>vista_ejecutar_duckdb(..., diferido = TRUE)</code> el resultado queda como tabla de dplyr sobre DuckDB, para filtrar y resumir sin traer todas las filas a R. Con el motor V8, los recursos que llegan como JSON (de un servidor, de <code>$export</code> o de un archivo) pasan el texto original directamente a V8; los armados como listas de R son unas cuatro veces más lentos porque deben convertirse a JSON.</p>
 </div>
 <div class="section level2">
 <h2 id="funciones">Funciones<a class="anchor" aria-label="anchor" href="#funciones"></a>
@@ -566,6 +571,13 @@
 </td>
 </tr>
 <tr>
+<td>Catálogo de vistas</td>
+<td>
+<code><a href="reference/vista_catalogo.html">vista_catalogo()</a></code>, <code><a href="reference/vista_plantilla.html">vista_plantilla()</a></code>
+</td>
+<td>Vistas listas para salud pública: pacientes con residencia, signos vitales, diagnósticos, notificación obligatoria, inmunizaciones, encuentros y medicamentos</td>
+</tr>
+<tr>
 <td>Ejecución</td>
 <td>
 <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code>, <code><a href="reference/fhir_vista.html">fhir_vista()</a></code>, <code><a href="reference/vista_fhirpath.html">vista_fhirpath()</a></code>
@@ -578,6 +590,15 @@
 <code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>, <code><a href="reference/vista_sql.html">vista_sql()</a></code>
 </td>
 <td>Ejecutar la vista como SQL de DuckDB sobre NDJSON o Parquet (experimental)</td>
+</tr>
+<tr>
+<td>Terminologías</td>
+<td>
+<code><a href="reference/tx_expandir.html">tx_expandir()</a></code>, <code><a href="reference/tx_buscar_codigo.html">tx_buscar_codigo()</a></code>, <code><a href="reference/tx_validar_codigo.html">tx_validar_codigo()</a></code>, <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code>
+</td>
+<td>
+<code>$expand</code>, <code>$lookup</code> y <code>$validate-code</code> en un servidor de terminología (tx.fhir.org, Snowstorm) y vistas filtradas por los códigos de un <code>ValueSet</code>
+</td>
 </tr>
 <tr>
 <td>SQL</td>
@@ -668,8 +689,8 @@
 </tr>
 <tr>
 <td>Terminologías (SNOMED CT, LOINC, ValueSet)</td>
-<td>No</td>
-<td>Sí, funciones <code>tx_*</code> con un servidor de terminología</td>
+<td>Sí: <code>$expand</code> (con paginación), <code>$lookup</code> y <code>$validate-code</code> con un servidor de terminología; <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code> guarda los códigos en la vista</td>
+<td>Sí, funciones <code>tx_*</code> con un servidor de terminología, también dentro de las consultas</td>
 <td>No</td>
 </tr>
 <tr>
@@ -702,7 +723,7 @@
 <p><strong>¿Cuál elegir?</strong></p>
 <ul>
 <li>
-<strong>pathling</strong>, para grandes volúmenes en Spark o en un clúster, o si necesitas operaciones de terminología.</li>
+<strong>pathling</strong>, para grandes volúmenes en Spark o en un clúster, o si necesitas consultar el servidor de terminología dentro de cada expresión (por ejemplo, <code>subsumes()</code> o traducciones con <code>$translate</code>).</li>
 <li>
 <strong>fhirviews</strong>, para análisis en un portátil o un servidor sin instalar Java ni Spark (hasta millones de recursos con el motor DuckDB), para trabajar con un servidor FHIR (autenticarse, leer, escribir, validar, exportar) y llevar los resultados a <code>data.frame</code>, DuckDB o pobecu, y para enseñar.</li>
 <li>
@@ -717,7 +738,7 @@
 <li>Motor de FHIRPath escrito en R, como alternativa a V8 (la capa ya está separada: <code>options(fhirviews.motor = ...)</code>).</li>
 <li>Búsquedas largas por <code>POST [tipo]/_search</code>.</li>
 <li>Motor DuckDB estable: más funciones de FHIRPath y <code>lowBoundary()</code> / <code>highBoundary()</code>.</li>
-<li>Terminologías: <code>$expand</code>, <code>$lookup</code> y <code>memberOf()</code> con un servidor de terminología.</li>
+<li>Terminologías: <code>memberOf()</code> en FHIRPath y <code>$translate</code> (las expansiones, <code>$lookup</code> y <code>$validate-code</code> ya están en las funciones <code>tx_*</code>).</li>
 <li>Operaciones de SQL on FHIR 3.0 (<code>$run</code>, <code>$export</code> de vistas) y <code>SQLQuery</code>.</li>
 <li>Caché del panel <em>Connections</em> para servidores lentos.</li>
 <li>Envío a CRAN, después de <a href="https://github.com/f-slg/pobecu" class="external-link">pobecu</a>.</li>

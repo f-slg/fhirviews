@@ -273,7 +273,89 @@ vista_ejecutar(caso, vista_crear("Immunization", c(
 #> 3 2025-04-03T10:10:00-05:00                                           <NA>
 ```
 
-## 7. Del servidor a la tabla en un paso
+## 7. Vistas listas para usar
+
+No hace falta escribir cada vista desde cero: el paquete trae un
+catálogo de `ViewDefinition` para las tablas más comunes en vigilancia y
+salud pública. Todas usan `getResourceKey()` en la columna `id` y
+`getReferenceKey()` en las claves de otros recursos (`paciente`,
+`encuentro`…), así que las tablas se unen entre sí, y dan lo mismo con
+[`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+que con el motor DuckDB.
+
+``` r
+
+vista_catalogo()[, c("nombre", "recurso", "titulo")]
+#>                     nombre           recurso
+#> 1             diagnosticos         Condition
+#> 2               encuentros         Encounter
+#> 3           inmunizaciones      Immunization
+#> 4             medicamentos MedicationRequest
+#> 5 notificacion_obligatoria         Condition
+#> 6                pacientes           Patient
+#> 7           signos_vitales       Observation
+#>                                     titulo
+#> 1                             Diagnósticos
+#> 2                               Encuentros
+#> 3                           Inmunizaciones
+#> 4           Prescripciones de medicamentos
+#> 5 Enfermedades de notificación obligatoria
+#> 6                                Pacientes
+#> 7                           Signos vitales
+```
+
+[`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md)
+devuelve una de ellas, lista para ejecutar:
+
+``` r
+
+vista_ejecutar(caso, vista_plantilla("signos_vitales"))[
+  , c("id", "codigo", "descripcion", "valor", "unidad")]
+#>         id codigo             descripcion  valor            unidad
+#> 1   obs-pa 8480-6       Presión sistólica 128.00              mmHg
+#> 2   obs-pa 8462-4      Presión diastólica  84.00              mmHg
+#> 3 obs-temp 8310-5    Temperatura corporal  38.40                °C
+#> 4   obs-fr 9279-1 Frecuencia respiratoria  20.00 respiraciones/min
+#> 5   obs-fc 8867-4     Frecuencia cardíaca 102.00       latidos/min
+#> 6  obs-bsa 8277-6     Superficie corporal   1.77                m2
+```
+
+La presión arterial se registra como un panel con dos componentes; la
+vista `signos_vitales` los separa con `unionAll` en una fila para la
+sistólica (8480-6) y otra para la diastólica (8462-4).
+
+La vista `notificacion_obligatoria` filtra los diagnósticos con una
+lista de categorías CIE-10 guardada en la constante `codigos` (por
+defecto dengue, malaria y tuberculosis). Con los 755 casos de dengue
+simulados de 2025 y la vista `pacientes`, que trae el cantón y la
+provincia de residencia, se arma la tabla de casos por provincia:
+
+``` r
+
+dengue <- system.file("extdata", "dengue_2025.ndjson.gz",
+                      package = "fhirviews")
+casos <- vista_ejecutar(dengue, vista_plantilla("notificacion_obligatoria"))
+pacientes <- vista_ejecutar(dengue, vista_plantilla("pacientes"))
+casos <- merge(casos, pacientes, by.x = "paciente", by.y = "id")
+sort(table(casos$provincia), decreasing = TRUE)
+#> 
+#>   Guayas   Manabí Los Ríos   El Oro 
+#>      371      159      130       95
+```
+
+Para otras enfermedades se cambia la constante, y
+[`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md)
+muestra el JSON de cualquier vista para copiarlo y adaptarlo:
+
+``` r
+
+solo_a91 <- vista_plantilla("notificacion_obligatoria",
+                            constantes = list(codigos = "A91"))
+nrow(vista_ejecutar(dengue, solo_a91))
+#> [1] 54
+```
+
+## 8. Del servidor a la tabla en un paso
 
 Con un servidor,
 [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md)
@@ -290,7 +372,7 @@ Y
 guarda varias vistas en DuckDB para unirlas con SQL; se explica en la
 viñeta *ViewDefinition en detalle*.
 
-## 8. Exportación masiva para análisis poblacional
+## 9. Exportación masiva para análisis poblacional
 
 Para una población entera (vigilancia epidemiológica, indicadores)
 buscar página a página es lento. Los servidores que implementan [FHIR
@@ -335,7 +417,7 @@ trabajo <- fhir_exportar_estado(trabajo, esperar = TRUE)
 fhir_exportar_cancelar(trabajo)            # o cancelarla
 ```
 
-## 9. Subir el caso a un servidor
+## 10. Subir el caso a un servidor
 
 Los recursos se pueden cargar en un servidor propio (no en el público)
 para practicar con el taller. Como los ids son fijos,

@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,8 +80,8 @@
     
 <p>Las viñetas anteriores trabajan con servidores de prueba abiertos y
 con datos que caben cómodamente en memoria. En un hospital, un
-ministerio o una red de servicios aparecen tres necesidades más, que
-fhirviews 0.2.0 cubre:</p>
+ministerio o una red de servicios aparecen cuatro necesidades más, que
+fhirviews cubre:</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -115,10 +115,18 @@ fhirviews 0.2.0 cubre:</p>
 <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> (motor DuckDB)</td>
 <td><a href="#motor-duckdb-millones-de-recursos">3</a></td>
 </tr>
+<tr class="even">
+<td>Definir un indicador con un <code>ValueSet</code> (todos los códigos
+de diabetes)</td>
+<td>
+<code><a href="../reference/tx_expandir.html">tx_expandir()</a></code> y <code><a href="../reference/vista_con_valueset.html">vista_con_valueset()</a></code>
+</td>
+<td><a href="#terminologias">4</a></td>
+</tr>
 </tbody>
 </table>
-<p>Al final, la <a href="#flujo-completo">sección 4</a> une las tres
-piezas en un flujo de vigilancia epidemiológica.</p>
+<p>Al final, la <a href="#flujo-completo">sección 5</a> une las piezas
+en un flujo de vigilancia epidemiológica.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://f-slg.github.io/fhirviews/">fhirviews</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
@@ -441,32 +449,32 @@ núcleos, R 4.5.2, duckdb 1.5.6):</p>
 <tbody>
 <tr class="odd">
 <td align="right">10 000</td>
-<td align="right">2,6</td>
-<td align="right">0,16</td>
-<td align="right">16</td>
+<td align="right">2,3</td>
+<td align="right">0,22</td>
+<td align="right">11</td>
 </tr>
 <tr class="even">
 <td align="right">50 000</td>
-<td align="right">11,8</td>
-<td align="right">0,72</td>
-<td align="right">16</td>
+<td align="right">11,0</td>
+<td align="right">0,92</td>
+<td align="right">12</td>
 </tr>
 <tr class="odd">
 <td align="right">100 000</td>
-<td align="right">24,2</td>
-<td align="right">0,94</td>
-<td align="right">26</td>
+<td align="right">23,2</td>
+<td align="right">1,18</td>
+<td align="right">20</td>
 </tr>
 <tr class="even">
 <td align="right">250 000</td>
-<td align="right">62,4</td>
-<td align="right">1,67</td>
-<td align="right">37</td>
+<td align="right">58,9</td>
+<td align="right">1,56</td>
+<td align="right">38</td>
 </tr>
 <tr class="odd">
 <td align="right">1 000 000</td>
 <td align="right">no medido</td>
-<td align="right">5,5</td>
+<td align="right">5,8</td>
 <td align="right"></td>
 </tr>
 </tbody>
@@ -484,27 +492,34 @@ máximo unos 1,3 GB.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"basic.json"</span>, <span class="st">"foreach.json"</span>, <span class="st">"union.json"</span>, <span class="st">"repeat.json"</span><span class="op">)</span>,</span>
 <span>                  motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) </span></span>
-<span><span class="co">#&gt; fhirviews 0.2.0 · motor DuckDB 1.5.6</span></span>
+<span><span class="co">#&gt; fhirviews 0.2.0.9000 · motor DuckDB 1.5.6</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   shareable       53 de  53 aprobadas</span></span>
 <span><span class="co">#&gt;   total           53 de  53 aprobadas</span></span></code></pre></div>
 <p>Es un motor <strong>experimental</strong>:</p>
 <ul>
-<li>Traduce un subconjunto de FHIRPath: navegación, elementos de
+<li>Traduce un subconjunto amplio de FHIRPath: navegación, elementos de
 elección (<code>value</code>, <code>effective</code>,
-<code>onset</code>…), <code>where()</code>, <code><a href="https://rdrr.io/r/base/exists.html" class="external-link">exists()</a></code>,
-<code>empty()</code>, <code>first()</code>, <code>join()</code>,
-<code>ofType()</code>, <code>extension()</code>,
-<code>getResourceKey()</code>, <code>getReferenceKey()</code>,
-comparaciones, lógica y constantes.</li>
+<code>onset</code>…), filtros y subconjuntos (<code>where()</code>,
+<code>select()</code>, <code>first()</code>, <code>last()</code>,
+<code>skip()</code>, <code>take()</code>, <code>distinct()</code>…),
+conjuntos (<code>|</code>, <code><a href="https://rdrr.io/r/base/sets.html" class="external-link">union()</a></code>, <code>combine()</code>,
+<code><a href="https://rdrr.io/r/base/sets.html" class="external-link">intersect()</a></code>, <code>exclude()</code>, <code>in</code>),
+conversiones (<code><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString()</a></code>, <code>toInteger()</code>,
+<code>toDecimal()</code>, <code>toBoolean()</code>), funciones de texto,
+aritmética, redondeo, fechas con su precisión y
+<code>lowBoundary()</code>/<code>highBoundary()</code> de fechas y
+horas. El inventario completo está en
+<code>data-raw/motor-duckdb.md</code> del repositorio.</li>
 <li>Lo que no sabe traducir no lo adivina: da un error de clase
 <code>fhirviews_error_sql</code> que sugiere usar
-<code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code>.</li>
+<code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code>. Lo que solo se sabe al ver los datos (por
+ejemplo, comparar una fecha sin hora con una fecha y hora, que en
+fhirpath.js depende de la zona horaria del equipo) da un error al
+ejecutar la consulta.</li>
 <li>
 <code>repeat</code> recorre hasta 12 niveles de anidamiento (opción
 <code>fhirviews.sql_profundidad</code>).</li>
-<li>No calcula <code>lowBoundary()</code> ni <code>highBoundary()</code>
-(pruebas experimentales del banco).</li>
 </ul>
 <p>En la práctica: <strong>desarrolla y valida la vista con
 <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code></strong> sobre una muestra y
@@ -512,9 +527,18 @@ comparaciones, lógica y constantes.</li>
 <code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code></strong>. Las pruebas del paquete
 comparan ambos motores con las vistas de todas las viñetas y exigen
 tablas idénticas.</p>
+<p>Con <code>diferido = TRUE</code>, el resultado es una tabla de dplyr
+sobre DuckDB (requiere dplyr y dbplyr): los filtros y resúmenes se
+calculan en DuckDB y solo el resultado llega a R.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="st">"exportacion/Condition.ndjson"</span>, <span class="va">confirmados</span>,</span>
+<span>                               diferido <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">casos</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">count</span><span class="op">(</span><span class="va">grave</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Con una base DuckDB propia, el resultado se puede guardar como tabla
 en lugar de traerlo a R:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"vigilancia.duckdb"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="st">"exportacion/Condition.ndjson"</span>, <span class="va">confirmados</span>,</span>
 <span>                      con_db <span class="op">=</span> <span class="va">db</span>, tabla <span class="op">=</span> <span class="st">"dengue"</span><span class="op">)</span></span>
@@ -522,11 +546,157 @@ en lugar de traerlo a R:</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="flujo-completo">4. Flujo completo<a class="anchor" aria-label="anchor" href="#flujo-completo"></a>
+<h2 id="terminologias">4. Terminologías: indicadores definidos con ValueSets<a class="anchor" aria-label="anchor" href="#terminologias"></a>
+</h2>
+<p>Los indicadores de salud pública casi nunca se definen con un código,
+sino con un conjunto: “todos los diagnósticos de diabetes”, “las vacunas
+del esquema regular”, “los resultados de laboratorio de glucosa”. En
+FHIR ese conjunto es un <code>ValueSet</code>, y quien sabe qué códigos
+contiene es un <strong>servidor de terminología</strong>: <a href="https://tx.fhir.org/r4" class="external-link">tx.fhir.org</a> (el de HL7, abierto), un
+<a href="https://github.com/IHTSDO/snowstorm" class="external-link">Snowstorm</a> con SNOMED
+CT o un HAPI con las terminologías nacionales cargadas.</p>
+<p>Las funciones <code>tx_*</code> usan la misma conexión que el resto
+del paquete (con <code>token</code> o <code>autenticacion</code> si el
+servidor lo exige):</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Función</th>
+<th>Operación</th>
+<th>Para qué</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code><a href="../reference/tx_expandir.html">tx_expandir()</a></code></td>
+<td><code>ValueSet/$expand</code></td>
+<td>La lista de códigos de un <code>ValueSet</code>, por páginas</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/tx_buscar_codigo.html">tx_buscar_codigo()</a></code></td>
+<td><code>CodeSystem/$lookup</code></td>
+<td>Nombre, sinónimos y propiedades (padres, hijos…) de un código</td>
+</tr>
+<tr class="odd">
+<td><code><a href="../reference/tx_validar_codigo.html">tx_validar_codigo()</a></code></td>
+<td><code>ValueSet/$validate-code</code></td>
+<td>Si cada código de un vector pertenece al <code>ValueSet</code>
+</td>
+</tr>
+<tr class="even">
+<td><code><a href="../reference/vista_con_valueset.html">vista_con_valueset()</a></code></td>
+<td>(sin red)</td>
+<td>Agregar los códigos expandidos a un <code>ViewDefinition</code>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="section level3">
+<h3 id="expandir-un-valueset">Expandir un ValueSet<a class="anchor" aria-label="anchor" href="#expandir-un-valueset"></a>
+</h3>
+<p><code><a href="../reference/tx_expandir.html">tx_expandir()</a></code> acepta la URL canónica de un
+<code>ValueSet</code> publicado o un <code>ValueSet</code> propio. Este,
+por ejemplo, define la diabetes como el concepto 73211009 de SNOMED CT y
+todos sus descendientes:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://tx.fhir.org/r4"</span>, panel <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">diabetes_vs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  resourceType <span class="op">=</span> <span class="st">"ValueSet"</span>,</span>
+<span>  compose <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>include <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    system <span class="op">=</span> <span class="st">"http://snomed.info/sct"</span>,</span>
+<span>    filter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>property <span class="op">=</span> <span class="st">"concept"</span>, op <span class="op">=</span> <span class="st">"is-a"</span>, value <span class="op">=</span> <span class="st">"73211009"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">diabetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tx_expandir.html">tx_expandir</a></span><span class="op">(</span><span class="va">tx</span>, <span class="va">diabetes_vs</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">diabetes</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 124</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">diabetes</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"code"</span>, <span class="st">"display"</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt;       code                                                       display</span></span>
+<span><span class="co">#&gt; 1 73211009                                             Diabetes mellitus</span></span>
+<span><span class="co">#&gt; 2  2751001                            Fibrocalculous pancreatic diabetes</span></span>
+<span><span class="co">#&gt; 3  4783006 Maternal diabetes mellitus with hypoglycemia affecting fetus OR newborn</span></span></code></pre></div>
+<p>Las expansiones grandes se piden por páginas
+(<code>tamano_pagina</code>, 1000 códigos por defecto, con los
+parámetros <code>offset</code> y <code>count</code>); <code>max</code>
+limita el total y <code>filtro</code> busca por nombre. Otros parámetros
+de <code>$expand</code>, como el idioma, van en
+<code>parametros = list(displayLanguage = "es")</code>.</p>
+</div>
+<div class="section level3">
+<h3 id="revisar-códigos">Revisar códigos<a class="anchor" aria-label="anchor" href="#revisar-c%C3%B3digos"></a>
+</h3>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/tx_validar_codigo.html">tx_validar_codigo</a></span><span class="op">(</span><span class="va">tx</span>, <span class="va">diabetes_vs</span>, <span class="st">"http://snomed.info/sct"</span>,</span>
+<span>                  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"44054006"</span>, <span class="st">"38341003"</span><span class="op">)</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"codigo"</span>, <span class="st">"valido"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;     codigo valido</span></span>
+<span><span class="co">#&gt; 1 44054006   TRUE</span></span>
+<span><span class="co">#&gt; 2 38341003  FALSE</span></span>
+<span></span>
+<span><span class="va">dm2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tx_buscar_codigo.html">tx_buscar_codigo</a></span><span class="op">(</span><span class="va">tx</span>, <span class="st">"http://snomed.info/sct"</span>, <span class="st">"44054006"</span><span class="op">)</span></span>
+<span><span class="va">dm2</span><span class="op">$</span><span class="va">display</span></span>
+<span><span class="co">#&gt; [1] "Type 2 diabetes mellitus"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">dm2</span><span class="op">$</span><span class="va">propiedades</span>, <span class="va">propiedad</span> <span class="op">==</span> <span class="st">"parent"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   propiedad    valor       descripcion</span></span>
+<span><span class="co">#&gt; 3    parent 73211009 Diabetes mellitus</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="usar-la-expansión-en-una-vista">Usar la expansión en una vista<a class="anchor" aria-label="anchor" href="#usar-la-expansi%C3%B3n-en-una-vista"></a>
+</h3>
+<p>La expansión se hace una vez y se guarda dentro de la vista con
+<code><a href="../reference/vista_con_valueset.html">vista_con_valueset()</a></code>: el sistema y la lista de códigos
+quedan como constantes del <code>ViewDefinition</code> y se agrega un
+<code>where</code>. La vista resultante no necesita red, funciona igual
+con <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> y con
+<code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>, y su JSON documenta los códigos
+exactos que se usaron en el indicador. Aquí, con una expansión escrita a
+mano en la CIE-10:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cie10_diabetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  system <span class="op">=</span> <span class="st">"http://hl7.org/fhir/sid/icd-10"</span>,</span>
+<span>  code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"E10"</span>, <span class="st">"E11"</span>, <span class="st">"E12"</span>, <span class="st">"E13"</span>, <span class="st">"E14"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">v_diabetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Condition"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  paciente <span class="op">=</span> <span class="st">"subject.getReferenceKey(Patient)"</span>,</span>
+<span>  codigo <span class="op">=</span> <span class="st">"code.coding.first().code"</span>,</span>
+<span>  inicio <span class="op">=</span> <span class="st">"onset.ofType(dateTime)"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">v_diabetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_con_valueset.html">vista_con_valueset</a></span><span class="op">(</span><span class="va">v_diabetes</span>, <span class="va">cie10_diabetes</span>, nombre <span class="op">=</span> <span class="st">"dm"</span><span class="op">)</span></span>
+<span><span class="va">v_diabetes</span><span class="op">$</span><span class="va">where</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">path</span></span>
+<span><span class="co">#&gt; [1] "code.coding.where(system = %dm_sistema and %dm_codigos.contains('|' &amp; code &amp; '|')).exists()"</span></span>
+<span></span>
+<span><span class="va">diagnosticos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fhir_recursos.html">fhir_recursos</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"E11"</span>, <span class="st">"2025-03-02"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2"</span>, <span class="st">"I10"</span>, <span class="st">"2025-04-11"</span><span class="op">)</span>,</span>
+<span>       <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"3"</span>, <span class="st">"E10"</span>, <span class="st">"2025-06-20"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    resourceType <span class="op">=</span> <span class="st">"Condition"</span>, id <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>,</span>
+<span>    subject <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>reference <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"Patient/p"</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    code <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>coding <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>system <span class="op">=</span> <span class="st">"http://hl7.org/fhir/sid/icd-10"</span>,</span>
+<span>                                   code <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    onsetDateTime <span class="op">=</span> <span class="va">x</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">diagnosticos</span>, <span class="va">v_diabetes</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   id paciente codigo     inicio</span></span>
+<span><span class="co">#&gt; 1  1       p1    E11 2025-03-02</span></span>
+<span><span class="co">#&gt; 2  3       p3    E10 2025-06-20</span></span></code></pre></div>
+<p>Con <code>columna = "diabetes"</code>, en vez de filtrar, se agrega
+una columna lógica: útil para marcar varios grupos (diabetes,
+hipertensión…) en una misma vista. La lista va como texto separado por
+<code>|</code> y no como una cadena de <code>or</code>, así la expresión
+sigue siendo corta con miles de códigos y el motor DuckDB la resuelve
+con una sola búsqueda de texto por recurso.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="flujo-completo">5. Flujo completo<a class="anchor" aria-label="anchor" href="#flujo-completo"></a>
 </h2>
 <p>De un servidor protegido a tasas por cantón, sin pasar los recursos
 por la memoria de R:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://f-slg.github.io/fhirviews/">fhirviews</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 1. Conexión con SMART Backend Services</span></span>

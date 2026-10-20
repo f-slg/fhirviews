@@ -2,7 +2,7 @@
 
 Las viñetas anteriores trabajan con servidores de prueba abiertos y con
 datos que caben cómodamente en memoria. En un hospital, un ministerio o
-una red de servicios aparecen tres necesidades más, que fhirviews 0.2.0
+una red de servicios aparecen cuatro necesidades más, que fhirviews
 cubre:
 
 | Necesidad | Qué usar | Sección |
@@ -10,9 +10,10 @@ cubre:
 | El servidor exige iniciar sesión (OAuth2) | `autenticacion = fhir_auth_*()` en [`fhir_conectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conectar.md) | [1](#autenticacion-smart-on-fhir) |
 | Descargar una población completa, no solo una búsqueda | [`fhir_exportar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md) (FHIR Bulk Data, `$export`) | [2](#exportacion-masiva-con-export) |
 | Aplanar millones de recursos en un portátil | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md) (motor DuckDB) | [3](#motor-duckdb-millones-de-recursos) |
+| Definir un indicador con un `ValueSet` (todos los códigos de diabetes) | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md) y [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) | [4](#terminologias) |
 
-Al final, la [sección 4](#flujo-completo) une las tres piezas en un
-flujo de vigilancia epidemiológica.
+Al final, la [sección 5](#flujo-completo) une las piezas en un flujo de
+vigilancia epidemiológica.
 
 ``` r
 
@@ -269,11 +270,11 @@ con pacientes sintéticos y una vista con `where`, cuatro columnas y
 
 | Pacientes | Motor V8 (s) | Motor DuckDB (s) | Veces más rápido |
 |----------:|-------------:|-----------------:|-----------------:|
-|    10 000 |          2,6 |             0,16 |               16 |
-|    50 000 |         11,8 |             0,72 |               16 |
-|   100 000 |         24,2 |             0,94 |               26 |
-|   250 000 |         62,4 |             1,67 |               37 |
-| 1 000 000 |    no medido |              5,5 |                  |
+|    10 000 |          2,3 |             0,22 |               11 |
+|    50 000 |         11,0 |             0,92 |               12 |
+|   100 000 |         23,2 |             1,18 |               20 |
+|   250 000 |         58,9 |             1,56 |               38 |
+| 1 000 000 |    no medido |              5,8 |                  |
 
 El motor V8 no se midió con un millón de pacientes: necesita más memoria
 de la que tiene un portátil típico. El motor DuckDB usó como máximo unos
@@ -289,7 +290,7 @@ oficial:
 vista_conformidad(c("basic.json", "foreach.json", "union.json", "repeat.json"),
                   motor = "duckdb")
 #> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) 
-#> fhirviews 0.2.0 · motor DuckDB 1.5.6
+#> fhirviews 0.2.0.9000 · motor DuckDB 1.5.6
 #> 
 #>   shareable       53 de  53 aprobadas
 #>   total           53 de  53 aprobadas
@@ -297,18 +298,25 @@ vista_conformidad(c("basic.json", "foreach.json", "union.json", "repeat.json"),
 
 Es un motor **experimental**:
 
-- Traduce un subconjunto de FHIRPath: navegación, elementos de elección
-  (`value`, `effective`, `onset`…), `where()`,
-  [`exists()`](https://rdrr.io/r/base/exists.html), `empty()`,
-  `first()`, `join()`, `ofType()`, `extension()`, `getResourceKey()`,
-  `getReferenceKey()`, comparaciones, lógica y constantes.
+- Traduce un subconjunto amplio de FHIRPath: navegación, elementos de
+  elección (`value`, `effective`, `onset`…), filtros y subconjuntos
+  (`where()`, `select()`, `first()`, `last()`, `skip()`, `take()`,
+  `distinct()`…), conjuntos (`|`,
+  [`union()`](https://rdrr.io/r/base/sets.html), `combine()`,
+  [`intersect()`](https://rdrr.io/r/base/sets.html), `exclude()`, `in`),
+  conversiones ([`toString()`](https://rdrr.io/r/base/toString.html),
+  `toInteger()`, `toDecimal()`, `toBoolean()`), funciones de texto,
+  aritmética, redondeo, fechas con su precisión y
+  `lowBoundary()`/`highBoundary()` de fechas y horas. El inventario
+  completo está en `data-raw/motor-duckdb.md` del repositorio.
 - Lo que no sabe traducir no lo adivina: da un error de clase
   `fhirviews_error_sql` que sugiere usar
   [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).
+  Lo que solo se sabe al ver los datos (por ejemplo, comparar una fecha
+  sin hora con una fecha y hora, que en fhirpath.js depende de la zona
+  horaria del equipo) da un error al ejecutar la consulta.
 - `repeat` recorre hasta 12 niveles de anidamiento (opción
   `fhirviews.sql_profundidad`).
-- No calcula `lowBoundary()` ni `highBoundary()` (pruebas experimentales
-  del banco).
 
 En la práctica: **desarrolla y valida la vista con
 [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)**
@@ -316,6 +324,19 @@ sobre una muestra y **ejecútala a escala con
 [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md)**.
 Las pruebas del paquete comparan ambos motores con las vistas de todas
 las viñetas y exigen tablas idénticas.
+
+Con `diferido = TRUE`, el resultado es una tabla de dplyr sobre DuckDB
+(requiere dplyr y dbplyr): los filtros y resúmenes se calculan en DuckDB
+y solo el resultado llega a R.
+
+``` r
+
+casos <- vista_ejecutar_duckdb("exportacion/Condition.ndjson", confirmados,
+                               diferido = TRUE)
+casos |>
+  dplyr::count(grave) |>
+  dplyr::collect()
+```
 
 Con una base DuckDB propia, el resultado se puede guardar como tabla en
 lugar de traerlo a R:
@@ -328,7 +349,132 @@ vista_ejecutar_duckdb("exportacion/Condition.ndjson", confirmados,
 DBI::dbGetQuery(db, "SELECT count(*) FROM dengue")
 ```
 
-## 4. Flujo completo
+## 4. Terminologías: indicadores definidos con ValueSets
+
+Los indicadores de salud pública casi nunca se definen con un código,
+sino con un conjunto: “todos los diagnósticos de diabetes”, “las vacunas
+del esquema regular”, “los resultados de laboratorio de glucosa”. En
+FHIR ese conjunto es un `ValueSet`, y quien sabe qué códigos contiene es
+un **servidor de terminología**: [tx.fhir.org](https://tx.fhir.org/r4)
+(el de HL7, abierto), un
+[Snowstorm](https://github.com/IHTSDO/snowstorm) con SNOMED CT o un HAPI
+con las terminologías nacionales cargadas.
+
+Las funciones `tx_*` usan la misma conexión que el resto del paquete
+(con `token` o `autenticacion` si el servidor lo exige):
+
+| Función | Operación | Para qué |
+|----|----|----|
+| [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md) | `ValueSet/$expand` | La lista de códigos de un `ValueSet`, por páginas |
+| [`tx_buscar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_buscar_codigo.md) | `CodeSystem/$lookup` | Nombre, sinónimos y propiedades (padres, hijos…) de un código |
+| [`tx_validar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.md) | `ValueSet/$validate-code` | Si cada código de un vector pertenece al `ValueSet` |
+| [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) | (sin red) | Agregar los códigos expandidos a un `ViewDefinition` |
+
+### Expandir un ValueSet
+
+[`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md)
+acepta la URL canónica de un `ValueSet` publicado o un `ValueSet`
+propio. Este, por ejemplo, define la diabetes como el concepto 73211009
+de SNOMED CT y todos sus descendientes:
+
+``` r
+
+tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
+
+diabetes_vs <- list(
+  resourceType = "ValueSet",
+  compose = list(include = list(list(
+    system = "http://snomed.info/sct",
+    filter = list(list(property = "concept", op = "is-a", value = "73211009"))
+  )))
+)
+diabetes <- tx_expandir(tx, diabetes_vs)
+nrow(diabetes)
+#> [1] 124
+head(diabetes[, c("code", "display")], 3)
+#>       code                                                       display
+#> 1 73211009                                             Diabetes mellitus
+#> 2  2751001                            Fibrocalculous pancreatic diabetes
+#> 3  4783006 Maternal diabetes mellitus with hypoglycemia affecting fetus OR newborn
+```
+
+Las expansiones grandes se piden por páginas (`tamano_pagina`, 1000
+códigos por defecto, con los parámetros `offset` y `count`); `max`
+limita el total y `filtro` busca por nombre. Otros parámetros de
+`$expand`, como el idioma, van en
+`parametros = list(displayLanguage = "es")`.
+
+### Revisar códigos
+
+``` r
+
+tx_validar_codigo(tx, diabetes_vs, "http://snomed.info/sct",
+                  c("44054006", "38341003"))[, c("codigo", "valido")]
+#>     codigo valido
+#> 1 44054006   TRUE
+#> 2 38341003  FALSE
+
+dm2 <- tx_buscar_codigo(tx, "http://snomed.info/sct", "44054006")
+dm2$display
+#> [1] "Type 2 diabetes mellitus"
+subset(dm2$propiedades, propiedad == "parent")
+#>   propiedad    valor       descripcion
+#> 3    parent 73211009 Diabetes mellitus
+```
+
+### Usar la expansión en una vista
+
+La expansión se hace una vez y se guarda dentro de la vista con
+[`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md):
+el sistema y la lista de códigos quedan como constantes del
+`ViewDefinition` y se agrega un `where`. La vista resultante no necesita
+red, funciona igual con
+[`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+y con
+[`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md),
+y su JSON documenta los códigos exactos que se usaron en el indicador.
+Aquí, con una expansión escrita a mano en la CIE-10:
+
+``` r
+
+cie10_diabetes <- data.frame(
+  system = "http://hl7.org/fhir/sid/icd-10",
+  code = c("E10", "E11", "E12", "E13", "E14")
+)
+v_diabetes <- vista_crear("Condition", c(
+  paciente = "subject.getReferenceKey(Patient)",
+  codigo = "code.coding.first().code",
+  inicio = "onset.ofType(dateTime)"
+))
+v_diabetes <- vista_con_valueset(v_diabetes, cie10_diabetes, nombre = "dm")
+v_diabetes$where[[1]]$path
+#> [1] "code.coding.where(system = %dm_sistema and %dm_codigos.contains('|' & code & '|')).exists()"
+
+diagnosticos <- fhir_recursos(lapply(
+  list(c("1", "E11", "2025-03-02"), c("2", "I10", "2025-04-11"),
+       c("3", "E10", "2025-06-20")),
+  function(x) list(
+    resourceType = "Condition", id = x[1],
+    subject = list(reference = paste0("Patient/p", x[1])),
+    code = list(coding = list(list(system = "http://hl7.org/fhir/sid/icd-10",
+                                   code = x[2]))),
+    onsetDateTime = x[3]
+  )
+))
+vista_ejecutar(diagnosticos, v_diabetes)
+#>   id paciente codigo     inicio
+#> 1  1       p1    E11 2025-03-02
+#> 2  3       p3    E10 2025-06-20
+```
+
+Con `columna = "diabetes"`, en vez de filtrar, se agrega una columna
+lógica: útil para marcar varios grupos (diabetes, hipertensión…) en una
+misma vista. La lista va como texto separado por `|` y no como una
+cadena de `or`, así la expresión sigue siendo corta con miles de códigos
+y el motor DuckDB la resuelve con una sola búsqueda de texto por
+recurso.
+
+## 5. Flujo completo
 
 De un servidor protegido a tasas por cantón, sin pasar los recursos por
 la memoria de R:

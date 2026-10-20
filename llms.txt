@@ -58,6 +58,7 @@ Aidbox, Google FHIR Data Pipes…). fhirviews trae ese estándar a R.
 | Trabajar con servidores protegidos | Autenticación SMART on FHIR / OAuth2: *client credentials*, *Backend Services* (JWT firmado) e inicio de sesión en el navegador, con renovación automática del token |
 | Convertir recursos en tablas de forma reproducible | Motor de `ViewDefinition` conforme al estándar, validado con el banco oficial |
 | Trabajar con volúmenes reales | Exportación masiva con `$export` (FHIR Bulk Data); motor V8 por lotes y motor DuckDB que traduce la vista a SQL: un millón de pacientes en segundos |
+| Definir indicadores con `ValueSet` | Expansión de `ValueSet` con paginación, `$lookup` y `$validate-code` en un servidor de terminología; los códigos quedan dentro de la vista, sin red al ejecutarla |
 | Analizar con SQL | Las vistas se guardan en DuckDB (u otra base DBI) con un comando |
 | Enseñar y explorar | Panel *Connections* y addins de RStudio, peticiones al estilo Postman, datos de ejemplo |
 
@@ -439,8 +440,7 @@ El paquete incluye el [banco oficial de
 pruebas](https://github.com/FHIR/sql-on-fhir.js/tree/main/tests) de SQL
 on FHIR, que se ejecuta en cada comprobación de integración continua.
 Pasan **las 133 pruebas del perfil *shareable*** (el que debe cumplir
-toda implementación) con los dos motores, y 7 de las 11 experimentales
-con el motor V8 (3 con el motor DuckDB).
+toda implementación) y 7 de las 11 experimentales con los dos motores.
 
 ![Barras por archivo del banco de pruebas: todas las pruebas shareable
 aprobadas; en fn_boundary, 4 de 8 pruebas experimentales
@@ -473,28 +473,32 @@ fhirviews tiene dos motores para ejecutar la misma vista:
   los archivos, en paralelo y sin cargarlos en R. Es el que conviene
   para volúmenes grandes.
 
-![Barras agrupadas por número de pacientes: el motor DuckDB tarda 0,16 s
-con 10 000 pacientes, 1,67 s con 250 000 y 5,5 s con un millón; el motor
-V8 tarda 2,6 s, 62,4 s y no se midió con un
+![Barras agrupadas por número de pacientes: el motor DuckDB tarda 0,22 s
+con 10 000 pacientes, 1,56 s con 250 000 y 5,8 s con un millón; el motor
+V8 tarda 2,3 s, 58,9 s y no se midió con un
 millón](reference/figures/README-rendimiento.png)
 
 | Pacientes |     Filas | Motor V8 | Motor DuckDB | Veces más rápido |
 |----------:|----------:|---------:|-------------:|-----------------:|
-|    10 000 |    17 824 |    2,6 s |       0,16 s |               16 |
-|    50 000 |    89 128 |   11,8 s |       0,72 s |               16 |
-|   100 000 |   178 062 |   24,2 s |       0,94 s |               26 |
-|   250 000 |   444 912 |   62,4 s |       1,67 s |               37 |
-| 1 000 000 | 1 780 958 |        — |        5,5 s |                — |
+|    10 000 |    17 824 |    2,3 s |       0,22 s |               11 |
+|    50 000 |    89 128 |   11,0 s |       0,92 s |               12 |
+|   100 000 |   178 062 |   23,2 s |       1,18 s |               20 |
+|   250 000 |   444 912 |   58,9 s |       1,56 s |               38 |
+| 1 000 000 | 1 780 958 |        — |        5,8 s |                — |
 
 Tiempo de punta a punta, desde el archivo NDJSON hasta el `data.frame`,
 con pacientes sintéticos y una vista con `where`, cuatro columnas y
 `forEach` sobre `name` (`data-raw/motor-duckdb.R`; Linux, 8 núcleos, R
 4.5.2, duckdb 1.5.6). Ambos motores dan tablas idénticas: las pruebas
-del paquete los comparan con las vistas de todas las viñetas. Con el
-motor V8, los recursos que llegan como JSON (de un servidor, de
-`$export` o de un archivo) pasan el texto original directamente a V8;
-los armados como listas de R son unas cuatro veces más lentos porque
-deben convertirse a JSON.
+del paquete los comparan con las vistas de todas las viñetas y con más
+de 100 expresiones de FHIRPath, y lo que el motor DuckDB no puede
+traducir con certeza da un error en lugar de un resultado distinto. Con
+`vista_ejecutar_duckdb(..., diferido = TRUE)` el resultado queda como
+tabla de dplyr sobre DuckDB, para filtrar y resumir sin traer todas las
+filas a R. Con el motor V8, los recursos que llegan como JSON (de un
+servidor, de `$export` o de un archivo) pasan el texto original
+directamente a V8; los armados como listas de R son unas cuatro veces
+más lentos porque deben convertirse a JSON.
 
 ## Funciones
 
@@ -509,8 +513,10 @@ deben convertirse a JSON.
 | Peticiones libres | [`fhir_peticion()`](https://f-slg.github.io/fhirviews/reference/fhir_peticion.md), [`fhir_ejecutar_texto()`](https://f-slg.github.io/fhirviews/reference/fhir_ejecutar_texto.md) | Cualquier otra petición, también escrita como en Postman |
 | Recursos | [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md), [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md) | Reunir recursos de cualquier fuente y verlos como tabla rápida |
 | Vistas | [`vista_crear()`](https://f-slg.github.io/fhirviews/reference/vista_crear.md), [`vista_leer()`](https://f-slg.github.io/fhirviews/reference/vista_leer.md), [`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md), [`vista_validar()`](https://f-slg.github.io/fhirviews/reference/vista_validar.md) | Definir, leer, exportar y validar `ViewDefinition` |
+| Catálogo de vistas | [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md), [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md) | Vistas listas para salud pública: pacientes con residencia, signos vitales, diagnósticos, notificación obligatoria, inmunizaciones, encuentros y medicamentos |
 | Ejecución | [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md), [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md), [`vista_fhirpath()`](https://f-slg.github.io/fhirviews/reference/vista_fhirpath.md) | Aplicar una vista (a recursos o directamente al servidor) y probar FHIRPath |
 | Motor DuckDB | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md), [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md) | Ejecutar la vista como SQL de DuckDB sobre NDJSON o Parquet (experimental) |
+| Terminologías | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md), [`tx_buscar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_buscar_codigo.md), [`tx_validar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.md), [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) | `$expand`, `$lookup` y `$validate-code` en un servidor de terminología (tx.fhir.org, Snowstorm) y vistas filtradas por los códigos de un `ValueSet` |
 | SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) | Guardar vistas como tablas de DuckDB u otra base DBI |
 | Conformidad | [`vista_conformidad()`](https://f-slg.github.io/fhirviews/reference/vista_conformidad.md) | Ejecutar el banco oficial de pruebas de SQL on FHIR, con cualquiera de los dos motores |
 | RStudio | [`fhir_conexion_activa()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md), [`fhir_desconectar()`](https://f-slg.github.io/fhirviews/reference/fhir_conexion_activa.md) | Conexión activa del panel *Connections* y de los addins |
@@ -531,7 +537,7 @@ ejecuta `ViewDefinition` desde R con `ds_view()`, sobre Spark.
 | Resultado | `data.frame` de R | Spark DataFrame | `data.frame` de R |
 | Cliente REST de FHIR | Sí, en JSON: búsqueda con paginación, escritura, transacciones, `$everything`, `$validate`, *bulk export* (`$export`) | Lectura con *bulk export* (`$export`) | Sí, en XML: búsqueda, `POST`, `PUT` |
 | Autenticación | SMART on FHIR en todas las peticiones: *client credentials*, *Backend Services* (JWT), *authorization code* + PKCE | SMART (secreto o clave privada) para la lectura con `$export` | OAuth2 / OpenID Connect (`fhir_authenticate()`) y autenticación básica |
-| Terminologías (SNOMED CT, LOINC, ValueSet) | No | Sí, funciones `tx_*` con un servidor de terminología | No |
+| Terminologías (SNOMED CT, LOINC, ValueSet) | Sí: `$expand` (con paginación), `$lookup` y `$validate-code` con un servidor de terminología; [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) guarda los códigos en la vista | Sí, funciones `tx_*` con un servidor de terminología, también dentro de las consultas | No |
 | Volumen de datos | Motor V8: memoria de la sesión de R. Motor DuckDB: millones de recursos en un portátil | Distribuido: grandes volúmenes en un clúster | Memoria de una sesión de R |
 | Banco oficial de SQL on FHIR | Incluido en el paquete ([`vista_conformidad()`](https://f-slg.github.io/fhirviews/reference/vista_conformidad.md)) | Pathling figura en la [página de implementaciones](https://sql-on-fhir.org/extra/impls.html) | No aplica |
 | RStudio | Panel *Connections* y addins | Conexión de Spark | No |
@@ -540,7 +546,8 @@ ejecuta `ViewDefinition` desde R con `ds_view()`, sobre Spark.
 **¿Cuál elegir?**
 
 - **pathling**, para grandes volúmenes en Spark o en un clúster, o si
-  necesitas operaciones de terminología.
+  necesitas consultar el servidor de terminología dentro de cada
+  expresión (por ejemplo, `subsumes()` o traducciones con `$translate`).
 - **fhirviews**, para análisis en un portátil o un servidor sin instalar
   Java ni Spark (hasta millones de recursos con el motor DuckDB), para
   trabajar con un servidor FHIR (autenticarse, leer, escribir, validar,
@@ -560,8 +567,9 @@ pueden convivir, porque sus funciones no comparten nombres.
 - Búsquedas largas por `POST [tipo]/_search`.
 - Motor DuckDB estable: más funciones de FHIRPath y `lowBoundary()` /
   `highBoundary()`.
-- Terminologías: `$expand`, `$lookup` y `memberOf()` con un servidor de
-  terminología.
+- Terminologías: `memberOf()` en FHIRPath y `$translate` (las
+  expansiones, `$lookup` y `$validate-code` ya están en las funciones
+  `tx_*`).
 - Operaciones de SQL on FHIR 3.0 (`$run`, `$export` de vistas) y
   `SQLQuery`.
 - Caché del panel *Connections* para servidores lentos.
@@ -721,6 +729,15 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 - [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
   : Guardar vistas en DuckDB
 
+## Catálogo de vistas
+
+ViewDefinition listos para vigilancia y salud pública.
+
+- [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md)
+  : Catálogo de vistas listas para usar
+- [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md)
+  : Obtener una vista del catálogo
+
 ## Motor DuckDB (experimental)
 
 Traducir vistas a SQL y ejecutarlas sobre NDJSON o Parquet sin cargar
@@ -730,6 +747,20 @@ los recursos en R.
   : Ejecutar un ViewDefinition con DuckDB (experimental)
 - [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md)
   : Traducir un ViewDefinition a SQL de DuckDB (experimental)
+
+## Terminologías
+
+Expandir ValueSets, buscar y validar códigos en un servidor de
+terminología, y usar las expansiones en las vistas.
+
+- [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md)
+  : Expandir un ValueSet en un servidor de terminología (\$expand)
+- [`tx_buscar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_buscar_codigo.md)
+  : Buscar un código en un sistema de codificación (\$lookup)
+- [`tx_validar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.md)
+  : Validar códigos contra un ValueSet (\$validate-code)
+- [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md)
+  : Filtrar una vista con los códigos de un ValueSet
 
 ## Conformidad
 

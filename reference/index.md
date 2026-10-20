@@ -93,6 +93,15 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 - [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
   : Guardar vistas en DuckDB
 
+## Catálogo de vistas
+
+ViewDefinition listos para vigilancia y salud pública.
+
+- [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md)
+  : Catálogo de vistas listas para usar
+- [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md)
+  : Obtener una vista del catálogo
+
 ## Motor DuckDB (experimental)
 
 Traducir vistas a SQL y ejecutarlas sobre NDJSON o Parquet sin cargar
@@ -102,6 +111,20 @@ los recursos en R.
   : Ejecutar un ViewDefinition con DuckDB (experimental)
 - [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md)
   : Traducir un ViewDefinition a SQL de DuckDB (experimental)
+
+## Terminologías
+
+Expandir ValueSets, buscar y validar códigos en un servidor de
+terminología, y usar las expansiones en las vistas.
+
+- [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md)
+  : Expandir un ValueSet en un servidor de terminología (\$expand)
+- [`tx_buscar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_buscar_codigo.md)
+  : Buscar un código en un sistema de codificación (\$lookup)
+- [`tx_validar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.md)
+  : Validar códigos contra un ValueSet (\$validate-code)
+- [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md)
+  : Filtrar una vista con los códigos de un ValueSet
 
 ## Conformidad
 

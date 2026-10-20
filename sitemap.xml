@@ -34,6 +34,11 @@
 <url><loc>https://f-slg.github.io/fhirviews/reference/fhirviews-package.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/fhirviews_motor.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/index.html</loc></url>
+<url><loc>https://f-slg.github.io/fhirviews/reference/tx_buscar_codigo.html</loc></url>
+<url><loc>https://f-slg.github.io/fhirviews/reference/tx_expandir.html</loc></url>
+<url><loc>https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.html</loc></url>
+<url><loc>https://f-slg.github.io/fhirviews/reference/vista_catalogo.html</loc></url>
+<url><loc>https://f-slg.github.io/fhirviews/reference/vista_con_valueset.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_conformidad.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_crear.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_duckdb.html</loc></url>
@@ -42,6 +47,7 @@
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_fhirpath.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_json.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_leer.html</loc></url>
+<url><loc>https://f-slg.github.io/fhirviews/reference/vista_plantilla.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_sql.html</loc></url>
 <url><loc>https://f-slg.github.io/fhirviews/reference/vista_validar.html</loc></url>
 </urlset>
