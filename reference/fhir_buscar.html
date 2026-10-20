@@ -9,7 +9,7 @@ enlaces next de cada Bundle hasta reunir todos los resultados."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,13 +103,19 @@ El atributo <code>total</code> guarda el total que informa el servidor, si lo ha
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># fhir_disponible("https://hapi.fhir.org/baseR4")</span></span></span>
-<span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pacientes</span> <span class="op">&lt;-</span> <span class="fu">fhir_buscar</span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"female"</span>, `_count` <span class="op">=</span> <span class="fl">5</span>,</span></span>
 <span class="r-in"><span>                         max_paginas <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pacientes</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;fhir_recursos&gt; 5 recursos</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Patient: 5</span>
 <span class="r-in"><span><span class="fu"><a href="vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">pacientes</span>, <span class="fu"><a href="vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nacimiento <span class="op">=</span> <span class="st">"birthDate"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     id nacimiento</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            wellnessapp-demo-alex-223 1980-01-15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 6ac8f8ea-fe4a-4d0c-91f4-0814483430e7 1978-09-27</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                        nhanes-120300 1954-08-20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                        nhanes-118185 1993-10-24</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                        nhanes-118762 1991-06-17</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

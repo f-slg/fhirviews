@@ -290,7 +290,7 @@ oficial:
 vista_conformidad(c("basic.json", "foreach.json", "union.json", "repeat.json"),
                   motor = "duckdb")
 #> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) 
-#> fhirviews 0.2.0.9000 · motor DuckDB 1.5.6
+#> fhirviews 0.3.0 · motor DuckDB 1.5.6
 #> 
 #>   shareable       53 de  53 aprobadas
 #>   total           53 de  53 aprobadas

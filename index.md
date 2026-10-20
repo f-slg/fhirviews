@@ -6,10 +6,11 @@ motor que convierte los recursos FHIR en **tablas** con el estándar
 **[SQL on FHIR](https://sql-on-fhir.org/)** (`ViewDefinition`). El motor
 de vistas funciona dentro de R, sin Java ni Spark, devuelve `data.frame`
 y pasa **todas las pruebas *shareable*** del banco oficial de
-conformidad. Desde la versión 0.2.0 también se conecta a servidores
-protegidos con **SMART on FHIR**, descarga poblaciones completas con
-**`$export`** y, con su **motor DuckDB**, aplana millones de recursos en
-un portátil.
+conformidad. Se conecta a servidores protegidos con **SMART on FHIR**,
+descarga poblaciones completas con **`$export`** y, con su **motor
+DuckDB**, aplana millones de recursos en un portátil. La versión 0.3.0
+suma **terminologías** (`$expand`, `$lookup`, `$validate-code`) y un
+**catálogo de vistas** listas para salud pública.
 
 ![Tres paneles: un recurso Patient en JSON, un ViewDefinition con column
 y forEach, y el data.frame resultante con una fila por cada nombre del
@@ -222,7 +223,60 @@ Es un motor experimental: traduce un subconjunto de FHIRPath y, si algo
 no se puede traducir, lo dice con un error en lugar de adivinar. Ver
 [Rendimiento](#rendimiento).
 
-### 4. Vigilancia epidemiológica: de casos FHIR a tasas por territorio
+### 4. Vistas listas para salud pública y terminologías
+
+[`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md)
+trae siete `ViewDefinition` estándar para las tablas más comunes en
+vigilancia (pacientes con residencia, signos vitales, diagnósticos,
+notificación obligatoria, inmunizaciones, encuentros y medicamentos). Se
+usan tal cual o se ajustan sus constantes con
+[`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md),
+y funcionan con los dos motores:
+
+``` r
+
+vista_catalogo()[, c("nombre", "recurso")]
+#>                     nombre           recurso
+#> 1             diagnosticos         Condition
+#> 2               encuentros         Encounter
+#> 3           inmunizaciones      Immunization
+#> 4             medicamentos MedicationRequest
+#> 5 notificacion_obligatoria         Condition
+#> 6                pacientes           Patient
+#> 7           signos_vitales       Observation
+
+dengue <- system.file("extdata", "dengue_2025.ndjson.gz", package = "fhirviews")
+vista_ejecutar_duckdb(dengue, vista_plantilla("notificacion_obligatoria"))
+```
+
+Si un indicador se define con un `ValueSet` (por ejemplo, todos los
+códigos de diabetes en SNOMED CT),
+[`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md)
+lo expande en un servidor de terminología y
+[`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md)
+guarda los códigos dentro de la vista, de modo que ejecutarla ya no
+necesita red:
+
+``` r
+
+tx <- fhir_conectar("https://tx.fhir.org/r4")
+tx_expandir(tx, "http://hl7.org/fhir/ValueSet/administrative-gender")
+#>                                      system    code display
+#> 1 http://hl7.org/fhir/administrative-gender    male    Male
+#> 2 http://hl7.org/fhir/administrative-gender  female  Female
+#> 3 http://hl7.org/fhir/administrative-gender   other   Other
+#> 4 http://hl7.org/fhir/administrative-gender unknown Unknown
+
+tx_validar_codigo(tx, "http://hl7.org/fhir/ValueSet/administrative-gender",
+                  "http://hl7.org/fhir/administrative-gender",
+                  c("female", "mujer"))$valido
+#> [1]  TRUE FALSE
+
+diabetes <- tx_expandir(tx, url_valueset_diabetes)
+v <- vista_con_valueset(vista_plantilla("diagnosticos"), diabetes)
+```
+
+### 5. Vigilancia epidemiológica: de casos FHIR a tasas por territorio
 
 Los sistemas de notificación guardan cada caso como `Patient` +
 `Condition`. Con dos vistas y la población oficial del INEC del paquete
@@ -245,7 +299,7 @@ provincia](reference/figures/README-tasas.png)
 El ejemplo completo está en la viñeta [*Tasas por cantón con FHIR y
 pobecu*](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html).
 
-### 5. Indicadores y tableros con SQL
+### 6. Indicadores y tableros con SQL
 
 [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
 guarda varias vistas como tablas de [DuckDB](https://duckdb.org/) en un
@@ -277,7 +331,7 @@ DBI::dbGetQuery(db, "
 #> 4    El Oro    85       10.6       30.5
 ```
 
-### 6. Cohortes y conjuntos de datos para investigación
+### 7. Cohortes y conjuntos de datos para investigación
 
 Las vistas son reproducibles y se pueden compartir: el mismo
 `ViewDefinition` JSON produce la misma tabla en fhirviews y en otras
@@ -290,7 +344,7 @@ vista_json(v_dengue)                                   # compartir la definició
 DBI::dbExecute(db, "COPY dengue TO 'dengue.parquet' (FORMAT parquet)")
 ```
 
-### 7. Interoperabilidad: cargar, validar y transaccionar
+### 8. Interoperabilidad: cargar, validar y transaccionar
 
 ``` r
 
@@ -300,7 +354,7 @@ fhir_crear(local, "transaccion.json")                  # Bundle transaction -> P
 for (r in caso) fhir_actualizar(local, r)              # cargar el caso clínico con sus ids
 ```
 
-### 8. Docencia
+### 9. Docencia
 
 El caso clínico de [aprende-fhir](https://github.com/f-slg/aprende-fhir)
 viene incluido,
@@ -565,8 +619,9 @@ pueden convivir, porque sus funciones no comparten nombres.
 - Motor de FHIRPath escrito en R, como alternativa a V8 (la capa ya está
   separada: `options(fhirviews.motor = ...)`).
 - Búsquedas largas por `POST [tipo]/_search`.
-- Motor DuckDB estable: más funciones de FHIRPath y `lowBoundary()` /
-  `highBoundary()`.
+- Motor DuckDB estable (ya traduce la mayor parte de FHIRPath, incluidos
+  `lowBoundary()` / `highBoundary()` de fechas): `memberOf()`, decimales
+  con su precisión y uso en producción.
 - Terminologías: `memberOf()` en FHIRPath y `$translate` (las
   expansiones, `$lookup` y `$validate-code` ya están en las funciones
   `tx_*`).
