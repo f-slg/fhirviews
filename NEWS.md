@@ -58,6 +58,22 @@
 * Nueva sección sobre terminologías en la viñeta *Servidores reales y
   grandes volúmenes*.
 
+## Catálogo de vistas para salud pública
+
+* Nuevas `vista_catalogo()` y `vista_plantilla()`: una biblioteca de
+  `ViewDefinition` listos para usar (JSON estándar de SQL on FHIR en
+  `inst/vistas`) con las tablas más comunes en vigilancia y salud pública:
+  `pacientes` (sexo, nacimiento, fallecimiento, cantón y provincia de
+  residencia), `signos_vitales` (una fila por medición, con la presión
+  sistólica y diastólica separadas), `diagnosticos` (CIE-10 y SNOMED CT),
+  `notificacion_obligatoria` (dengue, malaria y tuberculosis por defecto,
+  con la lista de categorías CIE-10 como constante), `inmunizaciones`,
+  `encuentros` y `medicamentos`. Todas usan `getResourceKey()` y
+  `getReferenceKey()` para unir las tablas, y dan los mismos resultados con
+  `vista_ejecutar()` y `vista_ejecutar_duckdb()`.
+* `vista_plantilla()` permite cambiar las constantes de una vista con el
+  argumento `constantes`.
+
 # fhirviews 0.2.0
 
 Esta versión prepara fhirviews para servidores y volúmenes reales:

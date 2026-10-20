@@ -1,0 +1,29 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "notificacion_obligatoria",
+  "title": "Enfermedades de notificación obligatoria",
+  "description": "Diagnósticos (Condition) cuyo código CIE-10 pertenece a la lista de categorías de la constante 'codigos', separadas por comas (por defecto dengue A90-A91, malaria B50-B54 y tuberculosis A15-A19). Se compara la categoría (los tres primeros caracteres del código). Cambia la lista con vista_plantilla(\"notificacion_obligatoria\", constantes = list(codigos = \"...\")).",
+  "status": "active",
+  "resource": "Condition",
+  "constant": [
+    {"name": "codigos", "valueString": "A90,A91,B50,B51,B52,B53,B54,A15,A16,A17,A18,A19"},
+    {"name": "sistema_cie10", "valueString": "http://hl7.org/fhir/sid/icd-10"}
+  ],
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "description": "Clave del diagnóstico"},
+        {"name": "paciente", "path": "subject.getReferenceKey(Patient)", "description": "Clave del paciente"},
+        {"name": "cie10", "path": "code.coding.where(system = %sistema_cie10).code.first()", "type": "code", "description": "Código CIE-10"},
+        {"name": "categoria", "path": "code.coding.where(system = %sistema_cie10).code.first().substring(0, 3)", "type": "code", "description": "Categoría CIE-10 (tres caracteres)"},
+        {"name": "descripcion", "path": "code.text", "type": "string", "description": "Texto del diagnóstico"},
+        {"name": "inicio", "path": "onset.ofType(dateTime)", "type": "dateTime", "description": "Fecha de inicio de síntomas"},
+        {"name": "registro", "path": "recordedDate", "type": "dateTime", "description": "Fecha de registro"},
+        {"name": "verificacion", "path": "verificationStatus.coding.code.first()", "type": "code", "description": "Estado de verificación (confirmed, provisional...)"}
+      ]
+    }
+  ],
+  "where": [
+    {"path": "code.coding.where(system = %sistema_cie10 and %codigos.contains(code.substring(0, 3))).exists()", "description": "Código CIE-10 en la lista"}
+  ]
+}
