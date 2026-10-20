@@ -36,6 +36,28 @@
 * Una columna sin tipo cuyos valores son todos números enteros llega a R como
   entero, como en `vista_ejecutar()`.
 
+## Terminologías
+
+* Nuevas funciones para trabajar con un servidor de terminología FHIR
+  (por ejemplo, [tx.fhir.org](https://tx.fhir.org/r4) o un Snowstorm), con la
+  misma conexión de `fhir_conectar()`, su token o su autenticación SMART on
+  FHIR:
+  * `tx_expandir()`: operación `ValueSet/$expand` con paginación (`offset` y
+    `count`) para expansiones grandes; acepta la URL canónica del `ValueSet`
+    o un `ValueSet` propio (lista, JSON o archivo) y devuelve un `data.frame`
+    con `system`, `code`, `display` y `version`.
+  * `tx_buscar_codigo()`: operación `CodeSystem/$lookup`, con el nombre, las
+    designaciones y las propiedades del código.
+  * `tx_validar_codigo()`: operación `ValueSet/$validate-code` para un vector
+    de códigos.
+* `vista_con_valueset()` agrega a un `ViewDefinition` los códigos de una
+  expansión (como constantes y un `where`, o como columna lógica), de modo
+  que un indicador definido con un `ValueSet` se calcula con
+  `vista_ejecutar()` o `vista_ejecutar_duckdb()` sin red. La forma de la
+  condición mantiene la expresión corta con miles de códigos.
+* Nueva sección sobre terminologías en la viñeta *Servidores reales y
+  grandes volúmenes*.
+
 # fhirviews 0.2.0
 
 Esta versión prepara fhirviews para servidores y volúmenes reales:

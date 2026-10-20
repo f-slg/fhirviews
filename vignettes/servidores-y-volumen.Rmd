@@ -16,15 +16,16 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 Las viñetas anteriores trabajan con servidores de prueba abiertos y con datos
 que caben cómodamente en memoria. En un hospital, un ministerio o una red de
-servicios aparecen tres necesidades más, que fhirviews 0.2.0 cubre:
+servicios aparecen cuatro necesidades más, que fhirviews cubre:
 
 | Necesidad | Qué usar | Sección |
 |---|---|---|
 | El servidor exige iniciar sesión (OAuth2) | `autenticacion = fhir_auth_*()` en `fhir_conectar()` | [1](#autenticacion-smart-on-fhir) |
 | Descargar una población completa, no solo una búsqueda | `fhir_exportar()` (FHIR Bulk Data, `$export`) | [2](#exportacion-masiva-con-export) |
 | Aplanar millones de recursos en un portátil | `vista_ejecutar_duckdb()` (motor DuckDB) | [3](#motor-duckdb-millones-de-recursos) |
+| Definir un indicador con un `ValueSet` (todos los códigos de diabetes) | `tx_expandir()` y `vista_con_valueset()` | [4](#terminologias) |
 
-Al final, la [sección 4](#flujo-completo) une las tres piezas en un flujo de
+Al final, la [sección 5](#flujo-completo) une las piezas en un flujo de
 vigilancia epidemiológica.
 
 ```{r}
@@ -313,7 +314,117 @@ vista_ejecutar_duckdb("exportacion/Condition.ndjson", confirmados,
 DBI::dbGetQuery(db, "SELECT count(*) FROM dengue")
 ```
 
-## 4. Flujo completo {#flujo-completo}
+## 4. Terminologías: indicadores definidos con ValueSets {#terminologias}
+
+Los indicadores de salud pública casi nunca se definen con un código, sino
+con un conjunto: "todos los diagnósticos de diabetes", "las vacunas del
+esquema regular", "los resultados de laboratorio de glucosa". En FHIR ese
+conjunto es un `ValueSet`, y quien sabe qué códigos contiene es un
+**servidor de terminología**: [tx.fhir.org](https://tx.fhir.org/r4) (el de
+HL7, abierto), un [Snowstorm](https://github.com/IHTSDO/snowstorm) con
+SNOMED CT o un HAPI con las terminologías nacionales cargadas.
+
+Las funciones `tx_*` usan la misma conexión que el resto del paquete (con
+`token` o `autenticacion` si el servidor lo exige):
+
+| Función | Operación | Para qué |
+|---|---|---|
+| `tx_expandir()` | `ValueSet/$expand` | La lista de códigos de un `ValueSet`, por páginas |
+| `tx_buscar_codigo()` | `CodeSystem/$lookup` | Nombre, sinónimos y propiedades (padres, hijos...) de un código |
+| `tx_validar_codigo()` | `ValueSet/$validate-code` | Si cada código de un vector pertenece al `ValueSet` |
+| `vista_con_valueset()` | (sin red) | Agregar los códigos expandidos a un `ViewDefinition` |
+
+### Expandir un ValueSet
+
+`tx_expandir()` acepta la URL canónica de un `ValueSet` publicado o un
+`ValueSet` propio. Este, por ejemplo, define la diabetes como el concepto
+73211009 de SNOMED CT y todos sus descendientes:
+
+```{r, eval = FALSE}
+tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
+
+diabetes_vs <- list(
+  resourceType = "ValueSet",
+  compose = list(include = list(list(
+    system = "http://snomed.info/sct",
+    filter = list(list(property = "concept", op = "is-a", value = "73211009"))
+  )))
+)
+diabetes <- tx_expandir(tx, diabetes_vs)
+nrow(diabetes)
+#> [1] 124
+head(diabetes[, c("code", "display")], 3)
+#>       code                                                       display
+#> 1 73211009                                             Diabetes mellitus
+#> 2  2751001                            Fibrocalculous pancreatic diabetes
+#> 3  4783006 Maternal diabetes mellitus with hypoglycemia affecting fetus OR newborn
+```
+
+Las expansiones grandes se piden por páginas (`tamano_pagina`, 1000 códigos
+por defecto, con los parámetros `offset` y `count`); `max` limita el total y
+`filtro` busca por nombre. Otros parámetros de `$expand`, como el idioma, van
+en `parametros = list(displayLanguage = "es")`.
+
+### Revisar códigos
+
+```{r, eval = FALSE}
+tx_validar_codigo(tx, diabetes_vs, "http://snomed.info/sct",
+                  c("44054006", "38341003"))[, c("codigo", "valido")]
+#>     codigo valido
+#> 1 44054006   TRUE
+#> 2 38341003  FALSE
+
+dm2 <- tx_buscar_codigo(tx, "http://snomed.info/sct", "44054006")
+dm2$display
+#> [1] "Type 2 diabetes mellitus"
+subset(dm2$propiedades, propiedad == "parent")
+#>   propiedad    valor       descripcion
+#> 3    parent 73211009 Diabetes mellitus
+```
+
+### Usar la expansión en una vista
+
+La expansión se hace una vez y se guarda dentro de la vista con
+`vista_con_valueset()`: el sistema y la lista de códigos quedan como
+constantes del `ViewDefinition` y se agrega un `where`. La vista resultante
+no necesita red, funciona igual con `vista_ejecutar()` y con
+`vista_ejecutar_duckdb()`, y su JSON documenta los códigos exactos que se
+usaron en el indicador. Aquí, con una expansión escrita a mano en la CIE-10:
+
+```{r}
+cie10_diabetes <- data.frame(
+  system = "http://hl7.org/fhir/sid/icd-10",
+  code = c("E10", "E11", "E12", "E13", "E14")
+)
+v_diabetes <- vista_crear("Condition", c(
+  paciente = "subject.getReferenceKey(Patient)",
+  codigo = "code.coding.first().code",
+  inicio = "onset.ofType(dateTime)"
+))
+v_diabetes <- vista_con_valueset(v_diabetes, cie10_diabetes, nombre = "dm")
+v_diabetes$where[[1]]$path
+
+diagnosticos <- fhir_recursos(lapply(
+  list(c("1", "E11", "2025-03-02"), c("2", "I10", "2025-04-11"),
+       c("3", "E10", "2025-06-20")),
+  function(x) list(
+    resourceType = "Condition", id = x[1],
+    subject = list(reference = paste0("Patient/p", x[1])),
+    code = list(coding = list(list(system = "http://hl7.org/fhir/sid/icd-10",
+                                   code = x[2]))),
+    onsetDateTime = x[3]
+  )
+))
+vista_ejecutar(diagnosticos, v_diabetes)
+```
+
+Con `columna = "diabetes"`, en vez de filtrar, se agrega una columna lógica:
+útil para marcar varios grupos (diabetes, hipertensión...) en una misma
+vista. La lista va como texto separado por `|` y no como una cadena de `or`,
+así la expresión sigue siendo corta con miles de códigos y el motor DuckDB la
+resuelve con una sola búsqueda de texto por recurso.
+
+## 5. Flujo completo {#flujo-completo}
 
 De un servidor protegido a tasas por cantón, sin pasar los recursos por la
 memoria de R:

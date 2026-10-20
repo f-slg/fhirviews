@@ -62,6 +62,7 @@ FHIR Data Pipes...). fhirviews trae ese estándar a R.
 | Trabajar con servidores protegidos | Autenticación SMART on FHIR / OAuth2: *client credentials*, *Backend Services* (JWT firmado) e inicio de sesión en el navegador, con renovación automática del token |
 | Convertir recursos en tablas de forma reproducible | Motor de `ViewDefinition` conforme al estándar, validado con el banco oficial |
 | Trabajar con volúmenes reales | Exportación masiva con `$export` (FHIR Bulk Data); motor V8 por lotes y motor DuckDB que traduce la vista a SQL: un millón de pacientes en segundos |
+| Definir indicadores con `ValueSet` | Expansión de `ValueSet` con paginación, `$lookup` y `$validate-code` en un servidor de terminología; los códigos quedan dentro de la vista, sin red al ejecutarla |
 | Analizar con SQL | Las vistas se guardan en DuckDB (u otra base DBI) con un comando |
 | Enseñar y explorar | Panel *Connections* y addins de RStudio, peticiones al estilo Postman, datos de ejemplo |
 
@@ -473,6 +474,7 @@ lentos porque deben convertirse a JSON.
 | Vistas | `vista_crear()`, `vista_leer()`, `vista_json()`, `vista_validar()` | Definir, leer, exportar y validar `ViewDefinition` |
 | Ejecución | `vista_ejecutar()`, `fhir_vista()`, `vista_fhirpath()` | Aplicar una vista (a recursos o directamente al servidor) y probar FHIRPath |
 | Motor DuckDB | `vista_ejecutar_duckdb()`, `vista_sql()` | Ejecutar la vista como SQL de DuckDB sobre NDJSON o Parquet (experimental) |
+| Terminologías | `tx_expandir()`, `tx_buscar_codigo()`, `tx_validar_codigo()`, `vista_con_valueset()` | `$expand`, `$lookup` y `$validate-code` en un servidor de terminología (tx.fhir.org, Snowstorm) y vistas filtradas por los códigos de un `ValueSet` |
 | SQL | `vista_duckdb()` | Guardar vistas como tablas de DuckDB u otra base DBI |
 | Conformidad | `vista_conformidad()` | Ejecutar el banco oficial de pruebas de SQL on FHIR, con cualquiera de los dos motores |
 | RStudio | `fhir_conexion_activa()`, `fhir_desconectar()` | Conexión activa del panel *Connections* y de los addins |
@@ -492,7 +494,7 @@ particular, el paquete [pathling](https://cran.r-project.org/package=pathling)
 | Resultado | `data.frame` de R | Spark DataFrame | `data.frame` de R |
 | Cliente REST de FHIR | Sí, en JSON: búsqueda con paginación, escritura, transacciones, `$everything`, `$validate`, *bulk export* (`$export`) | Lectura con *bulk export* (`$export`) | Sí, en XML: búsqueda, `POST`, `PUT` |
 | Autenticación | SMART on FHIR en todas las peticiones: *client credentials*, *Backend Services* (JWT), *authorization code* + PKCE | SMART (secreto o clave privada) para la lectura con `$export` | OAuth2 / OpenID Connect (`fhir_authenticate()`) y autenticación básica |
-| Terminologías (SNOMED CT, LOINC, ValueSet) | No | Sí, funciones `tx_*` con un servidor de terminología | No |
+| Terminologías (SNOMED CT, LOINC, ValueSet) | Sí: `$expand` (con paginación), `$lookup` y `$validate-code` con un servidor de terminología; `vista_con_valueset()` guarda los códigos en la vista | Sí, funciones `tx_*` con un servidor de terminología, también dentro de las consultas | No |
 | Volumen de datos | Motor V8: memoria de la sesión de R. Motor DuckDB: millones de recursos en un portátil | Distribuido: grandes volúmenes en un clúster | Memoria de una sesión de R |
 | Banco oficial de SQL on FHIR | Incluido en el paquete (`vista_conformidad()`) | Pathling figura en la [página de implementaciones](https://sql-on-fhir.org/extra/impls.html) | No aplica |
 | RStudio | Panel *Connections* y addins | Conexión de Spark | No |
@@ -501,7 +503,8 @@ particular, el paquete [pathling](https://cran.r-project.org/package=pathling)
 **¿Cuál elegir?**
 
 - **pathling**, para grandes volúmenes en Spark o en un clúster, o si
-  necesitas operaciones de terminología.
+  necesitas consultar el servidor de terminología dentro de cada expresión
+  (por ejemplo, `subsumes()` o traducciones con `$translate`).
 - **fhirviews**, para análisis en un portátil o un servidor sin instalar Java
   ni Spark (hasta millones de recursos con el motor DuckDB), para trabajar con
   un servidor FHIR (autenticarse, leer, escribir, validar, exportar) y llevar
@@ -520,8 +523,9 @@ porque sus funciones no comparten nombres.
 - Búsquedas largas por `POST [tipo]/_search`.
 - Motor DuckDB estable: más funciones de FHIRPath y `lowBoundary()` /
   `highBoundary()`.
-- Terminologías: `$expand`, `$lookup` y `memberOf()` con un servidor de
-  terminología.
+- Terminologías: `memberOf()` en FHIRPath y `$translate` (las
+  expansiones, `$lookup` y `$validate-code` ya están en las funciones
+  `tx_*`).
 - Operaciones de SQL on FHIR 3.0 (`$run`, `$export` de vistas) y
   `SQLQuery`.
 - Caché del panel *Connections* para servidores lentos.

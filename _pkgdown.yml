@@ -99,6 +99,15 @@ reference:
   contents:
   - vista_ejecutar_duckdb
   - vista_sql
+- title: Terminologías
+  desc: >
+    Expandir ValueSets, buscar y validar códigos en un servidor de
+    terminología, y usar las expansiones en las vistas.
+  contents:
+  - tx_expandir
+  - tx_buscar_codigo
+  - tx_validar_codigo
+  - vista_con_valueset
 - title: Conformidad
   contents:
   - vista_conformidad
