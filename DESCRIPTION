@@ -27,7 +27,8 @@ Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     'OAuth2' authentication), terminology operations ('$expand', '$lookup'
     and '$validate-code') to define views with value sets, and an engine
     that turns FHIR resources into tables following the 'SQL on FHIR'
-    'ViewDefinition' specification <https://sql-on-fhir.org/>. 'FHIRPath' expressions are evaluated with
+    'ViewDefinition' specification <https://sql-on-fhir.org/>. 'FHIRPath'
+    expressions are evaluated with
     the 'fhirpath.js' library through the 'V8' package; an experimental
     second engine translates views to 'DuckDB' SQL to process millions of
     resources from 'NDJSON' or 'Parquet' files. Includes the official 'SQL on
