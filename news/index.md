@@ -108,6 +108,15 @@
   permite cambiar las constantes de una vista con el argumento
   `constantes`.
 
+### Correcciones
+
+- Las operaciones (`$expand`, `$lookup`, `$everything`, `$export`…) con
+  parámetros de búsqueda se envían con el `$` sin codificar. Antes la
+  URL se reconstruía con
+  [`httr2::req_url_query()`](https://httr2.r-lib.org/reference/req_url.html)
+  y, según la versión de libcurl, el `$` viajaba como `%24`, que
+  servidores como tx.fhir.org rechazan con 404 (*Unknown operation*).
+
 ## fhirviews 0.2.0
 
 Esta versión prepara fhirviews para servidores y volúmenes reales:

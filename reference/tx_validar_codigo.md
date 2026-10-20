@@ -66,7 +66,10 @@ tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 tx_validar_codigo(tx, "http://hl7.org/fhir/ValueSet/administrative-gender",
                   "http://hl7.org/fhir/administrative-gender",
                   c("female", "mujer"))
-#> Error: El servidor respondió 404 Not Found.
-#> ✖ GET https://tx.fhir.org/r4/ValueSet/$validate-code
-#> • [error] Unknown operation: $validate-code
+#>                                     sistema codigo valido display
+#> 1 http://hl7.org/fhir/administrative-gender female   TRUE  Female
+#> 2 http://hl7.org/fhir/administrative-gender  mujer  FALSE    <NA>
+#>                                                                                                                                                                                                                                                             mensaje
+#> 1                                                                                                                                                                                                                                                              <NA>
+#> 2 The provided code 'http://hl7.org/fhir/administrative-gender#mujer' was not found in the value set 'http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1'; Unknown code 'mujer' in the CodeSystem 'http://hl7.org/fhir/administrative-gender' version '4.0.1'
 ```

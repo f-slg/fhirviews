@@ -142,11 +142,12 @@ token o su autenticación SMART on FHIR, y los mismos errores con el
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Un ValueSet publicado, por su URL canónica</span></span></span>
 <span class="r-in"><span><span class="va">sexo</span> <span class="op">&lt;-</span> <span class="fu">tx_expandir</span><span class="op">(</span><span class="va">tx</span>, <span class="st">"http://hl7.org/fhir/ValueSet/administrative-gender"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> El servidor respondió 404 Not Found.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">✖</span> GET https://tx.fhir.org/r4/ValueSet/$expand</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">•</span> [error] Unknown operation: $expand</span>
 <span class="r-in"><span><span class="va">sexo</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'sexo' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      system    code display</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 http://hl7.org/fhir/administrative-gender    male    Male</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 http://hl7.org/fhir/administrative-gender  female  Female</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 http://hl7.org/fhir/administrative-gender   other   Other</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 http://hl7.org/fhir/administrative-gender unknown Unknown</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Un ValueSet propio: los descendientes de "diabetes mellitus" en SNOMED CT</span></span></span>
 <span class="r-in"><span><span class="va">diabetes</span> <span class="op">&lt;-</span> <span class="fu">tx_expandir</span><span class="op">(</span><span class="va">tx</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>

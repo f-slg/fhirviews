@@ -117,9 +117,10 @@ vista_ejecutar(condiciones, vista)
 # Con un servidor de terminología
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 sexo <- tx_expandir(tx, "http://hl7.org/fhir/ValueSet/administrative-gender")
-#> Error: El servidor respondió 404 Not Found.
-#> ✖ GET https://tx.fhir.org/r4/ValueSet/$expand
-#> • [error] Unknown operation: $expand
 sexo
-#> Error: object 'sexo' not found
+#>                                      system    code display
+#> 1 http://hl7.org/fhir/administrative-gender    male    Male
+#> 2 http://hl7.org/fhir/administrative-gender  female  Female
+#> 3 http://hl7.org/fhir/administrative-gender   other   Other
+#> 4 http://hl7.org/fhir/administrative-gender unknown Unknown
 ```

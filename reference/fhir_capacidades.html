@@ -72,11 +72,30 @@ atributo <code>capability</code>.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># fhir_disponible("https://hapi.fhir.org/baseR4")</span></span></span>
-<span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cap</span> <span class="op">&lt;-</span> <span class="fu">fhir_capacidades</span><span class="op">(</span><span class="va">con</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cap</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               recurso</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             Account</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  ActivityDefinition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        AdverseEvent</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  AllergyIntolerance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         Appointment</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 AppointmentResponse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                             interacciones</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 search-type, update, vread, read, patch, history-type, history-instance, delete, create</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 search-type, update, vread, read, patch, history-type, history-instance, delete, create</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 search-type, update, vread, read, patch, history-type, history-instance, delete, create</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 search-type, update, vread, read, patch, history-type, history-instance, delete, create</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 search-type, update, vread, read, patch, history-type, history-instance, delete, create</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 search-type, update, vread, read, patch, history-type, history-instance, delete, create</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                                                                      parametros_busqueda</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                                owner, _language, identifier, period, subject, _lastUpdated, _security, type, _filter, _list, _profile, patient, _tag, _has, name, _source, _id, status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 date, _language, successor, context-type-value, _lastUpdated, jurisdiction, derived-from, description, context-type, predecessor, composed-of, title, _list, context-quantity, depends-on, effective, context, context-type-quantity, identifier, _security, version, url, _filter, _profile, _tag, _has, name, publisher, topic, _source, _id, status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                     date, severity, _language, recorder, study, actuality, subject, _lastUpdated, resultingcondition, substance, _security, _filter, _list, _profile, seriousness, _tag, _has, _source, location, _id, category, event</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                       date, _language, code, _lastUpdated, verification-status, criticality, clinical-status, type, _list, patient, severity, identifier, manifestation, recorder, _security, onset, _filter, asserter, route, _profile, _tag, _has, _source, _id, category, last-date</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                     date, _language, specialty, service-category, _lastUpdated, slot, reason-code, _list, based-on, patient, supporting-info, identifier, practitioner, appointment-type, part-status, service-type, _security, _filter, actor, _profile, _tag, _has, reason-reference, _source, location, _id, status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                   _language, identifier, practitioner, part-status, _lastUpdated, _security, appointment, _filter, actor, _list, _profile, patient, _tag, _has, _source, location, _id</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
