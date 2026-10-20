@@ -291,7 +291,7 @@ vista <- vista_crear("Patient", c(sistema = "system", valor = "value"),
                      por_cada = "telecom")
 system.time(vista_ejecutar(caso, vista))
 #>    user  system elapsed 
-#>   0.009   0.000   0.009
+#>   0.009   0.001   0.007
 ```
 
 ### Orden de columnas y de filas
