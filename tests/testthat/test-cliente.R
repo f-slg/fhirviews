@@ -227,3 +227,15 @@ test_that("las operaciones se envian con `$` sin codificar", {
   fhir_everything(con, "Patient", "p1")
   expect_match(p$lista[[1]]$url, "/Patient/p1/$everything", fixed = TRUE)
 })
+
+test_that("los parametros numericos no usan notacion cientifica", {
+  expect_identical(parametros_busqueda(list(`_count` = 100000, v = 0.1)),
+                   list(`_count` = "100000", v = "0.1"))
+  expect_identical(texto_parametro(c(1e6, 2.5)), c("1000000", "2.5"))
+  expect_identical(texto_parametro(as.POSIXct("2024-05-01 10:00:00",
+                                              tz = "America/Guayaquil")),
+                   "2024-05-01T15:00:00Z")
+  expect_identical(agregar_consulta("https://x.org/r4/Patient",
+                                    list(`_count` = 1e5)),
+                   "https://x.org/r4/Patient?_count=100000")
+})

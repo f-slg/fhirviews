@@ -40,7 +40,8 @@ fhir_recursos <- function(x) {
     attributes(x) <- list(names = names(x))
     r <- recursos_desde_lista(x)
     fuente <- if (!is.null(texto) && nzchar(texto)) texto
-    return(nuevo_fhir_recursos(r, fuente = fuente))
+    return(nuevo_fhir_recursos(r, fuente = fuente,
+                               alineada = es_recurso_suelto(x)))
   }
   if (!is.list(x)) {
     cli::cli_abort(c(
@@ -54,17 +55,47 @@ fhir_recursos <- function(x) {
 # `fuente` guarda el texto JSON del que salieron los recursos (si se leyeron
 # de texto o de archivos) para que el motor lo use sin volver a convertirlos
 # a JSON. Cualquier modificación de la lista lo descarta.
-nuevo_fhir_recursos <- function(x, fuente = NULL) {
+#
+# `alineada` indica que cada texto de `fuente` es exactamente un recurso, en
+# el mismo orden (no un Bundle ni un arreglo), y que se puede escribir tal cual
+# como una línea de NDJSON.
+nuevo_fhir_recursos <- function(x, fuente = NULL, alineada = FALSE) {
   if (is.null(x)) x <- list()
-  structure(unname(x), class = c("fhir_recursos", "list"), fuente = fuente)
+  structure(unname(x), class = c("fhir_recursos", "list"), fuente = fuente,
+            fuente_alineada = if (!is.null(fuente)) isTRUE(alineada))
 }
 
 sin_fuente <- function(x) {
   attr(x, "fuente") <- NULL
+  attr(x, "fuente_alineada") <- NULL
   x
 }
 
+# Textos de `fuente` que se pueden escribir como NDJSON (uno por recurso), o
+# NULL
+fuente_alineada <- function(x) {
+  fuente <- attr(x, "fuente")
+  if (!isTRUE(attr(x, "fuente_alineada")) || length(fuente) != length(x)) {
+    return(NULL)
+  }
+  fuente
+}
+
+# Un recurso que no es Bundle (un texto que da exactamente ese recurso)
+es_recurso_suelto <- function(x) {
+  is.list(x) && es_texto(x[["resourceType"]]) &&
+    !identical(x[["resourceType"]], "Bundle")
+}
+
 recursos_desde_lista <- function(x) {
+  if (!is.list(x)) {
+    cli::cli_abort(c(
+      "No se reconoce un recurso FHIR en los datos.",
+      "x" = "Se encontró un valor de clase {.cls {class(x)}} donde se
+             esperaba un recurso (lista con {.field resourceType}) o un
+             Bundle."
+    ), class = "fhirviews_error", call = NULL)
+  }
   if (!is.null(x[["resourceType"]])) {
     if (identical(x[["resourceType"]], "Bundle")) {
       entradas <- x[["entry"]]
@@ -112,7 +143,8 @@ recursos_desde_texto <- function(x) {
   if (is.null(datos)) {
     return(recursos_ndjson(strsplit(x, "\r?\n")[[1]]))
   }
-  nuevo_fhir_recursos(recursos_desde_lista(datos), fuente = x)
+  nuevo_fhir_recursos(recursos_desde_lista(datos), fuente = x,
+                      alineada = es_recurso_suelto(datos))
 }
 
 # Un recurso JSON por elemento (o por línea de NDJSON)
@@ -120,13 +152,15 @@ recursos_ndjson <- function(lineas) {
   lineas <- lineas[nzchar(trimws(lineas))]
   recursos <- lapply(lineas, parsear_json)
   nuevo_fhir_recursos(unlist(lapply(recursos, recursos_desde_lista),
-                             recursive = FALSE), fuente = lineas)
+                             recursive = FALSE), fuente = lineas,
+                      alineada = all(vapply(recursos, es_recurso_suelto,
+                                            logical(1))))
 }
 
 recursos_desde_archivo <- function(ruta) {
   lineas <- readLines(ruta, encoding = "UTF-8", warn = FALSE)
   if (!any(nzchar(trimws(lineas)))) {
-    return(nuevo_fhir_recursos(list(), fuente = character()))
+    return(nuevo_fhir_recursos(list(), fuente = character(), alineada = TRUE))
   }
   if (grepl("\\.ndjson(\\.gz)?$", ruta, ignore.case = TRUE)) {
     return(recursos_ndjson(lineas))
@@ -191,6 +225,9 @@ c.fhir_recursos <- function(...) {
   partes <- lapply(list(...), fhir_recursos)
   fuentes <- lapply(partes, attr, "fuente")
   fuente <- if (all(!vapply(fuentes, is.null, logical(1)))) unlist(fuentes)
+  alineada <- all(vapply(partes, function(p) isTRUE(attr(p, "fuente_alineada")),
+                         logical(1)))
   nuevo_fhir_recursos(unlist(lapply(partes, function(p) unclass(sin_fuente(p))),
-                             recursive = FALSE), fuente = fuente)
+                             recursive = FALSE), fuente = fuente,
+                      alineada = alineada)
 }

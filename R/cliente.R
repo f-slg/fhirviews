@@ -542,12 +542,7 @@ agregar_consulta <- function(url, parametros) {
     return(url)
   }
   pares <- unlist(Map(function(nombre, valor) {
-    if (is.logical(valor)) {
-      valor <- tolower(as.character(valor))
-    } else if (is.numeric(valor)) {
-      valor <- format(valor, scientific = FALSE, trim = TRUE)
-    }
-    paste0(codificar(nombre), "=", codificar(as.character(valor)))
+    paste0(codificar(nombre), "=", codificar(texto_parametro(valor)))
   }, names(parametros), parametros), use.names = FALSE)
   paste0(url, if (grepl("?", url, fixed = TRUE)) "&" else "?",
          paste(pares, collapse = "&"))
@@ -643,15 +638,29 @@ parametros_busqueda <- function(x) {
       "i" = "Por ejemplo: {.code family = \"Paredes\"}."
     ), class = "fhirviews_error", call = NULL)
   }
-  lapply(x, function(v) {
-    if (inherits(v, "Date")) {
-      format(v, "%Y-%m-%d")
-    } else if (is.logical(v)) {
-      tolower(as.character(v))
-    } else {
-      as.character(v)
-    }
-  })
+  lapply(x, texto_parametro)
+}
+
+# Valor de un parámetro de la URL como texto: fechas en ISO 8601, lógicos en
+# minúsculas y números sin notación científica (as.character(1e5) da
+# "1e+05"). Cada elemento se convierte por separado para que format() no
+# iguale el ancho ni los decimales de todo el vector.
+texto_parametro <- function(v) {
+  if (inherits(v, "Date")) {
+    return(format(v, "%Y-%m-%d"))
+  }
+  if (inherits(v, "POSIXt")) {
+    return(format(as.POSIXct(v), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"))
+  }
+  if (is.logical(v)) {
+    return(tolower(as.character(v)))
+  }
+  if (is.numeric(v)) {
+    return(vapply(v, function(n) {
+      format(n, scientific = FALSE, trim = TRUE, digits = 15)
+    }, character(1)))
+  }
+  as.character(v)
 }
 
 paginar <- function(con, ruta, parametros, max_paginas, progreso) {
