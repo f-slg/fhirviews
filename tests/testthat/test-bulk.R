@@ -223,6 +223,33 @@ test_that("el token no se env\u00eda a archivos de otro servidor", {
                "otro servidor", class = "fhirviews_error_exportacion")
 })
 
+test_that("la espera sin Retry-After crece y la barra de progreso funciona", {
+  servidor_exportacion(estado_final = respuesta_fhir(NULL, 202L))
+  esperas <- simular_espera()
+  con <- con_simulada()
+  trabajo <- fhir_exportar(con, esperar = FALSE)
+  # Sin Retry-After: 1, 2, 4... hasta un minuto; la segunda consulta trae
+  # Retry-After = 7
+  expect_warning(
+    trabajo <- suppressMessages(fhir_exportar_estado(
+      trabajo, esperar = TRUE, max_espera = 40,
+      progreso = TRUE)),
+    "sigue en curso", class = "fhirviews_aviso")
+  expect_identical(esperas$s[1:3], c(1, 7, 2))
+  expect_identical(trabajo$progreso, "50%")
+  expect_output(print(trabajo), "en curso")
+  expect_output(print(trabajo), "50%")
+
+  servidor_exportacion()
+  simular_espera()
+  exp <- suppressMessages(fhir_exportar(con, carpeta = withr_tempfile(),
+                                        progreso = TRUE))
+  expect_identical(exp$estado, "completada")
+  expect_output(print(exp), "Patient .*1 archivo, 2 recursos")
+  expect_error(parametros_exportacion(1, NULL, NULL), class = "fhirviews_error")
+  expect_error(parametros_exportacion(NULL, NULL, 1), class = "fhirviews_error")
+})
+
 test_that("se respeta max_espera, intervalo y Retry-After como fecha", {
   servidor_exportacion()
   esperas <- simular_espera()

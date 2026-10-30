@@ -242,6 +242,23 @@ test_that("Backend Services firma ES384 con claves P-384", {
                class = "fhirviews_error")
 })
 
+test_that("lee claves PEM cifradas, en texto o con la contrasena equivocada", {
+  skip_if_not_installed("jose")
+  skip_if_not_installed("openssl")
+  clave <- openssl::ec_keygen("P-384")
+  archivo <- tempfile(fileext = ".pem")
+  on.exit(unlink(archivo), add = TRUE)
+  openssl::write_pem(clave, archivo, password = "s3creta")
+  auth <- fhir_auth_backend("b", archivo, contrasena = "s3creta")
+  expect_identical(alg_clave(auth$clave), "ES384")
+  expect_true(any(grepl("ES384", capture.output(print(auth)))))
+  expect_error(fhir_auth_backend("b", archivo, contrasena = "otra"),
+               "No se pudo leer la clave", class = "fhirviews_error")
+  # Texto PEM sin cifrar
+  pem <- openssl::write_pem(openssl::rsa_keygen(2048L))
+  expect_identical(alg_clave(fhir_auth_backend("b", pem)$clave), "RS384")
+})
+
 test_that("el flujo interactivo usa PKCE y aud (standalone)", {
   simular(servidor_smart())
   auth <- fhir_auth_interactiva("app-1",

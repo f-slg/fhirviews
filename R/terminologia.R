@@ -220,9 +220,10 @@ tx_buscar_codigo <- function(con, sistema, codigo, version = NULL,
 #' @param codigo Vector de códigos.
 #' @param display Vector opcional de nombres (*display*) que el servidor
 #'   también comprueba.
-#' @param lote Si es `TRUE` (por defecto) y hay varios códigos, se envían en
-#'   Bundles `batch` de hasta 100 códigos, con una petición por Bundle. Si el
-#'   servidor no admite `batch`, se valida un código por petición, como con
+#' @param lote Si es `TRUE` (por defecto), hay varios códigos y `valueset`
+#'   es una URL canónica, se envían en Bundles `batch` de hasta 100 códigos,
+#'   con una petición por Bundle. Si el servidor no admite `batch`, o si
+#'   `valueset` es un recurso, se valida un código por petición, como con
 #'   `lote = FALSE`.
 #'
 #' @return Un `data.frame` con una fila por código y las columnas `sistema`,
@@ -268,7 +269,10 @@ tx_validar_codigo <- function(con, valueset, sistema, codigo, display = NULL,
   })
   ruta <- "ValueSet/$validate-code"
   filas <- NULL
-  if (lote && n > 1L) {
+  # Solo con el ValueSet por URL: las entradas son GET. Un POST a
+  # ValueSet/$validate-code dentro de un batch lo toman algunos servidores
+  # (HAPI) como la creación de un recurso Parameters.
+  if (lote && n > 1L && is.null(vs$recurso)) {
     grupos <- split(seq_len(n), ceiling(seq_len(n) / 100L))
     filas <- tryCatch(
       unlist(lapply(grupos, function(g) {
@@ -489,13 +493,8 @@ fila_validacion <- function(datos) {
 # fhirviews_error_lote para volver a la validación de a uno.
 validar_en_lote <- function(con, ruta, vs, parametros) {
   entradas <- lapply(parametros, function(p) {
-    if (is.null(vs$recurso)) {
-      list(request = list(method = "GET", url = agregar_consulta(
-        ruta, c(list(url = vs$url), p))))
-    } else {
-      list(resource = parameters_tx(vs, p),
-           request = list(method = "POST", url = ruta))
-    }
+    list(request = list(method = "GET", url = agregar_consulta(
+      ruta, c(list(url = vs$url), p))))
   })
   bundle <- list(resourceType = "Bundle", type = "batch", entry = entradas)
   no_admite <- function(...) {
@@ -530,22 +529,38 @@ operacion_tx <- function(con, ruta, vs, parametros) {
                 cuerpo = cuerpo_json(parameters_tx(vs, parametros)))
 }
 
+# Tipo FHIR de los parámetros de $expand y $validate-code. Los servidores
+# estrictos (HAPI) rechazan, por ejemplo, un `system` enviado como
+# valueString: "expects type UriType".
+tipos_parametros_tx <- c(
+  url = "valueUri", system = "valueUri", valueSetVersion = "valueString",
+  code = "valueCode", display = "valueString", version = "valueString",
+  filter = "valueString", displayLanguage = "valueCode",
+  offset = "valueInteger", count = "valueInteger",
+  activeOnly = "valueBoolean", includeDesignations = "valueBoolean",
+  includeDefinition = "valueBoolean", excludeNested = "valueBoolean",
+  excludeNotForUI = "valueBoolean", excludePostCoordinated = "valueBoolean",
+  abstract = "valueBoolean"
+)
+
 # Parameters de una operación con el ValueSet como recurso
 parameters_tx <- function(vs, parametros) {
-  cuerpo <- list(resourceType = "Parameters", parameter = c(
-    list(list(name = "valueSet", resource = vs$recurso)),
-    unname(Map(function(n, v) list(name = n, valueString = v),
-               names(parametros), parametros))
-  ))
-  # offset y count son enteros en la definición de la operación
-  cuerpo$parameter <- lapply(cuerpo$parameter, function(p) {
-    if (p$name %in% c("offset", "count")) {
-      list(name = p$name, valueInteger = as.integer(p$valueString))
-    } else {
-      p
-    }
-  })
-  cuerpo
+  param <- function(nombre, valor) {
+    tipo <- tipos_parametros_tx[nombre]
+    if (is.na(tipo)) tipo <- "valueString"
+    valor <- switch(tipo,
+      valueInteger = as.integer(valor),
+      valueBoolean = as.logical(valor),
+      as.character(valor)
+    )
+    stats::setNames(list(nombre, valor), c("name", tipo))
+  }
+  # Un parámetro repetido por cada elemento de un vector
+  otros <- unlist(unname(Map(function(n, v) lapply(v, param, nombre = n),
+                             names(parametros), parametros)),
+                  recursive = FALSE)
+  list(resourceType = "Parameters", parameter = c(
+    list(list(name = "valueSet", resource = vs$recurso)), otros))
 }
 
 aplanar_contains <- function(contains) {

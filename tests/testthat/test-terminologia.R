@@ -226,23 +226,23 @@ test_that("tx_validar_codigo valida de a uno si el servidor no admite batch", {
   r <- tx_validar_codigo(con_simulada(), url_vs, sis_cie, c("E11", "I10"))
   expect_identical(r$valido, c(TRUE, FALSE))
   expect_length(p$lista, 3L)
-  # Con un ValueSet como recurso, las entradas son POST con un Parameters
+  # Con un ValueSet como recurso no se usa batch (un POST a una operación
+  # dentro de un batch lo toman algunos servidores como un create): un POST
+  # con un Parameters por código, con los tipos de la operación
   vs <- list(resourceType = "ValueSet", url = url_vs)
   p <- simular(function(req, ruta) {
-    b <- jsonlite::fromJSON(cuerpo_req(req), simplifyVector = FALSE)
-    respuesta_fhir(list(resourceType = "Bundle", type = "batch-response",
-                        entry = lapply(b$entry, function(e) list(
-                          resource = list(resourceType = "Parameters",
-                                          parameter = list(list(
-                                            name = "result",
-                                            valueBoolean = TRUE)))))))
+    respuesta_fhir(list(resourceType = "Parameters", parameter = list(list(
+      name = "result", valueBoolean = TRUE))))
   })
   r <- tx_validar_codigo(con_simulada(), vs, sis_cie, c("E11", "I10"))
   expect_identical(r$valido, c(TRUE, TRUE))
-  b <- jsonlite::fromJSON(cuerpo_req(p$lista[[1]]),
-                          simplifyVector = FALSE)
-  expect_identical(b$entry[[1]]$request$method, "POST")
-  expect_identical(b$entry[[1]]$resource$parameter[[1]]$name, "valueSet")
+  expect_length(p$lista, 2L)
+  expect_match(p$lista[[1]]$url, "ValueSet/$validate-code", fixed = TRUE)
+  b <- jsonlite::fromJSON(cuerpo_req(p$lista[[1]]), simplifyVector = FALSE)
+  expect_identical(b$resourceType, "Parameters")
+  expect_identical(b$parameter[[1]]$name, "valueSet")
+  expect_identical(b$parameter[[2]], list(name = "system", valueUri = sis_cie))
+  expect_identical(b$parameter[[3]], list(name = "code", valueCode = "E11"))
 })
 
 test_that("las operaciones usan el token de la conexion", {
