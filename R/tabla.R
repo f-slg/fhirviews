@@ -29,7 +29,7 @@ fhir_tabla <- function(recursos, tipo = NULL, max_caracteres = 200L) {
   recursos <- fhir_recursos(recursos)
   if (!is.numeric(max_caracteres) || length(max_caracteres) != 1L ||
       is.na(max_caracteres) || max_caracteres < 4) {
-    cli::cli_abort("{.arg max_caracteres} debe ser un número mayor que 3.",
+    cli::cli_abort("{.arg max_caracteres} debe ser un n\u00famero mayor que 3.",
                    class = "fhirviews_error")
   }
   usar <- rep(TRUE, length(recursos))

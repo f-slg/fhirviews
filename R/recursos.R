@@ -91,7 +91,7 @@ recursos_desde_lista <- function(x) {
   if (!is.list(x)) {
     cli::cli_abort(c(
       "No se reconoce un recurso FHIR en los datos.",
-      "x" = "Se encontró un valor de clase {.cls {class(x)}} donde se
+      "x" = "Se encontr\u00f3 un valor de clase {.cls {class(x)}} donde se
              esperaba un recurso (lista con {.field resourceType}) o un
              Bundle."
     ), class = "fhirviews_error", call = NULL)
