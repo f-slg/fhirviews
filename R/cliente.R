@@ -664,16 +664,19 @@ texto_parametro <- function(v) {
 }
 
 paginar <- function(con, ruta, parametros, max_paginas, progreso) {
-  textos <- character()
-  recursos <- list()
+  # Páginas en listas que se unen al final: con c() en cada vuelta el costo
+  # crece con el cuadrado del número de páginas
+  textos <- list()
+  paginas <- list()
+  n_recursos <- 0L
   total <- NULL
   siguiente <- NULL
-  visitadas <- character()
+  visitadas <- new.env(hash = TRUE, parent = emptyenv())
   pagina <- 0L
   if (progreso) {
     cli::cli_progress_bar(format = paste(
       "{cli::pb_spin} Descargando p\u00e1gina {pagina}",
-      "({length(recursos)} recursos)"
+      "({n_recursos} recursos)"
     ), clear = TRUE)
   }
   repeat {
@@ -691,16 +694,18 @@ paginar <- function(con, ruta, parametros, max_paginas, progreso) {
       ), class = "fhirviews_error", call = NULL)
     }
     if (pagina == 1L) total <- bundle$total
-    textos <- c(textos, res$texto)
-    recursos <- c(recursos, recursos_desde_lista(bundle))
+    textos[[pagina]] <- res$texto
+    paginas[[pagina]] <- recursos_desde_lista(bundle)
+    n_recursos <- n_recursos + length(paginas[[pagina]])
     if (progreso) cli::cli_progress_update()
-    if (!is.null(siguiente)) visitadas <- c(visitadas, siguiente)
+    if (!is.null(siguiente)) assign(siguiente, TRUE, envir = visitadas)
     siguiente <- enlace_siguiente(bundle, con)
-    if (!is.null(siguiente) && siguiente %in% visitadas) {
+    if (!is.null(siguiente) &&
+        exists(siguiente, envir = visitadas, inherits = FALSE)) {
       cli::cli_warn(c(
         "El servidor repiti\u00f3 un enlace {.field next} ya visitado; se
          detiene la paginaci\u00f3n para no entrar en un bucle.",
-        "i" = "Se reunieron {length(recursos)} recurso{?s} en {pagina}
+        "i" = "Se reunieron {n_recursos} recurso{?s} en {pagina}
                p\u00e1gina{?s}."
       ), class = "fhirviews_aviso")
       break
@@ -708,7 +713,8 @@ paginar <- function(con, ruta, parametros, max_paginas, progreso) {
     if (is.null(siguiente) || pagina >= max_paginas) break
   }
   if (progreso) cli::cli_progress_done()
-  r <- nuevo_fhir_recursos(recursos, fuente = textos)
+  r <- nuevo_fhir_recursos(unlist(paginas, recursive = FALSE),
+                           fuente = unlist(textos))
   attr(r, "total") <- total
   r
 }

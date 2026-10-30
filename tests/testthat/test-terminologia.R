@@ -162,7 +162,7 @@ test_that("tx_validar_codigo valida cada codigo", {
     respuesta_fhir(list(resourceType = "Parameters", parameter = parametros))
   })
   r <- tx_validar_codigo(con_simulada(), url_vs, sis_cie, c("E11", "I10"),
-                         display = c("Tipo 2", NA))
+                         display = c("Tipo 2", NA), lote = FALSE)
   expect_identical(r$valido, c(TRUE, FALSE))
   expect_identical(r$display, c("Tipo 2", NA))
   expect_identical(r$mensaje, c(NA, "No est\u00e1"))
@@ -176,6 +176,73 @@ test_that("tx_validar_codigo valida cada codigo", {
                class = "fhirviews_error")
   expect_error(tx_validar_codigo(con_simulada(), url_vs, sis_cie, 11),
                class = "fhirviews_error")
+  expect_error(tx_validar_codigo(con_simulada(), url_vs, sis_cie, "E11",
+                                 lote = NA),
+               class = "fhirviews_error")
+})
+
+test_that("tx_validar_codigo valida en lote con un Bundle batch", {
+  parametros <- function(valido) {
+    list(resourceType = "Parameters",
+         parameter = list(list(name = "result", valueBoolean = valido)))
+  }
+  p <- simular(function(req, ruta) {
+    b <- jsonlite::fromJSON(cuerpo_req(req), simplifyVector = FALSE)
+    respuesta_fhir(list(resourceType = "Bundle", type = "batch-response",
+                        entry = lapply(b$entry, function(e) {
+      if (grepl("code=X99", e$request$url)) {
+        return(list(response = list(status = "404 Not Found")))
+      }
+      list(resource = parametros(grepl("code=E11", e$request$url)),
+           response = list(status = "200 OK"))
+    })))
+  })
+  codigos <- c("E11", "I10", "X99", rep("E11", 150))
+  r <- tx_validar_codigo(con_simulada(), url_vs, sis_cie, codigos)
+  expect_identical(r$valido[1:3], c(TRUE, FALSE, NA))
+  expect_match(r$mensaje[3], "404")
+  expect_true(all(r$valido[4:153]))
+  # 153 codigos: dos Bundles (100 + 53) a la base del servidor
+  expect_length(p$lista, 2L)
+  expect_identical(p$lista[[1]]$method, "POST")
+  expect_identical(p$lista[[1]]$url, base)
+  b <- jsonlite::fromJSON(cuerpo_req(p$lista[[1]]),
+                          simplifyVector = FALSE)
+  expect_identical(b$type, "batch")
+  expect_length(b$entry, 100L)
+  expect_match(b$entry[[1]]$request$url,
+               "^ValueSet/\\$validate-code\\?url=.*&code=E11$")
+})
+
+test_that("tx_validar_codigo valida de a uno si el servidor no admite batch", {
+  p <- simular(function(req, ruta) {
+    if (identical(req$method, "POST")) {
+      return(respuesta_fhir(list(resourceType = "OperationOutcome", issue = list(
+        list(severity = "error", code = "not-supported"))), estado = 400L))
+    }
+    respuesta_fhir(list(resourceType = "Parameters", parameter = list(
+      list(name = "result", valueBoolean = grepl("code=E11", ruta)))))
+  })
+  r <- tx_validar_codigo(con_simulada(), url_vs, sis_cie, c("E11", "I10"))
+  expect_identical(r$valido, c(TRUE, FALSE))
+  expect_length(p$lista, 3L)
+  # Con un ValueSet como recurso, las entradas son POST con un Parameters
+  vs <- list(resourceType = "ValueSet", url = url_vs)
+  p <- simular(function(req, ruta) {
+    b <- jsonlite::fromJSON(cuerpo_req(req), simplifyVector = FALSE)
+    respuesta_fhir(list(resourceType = "Bundle", type = "batch-response",
+                        entry = lapply(b$entry, function(e) list(
+                          resource = list(resourceType = "Parameters",
+                                          parameter = list(list(
+                                            name = "result",
+                                            valueBoolean = TRUE)))))))
+  })
+  r <- tx_validar_codigo(con_simulada(), vs, sis_cie, c("E11", "I10"))
+  expect_identical(r$valido, c(TRUE, TRUE))
+  b <- jsonlite::fromJSON(cuerpo_req(p$lista[[1]]),
+                          simplifyVector = FALSE)
+  expect_identical(b$entry[[1]]$request$method, "POST")
+  expect_identical(b$entry[[1]]$resource$parameter[[1]]$name, "valueSet")
 })
 
 test_that("las operaciones usan el token de la conexion", {

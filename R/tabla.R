@@ -27,45 +27,32 @@
 #' ))
 fhir_tabla <- function(recursos, tipo = NULL, max_caracteres = 200L) {
   recursos <- fhir_recursos(recursos)
-  if (!is.null(tipo)) {
-    tipos <- vapply(recursos, function(r) as.character(r$resourceType %||% NA),
-                    character(1))
-    recursos <- recursos[!is.na(tipos) & tipos == tipo]
+  if (!is.numeric(max_caracteres) || length(max_caracteres) != 1L ||
+      is.na(max_caracteres) || max_caracteres < 4) {
+    cli::cli_abort("{.arg max_caracteres} debe ser un número mayor que 3.",
+                   class = "fhirviews_error")
   }
-  campos <- unique(unlist(lapply(recursos, names)))
-  campos <- c(intersect(c("resourceType", "id"), campos),
-              setdiff(campos, c("resourceType", "id", "text")))
-  if (length(recursos) == 0L) {
+  usar <- rep(TRUE, length(recursos))
+  if (!is.null(tipo)) {
+    tipos <- vapply(recursos, function(r) {
+      t <- r[["resourceType"]]
+      if (is.character(t) && length(t) == 1L) t else NA_character_
+    }, character(1))
+    usar <- !is.na(tipos) & tipos == tipo
+  }
+  if (!any(usar)) {
     return(data.frame(resourceType = character(), id = character(),
                       stringsAsFactors = FALSE))
   }
-  cols <- lapply(campos, function(campo) {
-    valores <- lapply(recursos, function(r) celda_tabla(r[[campo]],
-                                                        max_caracteres))
-    unlist(valores)
-  })
-  names(cols) <- campos
-  structure(cols, row.names = .set_row_names(length(recursos)),
+  # Las celdas se arman en el motor de JavaScript, que ya tiene los recursos
+  # como JSON: convertir cada celda con jsonlite::toJSON() es muy lento con
+  # decenas de miles de recursos
+  m <- motor_actual()
+  inicio <- m$tamano()
+  on.exit(m$liberar(inicio), add = TRUE)
+  ids <- m$cargar(recursos)[usar]
+  res <- m$tabla(ids, max_caracteres)
+  cols <- stats::setNames(res$columnas, res$campos)
+  structure(cols, row.names = .set_row_names(length(ids)),
             class = "data.frame")
-}
-
-celda_tabla <- function(x, max_caracteres) {
-  if (is.null(x)) {
-    return(NA)
-  }
-  if (is.atomic(x) && length(x) == 1L) {
-    return(x)
-  }
-  simples <- is.list(x) && is.null(names(x)) &&
-    all(vapply(x, function(e) is.atomic(e) && length(e) == 1L, logical(1)))
-  texto <- if (simples) {
-    paste(unlist(x), collapse = "; ")
-  } else {
-    as.character(jsonlite::toJSON(x, auto_unbox = TRUE, digits = NA,
-                                  null = "null"))
-  }
-  if (nchar(texto) > max_caracteres) {
-    texto <- paste0(substr(texto, 1L, max_caracteres - 3L), "...")
-  }
-  texto
 }

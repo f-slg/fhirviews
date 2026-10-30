@@ -217,9 +217,13 @@ tx_buscar_codigo <- function(con, sistema, codigo, version = NULL,
 #' @inheritParams tx_expandir
 #' @param sistema URL del sistema de codificación de los códigos; se recicla
 #'   si es uno solo.
-#' @param codigo Vector de códigos. Se hace una petición por código.
+#' @param codigo Vector de códigos.
 #' @param display Vector opcional de nombres (*display*) que el servidor
 #'   también comprueba.
+#' @param lote Si es `TRUE` (por defecto) y hay varios códigos, se envían en
+#'   Bundles `batch` de hasta 100 códigos, con una petición por Bundle. Si el
+#'   servidor no admite `batch`, se valida un código por petición, como con
+#'   `lote = FALSE`.
 #'
 #' @return Un `data.frame` con una fila por código y las columnas `sistema`,
 #'   `codigo`, `valido` (lógico), `display` (el nombre que da el servidor) y
@@ -232,7 +236,8 @@ tx_buscar_codigo <- function(con, sistema, codigo, version = NULL,
 #' tx_validar_codigo(tx, "http://hl7.org/fhir/ValueSet/administrative-gender",
 #'                   "http://hl7.org/fhir/administrative-gender",
 #'                   c("female", "mujer"))
-tx_validar_codigo <- function(con, valueset, sistema, codigo, display = NULL) {
+tx_validar_codigo <- function(con, valueset, sistema, codigo, display = NULL,
+                              lote = TRUE) {
   comprobar_conexion(con)
   vs <- leer_valueset(valueset)
   if (!is.character(codigo) || length(codigo) == 0L || anyNA(codigo)) {
@@ -251,18 +256,32 @@ tx_validar_codigo <- function(con, valueset, sistema, codigo, display = NULL) {
       "{.arg display} debe ser un vector de caracteres del largo de {.arg codigo}.",
       class = "fhirviews_error")
   }
+  if (!rlang::is_bool(lote)) {
+    cli::cli_abort("{.arg lote} debe ser {.code TRUE} o {.code FALSE}.",
+                   class = "fhirviews_error")
+  }
   sistema <- rep_len(sistema, n)
-  filas <- lapply(seq_len(n), function(i) {
-    parametros <- list(system = sistema[[i]], code = codigo[[i]])
-    if (!is.null(display) && !is.na(display[[i]])) {
-      parametros$display <- display[[i]]
-    }
-    p <- operacion_tx(con, "ValueSet/$validate-code", vs, parametros)$datos$parameter
-    resultado <- Filter(function(x) identical(x$name, "result"), p)
-    list(valido = if (length(resultado)) isTRUE(resultado[[1]]$valueBoolean) else NA,
-         display = valor_parametro(p, "display"),
-         mensaje = valor_parametro(p, "message"))
+  parametros <- lapply(seq_len(n), function(i) {
+    p <- list(system = sistema[[i]], code = codigo[[i]])
+    if (!is.null(display) && !is.na(display[[i]])) p$display <- display[[i]]
+    p
   })
+  ruta <- "ValueSet/$validate-code"
+  filas <- NULL
+  if (lote && n > 1L) {
+    grupos <- split(seq_len(n), ceiling(seq_len(n) / 100L))
+    filas <- tryCatch(
+      unlist(lapply(grupos, function(g) {
+        validar_en_lote(con, ruta, vs, parametros[g])
+      }), recursive = FALSE, use.names = FALSE),
+      fhirviews_error_lote = function(e) NULL
+    )
+  }
+  if (is.null(filas)) {
+    filas <- lapply(parametros, function(p) {
+      fila_validacion(operacion_tx(con, ruta, vs, p)$datos)
+    })
+  }
   data.frame(
     sistema = sistema,
     codigo = codigo,
@@ -448,6 +467,58 @@ leer_valueset <- function(valueset) {
   list(url = if (es_texto(datos$url)) datos$url, recurso = datos)
 }
 
+# Resultado de $validate-code (Parameters, u OperationOutcome si el servidor
+# no pudo validar el código)
+fila_validacion <- function(datos) {
+  if (identical(datos$resourceType, "OperationOutcome")) {
+    mensajes <- tabla_outcome(datos)$mensaje
+    mensajes <- mensajes[!is.na(mensajes)]
+    return(list(valido = NA, display = NA_character_,
+                mensaje = if (length(mensajes)) paste(mensajes, collapse = "; ")
+                  else NA_character_))
+  }
+  p <- datos$parameter
+  resultado <- Filter(function(x) identical(x$name, "result"), p)
+  list(valido = if (length(resultado)) isTRUE(resultado[[1]]$valueBoolean) else NA,
+       display = valor_parametro(p, "display"),
+       mensaje = valor_parametro(p, "message"))
+}
+
+# Valida varios códigos en un Bundle batch. Si el servidor no responde con
+# un batch-response de la misma cantidad de entradas, lanza un error de clase
+# fhirviews_error_lote para volver a la validación de a uno.
+validar_en_lote <- function(con, ruta, vs, parametros) {
+  entradas <- lapply(parametros, function(p) {
+    if (is.null(vs$recurso)) {
+      list(request = list(method = "GET", url = agregar_consulta(
+        ruta, c(list(url = vs$url), p))))
+    } else {
+      list(resource = parameters_tx(vs, p),
+           request = list(method = "POST", url = ruta))
+    }
+  })
+  bundle <- list(resourceType = "Bundle", type = "batch", entry = entradas)
+  no_admite <- function(...) {
+    rlang::abort("El servidor no admite batch.", class = "fhirviews_error_lote")
+  }
+  res <- tryCatch(peticion_json(con, "POST", "", cuerpo = cuerpo_json(bundle)),
+                  fhirviews_error_http = no_admite)
+  respuesta <- res$datos
+  if (!identical(respuesta$resourceType, "Bundle") ||
+      !identical(respuesta$type, "batch-response") ||
+      length(respuesta$entry) != length(parametros)) {
+    no_admite()
+  }
+  lapply(respuesta$entry, function(e) {
+    if (is.null(e$resource)) {
+      return(list(valido = NA, display = NA_character_,
+                  mensaje = paste("El servidor respondi\u00f3",
+                                  e$response$status %||% "sin estado")))
+    }
+    fila_validacion(e$resource)
+  })
+}
+
 # Operación sobre un ValueSet: GET con `url` o POST con el recurso en un
 # Parameters
 operacion_tx <- function(con, ruta, vs, parametros) {
@@ -455,6 +526,12 @@ operacion_tx <- function(con, ruta, vs, parametros) {
     return(peticion_json(con, "GET", ruta,
                          parametros = c(list(url = vs$url), parametros)))
   }
+  peticion_json(con, "POST", ruta,
+                cuerpo = cuerpo_json(parameters_tx(vs, parametros)))
+}
+
+# Parameters de una operación con el ValueSet como recurso
+parameters_tx <- function(vs, parametros) {
   cuerpo <- list(resourceType = "Parameters", parameter = c(
     list(list(name = "valueSet", resource = vs$recurso)),
     unname(Map(function(n, v) list(name = n, valueString = v),
@@ -468,7 +545,7 @@ operacion_tx <- function(con, ruta, vs, parametros) {
       p
     }
   })
-  peticion_json(con, "POST", ruta, cuerpo = cuerpo_json(cuerpo))
+  cuerpo
 }
 
 aplanar_contains <- function(contains) {

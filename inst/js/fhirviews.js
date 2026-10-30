@@ -59,11 +59,22 @@ var fhirviews = (function () {
     }
   };
 
+  // Una sesion larga puede compilar miles de expresiones distintas (por
+  // ejemplo, probandolas con vista_fhirpath()): al pasar del maximo se vacia
+  // la cache, que se vuelve a llenar con las que se sigan usando.
+  var maxCompiladas = 1000;
+  var nCompiladas = 0;
+
   function compilar(expresion) {
     var f = compiladas[expresion];
     if (f === undefined) {
       f = fhirpath.compile(expresion, modelo, opciones);
+      if (nCompiladas >= maxCompiladas) {
+        compiladas = {};
+        nCompiladas = 0;
+      }
       compiladas[expresion] = f;
+      nCompiladas++;
     }
     return f;
   }
@@ -321,6 +332,63 @@ var fhirviews = (function () {
     validar: function (expresion) {
       compilar(expresion);
       return true;
+    },
+
+    // Tabla rapida (fhir_tabla): una columna por elemento de primer nivel, en
+    // el orden en que aparecen (resourceType e id primero, sin text). Los
+    // valores simples se copian; los arreglos de valores simples se unen con
+    // '; ' y el resto se escribe como JSON compacto, recortado a `maximo`
+    // caracteres. Devuelve {campos: [...], columnas: [[valor por nodo]]}.
+    tabla: function (ids, maximo) {
+      var otros = [];
+      var vistos = {};
+      ids.forEach(function (id) {
+        var r = nodos[id];
+        if (r && typeof r === 'object') {
+          Object.keys(r).forEach(function (k) {
+            if (!vistos[k]) {
+              vistos[k] = true;
+              if (k !== 'resourceType' && k !== 'id' && k !== 'text') {
+                otros.push(k);
+              }
+            }
+          });
+        }
+      });
+      var campos = ['resourceType', 'id'].filter(function (k) {
+        return vistos[k];
+      }).concat(otros);
+      function simple(v) {
+        return v === null || typeof v !== 'object';
+      }
+      function recortar(texto) {
+        var letras = Array.from(texto);
+        if (letras.length > maximo) {
+          return letras.slice(0, maximo - 3).join('') + '...';
+        }
+        return texto;
+      }
+      var columnas = campos.map(function (k) {
+        return ids.map(function (id) {
+          var r = nodos[id];
+          var v = r && typeof r === 'object' ? r[k] : undefined;
+          if (v === undefined || v === null) {
+            return null;
+          }
+          if (simple(v)) {
+            return v;
+          }
+          if (Array.isArray(v) && v.every(simple)) {
+            return recortar(v.join('; '));
+          }
+          return recortar(JSON.stringify(v));
+        });
+      });
+      // Cada columna como texto JSON aparte, para que R la simplifique por
+      // separado (con su propio tipo)
+      return {campos: campos, columnas: columnas.map(function (c) {
+        return JSON.stringify(c);
+      })};
     },
 
     // Libera los nodos desde el indice dado (0 vacia el almacen).
