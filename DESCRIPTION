@@ -1,8 +1,7 @@
 Package: fhirviews
 Type: Package
-Title: Query 'HL7 FHIR' Servers and Flatten Resources with 'SQL on FHIR'
-    View Definitions
-Version: 0.3.0.9000
+Title: 'HL7 FHIR' Client and 'SQL on FHIR' View Engine
+Version: 0.4.0
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",
@@ -58,7 +57,6 @@ Suggests:
     jose,
     knitr,
     openssl,
-    pobecu,
     rmarkdown,
     rstudioapi,
     testthat (>= 3.0.0)

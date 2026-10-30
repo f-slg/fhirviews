@@ -4,24 +4,17 @@ This is the first submission of 'fhirviews'.
 
 ## Test environments
 
-* Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran`)
-* GitHub Actions: R 4.6.1 on Windows, macOS and Ubuntu
+* Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran`, with
+  `_R_CHECK_CRAN_INCOMING_REMOTE_=true`)
+* GitHub Actions: R release on Windows, macOS and Ubuntu
 
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 1 note
 
 * This is a new submission.
-* Suggests or Enhances not in mainstream repositories: pobecu.
 
 ## Notes for the reviewers
-
-* 'pobecu' (Suggests) is the companion package with the official population
-  of Ecuador by canton; it is used only in one vignette to compute rates.
-  It will be submitted to CRAN before 'fhirviews', which will only be
-  submitted once 'pobecu' is available there. Its use is conditional
-  (`requireNamespace()`): the vignette chunks are not evaluated when it is
-  not installed.
 
 * Bundled third-party code and data (listed in `inst/COPYRIGHTS`, with the
   copyright holders also in `Authors@R`):
@@ -46,20 +39,24 @@ This is the first submission of 'fhirviews'.
   `diferido = TRUE`). Tests and vignette chunks that need them are skipped
   when they are not installed.
 
+* The 'DuckDB' engine needs the 'json' extension, which 'duckdb' downloads
+  the first time it is used (`INSTALL json`). It is never downloaded during
+  `R CMD check`: the examples that use it run only interactively, the tests
+  are skipped on CRAN and the vignette chunks are not evaluated when
+  `_R_CHECK_PACKAGE_NAME_` is set.
+
 * Authentication tokens are kept in memory only (on disk only if the user
   asks for it explicitly with `cache_disco = TRUE`, through 'httr2'), are never
   printed and are only sent to the URL of the connected FHIR server.
 
-* Terminology functions (`tx_*`) talk to a FHIR terminology server chosen by
-  the user; their examples use <https://tx.fhir.org/r4> and are wrapped in
-  `@examplesIf fhir_disponible(...)` as below.
-
-* Examples that need a FHIR server are wrapped in
-  `@examplesIf fhir_disponible(...)`, which checks quickly whether the public
-  test server <https://hapi.fhir.org/baseR4> responds, so they are skipped
-  without internet access. Examples that write to a server only run
-  interactively against a local server. Tests that use the network are
-  skipped on CRAN; all client tests use mocked HTTP responses.
+* Examples that need a FHIR server (the public test servers
+  <https://hapi.fhir.org/baseR4> and, for the terminology functions `tx_*`,
+  <https://tx.fhir.org/r4>) only run in interactive sessions and when the
+  server responds (`@examplesIf interactive() && fhir_disponible(...)`, also
+  enabled on the pkgdown site), so `R CMD check` never depends on a public
+  server. Examples that write to a server only run interactively against a
+  local server. Tests that use the network are skipped on CRAN; all client
+  tests use mocked HTTP responses.
 
 * The package does not write to the user's home directory: DuckDB
   connections created by `vista_duckdb()` use `shared_home = FALSE`.

@@ -1,7 +1,8 @@
-# fhirviews (versión en desarrollo)
+# fhirviews 0.4.0
 
 Correcciones de una auditoría del paquete, con pruebas de escritura contra
-un servidor HAPI FHIR propio. No hay cambios incompatibles.
+un servidor HAPI FHIR propio, y preparación para CRAN. No hay cambios
+incompatibles.
 
 ## Correcciones
 
@@ -47,6 +48,20 @@ un servidor HAPI FHIR propio. No hay cambios incompatibles.
   (antes el costo crecía con el cuadrado del número de páginas).
 * fhirpath.js 5.2.2 (solo cambia el empaquetado de npm).
 * La caché de expresiones FHIRPath compiladas tiene un límite de 1000.
+
+## Preparación para CRAN
+
+* La viñeta *Tasas por cantón con FHIR y pobecu* pasa a ser un artículo de
+  la web (`vignettes/articles/`, misma dirección) y pobecu sale de
+  Suggests: así todas las dependencias están en CRAN.
+* Los ejemplos que usan servidores públicos (hapi.fhir.org, tx.fhir.org)
+  corren en sesiones interactivas y en la web, no en `R CMD check`; la
+  viñeta de volumen no descarga la extensión json de DuckDB durante el
+  check.
+* `fhirviews_motor()` devuelve un objeto que se imprime, en lugar de
+  escribir en la consola al llamarla.
+* Título más corto y los contribuyentes de SQL on FHIR como titulares del
+  banco de pruebas incluido.
 
 ## Pruebas
 

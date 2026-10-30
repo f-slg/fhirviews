@@ -151,7 +151,7 @@ vistas_vinetas <- function() {
     carpeta <- system.file("doc", package = "fhirviews")
   }
   archivos <- file.path(carpeta, c("fhirviews.Rmd", "vistas.Rmd",
-                                   "tasas-pobecu.Rmd"))
+                                   file.path("articles", "tasas-pobecu.Rmd")))
   archivos <- archivos[file.exists(archivos)]
   vistas <- list()
   for (a in archivos) {

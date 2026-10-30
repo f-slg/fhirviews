@@ -462,5 +462,5 @@ pobecu::pob_tasa(por_canton, "casos")
 ```
 
 La vista `v_paciente` (con el código DPA del cantón) y el cálculo de tasas
-se explican en la viñeta
-[*Tasas por cantón con FHIR y pobecu*](tasas-pobecu.html).
+se explican en el artículo
+[*Tasas por cantón con FHIR y pobecu*](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html).
