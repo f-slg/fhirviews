@@ -220,6 +220,60 @@ var fhirviews = (function () {
     return ctx.tipo === '(eleccion)' ? null : ctx;
   }
 
+  // Primer elemento de la ruta que no existe en el modelo R4, recorriendo
+  // los pasos de navegacion simples como tipoExpresion(). Devuelve
+  // {campo, tipo} o null si todos existen o si no se puede saber (elementos
+  // de eleccion, variables, operadores o funciones que cambian el tipo).
+  function campoDesconocido(ctx, expresion) {
+    var partes = partirExpresion(expresion);
+    for (var i = 0; i < partes.length; i++) {
+      var p = partes[i];
+      if (p === '$this' || (i === 0 && p === ctx.tipo)) {
+        continue;
+      }
+      var m = /^([A-Za-z_][A-Za-z0-9_]*)(\(([\s\S]*)\))?$/.exec(p);
+      if (!m) {
+        return null;
+      }
+      var nombre = m[1];
+      if (m[2] === undefined) {
+        if (ctx.tipo === '(eleccion)' ||
+            (i === 0 && (nombre === 'true' || nombre === 'false'))) {
+          return null;
+        }
+        var siguiente = hijo(ctx, nombre);
+        if (!siguiente) {
+          return tipoConocido(ctx.tipo) ? {campo: nombre, tipo: ctx.ruta} : null;
+        }
+        ctx = siguiente;
+      } else {
+        // Las funciones se resuelven como en tipoExpresion()
+        ctx = tipoExpresion(ctx, p);
+        if (!ctx) {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  // Tipo complejo del modelo (con hijos conocidos)
+  function tipoConocido(t) {
+    return !!t && t !== '(eleccion)' && /^[A-Z]/.test(t) &&
+      (modelo.type2Parent[t] !== undefined || t === 'Element' ||
+       t === 'BackboneElement' || t === 'Resource');
+  }
+
+  function esRecurso(t) {
+    for (var n = 0; t && n < 20; n++) {
+      if (t === 'Resource') {
+        return true;
+      }
+      t = modelo.type2Parent[t];
+    }
+    return false;
+  }
+
   // Variables: {nombre: valor} o {nombre: {literal: '@2020-01-01'}} para las
   // constantes que deben compararse como fechas u horas.
   function prepararVariables(variables) {
@@ -326,6 +380,20 @@ var fhirviews = (function () {
       } catch (e) {
         return null;
       }
+    },
+
+    // Primer elemento inexistente de una ruta en un contexto {tipo, ruta}
+    desconocido: function (ctx, expresion) {
+      try {
+        return campoDesconocido(ctx, expresion);
+      } catch (e) {
+        return null;
+      }
+    },
+
+    // ¿Es un tipo de recurso de FHIR R4?
+    esRecurso: function (tipo) {
+      return esRecurso(tipo);
     },
 
     // Comprueba que una expresion sea valida; lanza un error si no lo es.

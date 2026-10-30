@@ -11,6 +11,10 @@
 #                                            valores (modo "valores") o
 #                                            enteros de nodos (modo "nodos")
 #   validar(expresion)                    -> TRUE o error
+#   desconocido(contexto, expresion)      -> list(campo, tipo) con el primer
+#                                            elemento que no existe en el
+#                                            modelo, o NULL
+#   es_recurso(tipo)                      -> TRUE si es un recurso de R4
 #   tipo(contexto, expresion)             -> list(tipo, ruta) con el tipo FHIR
 #                                            del resultado, o NULL si no se
 #                                            puede deducir sin datos
@@ -134,6 +138,16 @@ motor_v8 <- function() {
                             a_json(contexto, unbox = TRUE),
                             a_json(expresion, unbox = TRUE)), expresion)
       if (is.null(res$tipo)) NULL else res
+    },
+    desconocido = function(contexto, expresion) {
+      res <- llamar(sprintf("JSON.stringify(fhirviews.desconocido(%s, %s))",
+                            a_json(contexto, unbox = TRUE),
+                            a_json(expresion, unbox = TRUE)), expresion)
+      if (is.null(res$campo)) NULL else res
+    },
+    es_recurso = function(tipo) {
+      isTRUE(ct$eval(sprintf("fhirviews.esRecurso(%s)",
+                             a_json(tipo, unbox = TRUE))) == "true")
     },
     validar = function(expresion) {
       llamar(sprintf("JSON.stringify(fhirviews.validar(%s))",
