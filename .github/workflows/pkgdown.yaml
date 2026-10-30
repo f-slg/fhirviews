@@ -28,7 +28,8 @@ jobs:
         with:
           use-public-rspm: true
 
-      # pobecu (Suggests) aún no está en CRAN: se instala desde GitHub.
+      # pobecu (artículo de tasas, vignettes/articles) no está en CRAN ni en
+      # Suggests: se instala desde GitHub solo para la web.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'

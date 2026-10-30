@@ -14,14 +14,40 @@ tablas siguiendo la especificación SQL on FHIR (\code{ViewDefinition}).
 \itemize{
 \item \strong{Cliente FHIR} (funciones \verb{fhir_*}): conectarse a un servidor, buscar
 con paginación automática, leer, crear, actualizar, borrar y ejecutar
-las operaciones \verb{$everything} y \verb{$validate}.
+las operaciones \verb{$everything}, \verb{$validate} y \verb{$export} (Bulk Data).
+\item \strong{Terminología} (funciones \verb{tx_*}): \verb{$expand}, \verb{$lookup} y
+\verb{$validate-code}.
 \item \strong{Vistas} (funciones \verb{vista_*}): ejecutar un \code{ViewDefinition} sobre una
 lista de recursos, un Bundle o un archivo NDJSON y obtener un
-\code{data.frame}.
+\code{data.frame}, con fhirpath.js o con DuckDB.
 }
 
 Las expresiones FHIRPath se evalúan con la biblioteca \code{fhirpath.js} a
 través del paquete V8.
+}
+
+\subsection{Opciones}{
+\itemize{
+\item \code{fhirviews.mostrar_consulta}: los mensajes de error muestran la URL de
+la petición sin los valores de la consulta (\verb{identifier=***}), que
+pueden ser datos de pacientes o credenciales y terminar en registros o
+capturas de pantalla; solo se ven los parámetros de control como
+\verb{_count}. Con \code{TRUE} se muestra la URL completa, útil para depurar.
+\item \code{fhirviews.motor}: motor de FHIRPath (hoy solo \code{"v8"}).
+\item \code{fhirviews.sql_profundidad}: niveles que recorre \code{repeat} en el motor
+DuckDB (12 por defecto).
+\item \code{fhirviews.addin_paginas}: páginas que descarga el complemento de
+RStudio (5 por defecto).
+}
+}
+
+\subsection{Limitaciones conocidas}{
+\itemize{
+\item Los decimales de FHIR se leen como números de JavaScript (y de R), así
+que pierden los ceros finales que indican la precisión: \code{1.10} se lee
+como \code{1.1}. Esto afecta a \code{toString()} y a las comparaciones de
+precisión de FHIRPath, no al valor numérico.
+}
 }
 }
 \seealso{
@@ -49,6 +75,7 @@ Other contributors:
   \item Sasha Koss (date-fns library bundled in fhirpath.js) [copyright holder]
   \item Michael Mclaughlin (decimal.js library bundled in fhirpath.js) [copyright holder]
   \item Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js) [copyright holder]
+  \item SQL on FHIR project contributors (conformance test suite in inst/sof-tests) [copyright holder]
 }
 
 }

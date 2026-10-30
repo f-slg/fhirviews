@@ -194,3 +194,35 @@ test_that("vista_validar encuentra los problemas", {
     list(column = list(list(name = "a", path = "id"))),
     list(column = list(list(name = "b", path = "id")))))), "mismas columnas")
 })
+
+test_that("avisa de recursos y elementos que no existen en R4", {
+  vista <- function(resource, ...) {
+    list(resource = resource, select = list(...))
+  }
+  col <- function(path) list(column = list(list(name = "a", path = path)))
+  avisos <- function(v) {
+    w <- tryCatch(vista_validar(v), fhirviews_aviso_vista = function(w) w)
+    if (inherits(w, "fhirviews_aviso_vista")) w$avisos else character()
+  }
+  expect_warning(vista_validar(vista("Patiente", col("id"))),
+                 "no es un tipo de recurso", class = "fhirviews_aviso_vista")
+  expect_match(avisos(vista("Patient", col("idd"))), "idd")
+  expect_match(avisos(vista("Patient", col("name.first().familia"))),
+               "HumanName")
+  expect_match(avisos(vista("Patient", list(forEach = "contact", column = list(
+    list(name = "a", path = "nombre"))))), "Patient.contact")
+  expect_match(avisos(list(resource = "Patient", where = list(list(
+    path = "activo")), select = list(col("id")))), "where\\[1\\]")
+  # Rutas validas: eleccion, extensiones, funciones, literales y repeat
+  for (p in c("name.where(use = 'official').family", "deceased.ofType(boolean)",
+              "deceasedBoolean", "extension('u').value", "birthDate.extension",
+              "getResourceKey()", "true", "gender = 'male'",
+              "link.other.getReferenceKey(Patient)", "%resource.id")) {
+    expect_length(avisos(vista("Patient", col(p))), 0L)
+  }
+  expect_length(avisos(vista("QuestionnaireResponse", list(
+    `repeat` = list("item", "answer.item"),
+    column = list(list(name = "a", path = "linkId"))))), 0L)
+  expect_length(avisos(vista("Observation", col("component.code.coding.code"))),
+                0L)
+})

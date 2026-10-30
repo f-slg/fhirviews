@@ -16,7 +16,7 @@ vistas funciona dentro de R, sin Java ni Spark, devuelve `data.frame` y pasa
 **todas las pruebas *shareable*** del banco oficial de conformidad. Se
 conecta a servidores protegidos con **SMART on FHIR**, descarga poblaciones
 completas con **`$export`** y, con su **motor DuckDB**, aplana millones de
-recursos en un portátil. La versión 0.3.0 suma **terminologías** (`$expand`,
+recursos en un portátil. Incluye además **terminologías** (`$expand`,
 `$lookup`, `$validate-code`) y un **catálogo de vistas** listas para salud
 pública.
 
@@ -363,7 +363,7 @@ flowchart LR
         E["vista_ejecutar()<br/>evaluación por lotes"]
     end
     subgraph JS["V8"]
-        FP["fhirpath.js 5.2.1<br/>+ almacén de nodos tipados"]
+        FP["fhirpath.js 5.2.2<br/>+ almacén de nodos tipados"]
     end
     subgraph DK["DuckDB (experimental)"]
         SQ["vista_ejecutar_duckdb()<br/>ViewDefinition a SQL"]
@@ -579,7 +579,8 @@ porque sus funciones no comparten nombres.
 - Operaciones de SQL on FHIR 3.0 (`$run`, `$export` de vistas) y
   `SQLQuery`.
 - Caché del panel *Connections* para servidores lentos.
-- Envío a CRAN, después de [pobecu](https://github.com/f-slg/pobecu).
+- Publicación en CRAN (el paquete ya pasa `R CMD check --as-cran` sin
+  errores ni avisos).
 
 ## Documentación
 

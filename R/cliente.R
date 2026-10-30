@@ -33,7 +33,7 @@
 #' @seealso [fhir_buscar()], [fhir_leer()], [fhir_crear()], [fhir_peticion()],
 #'   [fhir_auth].
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' con
 #' @examplesIf interactive()
@@ -158,7 +158,7 @@ fhir_disponible <- function(url, tiempo = 5) {
 #'   estado y el JSON con sangría, como Postman. Si es un Bundle, se puede
 #'   pasar a [fhir_recursos()], [fhir_tabla()] o [vista_ejecutar()].
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' r <- fhir_peticion(con, "GET", "Patient", parametros = list(`_count` = 1,
 #'                                                           `_summary` = "count"))
@@ -225,7 +225,7 @@ print.fhir_respuesta <- function(x, ..., lineas = 40L) {
 #'   [fhir_recursos()]) que se puede pasar directamente a [vista_ejecutar()].
 #'   El atributo `total` guarda el total que informa el servidor, si lo hace.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' pacientes <- fhir_buscar(con, "Patient", gender = "female", `_count` = 5,
 #'                          max_paginas = 1)
@@ -253,7 +253,7 @@ fhir_buscar <- function(con, recurso, ..., parametros = list(),
 #'
 #' @return El recurso como lista de R.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' uno <- fhir_buscar(con, "Patient", `_count` = 1, max_paginas = 1)
 #' paciente <- fhir_leer(con, "Patient", uno[[1]]$id)
@@ -277,7 +277,7 @@ fhir_leer <- function(con, recurso, id = NULL, version = NULL) {
 #'
 #' @return Una lista de recursos de clase `fhir_recursos`.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' uno <- fhir_buscar(con, "Patient", `_count` = 1, max_paginas = 1)
 #' todo <- fhir_everything(con, "Patient", uno[[1]]$id, max_paginas = 1)
@@ -385,7 +385,7 @@ fhir_borrar <- function(con, recurso, id = NULL) {
 #'   problema (`severidad`, `codigo`, `mensaje`, `ubicacion`) y el atributo
 #'   `valido` (`TRUE` si no hay errores). Al imprimirlo, resume el resultado.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' fhir_validar(con, list(resourceType = "Patient", gender = "mujer"))
 fhir_validar <- function(con, recurso, perfil = NULL) {
@@ -432,7 +432,7 @@ print.fhir_validacion <- function(x, ...) {
 #'   `parametros_busqueda`. El `CapabilityStatement` completo queda en el
 #'   atributo `capability`.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' cap <- fhir_capacidades(con)
 #' head(cap)
@@ -523,7 +523,7 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
   if (estado < 400L && nzchar(trimws(texto)) && is.null(datos)) {
     cli::cli_abort(c(
       "La respuesta del servidor no es JSON.",
-      "x" = "{metodo} {url}",
+      "x" = "{metodo} {url_mensaje(url)}",
       "i" = "Comienza con: {.val {substr(texto, 1, 80)}}"
     ), class = "fhirviews_error", call = NULL)
   }
@@ -542,12 +542,7 @@ agregar_consulta <- function(url, parametros) {
     return(url)
   }
   pares <- unlist(Map(function(nombre, valor) {
-    if (is.logical(valor)) {
-      valor <- tolower(as.character(valor))
-    } else if (is.numeric(valor)) {
-      valor <- format(valor, scientific = FALSE, trim = TRUE)
-    }
-    paste0(codificar(nombre), "=", codificar(as.character(valor)))
+    paste0(codificar(nombre), "=", codificar(texto_parametro(valor)))
   }, names(parametros), parametros), use.names = FALSE)
   paste0(url, if (grepl("?", url, fixed = TRUE)) "&" else "?",
          paste(pares, collapse = "&"))
@@ -585,7 +580,7 @@ enviar_peticion <- function(con, metodo, url, cuerpo, parametros, cabeceras,
   tryCatch(httr2::req_perform(req), error = function(e) {
     cli::cli_abort(c(
       "No se pudo conectar con el servidor FHIR.",
-      "x" = "{metodo} {url}",
+      "x" = "{metodo} {url_mensaje(url)}",
       "i" = "{limpiar_mensaje(conditionMessage(e))}"
     ), class = c("fhirviews_error_conexion", "fhirviews_error"), call = NULL)
   })
@@ -604,12 +599,43 @@ error_http <- function(metodo, url, estado, descripcion, datos, texto) {
   problemas <- escapar_cli(utils::head(problemas, 10L))
   cli::cli_abort(c(
     "El servidor respondi\u00f3 {estado} {descripcion %||% ''}.",
-    "x" = "{metodo} {url}",
+    "x" = "{metodo} {url_mensaje(url)}",
     stats::setNames(problemas, rep("*", length(problemas)))
   ), class = c(paste0("fhirviews_error_http_", estado),
                "fhirviews_error_http", "fhirviews_error"),
   estado = estado, outcome = datos, call = NULL)
 }
+
+# URL para los mensajes de error, sin los valores de la consulta que pueden
+# ser datos de pacientes (nombres, documentos de identidad) o credenciales
+# (firmas de URL de descarga). Se conservan los parámetros de control, como
+# `_count`. Con options(fhirviews.mostrar_consulta = TRUE) se muestra entera.
+url_mensaje <- function(url) {
+  if (isTRUE(getOption("fhirviews.mostrar_consulta")) ||
+      !grepl("?", url, fixed = TRUE)) {
+    return(url)
+  }
+  base <- sub("\\?.*$", "", url)
+  consulta <- sub("^[^?]*\\?", "", url)
+  pares <- strsplit(consulta, "&", fixed = TRUE)[[1]]
+  pares <- vapply(pares, function(par) {
+    nombre <- sub("=.*$", "", par)
+    if (!grepl("=", par, fixed = TRUE) ||
+        utils::URLdecode(nombre) %in% parametros_visibles) {
+      par
+    } else {
+      paste0(nombre, "=***")
+    }
+  }, character(1), USE.NAMES = FALSE)
+  paste0(base, "?", paste(pares, collapse = "&"))
+}
+
+parametros_visibles <- c(
+  "_count", "_sort", "_include", "_revinclude", "_summary", "_elements",
+  "_total", "_format", "_type", "_since", "_outputFormat", "_pretty",
+  "_getpages", "_getpagesoffset", "_bundletype", "_offset", "url", "system",
+  "version", "offset", "count", "property", "profile", "_id"
+)
 
 escapar_cli <- function(x) {
   gsub("\\}", "}}", gsub("\\{", "{{", x))
@@ -643,28 +669,45 @@ parametros_busqueda <- function(x) {
       "i" = "Por ejemplo: {.code family = \"Paredes\"}."
     ), class = "fhirviews_error", call = NULL)
   }
-  lapply(x, function(v) {
-    if (inherits(v, "Date")) {
-      format(v, "%Y-%m-%d")
-    } else if (is.logical(v)) {
-      tolower(as.character(v))
-    } else {
-      as.character(v)
-    }
-  })
+  lapply(x, texto_parametro)
+}
+
+# Valor de un parámetro de la URL como texto: fechas en ISO 8601, lógicos en
+# minúsculas y números sin notación científica (as.character(1e5) da
+# "1e+05"). Cada elemento se convierte por separado para que format() no
+# iguale el ancho ni los decimales de todo el vector.
+texto_parametro <- function(v) {
+  if (inherits(v, "Date")) {
+    return(format(v, "%Y-%m-%d"))
+  }
+  if (inherits(v, "POSIXt")) {
+    return(format(as.POSIXct(v), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"))
+  }
+  if (is.logical(v)) {
+    return(tolower(as.character(v)))
+  }
+  if (is.numeric(v)) {
+    return(vapply(v, function(n) {
+      format(n, scientific = FALSE, trim = TRUE, digits = 15)
+    }, character(1)))
+  }
+  as.character(v)
 }
 
 paginar <- function(con, ruta, parametros, max_paginas, progreso) {
-  textos <- character()
-  recursos <- list()
+  # Páginas en listas que se unen al final: con c() en cada vuelta el costo
+  # crece con el cuadrado del número de páginas
+  textos <- list()
+  paginas <- list()
+  n_recursos <- 0L
   total <- NULL
   siguiente <- NULL
-  visitadas <- character()
+  visitadas <- new.env(hash = TRUE, parent = emptyenv())
   pagina <- 0L
   if (progreso) {
     cli::cli_progress_bar(format = paste(
       "{cli::pb_spin} Descargando p\u00e1gina {pagina}",
-      "({length(recursos)} recursos)"
+      "({n_recursos} recursos)"
     ), clear = TRUE)
   }
   repeat {
@@ -682,16 +725,18 @@ paginar <- function(con, ruta, parametros, max_paginas, progreso) {
       ), class = "fhirviews_error", call = NULL)
     }
     if (pagina == 1L) total <- bundle$total
-    textos <- c(textos, res$texto)
-    recursos <- c(recursos, recursos_desde_lista(bundle))
+    textos[[pagina]] <- res$texto
+    paginas[[pagina]] <- recursos_desde_lista(bundle)
+    n_recursos <- n_recursos + length(paginas[[pagina]])
     if (progreso) cli::cli_progress_update()
-    if (!is.null(siguiente)) visitadas <- c(visitadas, siguiente)
+    if (!is.null(siguiente)) assign(siguiente, TRUE, envir = visitadas)
     siguiente <- enlace_siguiente(bundle, con)
-    if (!is.null(siguiente) && siguiente %in% visitadas) {
+    if (!is.null(siguiente) &&
+        exists(siguiente, envir = visitadas, inherits = FALSE)) {
       cli::cli_warn(c(
         "El servidor repiti\u00f3 un enlace {.field next} ya visitado; se
          detiene la paginaci\u00f3n para no entrar en un bucle.",
-        "i" = "Se reunieron {length(recursos)} recurso{?s} en {pagina}
+        "i" = "Se reunieron {n_recursos} recurso{?s} en {pagina}
                p\u00e1gina{?s}."
       ), class = "fhirviews_aviso")
       break
@@ -699,7 +744,8 @@ paginar <- function(con, ruta, parametros, max_paginas, progreso) {
     if (is.null(siguiente) || pagina >= max_paginas) break
   }
   if (progreso) cli::cli_progress_done()
-  r <- nuevo_fhir_recursos(recursos, fuente = textos)
+  r <- nuevo_fhir_recursos(unlist(paginas, recursive = FALSE),
+                           fuente = unlist(textos))
   attr(r, "total") <- total
   r
 }

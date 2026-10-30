@@ -57,4 +57,26 @@ test_that("da errores claros", {
   expect_error(fhir_recursos(1:3), class = "fhirviews_error")
   expect_error(fhir_recursos(list(id = "x")), class = "fhirviews_error")
   expect_error(fhir_recursos("{no es json"), class = "fhirviews_error")
+  expect_error(fhir_recursos("[1, 2, 3]"), "No se reconoce un recurso",
+               class = "fhirviews_error")
+  expect_error(fhir_recursos(list(42)), "No se reconoce un recurso",
+               class = "fhirviews_error")
+})
+
+test_that("la fuente alineada marca un texto por recurso", {
+  b1 <- paste0('{"resourceType":"Bundle","type":"searchset","entry":',
+               '[{"resource":{"resourceType":"Patient","id":"p1"}}]}')
+  r <- fhir_recursos(b1)
+  expect_length(r, 1L)
+  expect_false(is.null(attr(r, "fuente")))
+  expect_null(fuente_alineada(r))
+  expect_length(fuente_alineada(fhir_recursos(
+    '{"resourceType":"Patient","id":"p1"}')), 1L)
+  nd <- c('{"resourceType":"Patient","id":"a"}', b1)
+  expect_null(fuente_alineada(fhir_recursos(nd)))
+  expect_length(fuente_alineada(fhir_recursos(nd[1])), 1L)
+  expect_null(fuente_alineada(c(fhir_recursos(nd[1]), fhir_recursos(b1))))
+  expect_length(fuente_alineada(c(fhir_recursos(nd[1]), fhir_recursos(nd[1]))),
+                2L)
+  expect_null(attr(fhir_recursos(nd[1])[1], "fuente_alineada"))
 })

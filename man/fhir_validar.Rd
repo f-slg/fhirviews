@@ -24,7 +24,7 @@ Envía un recurso a la operación \verb{$validate} del servidor
 (\verb{POST [base]/[tipo]/$validate}) y devuelve los problemas encontrados.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 fhir_validar(con, list(resourceType = "Patient", gender = "mujer"))
 \dontshow{\}) # examplesIf}

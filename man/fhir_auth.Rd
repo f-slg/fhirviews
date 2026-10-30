@@ -45,7 +45,9 @@ el código, guárdalo en una variable de entorno y usa por ejemplo
 
 \item{alcances}{Vector de \emph{scopes} SMART, por ejemplo
 \code{c("system/Patient.read", "system/Observation.read")} o, en SMART v2,
-\code{"system/*.rs"}.}
+\code{"system/*.rs"}. El valor por defecto usa la sintaxis de SMART v1
+(\code{.read}), que la mayoría de servidores v2 también aceptan; si el
+servidor solo admite v2, indica los alcances con \code{.rs}.}
 
 \item{url_token}{URL del \emph{token endpoint}. Si es \code{NULL}, se descubre.}
 

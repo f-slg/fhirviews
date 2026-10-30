@@ -1,10 +1,8 @@
 ---
 title: "Tasas por cantón con FHIR y pobecu"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Tasas por cantón con FHIR y pobecu}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+description: >
+  Casos de dengue desde recursos FHIR, unidos a la población oficial del
+  Ecuador del paquete pobecu para calcular tasas por cantón.
 ---
 
 ```{r, include = FALSE}
@@ -14,7 +12,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7,
 ```
 
 ```{r, eval = !tiene_pobecu, echo = FALSE, results = "asis"}
-cat("> Esta viñeta necesita el paquete [pobecu](https://f-slg.github.io/pobecu/),",
+cat("> Este artículo necesita el paquete [pobecu](https://f-slg.github.io/pobecu/),",
     "que no está instalado: el código se muestra sin ejecutar.\n")
 ```
 

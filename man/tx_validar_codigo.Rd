@@ -4,7 +4,7 @@
 \alias{tx_validar_codigo}
 \title{Validar códigos contra un ValueSet ($validate-code)}
 \usage{
-tx_validar_codigo(con, valueset, sistema, codigo, display = NULL)
+tx_validar_codigo(con, valueset, sistema, codigo, display = NULL, lote = TRUE)
 }
 \arguments{
 \item{con}{Conexión al servidor de terminología creada con
@@ -19,10 +19,16 @@ y un filtro \code{is-a} de SNOMED CT).}
 \item{sistema}{URL del sistema de codificación de los códigos; se recicla
 si es uno solo.}
 
-\item{codigo}{Vector de códigos. Se hace una petición por código.}
+\item{codigo}{Vector de códigos.}
 
 \item{display}{Vector opcional de nombres (\emph{display}) que el servidor
 también comprueba.}
+
+\item{lote}{Si es \code{TRUE} (por defecto), hay varios códigos y \code{valueset}
+es una URL canónica, se envían en Bundles \code{batch} de hasta 100 códigos,
+con una petición por Bundle. Si el servidor no admite \code{batch}, o si
+\code{valueset} es un recurso, se valida un código por petición, como con
+\code{lote = FALSE}.}
 }
 \value{
 Un \code{data.frame} con una fila por código y las columnas \code{sistema},
@@ -41,7 +47,7 @@ La función se llama \code{tx_validar_codigo()}, en infinitivo como
 \code{\link[=fhir_validar]{fhir_validar()}}, \code{\link[=tx_expandir]{tx_expandir()}} y \code{\link[=tx_buscar_codigo]{tx_buscar_codigo()}}.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 tx_validar_codigo(tx, "http://hl7.org/fhir/ValueSet/administrative-gender",
                   "http://hl7.org/fhir/administrative-gender",

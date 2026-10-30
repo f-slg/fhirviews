@@ -1,3 +1,77 @@
+# fhirviews 0.4.0
+
+Correcciones de una auditoría del paquete, con pruebas de escritura contra
+un servidor HAPI FHIR propio, y preparación para CRAN. No hay cambios
+incompatibles.
+
+## Correcciones
+
+* `vista_ejecutar_duckdb()` devolvía una tabla vacía con recursos que venían
+  de un Bundle de una sola entrada, por ejemplo una búsqueda de
+  `fhir_buscar()` con un único resultado: el Bundle se escribía como si fuera
+  el recurso. `vista_ejecutar()` no estaba afectada.
+* Los parámetros numéricos de búsqueda se enviaban en notación científica:
+  `fhir_buscar(con, "Patient", _count = 100000)` llegaba al servidor como
+  `_count=1e+05`. Ahora los números se envían completos y las fechas y horas
+  de R (`POSIXct`), en ISO 8601 y UTC.
+* `vista_ejecutar_duckdb()` ya no altera el generador de números aleatorios
+  de R (`.Random.seed`) al crear su tabla temporal.
+* `vista_ejecutar_duckdb()` acepta, como `vista_ejecutar()`, texto JSON y
+  archivos `.json` con un recurso o un Bundle (antes los tomaba como rutas
+  NDJSON o nombres de tabla y fallaba).
+* `fhir_recursos()` da un error claro con valores que no son recursos, como
+  `'[1, 2, 3]'` o `list(42)`, en lugar de "subíndice fuera de los límites".
+* `tx_expandir()` y `tx_validar_codigo()` con un ValueSet como recurso envían
+  cada parámetro con su tipo de la operación (`system` y `url` como
+  `valueUri`, `code` como `valueCode`, `count` como `valueInteger`...): los
+  servidores estrictos, como HAPI, rechazaban `system` enviado como texto.
+
+## Mejoras
+
+* `vista_validar()` (y por tanto `vista_ejecutar()`) avisa, con la clase
+  `fhirviews_aviso_vista`, si `resource` no es un tipo de recurso de FHIR R4
+  o si una ruta usa un elemento que no existe (`name.familia`,
+  `resource = "Patiente"`): FHIRPath no da error en esos casos y la vista
+  devolvía una tabla vacía o columnas sin valores.
+* `tx_validar_codigo()` envía varios códigos en Bundles `batch` de hasta 100
+  (nuevo argumento `lote = TRUE`), con una petición por Bundle en lugar de
+  una por código. Si el servidor no admite `batch`, valida de a uno como
+  antes.
+* Los mensajes de error ya no muestran los valores de la consulta de la URL
+  (`identifier=***`), que pueden ser datos de pacientes o firmas de URL de
+  descarga. La opción `fhirviews.mostrar_consulta = TRUE` muestra la URL
+  completa. La ayuda del paquete (`?fhirviews`) describe las opciones.
+* `fhir_tabla()` es unas 20 veces más rápida (100 000 pacientes en 1,5 s en
+  lugar de 30 s), lo que también acelera la vista previa del panel
+  *Connections* de RStudio.
+* `fhir_buscar()` y `fhir_everything()` reúnen las páginas en tiempo lineal
+  (antes el costo crecía con el cuadrado del número de páginas).
+* fhirpath.js 5.2.2 (solo cambia el empaquetado de npm).
+* La caché de expresiones FHIRPath compiladas tiene un límite de 1000.
+
+## Preparación para CRAN
+
+* La viñeta *Tasas por cantón con FHIR y pobecu* pasa a ser un artículo de
+  la web (`vignettes/articles/`, misma dirección) y pobecu sale de
+  Suggests: así todas las dependencias están en CRAN.
+* Los ejemplos que usan servidores públicos (hapi.fhir.org, tx.fhir.org)
+  corren en sesiones interactivas y en la web, no en `R CMD check`; la
+  viñeta de volumen no descarga la extensión json de DuckDB durante el
+  check.
+* `fhirviews_motor()` devuelve un objeto que se imprime, en lugar de
+  escribir en la consola al llamarla.
+* Título más corto y los contribuyentes de SQL on FHIR como titulares del
+  banco de pruebas incluido.
+
+## Pruebas
+
+* `tests/testthat/test-servidor.R` prueba contra un servidor propio
+  (variable `FHIRVIEWS_SERVIDOR_ESCRITURA`, por ejemplo un HAPI local) el
+  ciclo de escritura completo, una transacción con referencias `urn:uuid`,
+  las vistas con V8 y DuckDB sobre los datos del servidor, `fhir_tabla()`,
+  `$expand`, `$validate-code` en lote y la exportación masiva `$export` de
+  punta a punta.
+
 # fhirviews 0.3.0
 
 Esta versión amplía el motor DuckDB a todo el perfil *shareable* y la mayor

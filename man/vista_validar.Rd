@@ -12,7 +12,8 @@ vista_validar(vista)
 }
 \value{
 La vista, de forma invisible, si es válida. Si no, un error de
-clase \code{fhirviews_error_vista} con la lista de problemas encontrados.
+clase \code{fhirviews_error_vista} con la lista de problemas encontrados. Los
+avisos del modelo R4 son de clase \code{fhirviews_aviso_vista}.
 }
 \description{
 Comprueba que un \code{ViewDefinition} cumpla la estructura de SQL on FHIR antes
@@ -36,6 +37,15 @@ FHIRPath o del motor (\code{resource}, \code{rootResource}, \code{context}, \cod
 \code{ucum}, \code{sct}, \code{loinc}...);
 \item todas las expresiones FHIRPath se pueden compilar.
 }
+
+Además, con el modelo de FHIR R4 avisa (sin error) si \code{resource} no es un
+tipo de recurso de R4 o si una ruta usa un elemento que no existe (por
+ejemplo \code{name.familia} en lugar de \code{name.family}): FHIRPath no da error en
+esos casos y la vista devolvería una tabla vacía o columnas sin valores.
+Solo se revisan los pasos de navegación simples; los elementos de
+elección (\code{value}), las extensiones y las expresiones con operadores no
+generan avisos. Se pueden silenciar con
+\code{suppressWarnings(..., classes = "fhirviews_aviso_vista")}.
 }
 \examples{
 vista_validar(vista_crear("Patient", c(sexo = "gender")))

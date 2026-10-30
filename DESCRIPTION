@@ -1,8 +1,7 @@
 Package: fhirviews
 Type: Package
-Title: Query 'HL7 FHIR' Servers and Flatten Resources with 'SQL on FHIR'
-    View Definitions
-Version: 0.3.0
+Title: 'HL7 FHIR' Client and 'SQL on FHIR' View Engine
+Version: 0.4.0
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",
@@ -19,7 +18,9 @@ Authors@R:
       person("Michael Mclaughlin", role = "cph",
              comment = "decimal.js library bundled in fhirpath.js"),
       person("Regenstrief Institute, Inc.", role = "cph",
-             comment = "UCUM table bundled in fhirpath.js")
+             comment = "UCUM table bundled in fhirpath.js"),
+      person("SQL on FHIR project contributors", role = "cph",
+             comment = "conformance test suite in inst/sof-tests")
     )
 Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     paging, read, create, update, delete, transactions and the '$everything',
@@ -56,7 +57,6 @@ Suggests:
     jose,
     knitr,
     openssl,
-    pobecu,
     rmarkdown,
     rstudioapi,
     testthat (>= 3.0.0)

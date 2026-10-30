@@ -77,8 +77,9 @@ simplificar_valores <- function(res) {
 #' en el paquete V8. La opción `fhirviews.motor` queda reservada para elegir
 #' otros motores en el futuro.
 #'
-#' @return `fhirviews_motor()` devuelve, de forma invisible, una lista con el
-#'   motor, la versión de fhirpath.js y la del motor de JavaScript.
+#' @return `fhirviews_motor()` devuelve una lista de clase `fhirviews_motor`
+#'   con el motor (`motor`), la versión de fhirpath.js (`fhirpath_js`) y la
+#'   del motor de JavaScript (`v8`), que se imprime como un resumen.
 #'   `fhirviews_version_fhirpath()` devuelve la versión de fhirpath.js
 #'   incluida en el paquete, sin iniciar V8.
 #' @export
@@ -87,15 +88,19 @@ simplificar_valores <- function(res) {
 #' fhirviews_motor()
 fhirviews_motor <- function() {
   m <- motor_actual()
-  info <- list(
+  structure(list(
     motor = m$nombre,
     fhirpath_js = m$version(),
     v8 = V8::engine_info()$version
-  )
-  cat("Motor de FHIRPath: ", info$motor, "\n",
-      "fhirpath.js:       ", info$fhirpath_js, "\n",
-      "V8:                ", info$v8, "\n", sep = "")
-  invisible(info)
+  ), class = "fhirviews_motor")
+}
+
+#' @export
+print.fhirviews_motor <- function(x, ...) {
+  cat("Motor de FHIRPath: ", x$motor, "\n",
+      "fhirpath.js:       ", x$fhirpath_js, "\n",
+      "V8:                ", x$v8, "\n", sep = "")
+  invisible(x)
 }
 
 #' @rdname fhirviews_motor

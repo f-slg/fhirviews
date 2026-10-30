@@ -16,7 +16,8 @@ vista_ejecutar_duckdb(
 \item{archivos}{Rutas de archivos \code{.ndjson}, \code{.ndjson.gz} o \code{.parquet}
 (se pueden usar comodines como \code{"datos/*.ndjson"}), el nombre de una
 tabla de \code{con_db} con una columna \code{json}, o recursos en cualquier forma
-que acepte \code{\link[=fhir_recursos]{fhir_recursos()}} (que se escriben antes en un archivo
+que acepte \code{\link[=fhir_recursos]{fhir_recursos()}}, incluidos texto JSON y archivos \code{.json}
+con un recurso o un Bundle (que se escriben antes en un archivo NDJSON
 temporal).}
 
 \item{vista}{Un \code{ViewDefinition} en cualquier forma que acepte

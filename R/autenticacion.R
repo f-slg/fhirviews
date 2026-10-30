@@ -31,7 +31,9 @@
 #'   (solo para clientes confidenciales).
 #' @param alcances Vector de *scopes* SMART, por ejemplo
 #'   `c("system/Patient.read", "system/Observation.read")` o, en SMART v2,
-#'   `"system/*.rs"`.
+#'   `"system/*.rs"`. El valor por defecto usa la sintaxis de SMART v1
+#'   (`.read`), que la mayoría de servidores v2 también aceptan; si el
+#'   servidor solo admite v2, indica los alcances con `.rs`.
 #' @param url_token URL del *token endpoint*. Si es `NULL`, se descubre.
 #' @param envio Cómo se envía el secreto al pedir el token: `"cabecera"`
 #'   (HTTP Basic, `client_secret_basic`) o `"cuerpo"` (`client_secret_post`).

@@ -151,7 +151,7 @@ vistas_vinetas <- function() {
     carpeta <- system.file("doc", package = "fhirviews")
   }
   archivos <- file.path(carpeta, c("fhirviews.Rmd", "vistas.Rmd",
-                                   "tasas-pobecu.Rmd"))
+                                   file.path("articles", "tasas-pobecu.Rmd")))
   archivos <- archivos[file.exists(archivos)]
   vistas <- list()
   for (a in archivos) {
@@ -463,4 +463,32 @@ test_that("diferido devuelve una tabla de dbplyr", {
                class = "fhirviews_error")
   expect_error(vista_ejecutar_duckdb(caso, vista, diferido = NA),
                class = "fhirviews_error")
+})
+
+test_that("DuckDB lee un Bundle de una sola entrada", {
+  # Una busqueda con un solo resultado: el texto de la pagina es un Bundle y
+  # no se puede escribir como una linea de NDJSON
+  b <- paste0('{"resourceType":"Bundle","type":"searchset","entry":',
+              '[{"resource":{"resourceType":"Patient","id":"p1",',
+              '"gender":"female"}}]}')
+  v <- vista_crear("Patient", c(sexo = "gender"))
+  esperado <- vista_ejecutar(b, v)
+  expect_identical(nrow(esperado), 1L)
+  expect_identical(vista_ejecutar_duckdb(fhir_recursos(b), v), esperado)
+  # Texto JSON y archivos .json (un Bundle en varias lineas) tambien
+  expect_identical(vista_ejecutar_duckdb(b, v), esperado)
+  archivo <- withr_tempfile(".json")
+  writeLines(jsonlite::prettify(b), archivo)
+  expect_identical(vista_ejecutar_duckdb(archivo, v), esperado)
+})
+
+test_that("DuckDB no altera el generador de numeros aleatorios", {
+  obs <- list(list(resourceType = "Observation", id = "o1", status = "final",
+                   extension = list(list(url = "u", valueString = "a"))))
+  v <- vista_crear("Observation", c(x = "extension.value.first()"))
+  set.seed(1)
+  a <- stats::runif(1)
+  set.seed(1)
+  vista_ejecutar_duckdb(obs, v)
+  expect_identical(stats::runif(1), a)
 })
