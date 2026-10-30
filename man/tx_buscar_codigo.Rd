@@ -36,7 +36,7 @@ Consulta un código en un servidor de terminología con la operación
 sinónimos, etc., según el sistema).
 }
 \examples{
-\dontshow{if (fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 glucosa <- tx_buscar_codigo(tx, "http://loinc.org", "2345-7")
 glucosa$display

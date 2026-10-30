@@ -42,7 +42,7 @@ Los \code{where} de la vista se aplican después de descargar los datos; para
 descargar menos, filtra también con parámetros de búsqueda en \code{...}.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 fhir_vista(con, vista_crear("Patient", c(sexo = "gender",
                                          nacimiento = "birthDate")),

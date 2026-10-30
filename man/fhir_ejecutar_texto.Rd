@@ -23,7 +23,7 @@ Las líneas que empiezan con \verb{#} o \verb{//} son comentarios. Es lo que hac
 addin \emph{Ejecutar petición FHIR} de RStudio con el texto seleccionado.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 fhir_ejecutar_texto("GET Patient?_summary=count", con)
 

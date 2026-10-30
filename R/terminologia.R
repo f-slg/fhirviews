@@ -39,7 +39,7 @@
 #' @seealso [tx_buscar_codigo()], [tx_validar_codigo()],
 #'   [vista_con_valueset()].
 #' @export
-#' @examplesIf fhir_disponible("https://tx.fhir.org/r4")
+#' @examplesIf interactive() && fhir_disponible("https://tx.fhir.org/r4")
 #' tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 #'
 #' # Un ValueSet publicado, por su URL canónica
@@ -150,7 +150,7 @@ tx_expandir <- function(con, valueset, filtro = NULL, max = Inf,
 #'   atributo `respuesta`.
 #' @seealso [tx_expandir()], [tx_validar_codigo()].
 #' @export
-#' @examplesIf fhir_disponible("https://tx.fhir.org/r4")
+#' @examplesIf interactive() && fhir_disponible("https://tx.fhir.org/r4")
 #' tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 #' glucosa <- tx_buscar_codigo(tx, "http://loinc.org", "2345-7")
 #' glucosa$display
@@ -232,7 +232,7 @@ tx_buscar_codigo <- function(con, sistema, codigo, version = NULL,
 #'   válido).
 #' @seealso [tx_expandir()], [tx_buscar_codigo()].
 #' @export
-#' @examplesIf fhir_disponible("https://tx.fhir.org/r4")
+#' @examplesIf interactive() && fhir_disponible("https://tx.fhir.org/r4")
 #' tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 #' tx_validar_codigo(tx, "http://hl7.org/fhir/ValueSet/administrative-gender",
 #'                   "http://hl7.org/fhir/administrative-gender",
@@ -363,7 +363,7 @@ tx_validar_codigo <- function(con, valueset, sistema, codigo, display = NULL,
 #' ))
 #' vista_ejecutar(condiciones, vista)
 #'
-#' @examplesIf fhir_disponible("https://tx.fhir.org/r4")
+#' @examplesIf interactive() && fhir_disponible("https://tx.fhir.org/r4")
 #' # Con un servidor de terminología
 #' tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 #' sexo <- tx_expandir(tx, "http://hl7.org/fhir/ValueSet/administrative-gender")

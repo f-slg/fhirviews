@@ -20,7 +20,7 @@ Lee el \code{CapabilityStatement} (\code{GET [base]/metadata}) y resume qué
 recursos admite el servidor y qué se puede hacer con cada uno.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 cap <- fhir_capacidades(con)
 head(cap)

@@ -33,7 +33,7 @@
 #' @seealso [fhir_buscar()], [fhir_leer()], [fhir_crear()], [fhir_peticion()],
 #'   [fhir_auth].
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' con
 #' @examplesIf interactive()
@@ -158,7 +158,7 @@ fhir_disponible <- function(url, tiempo = 5) {
 #'   estado y el JSON con sangría, como Postman. Si es un Bundle, se puede
 #'   pasar a [fhir_recursos()], [fhir_tabla()] o [vista_ejecutar()].
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' r <- fhir_peticion(con, "GET", "Patient", parametros = list(`_count` = 1,
 #'                                                           `_summary` = "count"))
@@ -225,7 +225,7 @@ print.fhir_respuesta <- function(x, ..., lineas = 40L) {
 #'   [fhir_recursos()]) que se puede pasar directamente a [vista_ejecutar()].
 #'   El atributo `total` guarda el total que informa el servidor, si lo hace.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' pacientes <- fhir_buscar(con, "Patient", gender = "female", `_count` = 5,
 #'                          max_paginas = 1)
@@ -253,7 +253,7 @@ fhir_buscar <- function(con, recurso, ..., parametros = list(),
 #'
 #' @return El recurso como lista de R.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' uno <- fhir_buscar(con, "Patient", `_count` = 1, max_paginas = 1)
 #' paciente <- fhir_leer(con, "Patient", uno[[1]]$id)
@@ -277,7 +277,7 @@ fhir_leer <- function(con, recurso, id = NULL, version = NULL) {
 #'
 #' @return Una lista de recursos de clase `fhir_recursos`.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' uno <- fhir_buscar(con, "Patient", `_count` = 1, max_paginas = 1)
 #' todo <- fhir_everything(con, "Patient", uno[[1]]$id, max_paginas = 1)
@@ -385,7 +385,7 @@ fhir_borrar <- function(con, recurso, id = NULL) {
 #'   problema (`severidad`, `codigo`, `mensaje`, `ubicacion`) y el atributo
 #'   `valido` (`TRUE` si no hay errores). Al imprimirlo, resume el resultado.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' fhir_validar(con, list(resourceType = "Patient", gender = "mujer"))
 fhir_validar <- function(con, recurso, perfil = NULL) {
@@ -432,7 +432,7 @@ print.fhir_validacion <- function(x, ...) {
 #'   `parametros_busqueda`. El `CapabilityStatement` completo queda en el
 #'   atributo `capability`.
 #' @export
-#' @examplesIf fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' cap <- fhir_capacidades(con)
 #' head(cap)

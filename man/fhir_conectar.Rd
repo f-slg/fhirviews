@@ -55,7 +55,7 @@ reintentan si el servidor está saturado (códigos 429 y 503) y los errores
 muestran el \code{OperationOutcome} del servidor.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 con
 \dontshow{\}) # examplesIf}

@@ -128,7 +128,10 @@ test_that("el motor encadena nodos sin perder el tipo", {
 
 test_that("informa el motor y la version de fhirpath.js", {
   expect_identical(fhirviews_version_fhirpath(), "5.2.2")
-  expect_output(info <- fhirviews_motor(), "fhirpath.js")
+  # No escribe en la consola al llamarla, solo al imprimir el resultado
+  expect_silent(info <- fhirviews_motor())
+  expect_s3_class(info, "fhirviews_motor")
+  expect_output(print(info), "fhirpath.js")
   expect_identical(info$fhirpath_js, fhirviews_version_fhirpath())
   withr_opcion <- options(fhirviews.motor = "otro")
   on.exit(options(withr_opcion), add = TRUE)

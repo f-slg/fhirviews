@@ -24,9 +24,10 @@ si es uno solo.}
 \item{display}{Vector opcional de nombres (\emph{display}) que el servidor
 también comprueba.}
 
-\item{lote}{Si es \code{TRUE} (por defecto) y hay varios códigos, se envían en
-Bundles \code{batch} de hasta 100 códigos, con una petición por Bundle. Si el
-servidor no admite \code{batch}, se valida un código por petición, como con
+\item{lote}{Si es \code{TRUE} (por defecto), hay varios códigos y \code{valueset}
+es una URL canónica, se envían en Bundles \code{batch} de hasta 100 códigos,
+con una petición por Bundle. Si el servidor no admite \code{batch}, o si
+\code{valueset} es un recurso, se valida un código por petición, como con
 \code{lote = FALSE}.}
 }
 \value{
@@ -46,7 +47,7 @@ La función se llama \code{tx_validar_codigo()}, en infinitivo como
 \code{\link[=fhir_validar]{fhir_validar()}}, \code{\link[=tx_expandir]{tx_expandir()}} y \code{\link[=tx_buscar_codigo]{tx_buscar_codigo()}}.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 tx_validar_codigo(tx, "http://hl7.org/fhir/ValueSet/administrative-gender",
                   "http://hl7.org/fhir/administrative-gender",

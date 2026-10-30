@@ -30,7 +30,7 @@ del servidor, sus columnas y una vista previa de los datos (con
 }
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if (interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4", panel = FALSE)
 identical(fhir_conexion_activa()$url, con$url)
 fhir_desconectar(con)
