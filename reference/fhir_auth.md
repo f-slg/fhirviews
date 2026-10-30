@@ -54,7 +54,9 @@ fhir_auth_interactiva(
 
   Vector de *scopes* SMART, por ejemplo
   `c("system/Patient.read", "system/Observation.read")` o, en SMART v2,
-  `"system/*.rs"`.
+  `"system/*.rs"`. El valor por defecto usa la sintaxis de SMART v1
+  (`.read`), que la mayoría de servidores v2 también aceptan; si el
+  servidor solo admite v2, indica los alcances con `.rs`.
 
 - url_token:
 

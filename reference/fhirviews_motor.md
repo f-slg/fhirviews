@@ -15,8 +15,9 @@ fhirviews_version_fhirpath()
 
 ## Value
 
-`fhirviews_motor()` devuelve, de forma invisible, una lista con el
-motor, la versión de fhirpath.js y la del motor de JavaScript.
+`fhirviews_motor()` devuelve una lista de clase `fhirviews_motor` con el
+motor (`motor`), la versión de fhirpath.js (`fhirpath_js`) y la del
+motor de JavaScript (`v8`), que se imprime como un resumen.
 `fhirviews_version_fhirpath()` devuelve la versión de fhirpath.js
 incluida en el paquete, sin iniciar V8.
 
@@ -24,9 +25,9 @@ incluida en el paquete, sin iniciar V8.
 
 ``` r
 fhirviews_version_fhirpath()
-#> [1] "5.2.1"
+#> [1] "5.2.2"
 fhirviews_motor()
 #> Motor de FHIRPath: v8
-#> fhirpath.js:       5.2.1
+#> fhirpath.js:       5.2.2
 #> V8:                12.4.254.21
 ```

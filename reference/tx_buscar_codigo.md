@@ -60,7 +60,7 @@ glucosa$display
 head(glucosa$propiedades)
 #>    propiedad     valor descripcion
 #> 1   inactive     FALSE        <NA>
-#> 2      CLASS  LP7786-9        <NA>
+#> 2      CLASS      CHEM        <NA>
 #> 3  COMPONENT LP14635-4        <NA>
 #> 4   PROPERTY  LP6827-2        <NA>
 #> 5 TIME_ASPCT  LP6960-1        <NA>

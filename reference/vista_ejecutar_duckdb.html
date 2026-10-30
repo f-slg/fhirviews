@@ -11,7 +11,7 @@ referencia usa vista_ejecutar()."><meta property="og:image" content="https://f-s
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ referencia usa vista_ejecutar()."><meta property="og:image" content="https://f-s
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Ejecutar un ViewDefinition con DuckDB (experimental)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/R/sql.R" class="external-link"><code>R/sql.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/sql.R" class="external-link"><code>R/sql.R</code></a></small>
       <div class="d-none name"><code>vista_ejecutar_duckdb.Rd</code></div>
     </div>
 
@@ -71,7 +71,8 @@ referencia usa <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>.<
 <dd><p>Rutas de archivos <code>.ndjson</code>, <code>.ndjson.gz</code> o <code>.parquet</code>
 (se pueden usar comodines como <code>"datos/*.ndjson"</code>), el nombre de una
 tabla de <code>con_db</code> con una columna <code>json</code>, o recursos en cualquier forma
-que acepte <code><a href="fhir_recursos.html">fhir_recursos()</a></code> (que se escriben antes en un archivo
+que acepte <code><a href="fhir_recursos.html">fhir_recursos()</a></code>, incluidos texto JSON y archivos <code>.json</code>
+con un recurso o un Bundle (que se escriben antes en un archivo NDJSON
 temporal).</p></dd>
 
 

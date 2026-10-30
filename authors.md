@@ -23,19 +23,22 @@
 - **Regenstrief Institute, Inc.**. Copyright holder.  
   UCUM table bundled in fhirpath.js
 
+- **SQL on FHIR project contributors**. Copyright holder.  
+  conformance test suite in inst/sof-tests
+
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/f-slg/fhirviews/blob/v0.3.0/inst/CITATION)
+[`inst/CITATION`](https://github.com/f-slg/fhirviews/blob/main/inst/CITATION)
 
 Salas Guerrero, R. F. (2026). fhirviews: FHIR desde R y vistas tabulares
-con SQL on FHIR. Paquete de R versión 0.3.0.
+con SQL on FHIR. Paquete de R versión 0.4.0.
 https://github.com/f-slg/fhirviews
 
     @Manual{,
       title = {fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR},
       author = {Ronald Fabricio {Salas Guerrero}},
       year = {2026},
-      note = {Paquete de R versión 0.3.0},
+      note = {Paquete de R versión 0.4.0},
       url = {https://github.com/f-slg/fhirviews},
     }

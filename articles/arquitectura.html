@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Cómo funciona por dentro</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/vignettes/articles/arquitectura.Rmd" class="external-link"><code>vignettes/articles/arquitectura.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/vignettes/articles/arquitectura.Rmd" class="external-link"><code>vignettes/articles/arquitectura.Rmd</code></a></small>
       <div class="d-none name"><code>arquitectura.Rmd</code></div>
     </div>
 
@@ -88,7 +88,7 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://f-slg.github.io/fhirviews/">fhirviews</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/fhirviews_motor.html">fhirviews_motor</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Motor de FHIRPath: v8</span></span>
-<span><span class="co">#&gt; fhirpath.js:       5.2.1</span></span>
+<span><span class="co">#&gt; fhirpath.js:       5.2.2</span></span>
 <span><span class="co">#&gt; V8:                12.4.254.21</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="visión-general">Visión general<a class="anchor" aria-label="anchor" href="#visi%C3%B3n-general"></a>
@@ -103,7 +103,7 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
     end
     subgraph V8["V8 (JavaScript)"]
         GL["Capa propia&lt;br/&gt;inst/js/fhirviews.js"]
-        FP["fhirpath.js 5.2.1&lt;br/&gt;+ modelo FHIR R4"]
+        FP["fhirpath.js 5.2.2&lt;br/&gt;+ modelo FHIR R4"]
     end
     SV["Servidor FHIR"] &lt;--&gt;|"httr2&lt;br/&gt;application/fhir+json"| CL
     CL --&gt; RE
@@ -462,7 +462,7 @@ del número de recursos:</p>
 <span>                     por_cada <span class="op">=</span> <span class="st">"telecom"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="va">vista</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.009   0.001   0.007</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.014   0.000   0.013</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="orden-de-columnas-y-de-filas">Orden de columnas y de filas<a class="anchor" aria-label="anchor" href="#orden-de-columnas-y-de-filas"></a>

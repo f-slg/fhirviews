@@ -9,7 +9,7 @@ tablas siguiendo la especificación SQL on FHIR (ViewDefinition)."><meta propert
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,7 @@ tablas siguiendo la especificación SQL on FHIR (ViewDefinition)."><meta propert
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/R/fhirviews-package.R" class="external-link"><code>R/fhirviews-package.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/fhirviews-package.R" class="external-link"><code>R/fhirviews-package.R</code></a></small>
       <div class="d-none name"><code>fhirviews-package.Rd</code></div>
     </div>
 
@@ -58,13 +58,39 @@ tablas siguiendo la especificación SQL on FHIR (<code>ViewDefinition</code>).</
 
 <ul><li><p><strong>Cliente FHIR</strong> (funciones <code>fhir_*</code>): conectarse a un servidor, buscar
 con paginación automática, leer, crear, actualizar, borrar y ejecutar
-las operaciones <code>$everything</code> y <code>$validate</code>.</p></li>
+las operaciones <code>$everything</code>, <code>$validate</code> y <code>$export</code> (Bulk Data).</p></li>
+<li><p><strong>Terminología</strong> (funciones <code>tx_*</code>): <code>$expand</code>, <code>$lookup</code> y
+<code>$validate-code</code>.</p></li>
 <li><p><strong>Vistas</strong> (funciones <code>vista_*</code>): ejecutar un <code>ViewDefinition</code> sobre una
 lista de recursos, un Bundle o un archivo NDJSON y obtener un
-<code>data.frame</code>.</p></li>
+<code>data.frame</code>, con fhirpath.js o con DuckDB.</p></li>
 </ul><p>Las expresiones FHIRPath se evalúan con la biblioteca <code>fhirpath.js</code> a
 través del paquete V8.</p>
 </div>
+
+<div class="section">
+<h3 id="opciones">Opciones<a class="anchor" aria-label="anchor" href="#opciones"></a></h3>
+
+<ul><li><p><code>fhirviews.mostrar_consulta</code>: los mensajes de error muestran la URL de
+la petición sin los valores de la consulta (<code>identifier=***</code>), que
+pueden ser datos de pacientes o credenciales y terminar en registros o
+capturas de pantalla; solo se ven los parámetros de control como
+<code>_count</code>. Con <code>TRUE</code> se muestra la URL completa, útil para depurar.</p></li>
+<li><p><code>fhirviews.motor</code>: motor de FHIRPath (hoy solo <code>"v8"</code>).</p></li>
+<li><p><code>fhirviews.sql_profundidad</code>: niveles que recorre <code>repeat</code> en el motor
+DuckDB (12 por defecto).</p></li>
+<li><p><code>fhirviews.addin_paginas</code>: páginas que descarga el complemento de
+RStudio (5 por defecto).</p></li>
+</ul></div>
+
+<div class="section">
+<h3 id="limitaciones-conocidas">Limitaciones conocidas<a class="anchor" aria-label="anchor" href="#limitaciones-conocidas"></a></h3>
+
+<ul><li><p>Los decimales de FHIR se leen como números de JavaScript (y de R), así
+que pierden los ceros finales que indican la precisión: <code>1.10</code> se lee
+como <code>1.1</code>. Esto afecta a <code><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString()</a></code> y a las comparaciones de
+precisión de FHIRPath, no al valor numérico.</p></li>
+</ul></div>
 
     </div>
     <div class="section level2">
@@ -84,6 +110,7 @@ través del paquete V8.</p>
 <li><p>Sasha Koss (date-fns library bundled in fhirpath.js) [copyright holder]</p></li>
 <li><p>Michael Mclaughlin (decimal.js library bundled in fhirpath.js) [copyright holder]</p></li>
 <li><p>Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js) [copyright holder]</p></li>
+<li><p>SQL on FHIR project contributors (conformance test suite in inst/sof-tests) [copyright holder]</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

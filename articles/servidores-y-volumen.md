@@ -290,7 +290,7 @@ oficial:
 vista_conformidad(c("basic.json", "foreach.json", "union.json", "repeat.json"),
                   motor = "duckdb")
 #> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) 
-#> fhirviews 0.3.0 · motor DuckDB 1.5.6
+#> fhirviews 0.4.0 · motor DuckDB 2.0.0
 #> 
 #>   shareable       53 de  53 aprobadas
 #>   total           53 de  53 aprobadas
@@ -509,5 +509,5 @@ pobecu::pob_tasa(por_canton, "casos")
 ```
 
 La vista `v_paciente` (con el código DPA del cantón) y el cálculo de
-tasas se explican en la viñeta [*Tasas por cantón con FHIR y
-pobecu*](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.md).
+tasas se explican en el artículo [*Tasas por cantón con FHIR y
+pobecu*](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html).

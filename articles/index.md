@@ -18,5 +18,8 @@
 - [Tasas por cantón con FHIR y
   pobecu](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.md):
 
+  Casos de dengue desde recursos FHIR, unidos a la población oficial del
+  Ecuador del paquete pobecu para calcular tasas por cantón.
+
 - [ViewDefinition en
   detalle](https://f-slg.github.io/fhirviews/articles/vistas.md):

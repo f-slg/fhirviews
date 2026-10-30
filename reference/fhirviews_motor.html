@@ -13,7 +13,7 @@ otros motores en el futuro.'><meta property="og:image" content="https://f-slg.gi
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,7 @@ otros motores en el futuro.'><meta property="og:image" content="https://f-slg.gi
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Motor de FHIRPath y versión de fhirpath.js</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/R/fhirpath.R" class="external-link"><code>R/fhirpath.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/fhirpath.R" class="external-link"><code>R/fhirpath.R</code></a></small>
       <div class="d-none name"><code>fhirviews_motor.Rd</code></div>
     </div>
 
@@ -64,8 +64,9 @@ otros motores en el futuro.</p>
 
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p><code>fhirviews_motor()</code> devuelve, de forma invisible, una lista con el
-motor, la versión de fhirpath.js y la del motor de JavaScript.
+    <p><code>fhirviews_motor()</code> devuelve una lista de clase <code>fhirviews_motor</code>
+con el motor (<code>motor</code>), la versión de fhirpath.js (<code>fhirpath_js</code>) y la
+del motor de JavaScript (<code>v8</code>), que se imprime como un resumen.
 <code>fhirviews_version_fhirpath()</code> devuelve la versión de fhirpath.js
 incluida en el paquete, sin iniciar V8.</p>
     </div>
@@ -73,10 +74,10 @@ incluida en el paquete, sin iniciar V8.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">fhirviews_version_fhirpath</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "5.2.1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "5.2.2"</span>
 <span class="r-in"><span><span class="fu">fhirviews_motor</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Motor de FHIRPath: v8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> fhirpath.js:       5.2.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> fhirpath.js:       5.2.2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> V8:                12.4.254.21</span>
 </code></pre></div>
     </div>

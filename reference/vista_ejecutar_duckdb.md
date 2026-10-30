@@ -24,8 +24,9 @@ vista_ejecutar_duckdb(
   Rutas de archivos `.ndjson`, `.ndjson.gz` o `.parquet` (se pueden usar
   comodines como `"datos/*.ndjson"`), el nombre de una tabla de `con_db`
   con una columna `json`, o recursos en cualquier forma que acepte
-  [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md)
-  (que se escriben antes en un archivo temporal).
+  [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md),
+  incluidos texto JSON y archivos `.json` con un recurso o un Bundle
+  (que se escriben antes en un archivo NDJSON temporal).
 
 - vista:
 

@@ -60,17 +60,11 @@ El atributo `total` guarda el total que informa el servidor, si lo hace.
 ## Examples
 
 ``` r
+if (FALSE) { # (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 pacientes <- fhir_buscar(con, "Patient", gender = "female", `_count` = 5,
                          max_paginas = 1)
 pacientes
-#> <fhir_recursos> 5 recursos
-#>   Patient: 5
 vista_ejecutar(pacientes, vista_crear("Patient", c(nacimiento = "birthDate")))
-#>                                     id nacimiento
-#> 1            wellnessapp-demo-alex-223 1980-01-15
-#> 2 6ac8f8ea-fe4a-4d0c-91f4-0814483430e7 1978-09-27
-#> 3                        nhanes-120300 1954-08-20
-#> 4                        nhanes-118185 1993-10-24
-#> 5                        nhanes-118762 1991-06-17
+}
 ```

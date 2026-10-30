@@ -11,7 +11,7 @@ SMART on FHIR:"><meta property="og:image" content="https://f-slg.github.io/fhirv
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ SMART on FHIR:"><meta property="og:image" content="https://f-slg.github.io/fhirv
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Autenticación SMART on FHIR (OAuth2)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/R/autenticacion.R" class="external-link"><code>R/autenticacion.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/autenticacion.R" class="external-link"><code>R/autenticacion.R</code></a></small>
       <div class="d-none name"><code>fhir_auth.Rd</code></div>
     </div>
 
@@ -101,7 +101,9 @@ el código, guárdalo en una variable de entorno y usa por ejemplo
 <dt id="arg-alcances">alcances<a class="anchor" aria-label="anchor" href="#arg-alcances"></a></dt>
 <dd><p>Vector de <em>scopes</em> SMART, por ejemplo
 <code>c("system/Patient.read", "system/Observation.read")</code> o, en SMART v2,
-<code>"system/*.rs"</code>.</p></dd>
+<code>"system/*.rs"</code>. El valor por defecto usa la sintaxis de SMART v1
+(<code>.read</code>), que la mayoría de servidores v2 también aceptan; si el
+servidor solo admite v2, indica los alcances con <code>.rs</code>.</p></dd>
 
 
 <dt id="arg-url-token">url_token<a class="anchor" aria-label="anchor" href="#arg-url-token"></a></dt>

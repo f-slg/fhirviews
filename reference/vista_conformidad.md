@@ -79,7 +79,7 @@ falta internet. Con `descargar = TRUE` se usa la versión más reciente.
 ``` r
 vista_conformidad("basic.json")
 #> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) 
-#> fhirviews 0.3.0 · fhirpath.js 5.2.1
+#> fhirviews 0.4.0 · fhirpath.js 5.2.2
 #> 
 #>   shareable       11 de  11 aprobadas
 #>   total           11 de  11 aprobadas

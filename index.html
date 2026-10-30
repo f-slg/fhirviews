@@ -33,7 +33,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
 </div>
 <!-- badges: start -->
 
-<p><strong>fhirviews</strong> lleva <strong>HL7 FHIR R4</strong> a R: un cliente para hablar con cualquier servidor FHIR desde R y RStudio, como harías con Postman, y un motor que convierte los recursos FHIR en <strong>tablas</strong> con el estándar <strong><a href="https://sql-on-fhir.org/" class="external-link">SQL on FHIR</a></strong> (<code>ViewDefinition</code>). El motor de vistas funciona dentro de R, sin Java ni Spark, devuelve <code>data.frame</code> y pasa <strong>todas las pruebas <em>shareable</em></strong> del banco oficial de conformidad. Se conecta a servidores protegidos con <strong>SMART on FHIR</strong>, descarga poblaciones completas con <strong><code>$export</code></strong> y, con su <strong>motor DuckDB</strong>, aplana millones de recursos en un portátil. La versión 0.3.0 suma <strong>terminologías</strong> (<code>$expand</code>, <code>$lookup</code>, <code>$validate-code</code>) y un <strong>catálogo de vistas</strong> listas para salud pública.</p>
+<p><strong>fhirviews</strong> lleva <strong>HL7 FHIR R4</strong> a R: un cliente para hablar con cualquier servidor FHIR desde R y RStudio, como harías con Postman, y un motor que convierte los recursos FHIR en <strong>tablas</strong> con el estándar <strong><a href="https://sql-on-fhir.org/" class="external-link">SQL on FHIR</a></strong> (<code>ViewDefinition</code>). El motor de vistas funciona dentro de R, sin Java ni Spark, devuelve <code>data.frame</code> y pasa <strong>todas las pruebas <em>shareable</em></strong> del banco oficial de conformidad. Se conecta a servidores protegidos con <strong>SMART on FHIR</strong>, descarga poblaciones completas con <strong><code>$export</code></strong> y, con su <strong>motor DuckDB</strong>, aplana millones de recursos en un portátil. Incluye además <strong>terminologías</strong> (<code>$expand</code>, <code>$lookup</code>, <code>$validate-code</code>) y un <strong>catálogo de vistas</strong> listas para salud pública.</p>
 <p><img src="reference/figures/README-json-tabla.png" width="100%" alt="Tres paneles: un recurso Patient en JSON, un ViewDefinition con column y forEach, y el data.frame resultante con una fila por cada nombre del paciente"></p>
 <blockquote>
 <p><strong>Nota:</strong> fhirviews es un paquete independiente, desarrollado a título personal. No es un producto de HL7 ni de ninguna otra institución. Los datos de los ejemplos son ficticios.</p>
@@ -409,7 +409,7 @@
         E["vista_ejecutar()&lt;br/&gt;evaluación por lotes"]
     end
     subgraph JS["V8"]
-        FP["fhirpath.js 5.2.1&lt;br/&gt;+ almacén de nodos tipados"]
+        FP["fhirpath.js 5.2.2&lt;br/&gt;+ almacén de nodos tipados"]
     end
     subgraph DK["DuckDB (experimental)"]
         SQ["vista_ejecutar_duckdb()&lt;br/&gt;ViewDefinition a SQL"]
@@ -776,7 +776,7 @@
 <li>Terminologías: <code>memberOf()</code> en FHIRPath y <code>$translate</code> (las expansiones, <code>$lookup</code> y <code>$validate-code</code> ya están en las funciones <code>tx_*</code>).</li>
 <li>Operaciones de SQL on FHIR 3.0 (<code>$run</code>, <code>$export</code> de vistas) y <code>SQLQuery</code>.</li>
 <li>Caché del panel <em>Connections</em> para servidores lentos.</li>
-<li>Envío a CRAN, después de <a href="https://github.com/f-slg/pobecu" class="external-link">pobecu</a>.</li>
+<li>Publicación en CRAN (el paquete ya pasa <code>R CMD check --as-cran</code> sin errores ni avisos).</li>
 </ul>
 </div>
 <div class="section level2">

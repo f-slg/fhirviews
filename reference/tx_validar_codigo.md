@@ -8,7 +8,7 @@ calcular un indicador.
 ## Usage
 
 ``` r
-tx_validar_codigo(con, valueset, sistema, codigo, display = NULL)
+tx_validar_codigo(con, valueset, sistema, codigo, display = NULL, lote = TRUE)
 ```
 
 ## Arguments
@@ -33,12 +33,20 @@ tx_validar_codigo(con, valueset, sistema, codigo, display = NULL)
 
 - codigo:
 
-  Vector de códigos. Se hace una petición por código.
+  Vector de códigos.
 
 - display:
 
   Vector opcional de nombres (*display*) que el servidor también
   comprueba.
+
+- lote:
+
+  Si es `TRUE` (por defecto), hay varios códigos y `valueset` es una URL
+  canónica, se envían en Bundles `batch` de hasta 100 códigos, con una
+  petición por Bundle. Si el servidor no admite `batch`, o si `valueset`
+  es un recurso, se valida un código por petición, como con
+  `lote = FALSE`.
 
 ## Value
 

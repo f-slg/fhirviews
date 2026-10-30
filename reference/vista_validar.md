@@ -19,7 +19,8 @@ vista_validar(vista)
 ## Value
 
 La vista, de forma invisible, si es válida. Si no, un error de clase
-`fhirviews_error_vista` con la lista de problemas encontrados.
+`fhirviews_error_vista` con la lista de problemas encontrados. Los
+avisos del modelo R4 son de clase `fhirviews_aviso_vista`.
 
 ## Details
 
@@ -44,6 +45,15 @@ La vista, de forma invisible, si es válida. Si no, un error de clase
   `rowIndex`, `ucum`, `sct`, `loinc`...);
 
 - todas las expresiones FHIRPath se pueden compilar.
+
+Además, con el modelo de FHIR R4 avisa (sin error) si `resource` no es
+un tipo de recurso de R4 o si una ruta usa un elemento que no existe
+(por ejemplo `name.familia` en lugar de `name.family`): FHIRPath no da
+error en esos casos y la vista devolvería una tabla vacía o columnas sin
+valores. Solo se revisan los pasos de navegación simples; los elementos
+de elección (`value`), las extensiones y las expresiones con operadores
+no generan avisos. Se pueden silenciar con
+`suppressWarnings(..., classes = "fhirviews_aviso_vista")`.
 
 ## Examples
 

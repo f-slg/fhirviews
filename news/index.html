@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,9 +38,54 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/f-slg/fhirviews/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="fhirviews-040">fhirviews 0.4.0<a class="anchor" aria-label="anchor" href="#fhirviews-040"></a></h2>
+<p>Correcciones de una auditoría del paquete, con pruebas de escritura contra un servidor HAPI FHIR propio, y preparación para CRAN. No hay cambios incompatibles.</p>
+<div class="section level3">
+<h3 id="correcciones-0-4-0">Correcciones<a class="anchor" aria-label="anchor" href="#correcciones-0-4-0"></a></h3>
+<ul><li>
+<code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> devolvía una tabla vacía con recursos que venían de un Bundle de una sola entrada, por ejemplo una búsqueda de <code><a href="../reference/fhir_buscar.html">fhir_buscar()</a></code> con un único resultado: el Bundle se escribía como si fuera el recurso. <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> no estaba afectada.</li>
+<li>Los parámetros numéricos de búsqueda se enviaban en notación científica: <code>fhir_buscar(con, "Patient", _count = 100000)</code> llegaba al servidor como <code>_count=1e+05</code>. Ahora los números se envían completos y las fechas y horas de R (<code>POSIXct</code>), en ISO 8601 y UTC.</li>
+<li>
+<code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> ya no altera el generador de números aleatorios de R (<code>.Random.seed</code>) al crear su tabla temporal.</li>
+<li>
+<code><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> acepta, como <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code>, texto JSON y archivos <code>.json</code> con un recurso o un Bundle (antes los tomaba como rutas NDJSON o nombres de tabla y fallaba).</li>
+<li>
+<code><a href="../reference/fhir_recursos.html">fhir_recursos()</a></code> da un error claro con valores que no son recursos, como <code>'[1, 2, 3]'</code> o <code>list(42)</code>, en lugar de “subíndice fuera de los límites”.</li>
+<li>
+<code><a href="../reference/tx_expandir.html">tx_expandir()</a></code> y <code><a href="../reference/tx_validar_codigo.html">tx_validar_codigo()</a></code> con un ValueSet como recurso envían cada parámetro con su tipo de la operación (<code>system</code> y <code>url</code> como <code>valueUri</code>, <code>code</code> como <code>valueCode</code>, <code>count</code> como <code>valueInteger</code>…): los servidores estrictos, como HAPI, rechazaban <code>system</code> enviado como texto.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="mejoras-0-4-0">Mejoras<a class="anchor" aria-label="anchor" href="#mejoras-0-4-0"></a></h3>
+<ul><li>
+<code><a href="../reference/vista_validar.html">vista_validar()</a></code> (y por tanto <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code>) avisa, con la clase <code>fhirviews_aviso_vista</code>, si <code>resource</code> no es un tipo de recurso de FHIR R4 o si una ruta usa un elemento que no existe (<code>name.familia</code>, <code>resource = "Patiente"</code>): FHIRPath no da error en esos casos y la vista devolvía una tabla vacía o columnas sin valores.</li>
+<li>
+<code><a href="../reference/tx_validar_codigo.html">tx_validar_codigo()</a></code> envía varios códigos en Bundles <code>batch</code> de hasta 100 (nuevo argumento <code>lote = TRUE</code>), con una petición por Bundle en lugar de una por código. Si el servidor no admite <code>batch</code>, valida de a uno como antes.</li>
+<li>Los mensajes de error ya no muestran los valores de la consulta de la URL (<code>identifier=***</code>), que pueden ser datos de pacientes o firmas de URL de descarga. La opción <code>fhirviews.mostrar_consulta = TRUE</code> muestra la URL completa. La ayuda del paquete (<code><a href="../reference/fhirviews-package.html">?fhirviews</a></code>) describe las opciones.</li>
+<li>
+<code><a href="../reference/fhir_tabla.html">fhir_tabla()</a></code> es unas 20 veces más rápida (100 000 pacientes en 1,5 s en lugar de 30 s), lo que también acelera la vista previa del panel <em>Connections</em> de RStudio.</li>
+<li>
+<code><a href="../reference/fhir_buscar.html">fhir_buscar()</a></code> y <code><a href="../reference/fhir_everything.html">fhir_everything()</a></code> reúnen las páginas en tiempo lineal (antes el costo crecía con el cuadrado del número de páginas).</li>
+<li>fhirpath.js 5.2.2 (solo cambia el empaquetado de npm).</li>
+<li>La caché de expresiones FHIRPath compiladas tiene un límite de 1000.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="preparación-para-cran-0-4-0">Preparación para CRAN<a class="anchor" aria-label="anchor" href="#preparaci%C3%B3n-para-cran-0-4-0"></a></h3>
+<ul><li>La viñeta <em>Tasas por cantón con FHIR y pobecu</em> pasa a ser un artículo de la web (<code>vignettes/articles/</code>, misma dirección) y pobecu sale de Suggests: así todas las dependencias están en CRAN.</li>
+<li>Los ejemplos que usan servidores públicos (hapi.fhir.org, tx.fhir.org) corren en sesiones interactivas y en la web, no en <code>R CMD check</code>; la viñeta de volumen no descarga la extensión json de DuckDB durante el check.</li>
+<li>
+<code><a href="../reference/fhirviews_motor.html">fhirviews_motor()</a></code> devuelve un objeto que se imprime, en lugar de escribir en la consola al llamarla.</li>
+<li>Título más corto y los contribuyentes de SQL on FHIR como titulares del banco de pruebas incluido.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="pruebas-0-4-0">Pruebas<a class="anchor" aria-label="anchor" href="#pruebas-0-4-0"></a></h3>
+<ul><li>
+<code>tests/testthat/test-servidor.R</code> prueba contra un servidor propio (variable <code>FHIRVIEWS_SERVIDOR_ESCRITURA</code>, por ejemplo un HAPI local) el ciclo de escritura completo, una transacción con referencias <code>urn:uuid</code>, las vistas con V8 y DuckDB sobre los datos del servidor, <code><a href="../reference/fhir_tabla.html">fhir_tabla()</a></code>, <code>$expand</code>, <code>$validate-code</code> en lote y la exportación masiva <code>$export</code> de punta a punta.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.3.0" id="fhirviews-030">fhirviews 0.3.0<a class="anchor" aria-label="anchor" href="#fhirviews-030"></a></h2>
 <p>Esta versión amplía el motor DuckDB a todo el perfil <em>shareable</em> y la mayor parte de FHIRPath N1, con la misma semántica que fhirpath.js; agrega las operaciones de terminología (<code>$expand</code>, <code>$lookup</code>, <code>$validate-code</code>) y un catálogo de vistas listas para salud pública, y corrige el envío de las operaciones (<code>$</code>) a servidores reales. No hay cambios incompatibles.</p>

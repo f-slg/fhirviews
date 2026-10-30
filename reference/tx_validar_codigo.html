@@ -13,7 +13,7 @@ calcular un indicador."><meta property="og:image" content="https://f-slg.github.
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,7 @@ calcular un indicador."><meta property="og:image" content="https://f-slg.github.
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Validar códigos contra un ValueSet ($validate-code)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/R/terminologia.R" class="external-link"><code>R/terminologia.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/terminologia.R" class="external-link"><code>R/terminologia.R</code></a></small>
       <div class="d-none name"><code>tx_validar_codigo.Rd</code></div>
     </div>
 
@@ -57,7 +57,7 @@ calcular un indicador.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">tx_validar_codigo</span><span class="op">(</span><span class="va">con</span>, <span class="va">valueset</span>, <span class="va">sistema</span>, <span class="va">codigo</span>, display <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">tx_validar_codigo</span><span class="op">(</span><span class="va">con</span>, <span class="va">valueset</span>, <span class="va">sistema</span>, <span class="va">codigo</span>, display <span class="op">=</span> <span class="cn">NULL</span>, lote <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -83,12 +83,20 @@ si es uno solo.</p></dd>
 
 
 <dt id="arg-codigo">codigo<a class="anchor" aria-label="anchor" href="#arg-codigo"></a></dt>
-<dd><p>Vector de códigos. Se hace una petición por código.</p></dd>
+<dd><p>Vector de códigos.</p></dd>
 
 
 <dt id="arg-display">display<a class="anchor" aria-label="anchor" href="#arg-display"></a></dt>
 <dd><p>Vector opcional de nombres (<em>display</em>) que el servidor
 también comprueba.</p></dd>
+
+
+<dt id="arg-lote">lote<a class="anchor" aria-label="anchor" href="#arg-lote"></a></dt>
+<dd><p>Si es <code>TRUE</code> (por defecto), hay varios códigos y <code>valueset</code>
+es una URL canónica, se envían en Bundles <code>batch</code> de hasta 100 códigos,
+con una petición por Bundle. Si el servidor no admite <code>batch</code>, o si
+<code>valueset</code> es un recurso, se valida un código por petición, como con
+<code>lote = FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

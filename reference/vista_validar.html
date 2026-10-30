@@ -9,7 +9,7 @@ de ejecutarlo:"><meta property="og:image" content="https://f-slg.github.io/fhirv
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,7 @@ de ejecutarlo:"><meta property="og:image" content="https://f-slg.github.io/fhirv
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Validar un ViewDefinition</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.3.0/R/validar.R" class="external-link"><code>R/validar.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/validar.R" class="external-link"><code>R/validar.R</code></a></small>
       <div class="d-none name"><code>vista_validar.Rd</code></div>
     </div>
 
@@ -66,7 +66,8 @@ de ejecutarlo:</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>La vista, de forma invisible, si es válida. Si no, un error de
-clase <code>fhirviews_error_vista</code> con la lista de problemas encontrados.</p>
+clase <code>fhirviews_error_vista</code> con la lista de problemas encontrados. Los
+avisos del modelo R4 son de clase <code>fhirviews_aviso_vista</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -86,7 +87,15 @@ elemento;</p></li>
 FHIRPath o del motor (<code>resource</code>, <code>rootResource</code>, <code>context</code>, <code>rowIndex</code>,
 <code>ucum</code>, <code>sct</code>, <code>loinc</code>...);</p></li>
 <li><p>todas las expresiones FHIRPath se pueden compilar.</p></li>
-</ul></div>
+</ul><p>Además, con el modelo de FHIR R4 avisa (sin error) si <code>resource</code> no es un
+tipo de recurso de R4 o si una ruta usa un elemento que no existe (por
+ejemplo <code>name.familia</code> en lugar de <code>name.family</code>): FHIRPath no da error en
+esos casos y la vista devolvería una tabla vacía o columnas sin valores.
+Solo se revisan los pasos de navegación simples; los elementos de
+elección (<code>value</code>), las extensiones y las expresiones con operadores no
+generan avisos. Se pueden silenciar con
+<code>suppressWarnings(..., classes = "fhirviews_aviso_vista")</code>.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

@@ -10,7 +10,7 @@ pasos*](https://f-slg.github.io/fhirviews/fhirviews.md).
 library(fhirviews)
 fhirviews_motor()
 #> Motor de FHIRPath: v8
-#> fhirpath.js:       5.2.1
+#> fhirpath.js:       5.2.2
 #> V8:                12.4.254.21
 ```
 
@@ -27,7 +27,7 @@ flowchart LR
     end
     subgraph V8["V8 (JavaScript)"]
         GL["Capa propia<br/>inst/js/fhirviews.js"]
-        FP["fhirpath.js 5.2.1<br/>+ modelo FHIR R4"]
+        FP["fhirpath.js 5.2.2<br/>+ modelo FHIR R4"]
     end
     SV["Servidor FHIR"] <-->|"httr2<br/>application/fhir+json"| CL
     CL --> RE
@@ -291,7 +291,7 @@ vista <- vista_crear("Patient", c(sistema = "system", valor = "value"),
                      por_cada = "telecom")
 system.time(vista_ejecutar(caso, vista))
 #>    user  system elapsed 
-#>   0.009   0.001   0.007
+#>   0.014   0.000   0.013
 ```
 
 ### Orden de columnas y de filas
