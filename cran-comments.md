@@ -25,7 +25,7 @@ This is the first submission of 'fhirviews'.
 
 * Bundled third-party code and data (listed in `inst/COPYRIGHTS`, with the
   copyright holders also in `Authors@R`):
-  - `inst/js/fhirpath/`: the browser build of 'fhirpath.js' 5.2.1
+  - `inst/js/fhirpath/`: the browser build of 'fhirpath.js' 5.2.2
     (<https://github.com/HL7/fhirpath.js>), unmodified, under a BSD-style
     license from the U.S. National Library of Medicine and Health Samurai.
     It bundles 'ucum-lhc' (NLM, BSD-style; includes the UCUM table under the

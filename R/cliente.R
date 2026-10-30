@@ -523,7 +523,7 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
   if (estado < 400L && nzchar(trimws(texto)) && is.null(datos)) {
     cli::cli_abort(c(
       "La respuesta del servidor no es JSON.",
-      "x" = "{metodo} {url}",
+      "x" = "{metodo} {url_mensaje(url)}",
       "i" = "Comienza con: {.val {substr(texto, 1, 80)}}"
     ), class = "fhirviews_error", call = NULL)
   }
@@ -580,7 +580,7 @@ enviar_peticion <- function(con, metodo, url, cuerpo, parametros, cabeceras,
   tryCatch(httr2::req_perform(req), error = function(e) {
     cli::cli_abort(c(
       "No se pudo conectar con el servidor FHIR.",
-      "x" = "{metodo} {url}",
+      "x" = "{metodo} {url_mensaje(url)}",
       "i" = "{limpiar_mensaje(conditionMessage(e))}"
     ), class = c("fhirviews_error_conexion", "fhirviews_error"), call = NULL)
   })
@@ -599,12 +599,43 @@ error_http <- function(metodo, url, estado, descripcion, datos, texto) {
   problemas <- escapar_cli(utils::head(problemas, 10L))
   cli::cli_abort(c(
     "El servidor respondi\u00f3 {estado} {descripcion %||% ''}.",
-    "x" = "{metodo} {url}",
+    "x" = "{metodo} {url_mensaje(url)}",
     stats::setNames(problemas, rep("*", length(problemas)))
   ), class = c(paste0("fhirviews_error_http_", estado),
                "fhirviews_error_http", "fhirviews_error"),
   estado = estado, outcome = datos, call = NULL)
 }
+
+# URL para los mensajes de error, sin los valores de la consulta que pueden
+# ser datos de pacientes (nombres, documentos de identidad) o credenciales
+# (firmas de URL de descarga). Se conservan los parámetros de control, como
+# `_count`. Con options(fhirviews.mostrar_consulta = TRUE) se muestra entera.
+url_mensaje <- function(url) {
+  if (isTRUE(getOption("fhirviews.mostrar_consulta")) ||
+      !grepl("?", url, fixed = TRUE)) {
+    return(url)
+  }
+  base <- sub("\\?.*$", "", url)
+  consulta <- sub("^[^?]*\\?", "", url)
+  pares <- strsplit(consulta, "&", fixed = TRUE)[[1]]
+  pares <- vapply(pares, function(par) {
+    nombre <- sub("=.*$", "", par)
+    if (!grepl("=", par, fixed = TRUE) ||
+        utils::URLdecode(nombre) %in% parametros_visibles) {
+      par
+    } else {
+      paste0(nombre, "=***")
+    }
+  }, character(1), USE.NAMES = FALSE)
+  paste0(base, "?", paste(pares, collapse = "&"))
+}
+
+parametros_visibles <- c(
+  "_count", "_sort", "_include", "_revinclude", "_summary", "_elements",
+  "_total", "_format", "_type", "_since", "_outputFormat", "_pretty",
+  "_getpages", "_getpagesoffset", "_bundletype", "_offset", "url", "system",
+  "version", "offset", "count", "property", "profile", "_id"
+)
 
 escapar_cli <- function(x) {
   gsub("\\}", "}}", gsub("\\{", "{{", x))

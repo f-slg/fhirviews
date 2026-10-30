@@ -228,6 +228,30 @@ test_that("las operaciones se envian con `$` sin codificar", {
   expect_match(p$lista[[1]]$url, "/Patient/p1/$everything", fixed = TRUE)
 })
 
+test_that("los errores no muestran los valores de la busqueda", {
+  expect_identical(
+    url_mensaje(paste0(base, "/Patient?identifier=0102030405&_count=5")),
+    paste0(base, "/Patient?identifier=***&_count=5"))
+  expect_identical(url_mensaje(paste0(base, "/metadata")),
+                   paste0(base, "/metadata"))
+  simular(function(req, ruta) respuesta_fhir(list(
+    resourceType = "OperationOutcome",
+    issue = list(list(severity = "error", code = "processing",
+                      diagnostics = "Fallo")))
+  , estado = 500L))
+  e <- tryCatch(fhir_peticion(con_simulada(), "GET",
+                              "Patient?identifier=0102030405&_count=5"),
+                fhirviews_error_http = function(e) e)
+  expect_false(grepl("0102030405", conditionMessage(e)))
+  expect_match(conditionMessage(e), "identifier=***", fixed = TRUE)
+  anterior <- options(fhirviews.mostrar_consulta = TRUE)
+  on.exit(options(anterior), add = TRUE)
+  e <- tryCatch(fhir_peticion(con_simulada(), "GET",
+                              "Patient?identifier=0102030405&_count=5"),
+                fhirviews_error_http = function(e) e)
+  expect_match(conditionMessage(e), "0102030405")
+})
+
 test_that("los parametros numericos no usan notacion cientifica", {
   expect_identical(parametros_busqueda(list(`_count` = 100000, v = 0.1)),
                    list(`_count` = "100000", v = "0.1"))

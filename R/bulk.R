@@ -422,7 +422,7 @@ descargar_archivo <- function(con, url, archivo, con_token) {
     unlink(archivo)
     cli::cli_abort(c(
       "No se pudo descargar un archivo de la exportaci\u00f3n.",
-      "x" = "GET {url}",
+      "x" = "GET {url_mensaje(url)}",
       "i" = "{limpiar_mensaje(conditionMessage(e))}"
     ), class = c("fhirviews_error_conexion", "fhirviews_error"), call = NULL)
   })

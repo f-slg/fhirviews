@@ -363,7 +363,7 @@ flowchart LR
         E["vista_ejecutar()<br/>evaluación por lotes"]
     end
     subgraph JS["V8"]
-        FP["fhirpath.js 5.2.1<br/>+ almacén de nodos tipados"]
+        FP["fhirpath.js 5.2.2<br/>+ almacén de nodos tipados"]
     end
     subgraph DK["DuckDB (experimental)"]
         SQ["vista_ejecutar_duckdb()<br/>ViewDefinition a SQL"]

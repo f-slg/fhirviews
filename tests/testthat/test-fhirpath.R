@@ -127,7 +127,7 @@ test_that("el motor encadena nodos sin perder el tipo", {
 })
 
 test_that("informa el motor y la version de fhirpath.js", {
-  expect_identical(fhirviews_version_fhirpath(), "5.2.1")
+  expect_identical(fhirviews_version_fhirpath(), "5.2.2")
   expect_output(info <- fhirviews_motor(), "fhirpath.js")
   expect_identical(info$fhirpath_js, fhirviews_version_fhirpath())
   withr_opcion <- options(fhirviews.motor = "otro")
