@@ -84,7 +84,7 @@ condiciones <- fhir_recursos(list(
 ))
 vista_ejecutar(condiciones, vista)
 
-\dontshow{if (interactive() && fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
 # Con un servidor de terminología
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 sexo <- tx_expandir(tx, "http://hl7.org/fhir/ValueSet/administrative-gender")

@@ -37,7 +37,7 @@ Ejecuta la operación \verb{$everything} (\verb{GET [base]/Patient/[id]/$everyth
 y sigue la paginación del Bundle que devuelve.
 }
 \examples{
-\dontshow{if (interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 uno <- fhir_buscar(con, "Patient", `_count` = 1, max_paginas = 1)
 todo <- fhir_everything(con, "Patient", uno[[1]]$id, max_paginas = 1)

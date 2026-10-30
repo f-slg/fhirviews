@@ -44,7 +44,7 @@ cubren los casos habituales; esta sirve para todo lo demás (operaciones
 \code{$}, historial, \verb{_history}, peticiones condicionales, etc.).
 }
 \examples{
-\dontshow{if (interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 r <- fhir_peticion(con, "GET", "Patient", parametros = list(`_count` = 1,
                                                           `_summary` = "count"))

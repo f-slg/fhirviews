@@ -75,6 +75,7 @@ Other contributors:
   \item Sasha Koss (date-fns library bundled in fhirpath.js) [copyright holder]
   \item Michael Mclaughlin (decimal.js library bundled in fhirpath.js) [copyright holder]
   \item Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js) [copyright holder]
+  \item SQL on FHIR project contributors (conformance test suite in inst/sof-tests) [copyright holder]
 }
 
 }

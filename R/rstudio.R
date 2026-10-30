@@ -14,7 +14,7 @@
 #' @return `fhir_conexion_activa()` devuelve un objeto `fhir_conexion`.
 #'   `fhir_desconectar()` devuelve `TRUE` de forma invisible.
 #' @export
-#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4", panel = FALSE)
 #' identical(fhir_conexion_activa()$url, con$url)
 #' fhir_desconectar(con)
@@ -57,7 +57,7 @@ fhir_desconectar <- function(con) {
 #'
 #' @return Un `data.frame`, como [vista_ejecutar()].
 #' @export
-#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' fhir_vista(con, vista_crear("Patient", c(sexo = "gender",
 #'                                          nacimiento = "birthDate")),
@@ -85,7 +85,7 @@ fhir_vista <- function(con, vista, ..., parametros = list(), max_paginas = Inf,
 #'
 #' @return La respuesta, como [fhir_peticion()].
 #' @export
-#' @examplesIf interactive() && fhir_disponible("https://hapi.fhir.org/baseR4")
+#' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' fhir_ejecutar_texto("GET Patient?_summary=count", con)
 #'
