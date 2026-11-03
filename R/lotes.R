@@ -31,7 +31,7 @@ vista_ejecutar_lotes <- function(archivos, vista, procesar, tamano_lote = 10000L
                    class = "fhirviews_error")
   }
   if (!is.function(procesar)) {
-    cli::cli_abort("{.arg procesar} debe ser una función.", class = "fhirviews_error")
+    cli::cli_abort("{.arg procesar} debe ser una funci\u00f3n.", class = "fhirviews_error")
   }
   if (!is.numeric(tamano_lote) || length(tamano_lote) != 1L ||
       is.na(tamano_lote) || !is.finite(tamano_lote) || tamano_lote < 1 ||

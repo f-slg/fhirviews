@@ -1,5 +1,8 @@
 # fhirviews (desarrollo)
 
+* Se corrige un mensaje no ASCII de `vista_ejecutar_lotes()` que causaba
+  una advertencia de portabilidad en R CMD check en los tres sistemas.
+
 * Nueva `vista_ejecutar_lotes()` para leer NDJSON y gzip por bloques y entregar
   cada tabla a una función de procesamiento, sin acumular la entrada ni la salida.
 * Las exportaciones masivas usan archivos temporales y registros de checksum.
