@@ -51,3 +51,16 @@ test_that("listas, objetos, nombres y modo agregar", {
   expect_error(vista_duckdb(recursos, list(a = v, a = v), con_db = db),
                class = "fhirviews_error")
 })
+
+test_that("un fallo restaura las tablas previas y revierte las nuevas", {
+  db <- conectar_duckdb()
+  on.exit(DBI::dbDisconnect(db), add = TRUE)
+  DBI::dbWriteTable(db, "previa", data.frame(id = "original"))
+  buena <- vista_crear("Patient", c(sexo = "gender"))
+  mala <- vista_crear("Patient", c(nombres = "name.given"))
+  expect_error(vista_duckdb(recursos, list(previa = buena, nueva = buena,
+                                          falla = mala), con_db = db),
+               class = "fhirviews_error_vista")
+  expect_identical(DBI::dbListTables(db), "previa")
+  expect_identical(DBI::dbReadTable(db, "previa")$id, "original")
+})

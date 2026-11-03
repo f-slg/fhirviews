@@ -398,16 +398,23 @@ convertir_tipo <- function(vec, tipo, nombre) {
       return(vec)
     }
     if (tipo %in% tipos_decimales) return(num)
-    no_enteros <- presentes & (num != round(num) | abs(num) > .Machine$integer.max)
+    no_enteros <- presentes & (!is.finite(num) | num != round(num) |
+                                abs(num) > .Machine$integer.max)
     if (any(no_enteros)) {
       avisar(paste0("hay valores que no son enteros (por ejemplo ",
                     num[no_enteros][1], ")"))
       return(num)
     }
+    fuera_rango <- presentes & ((tipo == "positiveInt" & num <= 0) |
+                                (tipo == "unsignedInt" & num < 0))
+    if (any(fuera_rango)) {
+      avisar("hay valores fuera del rango permitido")
+      return(vec)
+    }
     return(as.integer(num))
   }
   # Tipos de texto (string, code, date, dateTime, uri...)
-  if (is.logical(vec) && all(!presentes)) as.character(vec) else vec
+  as.character(vec)
 }
 
 vector_tipo <- function(tipo) {

@@ -14,6 +14,9 @@
 #' Requiere los paquetes DBI y duckdb. Funciona también con otra conexión
 #' DBI (SQLite, PostgreSQL...) siempre que admita los tipos de las columnas.
 #'
+#' Todas las vistas se guardan en una transacción: si alguna falla, se
+#' revierten las escrituras de esta llamada.
+#'
 #' @param recursos Recursos FHIR en cualquier forma que acepte
 #'   [fhir_recursos()].
 #' @param vistas Un `ViewDefinition` (en cualquier forma que acepte
@@ -65,16 +68,22 @@
 vista_duckdb <- function(recursos, vistas, con_db = NULL, sobrescribir = TRUE) {
   rlang::check_installed("DBI", reason = "para guardar vistas en una base SQL.")
   vistas <- lista_vistas(vistas)
-  if (is.null(con_db)) {
+  propia <- is.null(con_db)
+  completa <- FALSE
+  if (propia) {
     con_db <- conectar_duckdb()
+    on.exit(if (!completa) DBI::dbDisconnect(con_db), add = TRUE)
   }
   recursos <- fhir_recursos(recursos)
-  for (nombre in names(vistas)) {
-    df <- vista_ejecutar(recursos, vistas[[nombre]])
-    df <- preparar_tabla_sql(df)
-    DBI::dbWriteTable(con_db, nombre, df, overwrite = sobrescribir,
-                      append = !sobrescribir)
-  }
+  DBI::dbWithTransaction(con_db, {
+    for (nombre in names(vistas)) {
+      df <- vista_ejecutar(recursos, vistas[[nombre]])
+      df <- preparar_tabla_sql(df)
+      DBI::dbWriteTable(con_db, nombre, df, overwrite = sobrescribir,
+                        append = !sobrescribir)
+    }
+  })
+  completa <- TRUE
   invisible(con_db)
 }
 

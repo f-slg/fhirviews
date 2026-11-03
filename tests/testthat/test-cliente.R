@@ -227,3 +227,31 @@ test_that("las operaciones se envian con `$` sin codificar", {
   fhir_everything(con, "Patient", "p1")
   expect_match(p$lista[[1]]$url, "/Patient/p1/$everything", fixed = TRUE)
 })
+
+test_that("resuelve enlaces de paginacion sin duplicar la base", {
+  con <- con_simulada()
+  expect_identical(url_completa(con, "/fhir/Patient?page=2"),
+                   paste0(base, "/Patient?page=2"))
+  expect_identical(url_completa(con, "?page=2"), paste0(base, "?page=2"))
+  expect_identical(url_completa(con, "//otro.test/fhir"), "https://otro.test/fhir")
+  p <- simular(function(req, ruta) {
+    if (grepl("page=2", req$url)) return(respuesta_fhir(list(
+      resourceType = "Bundle", entry = list(list(resource = paciente("2"))))))
+    respuesta_fhir(list(resourceType = "Bundle", link = list(list(
+      relation = "next", url = "/fhir/Patient?page=2")),
+      entry = list(list(resource = paciente("1")))))
+  })
+  expect_length(fhir_buscar(con, "Patient", progreso = FALSE), 2L)
+  expect_identical(p$lista[[2]]$url, paste0(base, "/Patient?page=2"))
+})
+
+test_that("no comparte cabeceras de conexion con enlaces externos", {
+  p <- simular(function(req, ruta) respuesta_fhir(paciente("1")))
+  con <- con_simulada(cabeceras = list(Authorization = "Bearer privado",
+                                      `X-API-Key` = "clave"))
+  peticion_json(con, "GET", "https://otro.test/Patient")
+  expect_null(p$lista[[1]]$headers$Authorization)
+  expect_null(p$lista[[1]]$headers$`X-API-Key`)
+  fhir_leer(con, "Patient", "1")
+  expect_identical(p$lista[[2]]$headers$`X-API-Key`, "clave")
+})

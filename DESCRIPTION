@@ -46,6 +46,7 @@ Imports:
     httr2 (>= 1.0.0),
     jsonlite,
     rlang,
+    tools,
     V8
 Suggests:
     DBI,

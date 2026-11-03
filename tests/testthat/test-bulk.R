@@ -308,3 +308,53 @@ test_that("con autenticaci\u00f3n SMART, los archivos reciben el token OAuth", {
   expect_identical(vapply(fhir_recursos(unlist(exp$archivos)), `[[`, "", "id"),
                    c("p1", "c1"))
 })
+
+test_that("recupera descargas sin repetir archivos completos y detecta alteraciones", {
+  falla <- TRUE
+  p <- simular(function(req, ruta) {
+    if (ruta == "archivos/c.ndjson" && falla) stop("interrupcion simulada")
+    ndjson(paciente(if (ruta == "archivos/p.ndjson") "p1" else "p2"))
+  })
+  carpeta <- withr_tempfile()
+  dir.create(carpeta)
+  x <- structure(list(estado = "completada", con = con_simulada(),
+    carpeta = carpeta, manifiesto = manifiesto(FALSE), url_estado = paste0(base, "/estado/1"),
+    archivos = list(), errores = character()), class = "fhir_exportacion")
+  expect_error(fhir_exportar_estado(x, progreso = FALSE), "interrupcion")
+  archivo <- file.path(carpeta, "Patient.ndjson")
+  expect_true(file.exists(archivo))
+  expect_false(file.exists(file.path(carpeta, "Condition.ndjson")))
+  falla <- FALSE
+  n <- length(p$lista)
+  x <- fhir_exportar_estado(x, progreso = FALSE)
+  expect_length(p$lista, n + 1L)
+  expect_true(all(file.exists(unlist(x$archivos))))
+  n <- length(p$lista)
+  x <- fhir_exportar_estado(x, progreso = FALSE)
+  expect_length(p$lista, n)
+  writeLines("corrupto", archivo)
+  x <- fhir_exportar_estado(x, progreso = FALSE)
+  expect_length(p$lista, n + 1L)
+  expect_identical(fhir_recursos(archivo)[[1]]$id, "p1")
+  expect_length(list.files(carpeta, pattern = "^\\.fhirviews-", all.files = TRUE), 0L)
+})
+
+test_that("otro trabajo y registros incompletos no reutilizan archivos", {
+  p <- simular(function(req, ruta) ndjson(paciente("nuevo")))
+  carpeta <- withr_tempfile()
+  dir.create(carpeta)
+  archivo <- file.path(carpeta, "Patient.ndjson")
+  x <- list(con = con_simulada(), url_estado = paste0(base, "/estado/1"),
+            manifiesto = manifiesto(FALSE))
+  descargar_archivo_recuperable(x, paste0(base, "/archivo"), archivo, FALSE)
+  x$url_estado <- paste0(base, "/estado/2")
+  descargar_archivo_recuperable(x, paste0(base, "/archivo"), archivo, FALSE)
+  expect_length(p$lista, 2L)
+  writeLines('{incompleto', paste0(archivo, ".fhirviews.json"))
+  descargar_archivo_recuperable(x, paste0(base, "/archivo"), archivo, FALSE)
+  expect_length(p$lista, 3L)
+  simular(function(req, ruta) stop("descarga fallida"))
+  expect_error(descargar_archivo_recuperable(x, paste0(base, "/otro"), archivo,
+                                            FALSE), "descarga fallida")
+  expect_identical(fhir_recursos(archivo)[[1]]$id, "nuevo")
+})

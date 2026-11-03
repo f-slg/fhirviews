@@ -27,6 +27,14 @@
 #' (que la descarga cuando está lista) o se cancela con
 #' `fhir_exportar_cancelar()` (`DELETE` a la dirección de estado).
 #'
+#' Las descargas se escriben primero en un archivo temporal. Al finalizar se
+#' guarda un registro `.fhirviews.json` junto a cada NDJSON, con la identidad
+#' de la exportación y su checksum MD5. Al volver a consultar la misma
+#' exportación se verifican y reutilizan los archivos completos. Los ausentes
+#' o alterados se descargan de nuevo desde el inicio; no se reanudan bytes de
+#' un archivo parcial. Conserva el objeto de exportación y la carpeta para
+#' recuperar el trabajo con `fhir_exportar_estado()`.
+#'
 #' @param con Conexión creada con [fhir_conectar()].
 #' @param nivel Qué exportar: `"sistema"` (todos los datos del servidor,
 #'   `[base]/$export`), `"paciente"` (todos los pacientes y sus datos,
@@ -149,8 +157,7 @@ fhir_exportar_estado <- function(x, esperar = FALSE, descargar = TRUE,
       consultar_exportacion(x)$x
     }
   }
-  if (descargar && identical(x$estado, "completada") &&
-      length(x$archivos) == 0L) {
+  if (descargar && identical(x$estado, "completada")) {
     x <- descargar_exportacion(x, progreso)
   }
   x
@@ -346,7 +353,7 @@ descargar_exportacion <- function(x, progreso) {
     tipo <- f$type %||% "Recurso"
     tipos <- c(tipos, tipo)
     rutas <- c(rutas, file.path(x$carpeta, nombre_archivo(f$url, tipo, tipos)))
-    descargar_archivo(x$con, f$url, rutas[length(rutas)], con_token)
+    descargar_archivo_recuperable(x, f$url, rutas[length(rutas)], con_token)
     if (progreso) cli::cli_progress_update()
   }
   if (progreso && length(salida) > 0L) cli::cli_progress_done()
@@ -362,7 +369,7 @@ descargar_exportacion <- function(x, progreso) {
       tipos_error <- c(tipos_error, tipo)
       archivo <- file.path(carpeta_errores,
                            nombre_archivo(f$url, tipo, tipos_error))
-      descargar_archivo(x$con, f$url, archivo, con_token)
+      descargar_archivo_recuperable(x, f$url, archivo, con_token)
       errores <- c(errores, archivo)
     }
     avisar_errores_exportacion(errores)
@@ -381,6 +388,35 @@ nombre_archivo <- function(url, tipo, tipos) {
 
 origen_url <- function(url) {
   tolower(sub("^(https?://[^/?#]+).*$", "\\1", url))
+}
+
+# Solo se reutilizan archivos completos de la misma exportación cuyo hash coincide.
+descargar_archivo_recuperable <- function(x, url, archivo, con_token) {
+  registro <- paste0(archivo, ".fhirviews.json")
+  identidad <- list(url = url, trabajo = x$url_estado,
+                    fecha = x$manifiesto$transactionTime)
+  anterior <- if (file.exists(registro)) {
+    tryCatch(jsonlite::read_json(registro, simplifyVector = FALSE),
+             error = function(e) NULL)
+  }
+  if (is.list(anterior) && file.exists(archivo) &&
+      identical(anterior$identidad, identidad) &&
+      identical(anterior$md5, unname(tools::md5sum(archivo)))) {
+    return(invisible(archivo))
+  }
+  temporal <- tempfile(".fhirviews-", tmpdir = dirname(archivo))
+  on.exit(unlink(temporal), add = TRUE)
+  descargar_archivo(x$con, url, temporal, con_token)
+  md5 <- unname(tools::md5sum(temporal))
+  if (is.na(md5) || !file.rename(temporal, archivo)) {
+    cli::cli_abort("No se pudo guardar el archivo {.file {archivo}}.",
+                   class = "fhirviews_error_exportacion")
+  }
+  # Un registro ausente o incompleto fuerza una nueva descarga; nunca se acepta
+  # la mera existencia del NDJSON como prueba de que terminó correctamente.
+  jsonlite::write_json(list(identidad = identidad, md5 = md5), registro,
+                        auto_unbox = TRUE, null = "null")
+  invisible(archivo)
 }
 
 descargar_archivo <- function(con, url, archivo, con_token) {

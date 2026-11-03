@@ -45,13 +45,28 @@ jobs:
           extra-packages: |
             any::rcmdcheck
             any::testthat
+            any::pkgload
             any::knitr
             any::rmarkdown
             any::DBI
             any::duckdb
             any::rstudioapi
+            any::jose
+            any::openssl
+            any::httpuv
+            any::dplyr
+            any::dbplyr
             github::f-slg/pobecu
           needs: check
+
+      - name: Verificar motor DuckDB sin omitir pruebas SQL
+        shell: Rscript {0}
+        run: |
+          pkgload::load_all()
+          con <- fhirviews:::conectar_duckdb()
+          fhirviews:::cargar_json_duckdb(con)
+          stopifnot(DBI::dbGetQuery(con, "SELECT json_valid('{}') AS ok")$ok)
+          DBI::dbDisconnect(con)
 
       - uses: r-lib/actions/check-r-package@v2
         with:

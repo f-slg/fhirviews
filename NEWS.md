@@ -1,3 +1,22 @@
+# fhirviews (desarrollo)
+
+* Nueva `vista_ejecutar_lotes()` para leer NDJSON y gzip por bloques y entregar
+  cada tabla a una función de procesamiento, sin acumular la entrada ni la salida.
+* Las exportaciones masivas usan archivos temporales y registros de checksum.
+  Al consultar de nuevo el mismo trabajo se reutilizan los archivos completos;
+  los ausentes o alterados se vuelven a descargar desde el inicio.
+
+* Se corrigen los enlaces de paginación relativos al origen y los que
+  contienen solo parámetros, sin duplicar la ruta base del servidor.
+* Las cabeceras de la conexión se envían únicamente a su base FHIR.
+* `vista_duckdb()` guarda todas las vistas en una transacción y cierra
+  las conexiones propias si falla, evitando tablas parcialmente actualizadas.
+* Los tipos de texto explícitos se convierten a caracteres; `positiveInt`
+  y `unsignedInt` avisan ante valores fuera de rango, conservando los datos.
+  Los enteros no finitos también generan un aviso.
+* CI verifica que la extensión JSON de DuckDB pueda cargarse antes del check
+  e instala las dependencias de autenticación y consultas diferidas.
+
 # fhirviews 0.3.0
 
 Esta versión amplía el motor DuckDB a todo el perfil *shareable* y la mayor

@@ -472,7 +472,15 @@ url_completa <- function(con, ruta) {
   if (grepl("^https?://", ruta)) {
     return(ruta)
   }
-  ruta <- sub("^/+", "", ruta)
+  if (startsWith(ruta, "//")) {
+    return(paste0(sub(":.*$", "", con$url), ":", ruta))
+  }
+  if (startsWith(ruta, "/")) {
+    return(paste0(sub("^(https?://[^/?#]+).*$", "\\1", con$url), ruta))
+  }
+  if (startsWith(ruta, "?") || startsWith(ruta, "#")) {
+    return(paste0(con$url, ruta))
+  }
   if (!nzchar(ruta)) con$url else paste0(con$url, "/", ruta)
 }
 
@@ -565,8 +573,9 @@ enviar_peticion <- function(con, metodo, url, cuerpo, parametros, cabeceras,
   req <- httr2::request(url)
   req <- httr2::req_method(req, metodo)
   req <- httr2::req_user_agent(req, agente())
+  cabeceras_con <- if (mismo_servidor(con, url)) con$cabeceras else list()
   req <- httr2::req_headers(req, Accept = "application/fhir+json",
-                            !!!con$cabeceras, !!!cabeceras)
+                            !!!cabeceras_con, !!!cabeceras)
   if (oauth) {
     req <- httr2::req_auth_bearer_token(req, token_acceso(con, renovar))
   } else if (!is.null(con$token) && mismo_servidor(con, url)) {

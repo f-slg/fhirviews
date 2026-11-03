@@ -194,3 +194,15 @@ test_that("vista_validar encuentra los problemas", {
     list(column = list(list(name = "a", path = "id"))),
     list(column = list(list(name = "b", path = "id")))))), "mismas columnas")
 })
+
+test_that("los tipos explicitos convierten texto y respetan rangos enteros", {
+  expect_identical(convertir_tipo(c(123, NA), "string", "x"), c("123", NA_character_))
+  expect_warning(expect_identical(convertir_tipo(-1, "positiveInt", "x"), -1),
+                 class = "fhirviews_aviso_tipo")
+  expect_warning(expect_identical(convertir_tipo(0, "positiveInt", "x"), 0),
+                 class = "fhirviews_aviso_tipo")
+  expect_warning(expect_identical(convertir_tipo(-1, "unsignedInt", "x"), -1),
+                 class = "fhirviews_aviso_tipo")
+  expect_identical(convertir_tipo(c(0, NA), "unsignedInt", "x"), c(0L, NA_integer_))
+  expect_warning(convertir_tipo(Inf, "integer", "x"), class = "fhirviews_aviso_tipo")
+})
