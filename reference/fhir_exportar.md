@@ -152,6 +152,14 @@ curso justo después del inicio; luego se consulta con
 cancela con `fhir_exportar_cancelar()` (`DELETE` a la dirección de
 estado).
 
+Las descargas se escriben primero en un archivo temporal. Al finalizar
+se guarda un registro `.fhirviews.json` junto a cada NDJSON, con la
+identidad de la exportación y su checksum MD5. Al volver a consultar la
+misma exportación se verifican y reutilizan los archivos completos. Los
+ausentes o alterados se descargan de nuevo desde el inicio; no se
+reanudan bytes de un archivo parcial. Conserva el objeto de exportación
+y la carpeta para recuperar el trabajo con `fhir_exportar_estado()`.
+
 `fhir_exportar_estado()` consulta el estado una vez (o, con
 `esperar = TRUE`, hasta que termine) y devuelve la exportación
 actualizada: hay que guardarla de nuevo,

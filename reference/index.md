@@ -82,6 +82,8 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 
 - [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
   : Ejecutar un ViewDefinition
+- [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
+  : Ejecutar una vista sobre archivos NDJSON por bloques
 - [`vista_crear()`](https://f-slg.github.io/fhirviews/reference/vista_crear.md)
   : Crear un ViewDefinition sencillo
 - [`vista_leer()`](https://f-slg.github.io/fhirviews/reference/vista_leer.md)

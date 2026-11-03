@@ -1,16 +1,31 @@
 # fhirviews
 
-**fhirviews** lleva **HL7 FHIR R4** a R: un cliente para hablar con
-cualquier servidor FHIR desde R y RStudio, como harías con Postman, y un
-motor que convierte los recursos FHIR en **tablas** con el estándar
-**[SQL on FHIR](https://sql-on-fhir.org/)** (`ViewDefinition`). El motor
-de vistas funciona dentro de R, sin Java ni Spark, devuelve `data.frame`
-y pasa **todas las pruebas *shareable*** del banco oficial de
-conformidad. Se conecta a servidores protegidos con **SMART on FHIR**,
-descarga poblaciones completas con **`$export`** y, con su **motor
-DuckDB**, aplana millones de recursos en un portátil. Incluye además
-**terminologías** (`$expand`, `$lookup`, `$validate-code`) y un
-**catálogo de vistas** listas para salud pública.
+**fhirviews** convierte recursos **HL7 FHIR R4** en tablas para analizar
+en R. Puedes leer archivos JSON o NDJSON, consultar un servidor FHIR y
+aplicar vistas reproducibles con **[SQL on
+FHIR](https://sql-on-fhir.org/)** (`ViewDefinition`). El resultado es un
+`data.frame` que puedes filtrar, resumir o guardar en una base de datos.
+
+El paquete reúne tres herramientas:
+
+- **Cliente FHIR:** búsqueda con paginación, lectura y escritura,
+  autenticación SMART on FHIR y exportación masiva con `$export`.
+- **Motor de vistas:** FHIRPath con fhirpath.js en V8, catálogo de
+  vistas para salud pública y operaciones de terminología para trabajar
+  con `ValueSet`.
+- **Procesamiento de archivos grandes:** lectura de NDJSON por bloques
+  con V8 y un motor experimental que traduce las vistas a SQL de DuckDB.
+
+Funciona dentro de R, sin instalar Java ni Spark. El motor V8 supera las
+133 pruebas *shareable* del banco de conformidad incluido en el paquete.
+Puedes probarlo con los datos ficticios incluidos, sin conectarte a un
+servidor.
+
+> **Versión de desarrollo:** incorpora
+> [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
+> y recuperación de descargas por archivo con comprobación de checksum.
+> Consulta [NEWS.md](https://f-slg.github.io/fhirviews/NEWS.md) para
+> conocer los cambios respecto a la versión 0.4.0.
 
 ![Tres paneles: un recurso Patient en JSON, un ViewDefinition con column
 y forEach, y el data.frame resultante con una fila por cada nombre del
@@ -25,6 +40,7 @@ paciente](reference/figures/README-json-tabla.png)
 - [¿Por qué fhirviews?](#por-qu%C3%A9-fhirviews)
 - [Instalación](#instalaci%C3%B3n)
 - [Inicio rápido](#inicio-r%C3%A1pido)
+- [Qué función usar](#qu%C3%A9-funci%C3%B3n-usar)
 - [Para qué se puede usar](#para-qu%C3%A9-se-puede-usar)
 - [Cómo funciona](#c%C3%B3mo-funciona)
 - [Conformidad con SQL on FHIR](#conformidad-con-sql-on-fhir)
@@ -58,12 +74,15 @@ Aidbox, Google FHIR Data Pipes…). fhirviews trae ese estándar a R.
 | Consultar un servidor FHIR sin salir de R | Cliente completo: búsqueda con paginación, lectura, escritura, transacciones, `$everything`, `$validate`, errores legibles |
 | Trabajar con servidores protegidos | Autenticación SMART on FHIR / OAuth2: *client credentials*, *Backend Services* (JWT firmado) e inicio de sesión en el navegador, con renovación automática del token |
 | Convertir recursos en tablas de forma reproducible | Motor de `ViewDefinition` conforme al estándar, validado con el banco oficial |
-| Trabajar con volúmenes reales | Exportación masiva con `$export` (FHIR Bulk Data); motor V8 por lotes y motor DuckDB que traduce la vista a SQL: un millón de pacientes en segundos |
+| Trabajar con archivos grandes | NDJSON y gzip por bloques con [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md), exportaciones con recuperación por archivo y motor SQL de DuckDB experimental |
 | Definir indicadores con `ValueSet` | Expansión de `ValueSet` con paginación, `$lookup` y `$validate-code` en un servidor de terminología; los códigos quedan dentro de la vista, sin red al ejecutarla |
-| Analizar con SQL | Las vistas se guardan en DuckDB (u otra base DBI) con un comando |
+| Analizar con SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) guarda varias vistas en una transacción; si alguna falla, revierte las escrituras de esa llamada |
 | Enseñar y explorar | Panel *Connections* y addins de RStudio, peticiones al estilo Postman, datos de ejemplo |
 
 ## Instalación
+
+Requiere **R 4.1.0 o posterior**. Instala la versión disponible en
+GitHub:
 
 ``` r
 
@@ -90,20 +109,32 @@ Opcionales, según lo que vayas a usar:
 | `jose` y `openssl` | Autenticación SMART *Backend Services* ([`fhir_auth_backend()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md)) |
 | `httpuv` | Inicio de sesión en el navegador ([`fhir_auth_interactiva()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md)) |
 | `rstudioapi` | Addins de RStudio |
+| `dplyr` y `dbplyr`, además de `duckdb` y `DBI` | Consultas diferidas con `vista_ejecutar_duckdb(..., diferido = TRUE)` |
 | [pobecu](https://f-slg.github.io/pobecu/) | Población del Ecuador para calcular tasas |
 
 ## Inicio rápido
 
-El paquete incluye el caso clínico ficticio del taller
-[aprende-fhir](https://github.com/f-slg/aprende-fhir) (60 recursos de 29
-tipos), así que el ejemplo funciona sin conexión:
+El ejemplo usa el caso clínico ficticio incluido en el paquete y una
+vista lista del catálogo. Funciona sin conexión y solo necesita las
+dependencias obligatorias:
 
 ``` r
 
 library(fhirviews)
 
-caso <- fhir_recursos(system.file("extdata", "caso_clinico.ndjson",
-                                  package = "fhirviews"))
+archivo <- system.file("extdata", "caso_clinico.ndjson", package = "fhirviews")
+signos <- vista_plantilla("signos_vitales")
+tabla <- vista_ejecutar(archivo, signos)
+head(tabla)
+```
+
+Para definir tus propias columnas, crea una vista con expresiones
+FHIRPath. Por ejemplo, una fila por cada observación que tenga un valor
+de tipo `Quantity`:
+
+``` r
+
+caso <- fhir_recursos(archivo)
 
 signos <- vista_crear(
   "Observation",
@@ -131,6 +162,26 @@ observaciones <- fhir_buscar(con, "Observation", category = "vital-signs",
                              `_count` = 100, max_paginas = 5)
 vista_ejecutar(observaciones, signos)
 ```
+
+## Qué función usar
+
+| Tu punto de partida | Función | Resultado |
+|----|----|----|
+| Recursos en R, un Bundle o un archivo que cabe en memoria | [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md) | Un `data.frame` con el motor V8 |
+| Archivos NDJSON o gzip que quieres recorrer por bloques | [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md) | Una tabla por bloque, entregada a tu función para guardar o resumir |
+| NDJSON o Parquet y una vista traducible a SQL | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md) | Un `data.frame`, una tabla persistida o una consulta diferida; motor experimental |
+| Un servidor FHIR y una búsqueda concreta | [`fhir_buscar()`](https://f-slg.github.io/fhirviews/reference/fhir_buscar.md) y [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md) | Recursos descargados y su tabla |
+| Una población disponible mediante Bulk Data | [`fhir_exportar()`](https://f-slg.github.io/fhirviews/reference/fhir_exportar.md) | Archivos NDJSON locales para procesar con cualquiera de los motores |
+| Varias vistas que quieres consultar juntas con SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) | Tablas guardadas mediante el motor V8 en una conexión DBI |
+
+[`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
+devuelve toda la tabla en memoria. Para limitar la memoria con
+[`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md),
+guarda o resume cada bloque sin acumularlos todos; el tamaño también
+depende de las filas que produzca la vista. En DuckDB, usa `tabla` o
+`diferido = TRUE` si quieres mantener el resultado en la base. Las
+expresiones que el motor SQL no admite producen un error y se pueden
+procesar con V8.
 
 ## Para qué se puede usar
 
@@ -222,6 +273,43 @@ vista_sql(v_dengue)          # la consulta SQL generada
 Es un motor experimental: traduce un subconjunto de FHIRPath y, si algo
 no se puede traducir, lo dice con un error en lugar de adivinar. Ver
 [Rendimiento](#rendimiento).
+
+Para usar el motor V8 con archivos grandes,
+[`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
+lee NDJSON (también gzip) por bloques y entrega cada tabla a una
+función:
+
+``` r
+
+vista_ejecutar_lotes(
+  "exportacion/Patient.ndjson", vista_plantilla("pacientes"),
+  procesar = function(tabla, bloque) {
+    # Guardar cada bloque en una tabla ya creada con el esquema esperado
+    DBI::dbAppendTable(db, "pacientes", tabla)
+  },
+  tamano_lote = 10000
+)
+```
+
+La memoria depende del tamaño del bloque, de las filas que produzca la
+vista y de lo que retenga la función. Declara `type` en las columnas si
+necesitas un esquema fijo entre bloques. Si la función falla, sus
+escrituras anteriores permanecen y el procesamiento se detiene.
+
+Las descargas de `$export` guardan un registro `.fhirviews.json` junto a
+cada archivo completo. Conservando el objeto de exportación y la
+carpeta, se puede reintentar con `exp <- fhir_exportar_estado(exp)`: se
+comprueban los checksums, se reutilizan los archivos completos del mismo
+trabajo y se descargan de nuevo los ausentes o alterados. Un archivo
+interrumpido se reinicia desde el comienzo. Para conservar el objeto
+antes de descargar, inicia con `esperar = FALSE`.
+
+``` r
+
+exp <- fhir_exportar(con, "paciente", carpeta = "exportacion", esperar = FALSE)
+exp <- fhir_exportar_estado(exp, esperar = TRUE)
+# Si se interrumpe la descarga, repetir la última llamada conserva lo completado.
+```
 
 ### 4. Vistas listas para salud pública y terminologías
 
@@ -390,6 +478,7 @@ flowchart LR
         R["fhir_recursos()<br/>conserva el JSON original"]
         V["vista_validar()"]
         E["vista_ejecutar()<br/>evaluación por lotes"]
+        BL["vista_ejecutar_lotes()<br/>NDJSON y gzip por bloques"]
     end
     subgraph JS["V8"]
         FP["fhirpath.js 5.2.2<br/>+ almacén de nodos tipados"]
@@ -406,6 +495,10 @@ flowchart LR
     F --> SQ
     SQ --> T
     F --> R
+    F -->|"NDJSON y gzip"| BL
+    X -->|"archivos completos"| BL
+    BL -->|"un bloque"| E
+    BL --> CB["procesar(tabla, bloque)<br/>guardar o resumir"]
     L --> R
     R --> E
     V --> E
@@ -440,6 +533,39 @@ sequenceDiagram
     R->>S: GET [link next]
     S-->>R: Bundle (37 entradas, sin next)
     Note over R: 237 recursos en un fhir_recursos,<br/>con el JSON de cada página
+```
+
+**Archivos grandes y recuperación.** El procesamiento por bloques
+entrega una tabla a la función `procesar()` y libera los nodos V8 antes
+de continuar. Las descargas de una misma exportación conservan los
+archivos completos cuyo checksum coincide. Si una descarga se
+interrumpe, el archivo temporal se elimina y ese archivo se vuelve a
+descargar al reintentar.
+
+``` mermaid
+flowchart TD
+    A["NDJSON o gzip"] --> B["Leer hasta tamano_lote líneas"]
+    B --> C{"¿Hay recursos?"}
+    C -->|"Sí"| D["Aplicar ViewDefinition con V8"]
+    D --> E["Liberar nodos V8"]
+    E --> F["procesar(tabla, bloque)"]
+    F --> G["Guardar filas o resumir el bloque"]
+    G --> B
+    C -->|"Fin del archivo"| H["Siguiente archivo o totales finales"]
+```
+
+``` mermaid
+flowchart TD
+    A["Manifiesto de la misma exportación"] --> B{"¿Archivo completo y<br/>registro con checksum válido?"}
+    B -->|"Sí"| C["Reutilizar archivo local"]
+    B -->|"No"| D["Descargar a un archivo temporal"]
+    D --> E{"¿Descarga correcta?"}
+    E -->|"Sí"| F["Guardar archivo final y registro de checksum"]
+    E -->|"No"| G["Eliminar temporal y conservar archivos completos"]
+    G --> H["Reintentar con fhir_exportar_estado()"]
+    H --> A
+    C --> I["Procesar NDJSON"]
+    F --> I
 ```
 
 **Motor de vistas.** El `ViewDefinition` se valida (estructura, nombres,
@@ -568,7 +694,7 @@ más lentos porque deben convertirse a JSON.
 | Recursos | [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md), [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md) | Reunir recursos de cualquier fuente y verlos como tabla rápida |
 | Vistas | [`vista_crear()`](https://f-slg.github.io/fhirviews/reference/vista_crear.md), [`vista_leer()`](https://f-slg.github.io/fhirviews/reference/vista_leer.md), [`vista_json()`](https://f-slg.github.io/fhirviews/reference/vista_json.md), [`vista_validar()`](https://f-slg.github.io/fhirviews/reference/vista_validar.md) | Definir, leer, exportar y validar `ViewDefinition` |
 | Catálogo de vistas | [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md), [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md) | Vistas listas para salud pública: pacientes con residencia, signos vitales, diagnósticos, notificación obligatoria, inmunizaciones, encuentros y medicamentos |
-| Ejecución | [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md), [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md), [`vista_fhirpath()`](https://f-slg.github.io/fhirviews/reference/vista_fhirpath.md) | Aplicar una vista (a recursos o directamente al servidor) y probar FHIRPath |
+| Ejecución | [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md), [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md), [`fhir_vista()`](https://f-slg.github.io/fhirviews/reference/fhir_vista.md), [`vista_fhirpath()`](https://f-slg.github.io/fhirviews/reference/vista_fhirpath.md) | Aplicar vistas en memoria, procesar NDJSON por bloques y probar FHIRPath |
 | Motor DuckDB | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md), [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md) | Ejecutar la vista como SQL de DuckDB sobre NDJSON o Parquet (experimental) |
 | Terminologías | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md), [`tx_buscar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_buscar_codigo.md), [`tx_validar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.md), [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) | `$expand`, `$lookup` y `$validate-code` en un servidor de terminología (tx.fhir.org, Snowstorm) y vistas filtradas por los códigos de un `ValueSet` |
 | SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) | Guardar vistas como tablas de DuckDB u otra base DBI |

@@ -56,6 +56,9 @@ Requiere los paquetes DBI y duckdb. Funciona también con otra conexión
 DBI (SQLite, PostgreSQL...) siempre que admita los tipos de las
 columnas.
 
+Todas las vistas se guardan en una transacción: si alguna falla, se
+revierten las escrituras de esta llamada.
+
 ## Examples
 
 ``` r
