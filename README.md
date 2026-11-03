@@ -29,7 +29,7 @@ Puedes probarlo con los datos ficticios incluidos, sin conectarte a un servidor.
 
 > **Versión de desarrollo:** incorpora `vista_ejecutar_lotes()` y
 > recuperación de descargas por archivo con comprobación de checksum.
-> Consulta [NEWS.md](NEWS.md) para conocer los cambios respecto a la versión 0.3.0.
+> Consulta [NEWS.md](NEWS.md) para conocer los cambios respecto a la versión 0.4.0.
 
 <img src="man/figures/README-json-tabla.png" width="100%" alt="Tres paneles: un recurso Patient en JSON, un ViewDefinition con column y forEach, y el data.frame resultante con una fila por cada nombre del paciente" />
 
@@ -438,7 +438,7 @@ flowchart LR
         BL["vista_ejecutar_lotes()<br/>NDJSON y gzip por bloques"]
     end
     subgraph JS["V8"]
-        FP["fhirpath.js 5.2.1<br/>+ almacén de nodos tipados"]
+        FP["fhirpath.js 5.2.2<br/>+ almacén de nodos tipados"]
     end
     subgraph DK["DuckDB (experimental)"]
         SQ["vista_ejecutar_duckdb()<br/>ViewDefinition a SQL"]
@@ -690,7 +690,8 @@ porque sus funciones no comparten nombres.
 - Operaciones de SQL on FHIR 3.0 (`$run`, `$export` de vistas) y
   `SQLQuery`.
 - Caché del panel *Connections* para servidores lentos.
-- Envío a CRAN, después de [pobecu](https://github.com/f-slg/pobecu).
+- Publicación en CRAN (el paquete ya pasa `R CMD check --as-cran` sin
+  errores ni avisos).
 
 ## Documentación
 

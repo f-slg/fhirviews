@@ -32,7 +32,7 @@ flowchart LR
     end
     subgraph V8["V8 (JavaScript)"]
         GL["Capa propia<br/>inst/js/fhirviews.js"]
-        FP["fhirpath.js 5.2.1<br/>+ modelo FHIR R4"]
+        FP["fhirpath.js 5.2.2<br/>+ modelo FHIR R4"]
     end
     SV["Servidor FHIR"] <-->|"httr2<br/>application/fhir+json"| CL
     CL --> RE

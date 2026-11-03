@@ -35,28 +35,13 @@ jobs:
           r-version: ${{ matrix.config.r }}
           use-public-rspm: true
 
-      # pobecu (Suggests, viñeta de tasas) aún no está en CRAN: se instalan
-      # las dependencias obligatorias y los Suggests se listan aquí, con
-      # pobecu desde GitHub. Cuando esté en CRAN, basta con volver a la
-      # configuración por defecto.
+      # Todas las dependencias (también los Suggests) están en CRAN. pobecu
+      # solo lo usa el artículo de tasas, que se construye en pkgdown.yaml.
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          dependencies: '"hard"'
           extra-packages: |
             any::rcmdcheck
-            any::testthat
             any::pkgload
-            any::knitr
-            any::rmarkdown
-            any::DBI
-            any::duckdb
-            any::rstudioapi
-            any::jose
-            any::openssl
-            any::httpuv
-            any::dplyr
-            any::dbplyr
-            github::f-slg/pobecu
           needs: check
 
       - name: Verificar motor DuckDB sin omitir pruebas SQL

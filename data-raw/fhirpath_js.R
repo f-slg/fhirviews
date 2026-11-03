@@ -23,7 +23,7 @@
 # Uso: Rscript data-raw/fhirpath_js.R [version]
 # -----------------------------------------------------------------------------
 version <- commandArgs(trailingOnly = TRUE)[1]
-if (is.na(version)) version <- "5.2.1"
+if (is.na(version)) version <- "5.2.2"
 
 url <- sprintf(
   "https://github.com/HL7/fhirpath.js/releases/download/%s/fhirpath.zip",

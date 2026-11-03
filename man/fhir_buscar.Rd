@@ -41,7 +41,7 @@ Hace una búsqueda FHIR (\verb{GET [base]/[tipo]?parametros}) y sigue los
 enlaces \code{next} de cada Bundle hasta reunir todos los resultados.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 pacientes <- fhir_buscar(con, "Patient", gender = "female", `_count` = 5,
                          max_paginas = 1)

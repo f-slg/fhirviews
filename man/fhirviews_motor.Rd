@@ -10,8 +10,9 @@ fhirviews_motor()
 fhirviews_version_fhirpath()
 }
 \value{
-\code{fhirviews_motor()} devuelve, de forma invisible, una lista con el
-motor, la versión de fhirpath.js y la del motor de JavaScript.
+\code{fhirviews_motor()} devuelve una lista de clase \code{fhirviews_motor}
+con el motor (\code{motor}), la versión de fhirpath.js (\code{fhirpath_js}) y la
+del motor de JavaScript (\code{v8}), que se imprime como un resumen.
 \code{fhirviews_version_fhirpath()} devuelve la versión de fhirpath.js
 incluida en el paquete, sin iniciar V8.
 }

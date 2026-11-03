@@ -10,7 +10,7 @@ The package code written by the package author is under the MIT license
 (see LICENSE). The bundled code keeps its own licenses, listed below.
 
 =============================================================================
-fhirpath.js 5.2.1
+fhirpath.js 5.2.2
 https://github.com/HL7/fhirpath.js
 Files: inst/js/fhirpath/fhirpath.min.js, inst/js/fhirpath/fhirpath.r4.min.js
 Copyright: Lister Hill National Center for Biomedical Communications

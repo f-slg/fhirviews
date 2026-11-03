@@ -60,7 +60,7 @@ token o su autenticación SMART on FHIR, y los mismos errores con el
 \code{OperationOutcome} del servidor.
 }
 \examples{
-\dontshow{if (fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://tx.fhir.org/r4")) withAutoprint(\{ # examplesIf}
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 
 # Un ValueSet publicado, por su URL canónica

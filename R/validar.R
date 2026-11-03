@@ -19,11 +19,21 @@
 #'   `ucum`, `sct`, `loinc`...);
 #' * todas las expresiones FHIRPath se pueden compilar.
 #'
+#' Además, con el modelo de FHIR R4 avisa (sin error) si `resource` no es un
+#' tipo de recurso de R4 o si una ruta usa un elemento que no existe (por
+#' ejemplo `name.familia` en lugar de `name.family`): FHIRPath no da error en
+#' esos casos y la vista devolvería una tabla vacía o columnas sin valores.
+#' Solo se revisan los pasos de navegación simples; los elementos de
+#' elección (`value`), las extensiones y las expresiones con operadores no
+#' generan avisos. Se pueden silenciar con
+#' `suppressWarnings(..., classes = "fhirviews_aviso_vista")`.
+#'
 #' @param vista Un `ViewDefinition` en cualquier forma que acepte
 #'   [vista_leer()].
 #'
 #' @return La vista, de forma invisible, si es válida. Si no, un error de
-#'   clase `fhirviews_error_vista` con la lista de problemas encontrados.
+#'   clase `fhirviews_error_vista` con la lista de problemas encontrados. Los
+#'   avisos del modelo R4 son de clase `fhirviews_aviso_vista`.
 #' @export
 #' @examples
 #' vista_validar(vista_crear("Patient", c(sexo = "gender")))
@@ -48,7 +58,69 @@ vista_validar <- function(vista) {
     ), class = c("fhirviews_error_vista", "fhirviews_error"),
     problemas = problemas, call = NULL)
   }
+  avisos <- avisos_vista(vista)
+  if (length(avisos) > 0L) {
+    mostrar <- utils::head(avisos, 10L)
+    cli::cli_warn(c(
+      "El ViewDefinition usa elementos que no existen en FHIR R4.",
+      stats::setNames(mostrar, rep("!", length(mostrar))),
+      if (length(avisos) > 10L)
+        c("i" = "... y {length(avisos) - 10L} aviso{?s} m\u00e1s."),
+      "i" = "Esas rutas no devuelven valores: revisa la ortograf\u00eda."
+    ), class = "fhirviews_aviso_vista", avisos = avisos, call = NULL)
+  }
   invisible(vista)
+}
+
+# Recursos y elementos que no existen en el modelo R4 (avisos, no errores)
+avisos_vista <- function(v) {
+  m <- motor_actual()
+  avisos <- character()
+  if (!m$es_recurso(v$resource)) {
+    return(paste0("{.val ", v$resource, "} no es un tipo de recurso de ",
+                  "FHIR R4."))
+  }
+  revisar <- function(ctx, expresion, donde) {
+    if (is.null(ctx) || !es_texto(expresion)) {
+      return(invisible())
+    }
+    d <- m$desconocido(ctx, expresion)
+    if (!is.null(d)) {
+      avisos <<- c(avisos, paste0(
+        "{.field ", donde, "}: {.field ", escapar_cli(d$campo),
+        "} no es un elemento de {.cls ", d$tipo, "} ({.code ",
+        escapar_cli(expresion), "})."))
+    }
+  }
+  visitar <- function(s, ctx, donde) {
+    iteracion <- s$forEach %||% s$forEachOrNull
+    campo <- if (!is.null(s$forEach)) "forEach" else "forEachOrNull"
+    if (!is.null(s[["repeat"]])) {
+      # Las rutas de repeat se aplican en cada nivel del recorrido, con
+      # tipos distintos: no se revisan, ni lo que cuelga de ellas
+      ctx <- NULL
+    } else if (!is.null(iteracion)) {
+      revisar(ctx, iteracion, paste0(donde, ".", campo))
+      if (!is.null(ctx)) ctx <- m$tipo(ctx, iteracion)
+    }
+    for (j in seq_along(s$column)) {
+      revisar(ctx, s$column[[j]]$path, paste0(donde, ".column[", j, "].path"))
+    }
+    for (j in seq_along(s$select)) {
+      visitar(s$select[[j]], ctx, paste0(donde, ".select[", j, "]"))
+    }
+    for (j in seq_along(s$unionAll)) {
+      visitar(s$unionAll[[j]], ctx, paste0(donde, ".unionAll[", j, "]"))
+    }
+  }
+  raiz <- list(tipo = v$resource, ruta = v$resource)
+  for (i in seq_along(v$where)) {
+    revisar(raiz, v$where[[i]]$path, paste0("where[", i, "].path"))
+  }
+  for (i in seq_along(v$select)) {
+    visitar(v$select[[i]], raiz, paste0("select[", i, "]"))
+  }
+  avisos
 }
 
 elementos_select <- c("column", "select", "unionAll", "forEach",

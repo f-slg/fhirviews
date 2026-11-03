@@ -24,7 +24,7 @@ Lee un recurso por su tipo e id (\verb{GET [base]/[tipo]/[id]}), o una versión
 concreta (\verb{_history}).
 }
 \examples{
-\dontshow{if (fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
+\dontshow{if ((interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")) withAutoprint(\{ # examplesIf}
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 uno <- fhir_buscar(con, "Patient", `_count` = 1, max_paginas = 1)
 paciente <- fhir_leer(con, "Patient", uno[[1]]$id)

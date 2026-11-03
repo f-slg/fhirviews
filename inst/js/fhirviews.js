@@ -59,11 +59,22 @@ var fhirviews = (function () {
     }
   };
 
+  // Una sesion larga puede compilar miles de expresiones distintas (por
+  // ejemplo, probandolas con vista_fhirpath()): al pasar del maximo se vacia
+  // la cache, que se vuelve a llenar con las que se sigan usando.
+  var maxCompiladas = 1000;
+  var nCompiladas = 0;
+
   function compilar(expresion) {
     var f = compiladas[expresion];
     if (f === undefined) {
       f = fhirpath.compile(expresion, modelo, opciones);
+      if (nCompiladas >= maxCompiladas) {
+        compiladas = {};
+        nCompiladas = 0;
+      }
       compiladas[expresion] = f;
+      nCompiladas++;
     }
     return f;
   }
@@ -209,6 +220,60 @@ var fhirviews = (function () {
     return ctx.tipo === '(eleccion)' ? null : ctx;
   }
 
+  // Primer elemento de la ruta que no existe en el modelo R4, recorriendo
+  // los pasos de navegacion simples como tipoExpresion(). Devuelve
+  // {campo, tipo} o null si todos existen o si no se puede saber (elementos
+  // de eleccion, variables, operadores o funciones que cambian el tipo).
+  function campoDesconocido(ctx, expresion) {
+    var partes = partirExpresion(expresion);
+    for (var i = 0; i < partes.length; i++) {
+      var p = partes[i];
+      if (p === '$this' || (i === 0 && p === ctx.tipo)) {
+        continue;
+      }
+      var m = /^([A-Za-z_][A-Za-z0-9_]*)(\(([\s\S]*)\))?$/.exec(p);
+      if (!m) {
+        return null;
+      }
+      var nombre = m[1];
+      if (m[2] === undefined) {
+        if (ctx.tipo === '(eleccion)' ||
+            (i === 0 && (nombre === 'true' || nombre === 'false'))) {
+          return null;
+        }
+        var siguiente = hijo(ctx, nombre);
+        if (!siguiente) {
+          return tipoConocido(ctx.tipo) ? {campo: nombre, tipo: ctx.ruta} : null;
+        }
+        ctx = siguiente;
+      } else {
+        // Las funciones se resuelven como en tipoExpresion()
+        ctx = tipoExpresion(ctx, p);
+        if (!ctx) {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
+  // Tipo complejo del modelo (con hijos conocidos)
+  function tipoConocido(t) {
+    return !!t && t !== '(eleccion)' && /^[A-Z]/.test(t) &&
+      (modelo.type2Parent[t] !== undefined || t === 'Element' ||
+       t === 'BackboneElement' || t === 'Resource');
+  }
+
+  function esRecurso(t) {
+    for (var n = 0; t && n < 20; n++) {
+      if (t === 'Resource') {
+        return true;
+      }
+      t = modelo.type2Parent[t];
+    }
+    return false;
+  }
+
   // Variables: {nombre: valor} o {nombre: {literal: '@2020-01-01'}} para las
   // constantes que deben compararse como fechas u horas.
   function prepararVariables(variables) {
@@ -317,10 +382,81 @@ var fhirviews = (function () {
       }
     },
 
+    // Primer elemento inexistente de una ruta en un contexto {tipo, ruta}
+    desconocido: function (ctx, expresion) {
+      try {
+        return campoDesconocido(ctx, expresion);
+      } catch (e) {
+        return null;
+      }
+    },
+
+    // ¿Es un tipo de recurso de FHIR R4?
+    esRecurso: function (tipo) {
+      return esRecurso(tipo);
+    },
+
     // Comprueba que una expresion sea valida; lanza un error si no lo es.
     validar: function (expresion) {
       compilar(expresion);
       return true;
+    },
+
+    // Tabla rapida (fhir_tabla): una columna por elemento de primer nivel, en
+    // el orden en que aparecen (resourceType e id primero, sin text). Los
+    // valores simples se copian; los arreglos de valores simples se unen con
+    // '; ' y el resto se escribe como JSON compacto, recortado a `maximo`
+    // caracteres. Devuelve {campos: [...], columnas: [[valor por nodo]]}.
+    tabla: function (ids, maximo) {
+      var otros = [];
+      var vistos = {};
+      ids.forEach(function (id) {
+        var r = nodos[id];
+        if (r && typeof r === 'object') {
+          Object.keys(r).forEach(function (k) {
+            if (!vistos[k]) {
+              vistos[k] = true;
+              if (k !== 'resourceType' && k !== 'id' && k !== 'text') {
+                otros.push(k);
+              }
+            }
+          });
+        }
+      });
+      var campos = ['resourceType', 'id'].filter(function (k) {
+        return vistos[k];
+      }).concat(otros);
+      function simple(v) {
+        return v === null || typeof v !== 'object';
+      }
+      function recortar(texto) {
+        var letras = Array.from(texto);
+        if (letras.length > maximo) {
+          return letras.slice(0, maximo - 3).join('') + '...';
+        }
+        return texto;
+      }
+      var columnas = campos.map(function (k) {
+        return ids.map(function (id) {
+          var r = nodos[id];
+          var v = r && typeof r === 'object' ? r[k] : undefined;
+          if (v === undefined || v === null) {
+            return null;
+          }
+          if (simple(v)) {
+            return v;
+          }
+          if (Array.isArray(v) && v.every(simple)) {
+            return recortar(v.join('; '));
+          }
+          return recortar(JSON.stringify(v));
+        });
+      });
+      // Cada columna como texto JSON aparte, para que R la simplifique por
+      // separado (con su propio tipo)
+      return {campos: campos, columnas: columnas.map(function (c) {
+        return JSON.stringify(c);
+      })};
     },
 
     // Libera los nodos desde el indice dado (0 vacia el almacen).

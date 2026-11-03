@@ -96,7 +96,8 @@ print.fhir_sql <- function(x, ...) {
 #' @param archivos Rutas de archivos `.ndjson`, `.ndjson.gz` o `.parquet`
 #'   (se pueden usar comodines como `"datos/*.ndjson"`), el nombre de una
 #'   tabla de `con_db` con una columna `json`, o recursos en cualquier forma
-#'   que acepte [fhir_recursos()] (que se escriben antes en un archivo
+#'   que acepte [fhir_recursos()], incluidos texto JSON y archivos `.json`
+#'   con un recurso o un Bundle (que se escriben antes en un archivo NDJSON
 #'   temporal).
 #' @param vista Un `ViewDefinition` en cualquier forma que acepte
 #'   [vista_leer()].
@@ -166,7 +167,7 @@ vista_ejecutar_duckdb <- function(archivos, vista, con_db = NULL,
     }
   }
   cargar_json_duckdb(con_db)
-  if (!is.character(archivos)) {
+  if (!is.character(archivos) || son_recursos_texto(archivos)) {
     archivos <- escribir_ndjson_temporal(archivos)
     if (!diferido) on.exit(unlink(archivos), add = TRUE)
   }
@@ -202,10 +203,24 @@ cargar_json_duckdb <- function(con) {
   invisible(TRUE)
 }
 
+# Texto que vista_ejecutar_duckdb() lee con fhir_recursos() y no como rutas
+# de DuckDB: texto JSON o archivos .json (que pueden ser un Bundle o un
+# recurso con varias líneas, no NDJSON)
+son_recursos_texto <- function(x) {
+  if (length(x) == 0L || anyNA(x)) {
+    return(FALSE)
+  }
+  if (any(grepl("^\\s*[[{]", x))) {
+    return(TRUE)
+  }
+  all(grepl("\\.json$", x, ignore.case = TRUE)) &&
+    !any(grepl("[*?[]", x)) && all(file.exists(x))
+}
+
 escribir_ndjson_temporal <- function(recursos) {
   recursos <- fhir_recursos(recursos)
-  fuente <- attr(recursos, "fuente")
-  if (!is.null(fuente) && length(fuente) == length(recursos)) {
+  fuente <- fuente_alineada(recursos)
+  if (!is.null(fuente)) {
     lineas <- gsub("[\r\n]+", " ", fuente)
   } else {
     lineas <- vapply(recursos, function(r) {
@@ -234,8 +249,10 @@ ejecutar_traduccion <- function(con, trad, tabla) {
   if (any(vapply(trad$tipos, is.na, logical(1)))) {
     # Columnas sin tipo deducible: se guarda el resultado y se decide el tipo
     # según los valores
-    temporal <- paste0("fhirviews_tmp_", paste(sample(letters, 10),
-                                                collapse = ""))
+    # tempfile() no usa el generador de números aleatorios de R, así que no
+    # altera .Random.seed
+    temporal <- gsub("[^A-Za-z0-9_]", "_",
+                     basename(tempfile("fhirviews_tmp_")))
     ejecutar(sprintf("CREATE TEMP TABLE %s AS %s", temporal, sql), FALSE)
     on.exit(DBI::dbExecute(con, paste("DROP TABLE IF EXISTS", temporal)),
             add = TRUE)
