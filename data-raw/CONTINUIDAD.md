@@ -118,4 +118,21 @@ Validación local con Podman: 46 comprobaciones aprobadas y operaciones obligato
 
 La primera ejecución del lanzador se repitió porque se editó mientras corría. La evidencia conservada corresponde a la repetición con el archivo estable, que terminó con código 0. Podman elimina el archivo CID al retirar el contenedor; el script guarda ahora `contenedor-id.txt` para conservar esa evidencia.
 
-Queda por confirmar este workflow en GitHub con Docker. El siguiente pendiente funcional del producto es el contrato estricto de esquema entre bloques y la política de errores del destino, además del piloto externo y la distribución privada ya descritos. El borrador y su archivo fuente NO se actualizan con estos cambios sin reconstrucción y validación posteriores; no publicar ni enviar a CRAN.
+La confirmación posterior de este workflow en GitHub con Docker se registra a continuación. El siguiente pendiente funcional del producto es el contrato estricto de esquema entre bloques y la política de errores del destino, además del piloto externo y la distribución privada ya descritos. El borrador y su archivo fuente NO se actualizan con estos cambios sin reconstrucción y validación posteriores; no publicar ni enviar a CRAN.
+
+
+### Confirmación final de integración: Podman y Docker
+
+El primer workflow falló al descargar la imagen: el digest de la caché local ya no estaba publicado en Docker Hub. Se consultó el registro remoto y se fijó **v8.12.0-2** con su digest de manifiesto publicado:
+
+`docker.io/hapiproject/hapi:v8.12.0-2@sha256:0ff86aac4c7bd13a1ee226444a70263bb46ed1c28ef543c30a44f865b80ca04e`
+
+La integración se repitió con esa referencia: 46 comprobaciones aprobadas con Podman local, código de salida cero y eliminación del contenedor comprobada. Los registros locales conservados se actualizaron a esta imagen definitiva. La política de omisiones y el fallo controlado de arranque también quedaron verificados.
+
+GitHub, Docker, commit `75d058c`: **Integracion HAPI aprobada**, 46 comprobaciones, código cero y registros de limpieza conservados. También aprobaron R-CMD-check (las cinco configuraciones) y pkgdown para ese commit.
+
+- Integración: https://github.com/f-slg/fhirviews/actions/runs/41815334804
+- R-CMD-check: https://github.com/f-slg/fhirviews/actions/runs/41815334893
+- Documentación: https://github.com/f-slg/fhirviews/actions/runs/41815334795
+
+Los resúmenes y registros de Docker se guardan permanentemente en `data-raw/validacion-0.5.0/hapi-ci/`, además de los artefactos temporales del workflow. Los commits que solo conservan esta evidencia no cambian el código probado. El paquete continúa privado y no se publicó el lanzamiento ni se envió a CRAN. El siguiente pendiente funcional es el esquema estricto entre bloques; el piloto externo y la distribución privada siguen pendientes.

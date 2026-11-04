@@ -422,7 +422,8 @@ y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta
 un HAPI aislado.
 
 Para ejecutar la integración completa de forma reproducible desde el repositorio,
-con Docker o Podman y las dependencias de prueba instaladas:
+con Docker o Podman y las dependencias de prueba instaladas (además de las
+dependencias obligatorias del paquete: `pkgload`, `testthat`, `DBI` y `duckdb`):
 
 ```sh
 bash data-raw/probar-hapi.sh

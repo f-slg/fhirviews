@@ -1,0 +1,4 @@
+Commit verificado: 75d058cd2fd3f5108d73899a6ab0a06a789c010a
+Integracion Docker aprobada: https://github.com/f-slg/fhirviews/actions/runs/41815334804
+R-CMD-check aprobado: https://github.com/f-slg/fhirviews/actions/runs/41815334893
+pkgdown aprobado: https://github.com/f-slg/fhirviews/actions/runs/41815334795

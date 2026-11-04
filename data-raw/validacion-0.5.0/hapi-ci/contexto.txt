@@ -1,0 +1,3 @@
+imagen=docker.io/hapiproject/hapi:v8.12.0-2@sha256:0ff86aac4c7bd13a1ee226444a70263bb46ed1c28ef543c30a44f865b80ca04e
+motor=docker
+url=http://127.0.0.1:32768/fhir

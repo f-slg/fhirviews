@@ -1,0 +1,9 @@
+servidor: S........................................S......
+
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. lectura y paginacion en el servidor publico ('test-servidor.R:13:3') - Reason: Servidor publico excluido de la integracion aislada
+
+2. terminologia con ValueSet en linea ('test-servidor.R:241:5') - Reason: El servidor no valida con un ValueSet en línea
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+Integracion aprobada; omisiones permitidas registradas en resumen.json.

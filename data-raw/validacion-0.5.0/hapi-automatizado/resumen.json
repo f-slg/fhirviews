@@ -1,5 +1,5 @@
 {
-  "imagen": "docker.io/hapiproject/hapi@sha256:eb310079e250939891d701c39c2093a70325447573c10c08c9cb11df47725828",
+  "imagen": "docker.io/hapiproject/hapi:v8.12.0-2@sha256:0ff86aac4c7bd13a1ee226444a70263bb46ed1c28ef543c30a44f865b80ca04e",
   "version_fhirviews": "0.5.0",
   "comprobaciones_aprobadas": 46,
   "grupos": [
@@ -27,9 +27,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.433,
-      "system": 0.004,
-      "real": 3.501,
+      "user": 0.446,
+      "system": 0.003,
+      "real": 3.344,
       "passed": 18,
       "omision": ""
     },
@@ -42,9 +42,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 2.797,
-      "system": 0.066,
-      "real": 2.207,
+      "user": 2.787,
+      "system": 0.082,
+      "real": 2.192,
       "passed": 17,
       "omision": ""
     },
@@ -57,9 +57,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.33,
+      "user": 0.294,
       "system": 0.006,
-      "real": 0.509,
+      "real": 0.634,
       "passed": 3,
       "omision": ""
     },
@@ -72,9 +72,9 @@
       "skipped": true,
       "error": false,
       "warning": 0,
-      "user": 0.239,
+      "user": 0.209,
       "system": 0.001,
-      "real": 0.428,
+      "real": 0.343,
       "passed": 2,
       "omision": "Reason: El servidor no valida con un ValueSet en línea"
     },
@@ -87,9 +87,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.612,
-      "system": 0.015,
-      "real": 120.682,
+      "user": 0.554,
+      "system": 0.025,
+      "real": 120.61,
       "passed": 6,
       "omision": ""
     }
