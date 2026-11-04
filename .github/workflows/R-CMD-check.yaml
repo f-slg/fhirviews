@@ -26,7 +26,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      _R_CHECK_FORCE_SUGGESTS_: ${{ matrix.config.r == '4.1' && 'false' || 'true' }}
+      _R_CHECK_FORCE_SUGGESTS_: ${{ matrix.config.r != 'release' && 'false' || 'true' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -41,17 +41,18 @@ jobs:
       # Todas las dependencias (también los Suggests) están en CRAN. pobecu
       # solo lo usa el artículo de tasas, que se construye en pkgdown.yaml.
       - uses: r-lib/actions/setup-r-dependencies@v2
-        if: matrix.config.r != '4.1'
+        if: matrix.config.r == 'release'
         with:
           extra-packages: |
             any::rcmdcheck
             any::pkgload
           needs: check
 
-      # DuckDB actual requiere R >= 4.2; en R 4.1 se verifica el motor V8
-      # y el cliente con las otras dependencias opcionales.
+      # DuckDB actual requiere R >= 4.2 y compilarlo en R-devel es costoso.
+      # R mínimo y R-devel verifican cliente/V8; los tres sistemas con
+      # R release verifican también DuckDB y sus pruebas SQL.
       - uses: r-lib/actions/setup-r-dependencies@v2
-        if: matrix.config.r == '4.1'
+        if: matrix.config.r != 'release'
         with:
           dependencies: '"hard"'
           extra-packages: |
@@ -70,7 +71,7 @@ jobs:
           needs: check
 
       - name: Verificar motor DuckDB sin omitir pruebas SQL
-        if: matrix.config.r != '4.1'
+        if: matrix.config.r == 'release'
         shell: Rscript {0}
         run: |
           pkgload::load_all()
