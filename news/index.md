@@ -2,6 +2,14 @@
 
 ## fhirviews 0.5.0
 
+- `vista_ejecutar_lotes(estricto = TRUE)` exige un contrato explícito de
+  tipos, comprueba valores antes de convertir o entregar cada bloque y
+  produce errores estructurados sin incluir datos ni mensajes del
+  destino.
+
+- Nuevo ejemplo `lotes-transaccion.R`: rollback de una carga fallida y
+  reemplazo completo al reintentar, sin acumular duplicados.
+
 - La integración con HAPI se automatiza con una imagen fijada por
   digest, servidor aislado, limpieza y registros de resultados. Las
   operaciones obligatorias no pueden quedar omitidas; la variante de

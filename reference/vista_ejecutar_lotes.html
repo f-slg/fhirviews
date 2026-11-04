@@ -60,7 +60,13 @@ y archivos gzip. El orden de archivos y recursos se conserva.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vista_ejecutar_lotes</span><span class="op">(</span><span class="va">archivos</span>, <span class="va">vista</span>, <span class="va">procesar</span>, tamano_lote <span class="op">=</span> <span class="fl">10000L</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">vista_ejecutar_lotes</span><span class="op">(</span></span>
+<span>  <span class="va">archivos</span>,</span>
+<span>  <span class="va">vista</span>,</span>
+<span>  <span class="va">procesar</span>,</span>
+<span>  tamano_lote <span class="op">=</span> <span class="fl">10000L</span>,</span>
+<span>  estricto <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -86,12 +92,49 @@ declara tipos en la vista si necesitas un esquema fijo para la salida.</p></dd>
 <dt id="arg-tamano-lote">tamano_lote<a class="anchor" aria-label="anchor" href="#arg-tamano-lote"></a></dt>
 <dd><p>Número máximo de líneas leídas por bloque.</p></dd>
 
+
+<dt id="arg-estricto">estricto<a class="anchor" aria-label="anchor" href="#arg-estricto"></a></dt>
+<dd><p>Con <code>TRUE</code>, exige <code>type</code> primitivo FHIR R4 en todas las
+columnas y el mismo contrato (<code>type</code> y <code>collection</code>) en cada rama.
+Valida cada valor antes de convertirlo y antes de llamar a <code>procesar</code>.
+No admite conversiones implícitas entre texto, números y lógicos.
+Los ausentes se conservan como <code>NA</code> del tipo declarado y las colecciones
+vacías como vectores vacíos de ese tipo. Por defecto es <code>FALSE</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Invisiblemente, una lista con los totales <code>bloques</code>, <code>recursos</code>
 y <code>filas</code>. Si no hay líneas con recursos no se llama a <code>procesar</code>.
 Si hay un error, se detiene; los efectos previos de <code>procesar</code> permanecen.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>El modo estricto comprueba tipos de R, cardinalidad y límites numéricos:
+enteros finitos representables en R, rangos de <code>positiveInt</code>/<code>unsignedInt</code>
+y decimales finitos. Rechaza números no finitos en la entrada y en los
+resultados antes de serializarlos. Los demás primitivos se representan como texto; no
+se validan aquí formatos de fechas, URI, códigos ni perfiles FHIR.</p>
+<p>Los errores estrictos tienen clase <code>fhirviews_error_lotes</code> (también
+<code>fhirviews_error_esquema</code> si falla el contrato). Incluyen <code>bloque</code>, <code>fase</code>,
+<code>columna</code> y <code>tipo_esperado</code> cuando se conocen, <code>motivo</code>, <code>indice_archivo</code>
+y <code>completados</code> (totales de llamadas a <code>procesar</code> que retornaron sin error).
+El bloque 0 indica un fallo de definición antes de leer los archivos.
+Los mensajes no incorporan valores, rutas de entrada ni el error original
+del destino. Los mensajes o avisos que emita el propio consumidor quedan
+bajo su responsabilidad. Los avisos de lectura o evaluación detienen el
+bloque en modo estricto.</p>
+<p>La función no revierte escrituras, no reintenta y no guarda checkpoints.
+Si falla <code>procesar</code>, el bloque actual puede tener escrituras parciales;
+<code>completados</code> no demuestra persistencia y una transacción externa puede
+revertir incluso esos bloques. No lo uses para decidir automáticamente
+qué bloques omitir al reanudar.</p>
+<p>Para reintentar sin acumular duplicados, usa una transacción que abarque
+toda la carga y reemplace el resultado, o escribe en un destino temporal
+nuevo que solo publiques cuando termine. Conserva las mismas entradas,
+orden, vista y tamaño de bloque. El ejemplo instalado
+<code>system.file("examples", "lotes-transaccion.R", package = "fhirviews")</code>
+demuestra rollback y reemplazo completo con DuckDB y datos ficticios.</p>
     </div>
 
     <div class="section level2">
