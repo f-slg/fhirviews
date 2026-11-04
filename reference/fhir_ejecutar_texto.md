@@ -38,9 +38,9 @@ fhir_ejecutar_texto("GET Patient?_summary=count", con)
 #> <fhir_respuesta> 200 · Bundle (searchset, total 20718, 0 entradas)
 #> {
 #>   "resourceType": "Bundle",
-#>   "id": "506b0052-a2b3-4dbb-a869-97d70de775a0",
+#>   "id": "bea28968-a3eb-4343-9501-19ade5432546",
 #>   "meta": {
-#>     "lastUpdated": "2026-11-03T23:07:54.137-05:00",
+#>     "lastUpdated": "2026-11-03T23:13:14.474-05:00",
 #>     "tag": [
 #>       {
 #>         "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationValue",

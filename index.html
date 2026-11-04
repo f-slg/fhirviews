@@ -74,49 +74,40 @@
 <img src="logo.png" class="logo" alt=""><h1 id="fhirviews-">fhirviews <a class="anchor" aria-label="anchor" href="#fhirviews-"></a>
 </h1>
 </div>
+<p><strong>De recursos FHIR a tablas reproducibles en R.</strong></p>
 <!-- badges: start -->
 
-<p><strong>fhirviews</strong> convierte recursos <strong>HL7 FHIR R4</strong> en tablas para analizar en R. Puedes leer archivos JSON o NDJSON, consultar un servidor FHIR y aplicar vistas reproducibles con <strong><a href="https://sql-on-fhir.org/" class="external-link">SQL on FHIR</a></strong> (<code>ViewDefinition</code>). El resultado es un <code>data.frame</code> que puedes filtrar, resumir o guardar en una base de datos.</p>
-<p>El paquete reúne tres herramientas:</p>
-<ul>
-<li>
-<strong>Cliente FHIR:</strong> búsqueda con paginación, lectura y escritura, autenticación SMART on FHIR y exportación masiva con <code>$export</code>.</li>
-<li>
-<strong>Motor de vistas:</strong> FHIRPath con fhirpath.js en V8, catálogo de vistas para salud pública y operaciones de terminología para trabajar con <code>ValueSet</code>.</li>
-<li>
-<strong>Procesamiento de archivos grandes:</strong> lectura de NDJSON por bloques con V8 y un motor experimental que traduce las vistas a SQL de DuckDB.</li>
-</ul>
-<p>Funciona dentro de R, sin instalar Java ni Spark. El motor V8 supera las 133 pruebas <em>shareable</em> del banco de conformidad incluido en el paquete. Puedes probarlo con los datos ficticios incluidos, sin conectarte a un servidor.</p>
+<p><strong>fhirviews</strong> consulta servidores <strong>HL7 FHIR R4</strong> y transforma sus recursos en <code>data.frame</code> mediante <strong>SQL on FHIR</strong> y <strong>FHIRPath</strong>. Define una vista una vez, guárdala como <code>ViewDefinition</code> y reutilízala sobre archivos locales, respuestas del servidor o exportaciones poblacionales.</p>
+<p>Está pensado para análisis clínico, investigación, vigilancia epidemiológica y docencia desde R. Incluye autenticación SMART on FHIR, vistas para salud pública y procesamiento NDJSON por bloques, sin instalar Java ni Spark.</p>
+<p><a href="https://f-slg.github.io/fhirviews/">Documentación</a> · <a href="https://f-slg.github.io/fhirviews/reference/">Referencia</a> · <a href="NEWS.html">Novedades de 0.5.0</a> · <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">Reportar un problema</a></p>
+<p><img src="reference/figures/README-json-tabla.png" width="100%" alt="Flujo de transformación: recurso Patient en JSON, columnas definidas en un ViewDefinition y tabla resultante en R"></p>
 <blockquote>
-<p><strong>Versión 0.5.0:</strong> incorpora <code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code>, recuperación de descargas con validación de contenido y correcciones de robustez y privacidad. Consulta <a href="NEWS.html">NEWS.md</a> para conocer los cambios respecto a la versión 0.4.0.</p>
-</blockquote>
-<p><img src="reference/figures/README-json-tabla.png" width="100%" alt="Tres paneles: un recurso Patient en JSON, un ViewDefinition con column y forEach, y el data.frame resultante con una fila por cada nombre del paciente"></p>
-<blockquote>
-<p><strong>Nota:</strong> fhirviews es un paquete independiente, desarrollado a título personal. No es un producto de HL7 ni de ninguna otra institución. Los datos de los ejemplos son ficticios.</p>
+<p><strong>Versión 0.5.0 · distribución en GitHub.</strong> Procesamiento por bloques, recuperación de exportaciones con validación de contenido y mejoras de privacidad. El motor SQL de DuckDB sigue siendo <strong>experimental</strong>. El paquete todavía no se ha enviado a CRAN.</p>
 </blockquote>
 <div class="section level2">
 <h2 id="contenido">Contenido<a class="anchor" aria-label="anchor" href="#contenido"></a>
 </h2>
 <ul>
-<li><a href="#por-qu%C3%A9-fhirviews">¿Por qué fhirviews?</a></li>
+<li><a href="#qu%C3%A9-puedes-hacer">Qué puedes hacer</a></li>
 <li><a href="#instalaci%C3%B3n">Instalación</a></li>
-<li><a href="#inicio-r%C3%A1pido">Inicio rápido</a></li>
-<li><a href="#qu%C3%A9-funci%C3%B3n-usar">Qué función usar</a></li>
-<li><a href="#para-qu%C3%A9-se-puede-usar">Para qué se puede usar</a></li>
-<li><a href="#c%C3%B3mo-funciona">Cómo funciona</a></li>
-<li><a href="#conformidad-con-sql-on-fhir">Conformidad con SQL on FHIR</a></li>
+<li><a href="#inicio-r%C3%A1pido-de-fhir-a-una-tabla">Inicio rápido: de FHIR a una tabla</a></li>
+<li><a href="#elegir-c%C3%B3mo-procesar-los-datos">Elegir cómo procesar los datos</a></li>
+<li><a href="#consultar-un-servidor-fhir">Consultar un servidor FHIR</a></li>
+<li><a href="#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva">Autenticación y exportación masiva</a></li>
+<li><a href="#procesar-archivos-por-bloques">Procesar archivos por bloques</a></li>
+<li><a href="#trabajar-con-duckdb">Trabajar con DuckDB</a></li>
+<li><a href="#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas">Vistas de salud pública y terminologías</a></li>
+<li><a href="#validaci%C3%B3n-y-privacidad">Validación y privacidad</a></li>
+<li><a href="#conformidad-y-pruebas">Conformidad y pruebas</a></li>
 <li><a href="#rendimiento">Rendimiento</a></li>
-<li><a href="#funciones">Funciones</a></li>
-<li><a href="#comparaci%C3%B3n-con-otras-herramientas">Comparación con otras herramientas</a></li>
-<li><a href="#hoja-de-ruta">Hoja de ruta</a></li>
-<li><a href="#documentaci%C3%B3n">Documentación, contribuciones y licencia</a></li>
+<li><a href="#alcance-y-l%C3%ADmites">Alcance y límites</a></li>
+<li><a href="#gu%C3%ADas-y-referencia">Guías y referencia</a></li>
+<li><a href="#contribuir-citar-y-licencia">Contribuir, citar y licencia</a></li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="por-qué-fhirviews">¿Por qué fhirviews?<a class="anchor" aria-label="anchor" href="#por-qu%C3%A9-fhirviews"></a>
+<h2 id="qué-puedes-hacer">Qué puedes hacer<a class="anchor" aria-label="anchor" href="#qu%C3%A9-puedes-hacer"></a>
 </h2>
-<p><strong>FHIR</strong> es el estándar con el que hoy se intercambian datos clínicos: historias clínicas, laboratorios, vacunación, sistemas de vigilancia. Sus recursos son <strong>árboles JSON</strong>: un paciente tiene varios nombres, cada nombre varios apellidos, cada observación varios componentes… Ideal para intercambiar información, incómodo para analizarla: un indicador, una tasa o un modelo estadístico necesitan <strong>tablas</strong>.</p>
-<p>Aplanar FHIR a mano es frágil: cada equipo escribe su propio código, con sus propias decisiones sobre qué hacer con las listas, las extensiones o los valores ausentes, y los resultados no se pueden comparar. <strong><a href="https://sql-on-fhir.org/" class="external-link">SQL on FHIR</a></strong> resuelve esto con un formato estándar, el <code>ViewDefinition</code>: una descripción en JSON de qué columnas sacar de cada recurso, con expresiones <a href="https://hl7.org/fhirpath/" class="external-link">FHIRPath</a>. La misma vista da la misma tabla en cualquier implementación (Pathling, Aidbox, Google FHIR Data Pipes…). fhirviews trae ese estándar a R.</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -124,118 +115,139 @@
 </colgroup>
 <thead><tr>
 <th>Necesidad</th>
-<th>Qué ofrece fhirviews</th>
+<th>Herramientas</th>
 </tr></thead>
 <tbody>
 <tr>
-<td>Consultar un servidor FHIR sin salir de R</td>
-<td>Cliente completo: búsqueda con paginación, lectura, escritura, transacciones, <code>$everything</code>, <code>$validate</code>, errores legibles</td>
-</tr>
-<tr>
-<td>Trabajar con servidores protegidos</td>
-<td>Autenticación SMART on FHIR / OAuth2: <em>client credentials</em>, <em>Backend Services</em> (JWT firmado) e inicio de sesión en el navegador, con renovación automática del token</td>
-</tr>
-<tr>
-<td>Convertir recursos en tablas de forma reproducible</td>
-<td>Motor de <code>ViewDefinition</code> conforme al estándar, validado con el banco oficial</td>
-</tr>
-<tr>
-<td>Trabajar con archivos grandes</td>
-<td>NDJSON y gzip por bloques con <code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code>, exportaciones con recuperación por archivo y motor SQL de DuckDB experimental</td>
-</tr>
-<tr>
-<td>Definir indicadores con <code>ValueSet</code>
-</td>
-<td>Expansión de <code>ValueSet</code> con paginación, <code>$lookup</code> y <code>$validate-code</code> en un servidor de terminología; los códigos quedan dentro de la vista, sin red al ejecutarla</td>
-</tr>
-<tr>
-<td>Analizar con SQL</td>
+<td>Convertir JSON, Bundles o recursos de R en tablas</td>
 <td>
-<code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code> guarda varias vistas en una transacción; si alguna falla, revierte las escrituras de esa llamada</td>
+<code><a href="reference/vista_crear.html">vista_crear()</a></code>, <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code>
+</td>
 </tr>
 <tr>
-<td>Enseñar y explorar</td>
-<td>Panel <em>Connections</em> y addins de RStudio, peticiones al estilo Postman, datos de ejemplo</td>
+<td>Consultar FHIR con paginación automática</td>
+<td>
+<code><a href="reference/fhir_conectar.html">fhir_conectar()</a></code>, <code><a href="reference/fhir_buscar.html">fhir_buscar()</a></code>, <code><a href="reference/fhir_leer.html">fhir_leer()</a></code>
+</td>
+</tr>
+<tr>
+<td>Acceder a servidores protegidos</td>
+<td>
+<code><a href="reference/fhir_auth.html">fhir_auth_cliente()</a></code>, <code><a href="reference/fhir_auth.html">fhir_auth_backend()</a></code>, <code><a href="reference/fhir_auth.html">fhir_auth_interactiva()</a></code>
+</td>
+</tr>
+<tr>
+<td>Descargar una población mediante Bulk Data</td>
+<td>
+<code><a href="reference/fhir_exportar.html">fhir_exportar()</a></code>, <code><a href="reference/fhir_exportar.html">fhir_exportar_estado()</a></code>
+</td>
+</tr>
+<tr>
+<td>Recorrer NDJSON y gzip sin reunir toda la salida en memoria</td>
+<td><code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code></td>
+</tr>
+<tr>
+<td>Ejecutar una vista traducible a SQL sobre NDJSON o Parquet</td>
+<td>
+<code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> — experimental</td>
+</tr>
+<tr>
+<td>Consultar varias tablas con SQL</td>
+<td>
+<code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code> — vistas evaluadas con V8 y guardadas en una transacción</td>
+</tr>
+<tr>
+<td>Partir de vistas para salud pública</td>
+<td>
+<code><a href="reference/vista_catalogo.html">vista_catalogo()</a></code>, <code><a href="reference/vista_plantilla.html">vista_plantilla()</a></code>
+</td>
+</tr>
+<tr>
+<td>Definir cohortes con códigos de un ValueSet</td>
+<td>
+<code><a href="reference/tx_expandir.html">tx_expandir()</a></code>, <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code>
+</td>
+</tr>
+<tr>
+<td>Escribir y validar recursos en el servidor</td>
+<td>
+<code><a href="reference/fhir_crear.html">fhir_crear()</a></code>, <code><a href="reference/fhir_crear.html">fhir_actualizar()</a></code>, <code><a href="reference/fhir_crear.html">fhir_borrar()</a></code>, <code><a href="reference/fhir_validar.html">fhir_validar()</a></code>
+</td>
 </tr>
 </tbody>
 </table>
+<p>Un <code>ViewDefinition</code> describe las columnas, filtros y colecciones que se quieren extraer mediante expresiones FHIRPath. Guardar esa definición junto al análisis hace explícitas las decisiones de transformación y facilita su revisión.</p>
+<pre class="mermaid"><code>flowchart LR
+    A["Archivos JSON / NDJSON / gzip"] --&gt; V["ViewDefinition + FHIRPath"]
+    B["Servidor FHIR R4"] --&gt; C["Cliente y exportación Bulk Data"]
+    C --&gt; V
+    V --&gt; D["data.frame en R"]
+    V --&gt; E["Una tabla por bloque"]
+    V --&gt; F["DuckDB SQL · experimental"]
+    D --&gt; G["Análisis, indicadores y tableros"]
+    E --&gt; G
+    F --&gt; G</code></pre>
 </div>
 <div class="section level2">
 <h2 id="instalación">Instalación<a class="anchor" aria-label="anchor" href="#instalaci%C3%B3n"></a>
 </h2>
-<p>Requiere <strong>R 4.1.0 o posterior</strong>. Instala la versión disponible en GitHub:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<p>El cliente y el motor V8 requieren <strong>R ≥ 4.1.0</strong>. Instala desde GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span>  <span class="co"># una sola vez</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"f-slg/fhirviews"</span><span class="op">)</span></span></code></pre></div>
-<p>fhirviews evalúa FHIRPath con <a href="https://github.com/HL7/fhirpath.js" class="external-link">fhirpath.js</a> a través del paquete <a href="https://cran.r-project.org/package=V8" class="external-link">V8</a>:</p>
-<ul>
-<li>
-<strong>Windows y macOS:</strong> V8 se instala como binario, sin pasos adicionales.</li>
-<li>
-<strong>Ubuntu, Debian, RHEL y derivados (x86_64 o arm64):</strong> V8 descarga automáticamente una versión estática del motor.</li>
-<li>
-<strong>Fedora, Arch u otros:</strong> instala <code>v8-devel</code> (o el equivalente) o define <code>DOWNLOAD_STATIC_LIBV8=1</code> antes de instalar V8.</li>
-</ul>
-<p>Opcionales, según lo que vayas a usar:</p>
+<p>La rama principal recibe cambios. Para reproducir un análisis, instala un commit concreto y conserva <code><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo()</a></code> junto con la vista y los datos:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"f-slg/fhirviews@&lt;SHA-del-commit&gt;"</span><span class="op">)</span></span></code></pre></div>
+<p>FHIRPath se ejecuta con <a href="https://github.com/HL7/fhirpath.js" class="external-link">fhirpath.js</a>, incluido en el paquete, a través de <a href="https://cran.r-project.org/package=V8" class="external-link">V8</a>. En sistemas con binarios disponibles, la instalación de V8 no requiere pasos adicionales. Si compilas desde código fuente, consulta sus <a href="https://github.com/jeroen/V8#installation" class="external-link">instrucciones de instalación</a>.</p>
+<p>Instala las dependencias opcionales según tu flujo:</p>
 <table class="table">
 <colgroup>
 <col width="50%">
 <col width="50%">
 </colgroup>
 <thead><tr>
-<th>Paquetes</th>
-<th>Para</th>
+<th>Funcionalidad</th>
+<th>Paquetes adicionales</th>
 </tr></thead>
 <tbody>
 <tr>
+<td>Tablas y motor SQL de DuckDB</td>
 <td>
-<code>duckdb</code> (1.3.0 o posterior) y <code>DBI</code>
-</td>
-<td>
-<code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code> y el motor DuckDB (<code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>)</td>
+<code>DBI</code>, <code>duckdb</code> ≥ 1.3.0; la versión actual de DuckDB requiere R ≥ 4.2</td>
 </tr>
 <tr>
-<td>
-<code>jose</code> y <code>openssl</code>
+<td>Consultas diferidas sobre DuckDB</td>
+<td>Los anteriores, más <code>dplyr</code> y <code>dbplyr</code>
 </td>
-<td>Autenticación SMART <em>Backend Services</em> (<code><a href="reference/fhir_auth.html">fhir_auth_backend()</a></code>)</td>
 </tr>
 <tr>
+<td>SMART Backend Services, con JWT firmado</td>
+<td>
+<code>jose</code>, <code>openssl</code>
+</td>
+</tr>
+<tr>
+<td>Inicio de sesión interactivo, con PKCE</td>
 <td><code>httpuv</code></td>
-<td>Inicio de sesión en el navegador (<code><a href="reference/fhir_auth.html">fhir_auth_interactiva()</a></code>)</td>
 </tr>
 <tr>
+<td>Addins y panel Connections de RStudio</td>
 <td><code>rstudioapi</code></td>
-<td>Addins de RStudio</td>
-</tr>
-<tr>
-<td>
-<code>dplyr</code> y <code>dbplyr</code>, además de <code>duckdb</code> y <code>DBI</code>
-</td>
-<td>Consultas diferidas con <code>vista_ejecutar_duckdb(..., diferido = TRUE)</code>
-</td>
-</tr>
-<tr>
-<td><a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a></td>
-<td>Población del Ecuador para calcular tasas</td>
 </tr>
 </tbody>
 </table>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Ejemplo: habilitar DuckDB</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DBI"</span>, <span class="st">"duckdb"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="inicio-rápido">Inicio rápido<a class="anchor" aria-label="anchor" href="#inicio-r%C3%A1pido"></a>
+<h2 id="inicio-rápido-de-fhir-a-una-tabla">Inicio rápido: de FHIR a una tabla<a class="anchor" aria-label="anchor" href="#inicio-r%C3%A1pido-de-fhir-a-una-tabla"></a>
 </h2>
-<p>El ejemplo usa el caso clínico ficticio incluido en el paquete y una vista lista del catálogo. Funciona sin conexión y solo necesita las dependencias obligatorias:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>Este ejemplo usa datos <strong>ficticios incluidos en el paquete</strong>. Una vez instalado, funciona sin conexión y no requiere dependencias opcionales.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://f-slg.github.io/fhirviews/">fhirviews</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"caso_clinico.ndjson"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
-<span><span class="va">signos</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"signos_vitales"</span><span class="op">)</span></span>
-<span><span class="va">tabla</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">archivo</span>, <span class="va">signos</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tabla</span><span class="op">)</span></span></code></pre></div>
-<p>Para definir tus propias columnas, crea una vista con expresiones FHIRPath. Por ejemplo, una fila por cada observación que tenga un valor de tipo <code>Quantity</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">caso</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_recursos.html">fhir_recursos</a></span><span class="op">(</span><span class="va">archivo</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">signos</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Observation"</span>,</span>
@@ -245,22 +257,27 @@
 <span>    unidad <span class="op">=</span> <span class="st">"value.ofType(Quantity).unit"</span><span class="op">)</span>,</span>
 <span>  where <span class="op">=</span> <span class="st">"value.ofType(Quantity).exists()"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="va">signos</span><span class="op">)</span></span>
-<span><span class="co">#&gt;          id                     fecha                  medida  valor            unidad</span></span>
-<span><span class="co">#&gt; 1  obs-temp 2025-03-20T07:30:00-05:00    Temperatura corporal  38.40                °C</span></span>
-<span><span class="co">#&gt; 2    obs-fr 2025-03-20T07:30:00-05:00 Frecuencia respiratoria  20.00 respiraciones/min</span></span>
-<span><span class="co">#&gt; 3    obs-fc 2025-03-20T07:30:00-05:00     Frecuencia cardíaca 102.00       latidos/min</span></span>
-<span><span class="co">#&gt; 4 obs-tumor                2025-05-08        Tamaño del tumor   3.50                cm</span></span>
-<span><span class="co">#&gt; 5   obs-bsa                2025-07-01     Superficie corporal   1.77                m2</span></span></code></pre></div>
-<p>Con un servidor real, los mismos pasos:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span>
-<span><span class="va">observaciones</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_buscar.html">fhir_buscar</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Observation"</span>, category <span class="op">=</span> <span class="st">"vital-signs"</span>,</span>
-<span>                             `_count` <span class="op">=</span> <span class="fl">100</span>, max_paginas <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">observaciones</span>, <span class="va">signos</span><span class="op">)</span></span></code></pre></div>
+<span></span>
+<span><span class="va">tabla</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">archivo</span>, <span class="va">signos</span><span class="op">)</span></span>
+<span><span class="va">tabla</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"medida"</span>, <span class="st">"valor"</span>, <span class="st">"unidad"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;          id                  medida  valor            unidad</span></span>
+<span><span class="co">#&gt; 1  obs-temp    Temperatura corporal  38.40                °C</span></span>
+<span><span class="co">#&gt; 2    obs-fr Frecuencia respiratoria  20.00 respiraciones/min</span></span>
+<span><span class="co">#&gt; 3    obs-fc     Frecuencia cardíaca 102.00       latidos/min</span></span>
+<span><span class="co">#&gt; 4 obs-tumor        Tamaño del tumor   3.50                cm</span></span>
+<span><span class="co">#&gt; 5   obs-bsa     Superficie corporal   1.77                m2</span></span></code></pre></div>
+<p>La vista selecciona <code>Observation</code>, filtra las que tienen <code>valueQuantity</code> y extrae cuatro columnas. <code><a href="reference/vista_crear.html">vista_crear()</a></code> añade la clave del recurso en <code>id</code>. También puedes empezar con una vista del catálogo:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tabla_catalogo</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">archivo</span>, <span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"signos_vitales"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">tabla_catalogo</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Guardar la definición en JSON para versionarla o compartirla</span></span>
+<span><span class="va">json_vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_json.html">vista_json</a></span><span class="op">(</span><span class="va">signos</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/writeLines.html" class="external-link">writeLines</a></span><span class="op">(</span><span class="va">json_vista</span>, <span class="st">"signos-vitales.json"</span><span class="op">)</span></span>
+<span><span class="va">vista_reutilizable</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_leer.html">vista_leer</a></span><span class="op">(</span><span class="st">"signos-vitales.json"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="qué-función-usar">Qué función usar<a class="anchor" aria-label="anchor" href="#qu%C3%A9-funci%C3%B3n-usar"></a>
+<h2 id="elegir-cómo-procesar-los-datos">Elegir cómo procesar los datos<a class="anchor" aria-label="anchor" href="#elegir-c%C3%B3mo-procesar-los-datos"></a>
 </h2>
 <table class="table">
 <colgroup>
@@ -269,338 +286,188 @@
 <col width="33%">
 </colgroup>
 <thead><tr>
-<th>Tu punto de partida</th>
+<th>Situación</th>
 <th>Función</th>
-<th>Resultado</th>
+<th>Dónde queda el resultado</th>
 </tr></thead>
 <tbody>
 <tr>
-<td>Recursos en R, un Bundle o un archivo que cabe en memoria</td>
+<td>Los recursos y la tabla caben en memoria</td>
 <td><code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code></td>
-<td>Un <code>data.frame</code> con el motor V8</td>
+<td>Un <code>data.frame</code> completo</td>
 </tr>
 <tr>
-<td>Archivos NDJSON o gzip que quieres recorrer por bloques</td>
+<td>Quieres leer NDJSON o gzip por bloques con FHIRPath en V8</td>
 <td><code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code></td>
-<td>Una tabla por bloque, entregada a tu función para guardar o resumir</td>
+<td>En la función <code>procesar(tabla, bloque)</code> que tú defines</td>
 </tr>
 <tr>
-<td>NDJSON o Parquet y una vista traducible a SQL</td>
+<td>Tienes NDJSON o Parquet y una vista compatible con el traductor SQL</td>
 <td><code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code></td>
-<td>Un <code>data.frame</code>, una tabla persistida o una consulta diferida; motor experimental</td>
+<td>En R, una tabla de DuckDB o una consulta diferida</td>
 </tr>
 <tr>
-<td>Un servidor FHIR y una búsqueda concreta</td>
-<td>
-<code><a href="reference/fhir_buscar.html">fhir_buscar()</a></code> y <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code>
-</td>
-<td>Recursos descargados y su tabla</td>
-</tr>
-<tr>
-<td>Una población disponible mediante Bulk Data</td>
-<td><code><a href="reference/fhir_exportar.html">fhir_exportar()</a></code></td>
-<td>Archivos NDJSON locales para procesar con cualquiera de los motores</td>
-</tr>
-<tr>
-<td>Varias vistas que quieres consultar juntas con SQL</td>
+<td>Quieres consultar juntas varias vistas evaluadas con V8</td>
 <td><code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code></td>
-<td>Tablas guardadas mediante el motor V8 en una conexión DBI</td>
+<td>Tablas en una conexión DBI</td>
 </tr>
 </tbody>
 </table>
-<p><code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code> devuelve toda la tabla en memoria. Para limitar la memoria con <code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code>, guarda o resume cada bloque sin acumularlos todos; el tamaño también depende de las filas que produzca la vista. En DuckDB, usa <code>tabla</code> o <code>diferido = TRUE</code> si quieres mantener el resultado en la base. Las expresiones que el motor SQL no admite producen un error y se pueden procesar con V8.</p>
+<p>El procesamiento por bloques limita la entrada que se lee en cada paso. La memoria total depende también de las filas generadas por la vista y de lo que conserve tu función. En DuckDB, usa <code>tabla</code> o <code>diferido = TRUE</code> para evitar traer toda la salida a R.</p>
 </div>
 <div class="section level2">
-<h2 id="para-qué-se-puede-usar">Para qué se puede usar<a class="anchor" aria-label="anchor" href="#para-qu%C3%A9-se-puede-usar"></a>
+<h2 id="consultar-un-servidor-fhir">Consultar un servidor FHIR<a class="anchor" aria-label="anchor" href="#consultar-un-servidor-fhir"></a>
 </h2>
-<div class="section level3">
-<h3 id="id_1-explorar-un-servidor-fhir-como-en-postman">1. Explorar un servidor FHIR como en Postman<a class="anchor" aria-label="anchor" href="#id_1-explorar-un-servidor-fhir-como-en-postman"></a>
-</h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/fhir_capacidades.html">fhir_capacidades</a></span><span class="op">(</span><span class="va">con</span><span class="op">)</span>                               <span class="co"># qué recursos y operaciones admite</span></span>
-<span><span class="fu"><a href="reference/fhir_ejecutar_texto.html">fhir_ejecutar_texto</a></span><span class="op">(</span><span class="st">"GET Patient?family=Paredes&amp;_count=5"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/fhir_leer.html">fhir_leer</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, <span class="st">"123"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/fhir_everything.html">fhir_everything</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, <span class="st">"123"</span><span class="op">)</span>              <span class="co"># todo lo del paciente</span></span></code></pre></div>
-<p>Las respuestas se imprimen con el estado HTTP y el JSON con sangría, y los errores muestran lo que dice el servidor (<code>OperationOutcome</code>):</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/fhir_leer.html">fhir_leer</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"Patient"</span>, <span class="st">"no-existe"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Error:</span></span>
-<span><span class="co">#&gt; ! El servidor respondió 404 Not Found.</span></span>
-<span><span class="co">#&gt; ✖ GET https://hapi.fhir.org/baseR4/Patient/no-existe</span></span>
-<span><span class="co">#&gt; • [error] HAPI-2001: Resource Patient/no-existe is not known</span></span></code></pre></div>
-<p>En RStudio, el servidor aparece en el panel <strong>Connections</strong> (tipos de recurso, columnas y vista previa), y los addins <strong>Ejecutar petición FHIR</strong> y <strong>Ejecutar ViewDefinition</strong> ejecutan el texto seleccionado con un clic.</p>
-</div>
-<div class="section level3">
-<h3 id="id_2-servidores-de-producción-smart-on-fhir-y-exportación-masiva">2. Servidores de producción: SMART on FHIR y exportación masiva<a class="anchor" aria-label="anchor" href="#id_2-servidores-de-producci%C3%B3n-smart-on-fhir-y-exportaci%C3%B3n-masiva"></a>
-</h3>
-<p>Los servidores reales exigen autenticación y, para una población completa, ofrecen <code>$export</code> (FHIR Bulk Data). Con una clave privada registrada en el servidor de autorización (<em>SMART Backend Services</em>), todas las funciones usan el token sin hacer nada más:</p>
+<p>El siguiente ejemplo usa un servidor público de pruebas y requiere conexión:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span></span>
-<span>  <span class="st">"https://fhir.hospital.ejemplo/r4"</span>,</span>
-<span>  autenticacion <span class="op">=</span> <span class="fu"><a href="reference/fhir_auth.html">fhir_auth_backend</a></span><span class="op">(</span><span class="st">"tablero-vigilancia"</span>, <span class="st">"~/.claves/privada.pem"</span>,</span>
-<span>                                    alcances <span class="op">=</span> <span class="st">"system/*.rs"</span>, kid <span class="op">=</span> <span class="st">"clave-2026"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>La exportación masiva, aquí contra el servidor de referencia de SMART Health IT (abierto, con datos sintéticos):</p>
+<code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pacientes</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_buscar.html">fhir_buscar</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>, <span class="st">"Patient"</span>, `_count` <span class="op">=</span> <span class="fl">20</span>, max_paginas <span class="op">=</span> <span class="fl">2</span>, progreso <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">vista_pacientes</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span>, nacimiento <span class="op">=</span> <span class="st">"birthDate"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">pacientes</span>, <span class="va">vista_pacientes</span><span class="op">)</span></span></code></pre></div>
+<p>La búsqueda sigue los enlaces <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">next</a></code> del servidor. <code>_count</code> solicita el tamaño de página; <code>max_paginas</code> limita las páginas descargadas. La disponibilidad y los resultados de los servidores públicos pueden variar.</p>
+<p>Usa <code>fhir_capacidades(con)</code> para consultar los recursos y operaciones que admite el servidor, <code><a href="reference/fhir_leer.html">fhir_leer()</a></code> para leer un recurso concreto y <code><a href="reference/fhir_everything.html">fhir_everything()</a></code> para solicitar <code>$everything</code>. En RStudio, el panel <strong>Connections</strong> permite explorar recursos y los addins ejecutan peticiones FHIR o vistas desde el editor.</p>
+</div>
+<div class="section level2">
+<h2 id="autenticación-y-exportación-masiva">Autenticación y exportación masiva<a class="anchor" aria-label="anchor" href="#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva"></a>
+</h2>
+<p>Para SMART Backend Services, registra previamente el cliente y su clave pública en el servidor de autorización. La clave privada debe ser RSA de al menos 2048 bits o EC P-384.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://bulk-data.smarthealthit.org/fhir"</span><span class="op">)</span></span>
-<span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_exportar.html">fhir_exportar</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"paciente"</span>,</span>
-<span>                     tipos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="st">"Condition"</span>, <span class="st">"Observation"</span><span class="op">)</span>,</span>
-<span>                     carpeta <span class="op">=</span> <span class="st">"exportacion"</span><span class="op">)</span></span>
-<span><span class="va">exp</span></span>
-<span><span class="co">#&gt; &lt;fhir_exportacion&gt; completada (nivel paciente)</span></span>
-<span><span class="co">#&gt;   Carpeta: exportacion</span></span>
-<span><span class="co">#&gt;   Condition                1 archivo, 639 recursos</span></span>
-<span><span class="co">#&gt;   Observation              2 archivos, 16315 recursos</span></span>
-<span><span class="co">#&gt;   Patient                  1 archivo, 100 recursos</span></span></code></pre></div>
-<p>El token se pide, se renueva y se envía solo al propio servidor; la exportación respeta <code>Retry-After</code>, muestra el avance y descarga los NDJSON. Probado contra el servidor de referencia <a href="https://bulk-data.smarthealthit.org" class="external-link">bulk-data.smarthealthit.org</a> y contra un servidor SMART local que verifica la firma de cada JWT. Detalle en la viñeta <a href="https://f-slg.github.io/fhirviews/articles/servidores-y-volumen.html"><em>Servidores reales y grandes volúmenes</em></a>.</p>
+<code class="sourceCode R"><span><span class="co"># Sustituye la URL, el identificador y la clave por los de tu entorno</span></span>
+<span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span></span>
+<span>  <span class="st">"https://fhir.hospital.ejemplo/r4"</span>,</span>
+<span>  autenticacion <span class="op">=</span> <span class="fu"><a href="reference/fhir_auth.html">fhir_auth_backend</a></span><span class="op">(</span></span>
+<span>    <span class="st">"tablero-vigilancia"</span>, <span class="st">"~/.claves/privada.pem"</span>,</span>
+<span>    alcances <span class="op">=</span> <span class="st">"system/*.rs"</span>, kid <span class="op">=</span> <span class="st">"clave-2026"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Iniciar el trabajo y conservar su referencia antes de descargar</span></span>
+<span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_exportar.html">fhir_exportar</a></span><span class="op">(</span></span>
+<span>  <span class="va">con</span>, <span class="st">"paciente"</span>, tipos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="st">"Condition"</span><span class="op">)</span>,</span>
+<span>  carpeta <span class="op">=</span> <span class="st">"exportacion"</span>, esperar <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_exportar.html">fhir_exportar_estado</a></span><span class="op">(</span><span class="va">exp</span>, esperar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>El cliente obtiene y renueva el token. La exportación respeta <code>Retry-After</code> y verifica el NDJSON recibido antes de registrar cada archivo como completo: contenido JSON, tipo de recurso y conteo cuando el manifiesto lo incluye. También admite archivos gzip.</p>
+<p>Si una descarga se interrumpe, vuelve a ejecutar <code>exp &lt;- fhir_exportar_estado(exp, esperar = TRUE)</code> conservando el objeto y la carpeta. Los archivos completos del mismo trabajo se reutilizan si su checksum coincide; los ausentes o alterados se descargan de nuevo. Cada archivo incompleto se reinicia desde el comienzo. La recuperación depende de que el servidor conserve el trabajo y sus URL de descarga.</p>
+<p>También están disponibles <em>client credentials</em> con secreto e inicio de sesión interactivo con PKCE. Consulta la <a href="https://f-slg.github.io/fhirviews/articles/servidores-y-volumen.html">guía de autenticación y Bulk Data</a>.</p>
 </div>
-<div class="section level3">
-<h3 id="id_3-millones-de-recursos-con-el-motor-duckdb">3. Millones de recursos con el motor DuckDB<a class="anchor" aria-label="anchor" href="#id_3-millones-de-recursos-con-el-motor-duckdb"></a>
-</h3>
-<p><code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> traduce el mismo <code>ViewDefinition</code> a una consulta SQL de <a href="https://duckdb.org/" class="external-link">DuckDB</a> y la ejecuta directamente sobre los NDJSON o Parquet, sin cargarlos en R. Da las mismas tablas que <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code> (las pruebas comparan ambos motores) y pasa también las 133 pruebas <em>shareable</em>:</p>
+<div class="section level2">
+<h2 id="procesar-archivos-por-bloques">Procesar archivos por bloques<a class="anchor" aria-label="anchor" href="#procesar-archivos-por-bloques"></a>
+</h2>
+<p>Este ejemplo completo recorre el archivo incluido y muestra un resumen por bloque. La función de procesamiento puede escribir cada tabla en una base de datos o generar agregados:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="st">"exportacion/*.ndjson"</span>, <span class="va">v_dengue</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/vista_sql.html">vista_sql</a></span><span class="op">(</span><span class="va">v_dengue</span><span class="op">)</span>          <span class="co"># la consulta SQL generada</span></span></code></pre></div>
-<p>Es un motor experimental: traduce un subconjunto de FHIRPath y, si algo no se puede traducir, lo dice con un error en lugar de adivinar. Ver <a href="#rendimiento">Rendimiento</a>.</p>
-<p>Para usar el motor V8 con archivos grandes, <code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> lee NDJSON (también gzip) por bloques y entrega cada tabla a una función:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes</a></span><span class="op">(</span></span>
-<span>  <span class="st">"exportacion/Patient.ndjson"</span>, <span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"pacientes"</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"caso_clinico.ndjson"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
+<span><span class="va">vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Observation"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>medida <span class="op">=</span> <span class="st">"code.text"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">totales</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes</a></span><span class="op">(</span></span>
+<span>  <span class="va">archivo</span>, <span class="va">vista</span>,</span>
 <span>  procesar <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">tabla</span>, <span class="va">bloque</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="co"># Guardar cada bloque en una tabla ya creada con el esquema esperado</span></span>
-<span>    <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbAppendTable.html" class="external-link">dbAppendTable</a></span><span class="op">(</span><span class="va">db</span>, <span class="st">"pacientes"</span>, <span class="va">tabla</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Bloque"</span>, <span class="va">bloque</span>, <span class="st">":"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">tabla</span><span class="op">)</span>, <span class="st">"filas\n"</span><span class="op">)</span></span>
 <span>  <span class="op">}</span>,</span>
-<span>  tamano_lote <span class="op">=</span> <span class="fl">10000</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>La memoria depende del tamaño del bloque, de las filas que produzca la vista y de lo que retenga la función. Declara <code>type</code> en las columnas si necesitas un esquema fijo entre bloques. Si la función falla, sus escrituras anteriores permanecen y el procesamiento se detiene.</p>
-<p>Las descargas de <code>$export</code> guardan un registro <code>.fhirviews.json</code> junto a cada archivo completo. Conservando el objeto de exportación y la carpeta, se puede reintentar con <code>exp &lt;- fhir_exportar_estado(exp)</code>: se comprueban los checksums, se reutilizan los archivos completos del mismo trabajo y se descargan de nuevo los ausentes o alterados. Un archivo interrumpido se reinicia desde el comienzo. Para conservar el objeto antes de descargar, inicia con <code>esperar = FALSE</code>.</p>
+<span>  tamano_lote <span class="op">=</span> <span class="fl">20</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">totales</span></span></code></pre></div>
+<p>Para una exportación propia, sustituye <code>archivo</code> por sus rutas NDJSON o <code>.ndjson.gz</code>. El retorno contiene <code>bloques</code>, <code>recursos</code> y <code>filas</code>; los resultados de la función <code>procesar()</code> se descartan.</p>
+<p>Si <code>procesar()</code> falla, la ejecución se detiene y sus escrituras anteriores permanecen. Declara tipos de columna con <code>type</code> en el <code>ViewDefinition</code> y comprueba el esquema antes de insertar en una tabla existente. Los tipos inferidos pueden variar entre bloques; los valores incompatibles con un tipo explícito generan un aviso y pueden conservarse sin convertir.</p>
+</div>
+<div class="section level2">
+<h2 id="trabajar-con-duckdb">Trabajar con DuckDB<a class="anchor" aria-label="anchor" href="#trabajar-con-duckdb"></a>
+</h2>
+<p>El motor SQL <strong>experimental</strong> traduce un <code>ViewDefinition</code> a una consulta de DuckDB. Es útil cuando la entrada es grande y la vista puede expresarse en el subconjunto FHIRPath que admite el traductor:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"caso_clinico.ndjson"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
+<span><span class="va">vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">pacientes_sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="va">archivo</span>, <span class="va">vista</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/vista_sql.html">vista_sql</a></span><span class="op">(</span><span class="va">vista</span><span class="op">)</span>  <span class="co"># inspeccionar la consulta generada</span></span></code></pre></div>
+<p>Prueba primero la vista con <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code> sobre una muestra representativa. Las expresiones que el traductor no admite producen un error. Para NDJSON o Parquet propios, usa sus rutas en lugar de <code>archivo</code>.</p>
+<p>El motor SQL necesita la extensión <code>json</code> de DuckDB y puede descargarla la primera vez. En entornos sin internet, prepara esa extensión con la misma versión de DuckDB y comprueba <code>LOAD json</code> antes de ejecutar el proceso. La construcción estándar de las viñetas evita esa descarga; sus ejemplos SQL se habilitan explícitamente con <code>FHIRVIEWS_VINETAS_DUCKDB=true</code>.</p>
+<p>Para guardar varias vistas evaluadas con el motor V8 y consultarlas con SQL, usa <code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code>. Esta función escribe las tablas en una transacción; no utiliza el traductor experimental.</p>
+</div>
+<div class="section level2">
+<h2 id="vistas-de-salud-pública-y-terminologías">Vistas de salud pública y terminologías<a class="anchor" aria-label="anchor" href="#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas"></a>
+</h2>
+<p>El catálogo incluye siete vistas: pacientes, diagnósticos, encuentros, inmunizaciones, medicamentos, signos vitales y notificación obligatoria. Puedes inspeccionarlas y adaptar sus constantes:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_exportar.html">fhir_exportar</a></span><span class="op">(</span><span class="va">con</span>, <span class="st">"paciente"</span>, carpeta <span class="op">=</span> <span class="st">"exportacion"</span>, esperar <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_exportar.html">fhir_exportar_estado</a></span><span class="op">(</span><span class="va">exp</span>, esperar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co"># Si se interrumpe la descarga, repetir la última llamada conserva lo completado.</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="id_4-vistas-listas-para-salud-pública-y-terminologías">4. Vistas listas para salud pública y terminologías<a class="anchor" aria-label="anchor" href="#id_4-vistas-listas-para-salud-p%C3%BAblica-y-terminolog%C3%ADas"></a>
-</h3>
-<p><code><a href="reference/vista_catalogo.html">vista_catalogo()</a></code> trae siete <code>ViewDefinition</code> estándar para las tablas más comunes en vigilancia (pacientes con residencia, signos vitales, diagnósticos, notificación obligatoria, inmunizaciones, encuentros y medicamentos). Se usan tal cual o se ajustan sus constantes con <code><a href="reference/vista_plantilla.html">vista_plantilla()</a></code>, y funcionan con los dos motores:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_catalogo.html">vista_catalogo</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nombre"</span>, <span class="st">"recurso"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;                     nombre           recurso</span></span>
-<span><span class="co">#&gt; 1             diagnosticos         Condition</span></span>
-<span><span class="co">#&gt; 2               encuentros         Encounter</span></span>
-<span><span class="co">#&gt; 3           inmunizaciones      Immunization</span></span>
-<span><span class="co">#&gt; 4             medicamentos MedicationRequest</span></span>
-<span><span class="co">#&gt; 5 notificacion_obligatoria         Condition</span></span>
-<span><span class="co">#&gt; 6                pacientes           Patient</span></span>
-<span><span class="co">#&gt; 7           signos_vitales       Observation</span></span>
 <span></span>
-<span><span class="va">dengue</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dengue_2025.ndjson.gz"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"notificacion_obligatoria"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Si un indicador se define con un <code>ValueSet</code> (por ejemplo, todos los códigos de diabetes en SNOMED CT), <code><a href="reference/tx_expandir.html">tx_expandir()</a></code> lo expande en un servidor de terminología y <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code> guarda los códigos dentro de la vista, de modo que ejecutarla ya no necesita red:</p>
+<span><span class="va">archivo_dengue</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
+<span>  <span class="st">"extdata"</span>, <span class="st">"dengue_2025.ndjson.gz"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">archivo_dengue</span>, <span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"notificacion_obligatoria"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Con un servidor de terminología, <code><a href="reference/tx_expandir.html">tx_expandir()</a></code> obtiene los códigos de un ValueSet, <code><a href="reference/tx_buscar_codigo.html">tx_buscar_codigo()</a></code> consulta <code>$lookup</code> y <code><a href="reference/tx_validar_codigo.html">tx_validar_codigo()</a></code> invoca <code>$validate-code</code>. <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code> incorpora los códigos expandidos a la vista para que su ejecución posterior no dependa de la red.</p>
+<p>Para convertir casos en indicadores territoriales, consulta el <a href="https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html">ejemplo de tasas por cantón con FHIR y pobecu</a>.</p>
+<p><img src="reference/figures/README-tasas.png" width="90%" alt="Ejemplo de análisis de tasas por territorio con datos FHIR ficticios y población de pobecu"></p>
+</div>
+<div class="section level2">
+<h2 id="validación-y-privacidad">Validación y privacidad<a class="anchor" aria-label="anchor" href="#validaci%C3%B3n-y-privacidad"></a>
+</h2>
+<p><code><a href="reference/vista_validar.html">vista_validar()</a></code> revisa una definición de vista. <code><a href="reference/fhir_validar.html">fhir_validar()</a></code> pide al <strong>servidor</strong> que valide un recurso mediante <code>$validate</code>; el alcance de esa validación depende de los perfiles y capacidades del servidor.</p>
+<p>Desde 0.5.0, el atributo <code>valido</code> distingue tres resultados:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Valor</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>TRUE</code></td>
+<td>El servidor devuelve un OperationOutcome completo, sin errores ni problemas fatales, en una respuesta HTTP satisfactoria</td>
+</tr>
+<tr>
+<td><code>FALSE</code></td>
+<td>El OperationOutcome contiene errores o problemas fatales en una respuesta HTTP satisfactoria</td>
+</tr>
+<tr>
+<td><code>NA</code></td>
+<td>La operación falla por HTTP o la respuesta no permite determinar la validez</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Requiere una conexión y un servidor que admita $validate</span></span>
+<span><span class="va">resultado</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_validar.html">fhir_validar</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>resourceType <span class="op">=</span> <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"female"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">resultado</span>, <span class="st">"valido"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"El recurso no tiene una validación positiva del servidor."</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>El estado HTTP queda disponible en <code>attr(resultado, "estado")</code>. Una validación positiva no certifica la calidad clínica de los datos.</p>
+<p>Los errores HTTP omiten por defecto el contenido del servidor, que puede contener información de pacientes. También se ocultan los valores sensibles de la consulta, incluido <code>_id</code>. Para depuración controlada:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tx</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://tx.fhir.org/r4"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/tx_expandir.html">tx_expandir</a></span><span class="op">(</span><span class="va">tx</span>, <span class="st">"http://hl7.org/fhir/ValueSet/administrative-gender"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                                      system    code display</span></span>
-<span><span class="co">#&gt; 1 http://hl7.org/fhir/administrative-gender    male    Male</span></span>
-<span><span class="co">#&gt; 2 http://hl7.org/fhir/administrative-gender  female  Female</span></span>
-<span><span class="co">#&gt; 3 http://hl7.org/fhir/administrative-gender   other   Other</span></span>
-<span><span class="co">#&gt; 4 http://hl7.org/fhir/administrative-gender unknown Unknown</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_detalles <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># contenido del servidor en errores</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_consulta <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># valores completos de la consulta</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/tx_validar_codigo.html">tx_validar_codigo</a></span><span class="op">(</span><span class="va">tx</span>, <span class="st">"http://hl7.org/fhir/ValueSet/administrative-gender"</span>,</span>
-<span>                  <span class="st">"http://hl7.org/fhir/administrative-gender"</span>,</span>
-<span>                  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"female"</span>, <span class="st">"mujer"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">valido</span></span>
-<span><span class="co">#&gt; [1]  TRUE FALSE</span></span>
-<span></span>
-<span><span class="va">diabetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/tx_expandir.html">tx_expandir</a></span><span class="op">(</span><span class="va">tx</span>, <span class="va">url_valueset_diabetes</span><span class="op">)</span></span>
-<span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_con_valueset.html">vista_con_valueset</a></span><span class="op">(</span><span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"diagnosticos"</span><span class="op">)</span>, <span class="va">diabetes</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Volver al comportamiento predeterminado</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_detalles <span class="op">=</span> <span class="cn">FALSE</span>, fhirviews.mostrar_consulta <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p>Los detalles estructurados siguen disponibles en <code>error$outcome</code> al capturar un error HTTP. Estas opciones no anonimizan recursos, rutas URL ni archivos de salida: el acceso y almacenamiento de datos clínicos corresponden al entorno que ejecuta el análisis. Los tokens se mantienen en memoria salvo que se solicite explícitamente caché en disco con <code>cache_disco = TRUE</code>.</p>
 </div>
-<div class="section level3">
-<h3 id="id_5-vigilancia-epidemiológica-de-casos-fhir-a-tasas-por-territorio">5. Vigilancia epidemiológica: de casos FHIR a tasas por territorio<a class="anchor" aria-label="anchor" href="#id_5-vigilancia-epidemiol%C3%B3gica-de-casos-fhir-a-tasas-por-territorio"></a>
-</h3>
-<p>Los sistemas de notificación guardan cada caso como <code>Patient</code> + <code>Condition</code>. Con dos vistas y la población oficial del INEC del paquete <a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a> se obtienen tasas por cantón:</p>
+<div class="section level2">
+<h2 id="conformidad-y-pruebas">Conformidad y pruebas<a class="anchor" aria-label="anchor" href="#conformidad-y-pruebas"></a>
+</h2>
+<p>El paquete incluye el <a href="https://github.com/FHIR/sql-on-fhir.js/tree/main/tests" class="external-link">banco oficial de SQL on FHIR</a>. Los dos motores superan <strong>133/133 pruebas del perfil shareable</strong> y <strong>7/11 experimentales</strong> del banco incluido. Las cuatro pendientes corresponden a <code>lowBoundary()</code> y <code>highBoundary()</code> y a diferencias de precisión o zona horaria. La conformidad se refiere a ese banco y no certifica un sistema clínico.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dengue</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_recursos.html">fhir_recursos</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"dengue_2025.ndjson.gz"</span>,</span>
-<span>                                    package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">pacientes</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="va">v_paciente</span><span class="op">)</span>  <span class="co"># con el código DPA del cantón</span></span>
-<span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="va">v_dengue</span><span class="op">)</span>        <span class="co"># solo diagnósticos confirmados</span></span>
-<span><span class="va">por_canton</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">paciente</span> <span class="op">~</span> <span class="va">dpa_canton</span>, <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">casos</span>, <span class="va">pacientes</span>, <span class="va">...</span><span class="op">)</span>, <span class="va">length</span><span class="op">)</span></span>
-<span><span class="fu">pobecu</span><span class="fu">::</span><span class="fu"><a href="https://f-slg.github.io/pobecu/reference/pob_tasa.html" class="external-link">pob_tasa</a></span><span class="op">(</span><span class="va">por_canton</span>, <span class="st">"casos"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-tasas.png" width="100%" alt="Barras horizontales con las tasas ficticias de dengue por 100 000 habitantes de los 15 cantones con tasas más altas, coloreadas por provincia"></p>
-<p>El ejemplo completo está en la viñeta <a href="https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html"><em>Tasas por cantón con FHIR y pobecu</em></a>.</p>
-</div>
-<div class="section level3">
-<h3 id="id_6-indicadores-y-tableros-con-sql">6. Indicadores y tableros con SQL<a class="anchor" aria-label="anchor" href="#id_6-indicadores-y-tableros-con-sql"></a>
-</h3>
-<p><code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code> guarda varias vistas como tablas de <a href="https://duckdb.org/" class="external-link">DuckDB</a> en un paso. A partir de ahí, cualquier indicador es una consulta SQL:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_duckdb.html">vista_duckdb</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  paciente <span class="op">=</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span>, nacimiento <span class="op">=</span> <span class="st">"birthDate"</span>,</span>
-<span>                                      provincia <span class="op">=</span> <span class="st">"address.state.first()"</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  dengue <span class="op">=</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Condition"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    paciente <span class="op">=</span> <span class="st">"subject.getReferenceKey(Patient)"</span>,</span>
-<span>    inicio <span class="op">=</span> <span class="st">"onset.ofType(dateTime)"</span>,</span>
-<span>    grave <span class="op">=</span> <span class="st">"code.coding.where(system = 'http://hl7.org/fhir/sid/icd-10').code = 'A91'"</span><span class="op">)</span>,</span>
-<span>    where <span class="op">=</span> <span class="st">"verificationStatus.coding.where(code = 'confirmed').exists()"</span><span class="op">)</span></span>
-<span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">db</span>, <span class="st">"</span></span>
-<span><span class="st">  SELECT p.provincia, count(*) AS casos,</span></span>
-<span><span class="st">         round(100 * avg(CASE WHEN d.grave THEN 1 ELSE 0 END), 1) AS pct_graves,</span></span>
-<span><span class="st">         round(avg(date_diff('year', CAST(p.nacimiento AS DATE),</span></span>
-<span><span class="st">                             CAST(d.inicio AS DATE))), 1) AS edad_media</span></span>
-<span><span class="st">  FROM dengue d JOIN paciente p ON d.paciente = p.id</span></span>
-<span><span class="st">  GROUP BY p.provincia ORDER BY casos DESC"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   provincia casos pct_graves edad_media</span></span>
-<span><span class="co">#&gt; 1    Guayas   329        5.2       29.7</span></span>
-<span><span class="co">#&gt; 2    Manabí   136        5.1       27.7</span></span>
-<span><span class="co">#&gt; 3  Los Ríos   111       14.4       28.3</span></span>
-<span><span class="co">#&gt; 4    El Oro    85       10.6       30.5</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="id_7-cohortes-y-conjuntos-de-datos-para-investigación">7. Cohortes y conjuntos de datos para investigación<a class="anchor" aria-label="anchor" href="#id_7-cohortes-y-conjuntos-de-datos-para-investigaci%C3%B3n"></a>
-</h3>
-<p>Las vistas son reproducibles y se pueden compartir: el mismo <code>ViewDefinition</code> JSON produce la misma tabla en fhirviews y en otras implementaciones. Para exportar una cohorte a Parquet o CSV basta con DuckDB:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/vista_json.html">vista_json</a></span><span class="op">(</span><span class="va">v_dengue</span><span class="op">)</span>                                   <span class="co"># compartir la definición</span></span>
-<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbExecute.html" class="external-link">dbExecute</a></span><span class="op">(</span><span class="va">db</span>, <span class="st">"COPY dengue TO 'dengue.parquet' (FORMAT parquet)"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="id_8-interoperabilidad-cargar-validar-y-transaccionar">8. Interoperabilidad: cargar, validar y transaccionar<a class="anchor" aria-label="anchor" href="#id_8-interoperabilidad-cargar-validar-y-transaccionar"></a>
-</h3>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">local</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"http://localhost:8080/fhir"</span><span class="op">)</span>   <span class="co"># por ejemplo, HAPI en Podman</span></span>
-<span><span class="fu"><a href="reference/fhir_validar.html">fhir_validar</a></span><span class="op">(</span><span class="va">local</span>, <span class="st">"paciente.json"</span><span class="op">)</span>                   <span class="co"># $validate: tabla de problemas</span></span>
-<span><span class="fu"><a href="reference/fhir_crear.html">fhir_crear</a></span><span class="op">(</span><span class="va">local</span>, <span class="st">"transaccion.json"</span><span class="op">)</span>                  <span class="co"># Bundle transaction -&gt; POST [base]</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">r</span> <span class="kw">in</span> <span class="va">caso</span><span class="op">)</span> <span class="fu"><a href="reference/fhir_crear.html">fhir_actualizar</a></span><span class="op">(</span><span class="va">local</span>, <span class="va">r</span><span class="op">)</span>              <span class="co"># cargar el caso clínico con sus ids</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="id_9-docencia">9. Docencia<a class="anchor" aria-label="anchor" href="#id_9-docencia"></a>
-</h3>
-<p>El caso clínico de <a href="https://github.com/f-slg/aprende-fhir" class="external-link">aprende-fhir</a> viene incluido, <code><a href="reference/fhir_tabla.html">fhir_tabla()</a></code> da un vistazo rápido sin escribir vistas, <code><a href="reference/vista_fhirpath.html">vista_fhirpath()</a></code> permite probar expresiones FHIRPath una a una y <code><a href="reference/vista_validar.html">vista_validar()</a></code> explica qué está mal en un <code>ViewDefinition</code>:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/vista_fhirpath.html">vista_fhirpath</a></span><span class="op">(</span><span class="va">caso</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"name.where(use = 'official').text"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Luis Alberto Paredes Cevallos"</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="cómo-funciona">Cómo funciona<a class="anchor" aria-label="anchor" href="#c%C3%B3mo-funciona"></a>
-</h2>
-<pre class="mermaid"><code>flowchart LR
-    subgraph Fuentes
-        S["Servidor FHIR R4"]
-        F["Archivos JSON, NDJSON,&lt;br/&gt;Bundle, .ndjson.gz"]
-        L["Listas de R"]
-    end
-    subgraph Cliente["Cliente FHIR (httr2)"]
-        AU["SMART on FHIR&lt;br/&gt;fhir_auth_*()"]
-        B["fhir_buscar()&lt;br/&gt;paginación por next"]
-        X["fhir_exportar()&lt;br/&gt;$export, NDJSON"]
-        P["fhir_leer(), fhir_crear(),&lt;br/&gt;$everything, $validate"]
-    end
-    subgraph Motor["Motor de vistas (R)"]
-        R["fhir_recursos()&lt;br/&gt;conserva el JSON original"]
-        V["vista_validar()"]
-        E["vista_ejecutar()&lt;br/&gt;evaluación por lotes"]
-        BL["vista_ejecutar_lotes()&lt;br/&gt;NDJSON y gzip por bloques"]
-    end
-    subgraph JS["V8"]
-        FP["fhirpath.js 5.2.2&lt;br/&gt;+ almacén de nodos tipados"]
-    end
-    subgraph DK["DuckDB (experimental)"]
-        SQ["vista_ejecutar_duckdb()&lt;br/&gt;ViewDefinition a SQL"]
-    end
-    AU -.-&gt;|"token"| B
-    AU -.-&gt;|"token"| X
-    S --&gt; B --&gt; R
-    S --&gt; X
-    S --&gt; P
-    X --&gt;|"NDJSON"| SQ
-    F --&gt; SQ
-    SQ --&gt; T
-    F --&gt; R
-    F --&gt;|"NDJSON y gzip"| BL
-    X --&gt;|"archivos completos"| BL
-    BL --&gt;|"un bloque"| E
-    BL --&gt; CB["procesar(tabla, bloque)&lt;br/&gt;guardar o resumir"]
-    L --&gt; R
-    R --&gt; E
-    V --&gt; E
-    E &lt;--&gt;|"una llamada por&lt;br/&gt;expresión y nivel"| FP
-    E --&gt; T["data.frame"]
-    T --&gt; D["DuckDB / SQL"]
-    T --&gt; A["Análisis en R,&lt;br/&gt;pobecu, gráficos"]</code></pre>
-<p><strong>Autenticación.</strong> Con <code>autenticacion = fhir_auth_*()</code>, el token SMART se pide en la primera petición, se renueva solo, se reintenta una vez si el servidor lo rechaza y se envía únicamente al servidor de la conexión. En <em>Backend Services</em> cada pedido de token firma un JWT nuevo (RS384 o ES384, <code>jti</code> aleatorio, validez de cinco minutos).</p>
-<p><strong>Cliente.</strong> Las peticiones usan <code>application/fhir+json</code>, se reintentan si el servidor está saturado (429/503) y convierten el <code>OperationOutcome</code> de los errores en mensajes legibles, con una clase de error por código HTTP. La búsqueda sigue los enlaces <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">next</a></code> de cada Bundle y se detiene si el servidor repite uno. El token de acceso solo se envía al servidor de la conexión y se avisa si viajaría sin cifrar.</p>
-<pre class="mermaid"><code>sequenceDiagram
-    participant R as fhir_buscar()
-    participant S as Servidor FHIR
-    R-&gt;&gt;S: GET Patient?family=Paredes&amp;_count=100
-    S--&gt;&gt;R: Bundle (100 entradas, link next)
-    R-&gt;&gt;S: GET [link next]
-    S--&gt;&gt;R: Bundle (100 entradas, link next)
-    R-&gt;&gt;S: GET [link next]
-    S--&gt;&gt;R: Bundle (37 entradas, sin next)
-    Note over R: 237 recursos en un fhir_recursos,&lt;br/&gt;con el JSON de cada página</code></pre>
-<p><strong>Archivos grandes y recuperación.</strong> El procesamiento por bloques entrega una tabla a la función <code>procesar()</code> y libera los nodos V8 antes de continuar. Las descargas de una misma exportación conservan los archivos completos cuyo checksum coincide. Si una descarga se interrumpe, el archivo temporal se elimina y ese archivo se vuelve a descargar al reintentar.</p>
-<pre class="mermaid"><code>flowchart TD
-    A["NDJSON o gzip"] --&gt; B["Leer hasta tamano_lote líneas"]
-    B --&gt; C{"¿Hay recursos?"}
-    C --&gt;|"Sí"| D["Aplicar ViewDefinition con V8"]
-    D --&gt; E["Liberar nodos V8"]
-    E --&gt; F["procesar(tabla, bloque)"]
-    F --&gt; G["Guardar filas o resumir el bloque"]
-    G --&gt; B
-    C --&gt;|"Fin del archivo"| H["Siguiente archivo o totales finales"]</code></pre>
-<pre class="mermaid"><code>flowchart TD
-    A["Manifiesto de la misma exportación"] --&gt; B{"¿Archivo completo y&lt;br/&gt;registro con checksum válido?"}
-    B --&gt;|"Sí"| C["Reutilizar archivo local"]
-    B --&gt;|"No"| D["Descargar a un archivo temporal"]
-    D --&gt; E{"¿Descarga correcta?"}
-    E --&gt;|"Sí"| F["Guardar archivo final y registro de checksum"]
-    E --&gt;|"No"| G["Eliminar temporal y conservar archivos completos"]
-    G --&gt; H["Reintentar con fhir_exportar_estado()"]
-    H --&gt; A
-    C --&gt; I["Procesar NDJSON"]
-    F --&gt; I</code></pre>
-<p><strong>Motor de vistas.</strong> El <code>ViewDefinition</code> se valida (estructura, nombres, <code>unionAll</code>, constantes, compilación de cada expresión FHIRPath) y se ejecuta <strong>por lotes</strong>: cada <code>column</code>, <code>forEach</code> o <code>where</code> es una sola llamada a V8 para todos los recursos a la vez, no una por recurso. Los elementos que devuelven <code>forEach</code> y <code>repeat</code> se guardan en V8 como nodos tipados, de modo que <code>ofType()</code> y <code>extension()</code> funcionan también en elementos anidados. Las filas de cada parte se combinan con índices (<code><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep()</a></code> y <code><a href="https://rdrr.io/r/base/sequence.html" class="external-link">sequence()</a></code>) en R.</p>
-<pre class="mermaid"><code>flowchart TD
-    A["Recursos del tipo de la vista"] --&gt; W{"where"}
-    W --&gt;|"cumplen"| S["select"]
-    S --&gt; C["column&lt;br/&gt;una fila por recurso"]
-    S --&gt; FE["forEach / forEachOrNull / repeat&lt;br/&gt;una fila por elemento,&lt;br/&gt;con %rowIndex"]
-    S --&gt; U["unionAll&lt;br/&gt;filas de varias ramas"]
-    FE --&gt; C2["column, select y unionAll&lt;br/&gt;anidados"]
-    C --&gt; X["producto de filas&lt;br/&gt;por recurso de origen"]
-    C2 --&gt; X
-    U --&gt; X
-    X --&gt; T["data.frame tipado&lt;br/&gt;(type o modelo FHIR R4)"]</code></pre>
-<p><strong>Motor DuckDB.</strong> <code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code> traduce la vista a una sola consulta SQL: cada recurso se lee como JSON sin esquema (<code>read_json_objects()</code>), las colecciones de FHIRPath son listas de DuckDB, las funciones se traducen a <code>list_filter()</code> y <code>list_transform()</code>, y <code>forEach</code>, <code>unionAll</code> y <code>repeat</code> se resuelven dentro de cada fila, lo que deja a DuckDB procesar los archivos en paralelo. Lo que no sabe traducir da un error en lugar de adivinar. <code><a href="reference/vista_sql.html">vista_sql()</a></code> muestra la consulta.</p>
-<p><strong>Tipos.</strong> Con <code>type</code>, cada columna se convierte al tipo de R correspondiente (<code>boolean</code> a lógico, <code>integer</code> a entero, <code>decimal</code> a numérico, el resto a texto) y se avisa si algún valor no es compatible. Sin <code>type</code>, las columnas vacías toman el tipo del modelo de FHIR R4, para que la misma vista dé siempre los mismos tipos.</p>
-<p><strong>Seguridad.</strong> fhirpath.js corre aislado en V8, sin acceso a red ni a archivos (funciones como <code>resolve()</code> están desactivadas): un <code>ViewDefinition</code> no puede hacer peticiones ni leer datos fuera de los recursos que se le pasan.</p>
-</div>
-<div class="section level2">
-<h2 id="conformidad-con-sql-on-fhir">Conformidad con SQL on FHIR<a class="anchor" aria-label="anchor" href="#conformidad-con-sql-on-fhir"></a>
-</h2>
-<p>El paquete incluye el <a href="https://github.com/FHIR/sql-on-fhir.js/tree/main/tests" class="external-link">banco oficial de pruebas</a> de SQL on FHIR, que se ejecuta en cada comprobación de integración continua. Pasan <strong>las 133 pruebas del perfil <em>shareable</em></strong> (el que debe cumplir toda implementación) y 7 de las 11 experimentales con los dos motores.</p>
-<p><img src="reference/figures/README-conformidad.png" width="80%" alt="Barras por archivo del banco de pruebas: todas las pruebas shareable aprobadas; en fn_boundary, 4 de 8 pruebas experimentales fallan"></p>
-<p>Las cuatro que fallan son de <code>lowBoundary()</code> y <code>highBoundary()</code>, funciones experimentales de FHIRPath que dependen de la precisión decimal original del JSON y de la zona horaria. Para comprobarlo en tu equipo, o con la versión más reciente del banco:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>descargar <span class="op">=</span> <span class="cn">TRUE</span>, informe <span class="op">=</span> <span class="st">"informe.json"</span><span class="op">)</span>  <span class="co"># formato oficial</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="op">)</span>                   <span class="co"># motor V8</span></span>
+<span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span>   <span class="co"># requiere DuckDB y su extensión json</span></span></code></pre></div>
+<p><img src="reference/figures/README-conformidad.png" width="80%" alt="Resultados por archivo del banco SQL on FHIR: todas las pruebas shareable aprobadas y cuatro experimentales pendientes"></p>
+<p>CI comprueba el paquete en Windows, macOS y Linux, además de R-devel y R 4.1. En R 4.1 se comprueban el cliente y V8; los otros entornos incluyen DuckDB. Las pruebas HTTP usan respuestas simuladas. La integración de escritura se habilita por separado contra un <strong>servidor de pruebas propio</strong>:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::test(filter = "servidor")'</span></span></code></pre></div>
+<p>Ese servidor debe permitir escritura; algunas pruebas requieren terminología y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta <a href="tests/testthat/test-servidor.R"><code>tests/testthat/test-servidor.R</code></a> para preparar un HAPI aislado.</p>
 </div>
 <div class="section level2">
 <h2 id="rendimiento">Rendimiento<a class="anchor" aria-label="anchor" href="#rendimiento"></a>
 </h2>
-<p>fhirviews tiene dos motores para ejecutar la misma vista:</p>
-<ul>
-<li>
-<strong>V8</strong> (<code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code>): evalúa FHIRPath con fhirpath.js, por lotes. Es el motor completo (todas las funciones de FHIRPath) y el que conviene para desarrollar y validar vistas.</li>
-<li>
-<strong>DuckDB</strong> (<code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>, experimental): traduce la vista a SQL y la ejecuta directamente sobre los archivos, en paralelo y sin cargarlos en R. Es el que conviene para volúmenes grandes.</li>
-</ul>
-<p><img src="reference/figures/README-rendimiento.png" width="90%" alt="Barras agrupadas por número de pacientes: el motor DuckDB tarda 0,22 s con 10 000 pacientes, 1,56 s con 250 000 y 5,8 s con un millón; el motor V8 tarda 2,3 s, 58,9 s y no se midió con un millón"></p>
+<p>La siguiente medición compara ambos motores con pacientes sintéticos y una vista que incluye <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code>.</p>
+<p><img src="reference/figures/README-rendimiento.png" width="90%" alt="Tiempos medidos para convertir NDJSON en tablas: comparación de V8 y DuckDB según el número de pacientes"></p>
 <table class="table">
 <thead><tr>
 <th align="right">Pacientes</th>
@@ -647,305 +514,78 @@
 </tr>
 </tbody>
 </table>
-<p>Tiempo de punta a punta, desde el archivo NDJSON hasta el <code>data.frame</code>, con pacientes sintéticos y una vista con <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code> (<code>data-raw/motor-duckdb.R</code>; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6). Ambos motores dan tablas idénticas: las pruebas del paquete los comparan con las vistas de todas las viñetas y con más de 100 expresiones de FHIRPath, y lo que el motor DuckDB no puede traducir con certeza da un error en lugar de un resultado distinto. Con <code>vista_ejecutar_duckdb(..., diferido = TRUE)</code> el resultado queda como tabla de dplyr sobre DuckDB, para filtrar y resumir sin traer todas las filas a R. Con el motor V8, los recursos que llegan como JSON (de un servidor, de <code>$export</code> o de un archivo) pasan el texto original directamente a V8; los armados como listas de R son unas cuatro veces más lentos porque deben convertirse a JSON.</p>
+<p>Tiempo de punta a punta, desde el archivo NDJSON hasta el <code>data.frame</code>, con pacientes sintéticos y una vista con <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code> (<code>data-raw/motor-duckdb.R</code>; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6).</p>
+<p>Son resultados de ese equipo y esa vista, no una garantía de rendimiento. La expansión de colecciones, el tamaño del resultado, el disco y la memoria pueden cambiar el comportamiento. El script reproducible está en <a href="data-raw/motor-duckdb.R"><code>data-raw/motor-duckdb.R</code></a>.</p>
 </div>
 <div class="section level2">
-<h2 id="funciones">Funciones<a class="anchor" aria-label="anchor" href="#funciones"></a>
+<h2 id="alcance-y-límites">Alcance y límites<a class="anchor" aria-label="anchor" href="#alcance-y-l%C3%ADmites"></a>
+</h2>
+<ul>
+<li>
+<strong>FHIR R4 y JSON.</strong> El modelo incluido es R4; no se declara compatibilidad con R5 ni con recursos XML.</li>
+<li>
+<strong>FHIRPath.</strong> La evaluación ocurre en V8. La resolución remota con <code>resolve()</code> está desactivada; las consultas de terminología se realizan con las funciones <code>tx_*</code> antes de ejecutar la vista.</li>
+<li>
+<strong>Precisión y fechas.</strong> Los números de JSON pierden los ceros decimales finales al leerse. Las fechas se conservan como texto ISO 8601 para admitir valores parciales como <code>2025</code> o <code>2025-03</code>.</li>
+<li>
+<strong>Memoria y esquema.</strong> <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code> reúne el resultado en memoria; el procesamiento por bloques requiere que tu función gestione la salida. Los avisos de conversión de tipos deben revisarse antes de persistir datos.</li>
+<li>
+<strong>DuckDB experimental.</strong> El traductor SQL cubre un subconjunto de FHIRPath. Contrasta tus vistas con V8 antes de llevarlas a gran escala.</li>
+<li>
+<strong>Capacidades del servidor.</strong> SMART, <code>$validate</code>, terminología y <code>$export</code> dependen de la configuración y los permisos del servidor conectado.</li>
+</ul>
+<p>Las prioridades de desarrollo incluyen estabilizar el motor DuckDB, mejorar la precisión decimal y ampliar las operaciones de búsqueda y terminología. Las propuestas y su seguimiento están en <a href="https://github.com/f-slg/fhirviews/issues" class="external-link">GitHub Issues</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="guías-y-referencia">Guías y referencia<a class="anchor" aria-label="anchor" href="#gu%C3%ADas-y-referencia"></a>
 </h2>
 <table class="table">
 <colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
+<col width="50%">
+<col width="50%">
 </colgroup>
 <thead><tr>
-<th>Grupo</th>
-<th>Funciones</th>
-<th>Para qué</th>
+<th>Guía</th>
+<th>Contenido</th>
 </tr></thead>
 <tbody>
 <tr>
-<td>Conexión</td>
-<td>
-<code><a href="reference/fhir_conectar.html">fhir_conectar()</a></code>, <code><a href="reference/fhir_disponible.html">fhir_disponible()</a></code>, <code><a href="reference/fhir_capacidades.html">fhir_capacidades()</a></code>
-</td>
-<td>Conectarse, comprobar que el servidor responde y ver qué admite</td>
+<td><a href="https://f-slg.github.io/fhirviews/articles/fhirviews.html">Primeros pasos</a></td>
+<td>Cliente, recursos y primeras vistas con el caso clínico</td>
 </tr>
 <tr>
-<td>Autenticación</td>
-<td>
-<code><a href="reference/fhir_auth.html">fhir_auth_cliente()</a></code>, <code><a href="reference/fhir_auth.html">fhir_auth_backend()</a></code>, <code><a href="reference/fhir_auth.html">fhir_auth_interactiva()</a></code>, <code><a href="reference/fhir_smart_configuracion.html">fhir_smart_configuracion()</a></code>
-</td>
-<td>SMART on FHIR / OAuth2 para servidores protegidos</td>
+<td><a href="https://f-slg.github.io/fhirviews/articles/vistas.html">ViewDefinition en detalle</a></td>
+<td>Columnas, colecciones, filtros, tipos y SQL</td>
 </tr>
 <tr>
-<td>Lectura</td>
-<td>
-<code><a href="reference/fhir_buscar.html">fhir_buscar()</a></code>, <code><a href="reference/fhir_leer.html">fhir_leer()</a></code>, <code><a href="reference/fhir_everything.html">fhir_everything()</a></code>
-</td>
-<td>Buscar con paginación, leer un recurso o todo un paciente</td>
+<td><a href="https://f-slg.github.io/fhirviews/articles/servidores-y-volumen.html">Servidores y grandes volúmenes</a></td>
+<td>SMART, exportación masiva y DuckDB</td>
 </tr>
 <tr>
-<td>Escritura</td>
-<td>
-<code><a href="reference/fhir_crear.html">fhir_crear()</a></code>, <code><a href="reference/fhir_crear.html">fhir_actualizar()</a></code>, <code><a href="reference/fhir_crear.html">fhir_borrar()</a></code>
-</td>
-<td>Crear, actualizar, borrar y ejecutar transacciones</td>
+<td><a href="https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html">Tasas por cantón</a></td>
+<td>Indicadores con FHIR y población de Ecuador</td>
 </tr>
 <tr>
-<td>Exportación masiva</td>
-<td>
-<code><a href="reference/fhir_exportar.html">fhir_exportar()</a></code>, <code><a href="reference/fhir_exportar.html">fhir_exportar_estado()</a></code>, <code><a href="reference/fhir_exportar.html">fhir_exportar_cancelar()</a></code>
-</td>
-<td>Operación <code>$export</code> (FHIR Bulk Data): espera al servidor y descarga los NDJSON para el análisis poblacional</td>
+<td><a href="https://f-slg.github.io/fhirviews/articles/arquitectura.html">Arquitectura</a></td>
+<td>Motores, evaluación por lotes y seguridad</td>
 </tr>
 <tr>
-<td>Validación</td>
-<td><code><a href="reference/fhir_validar.html">fhir_validar()</a></code></td>
-<td>Operación <code>$validate</code>, con la tabla de problemas</td>
-</tr>
-<tr>
-<td>Peticiones libres</td>
-<td>
-<code><a href="reference/fhir_peticion.html">fhir_peticion()</a></code>, <code><a href="reference/fhir_ejecutar_texto.html">fhir_ejecutar_texto()</a></code>
-</td>
-<td>Cualquier otra petición, también escrita como en Postman</td>
-</tr>
-<tr>
-<td>Recursos</td>
-<td>
-<code><a href="reference/fhir_recursos.html">fhir_recursos()</a></code>, <code><a href="reference/fhir_tabla.html">fhir_tabla()</a></code>
-</td>
-<td>Reunir recursos de cualquier fuente y verlos como tabla rápida</td>
-</tr>
-<tr>
-<td>Vistas</td>
-<td>
-<code><a href="reference/vista_crear.html">vista_crear()</a></code>, <code><a href="reference/vista_leer.html">vista_leer()</a></code>, <code><a href="reference/vista_json.html">vista_json()</a></code>, <code><a href="reference/vista_validar.html">vista_validar()</a></code>
-</td>
-<td>Definir, leer, exportar y validar <code>ViewDefinition</code>
-</td>
-</tr>
-<tr>
-<td>Catálogo de vistas</td>
-<td>
-<code><a href="reference/vista_catalogo.html">vista_catalogo()</a></code>, <code><a href="reference/vista_plantilla.html">vista_plantilla()</a></code>
-</td>
-<td>Vistas listas para salud pública: pacientes con residencia, signos vitales, diagnósticos, notificación obligatoria, inmunizaciones, encuentros y medicamentos</td>
-</tr>
-<tr>
-<td>Ejecución</td>
-<td>
-<code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code>, <code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code>, <code><a href="reference/fhir_vista.html">fhir_vista()</a></code>, <code><a href="reference/vista_fhirpath.html">vista_fhirpath()</a></code>
-</td>
-<td>Aplicar vistas en memoria, procesar NDJSON por bloques y probar FHIRPath</td>
-</tr>
-<tr>
-<td>Motor DuckDB</td>
-<td>
-<code><a href="reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>, <code><a href="reference/vista_sql.html">vista_sql()</a></code>
-</td>
-<td>Ejecutar la vista como SQL de DuckDB sobre NDJSON o Parquet (experimental)</td>
-</tr>
-<tr>
-<td>Terminologías</td>
-<td>
-<code><a href="reference/tx_expandir.html">tx_expandir()</a></code>, <code><a href="reference/tx_buscar_codigo.html">tx_buscar_codigo()</a></code>, <code><a href="reference/tx_validar_codigo.html">tx_validar_codigo()</a></code>, <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code>
-</td>
-<td>
-<code>$expand</code>, <code>$lookup</code> y <code>$validate-code</code> en un servidor de terminología (tx.fhir.org, Snowstorm) y vistas filtradas por los códigos de un <code>ValueSet</code>
-</td>
-</tr>
-<tr>
-<td>SQL</td>
-<td><code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code></td>
-<td>Guardar vistas como tablas de DuckDB u otra base DBI</td>
-</tr>
-<tr>
-<td>Conformidad</td>
-<td><code><a href="reference/vista_conformidad.html">vista_conformidad()</a></code></td>
-<td>Ejecutar el banco oficial de pruebas de SQL on FHIR, con cualquiera de los dos motores</td>
-</tr>
-<tr>
-<td>RStudio</td>
-<td>
-<code><a href="reference/fhir_conexion_activa.html">fhir_conexion_activa()</a></code>, <code><a href="reference/fhir_conexion_activa.html">fhir_desconectar()</a></code>
-</td>
-<td>Conexión activa del panel <em>Connections</em> y de los addins</td>
-</tr>
-<tr>
-<td>Motor</td>
-<td>
-<code><a href="reference/fhirviews_motor.html">fhirviews_motor()</a></code>, <code><a href="reference/fhirviews_motor.html">fhirviews_version_fhirpath()</a></code>
-</td>
-<td>Versión de fhirpath.js y del motor de JavaScript</td>
+<td><a href="https://f-slg.github.io/fhirviews/reference/">Referencia de funciones</a></td>
+<td>Firmas, argumentos y ejemplos de la API</td>
 </tr>
 </tbody>
 </table>
+<p>Proyectos relacionados: <a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a> para población de Ecuador, <a href="https://f-slg.github.io/geoecu/" class="external-link">geoecu</a> para límites territoriales y <a href="https://github.com/f-slg/aprende-fhir" class="external-link">aprende-fhir</a> para docencia con un caso clínico ficticio.</p>
 </div>
 <div class="section level2">
-<h2 id="comparación-con-otras-herramientas">Comparación con otras herramientas<a class="anchor" aria-label="anchor" href="#comparaci%C3%B3n-con-otras-herramientas"></a>
+<h2 id="contribuir-citar-y-licencia">Contribuir, citar y licencia<a class="anchor" aria-label="anchor" href="#contribuir-citar-y-licencia"></a>
 </h2>
-<p>fhirviews no es la única forma de usar FHIR o SQL on FHIR desde R. En particular, el paquete <a href="https://cran.r-project.org/package=pathling" class="external-link">pathling</a> (CSIRO) también ejecuta <code>ViewDefinition</code> desde R con <code>ds_view()</code>, sobre Spark.</p>
-<table class="table">
-<colgroup>
-<col width="25%">
-<col width="25%">
-<col width="25%">
-<col width="25%">
-</colgroup>
-<thead><tr>
-<th></th>
-<th>fhirviews</th>
-<th><a href="https://cran.r-project.org/package=pathling" class="external-link">pathling</a></th>
-<th><a href="https://cran.r-project.org/package=fhircrackr" class="external-link">fhircrackr</a></th>
-</tr></thead>
-<tbody>
-<tr>
-<td>Base técnica</td>
-<td>R + fhirpath.js en V8; motor opcional que traduce a SQL de DuckDB</td>
-<td>Biblioteca Java de Pathling sobre Apache Spark (vía sparklyr)</td>
-<td>R</td>
-</tr>
-<tr>
-<td>Requisitos</td>
-<td>Solo paquetes de R (V8)</td>
-<td>Java y Spark</td>
-<td>Solo paquetes de R</td>
-</tr>
-<tr>
-<td>Tablas con <code>ViewDefinition</code> (SQL on FHIR)</td>
-<td>Sí, <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code>
-</td>
-<td>Sí, <code>ds_view()</code>
-</td>
-<td>No: descripciones propias con XPath</td>
-</tr>
-<tr>
-<td>Resultado</td>
-<td>
-<code>data.frame</code> de R</td>
-<td>Spark DataFrame</td>
-<td>
-<code>data.frame</code> de R</td>
-</tr>
-<tr>
-<td>Cliente REST de FHIR</td>
-<td>Sí, en JSON: búsqueda con paginación, escritura, transacciones, <code>$everything</code>, <code>$validate</code>, <em>bulk export</em> (<code>$export</code>)</td>
-<td>Lectura con <em>bulk export</em> (<code>$export</code>)</td>
-<td>Sí, en XML: búsqueda, <code>POST</code>, <code>PUT</code>
-</td>
-</tr>
-<tr>
-<td>Autenticación</td>
-<td>SMART on FHIR en todas las peticiones: <em>client credentials</em>, <em>Backend Services</em> (JWT), <em>authorization code</em> + PKCE</td>
-<td>SMART (secreto o clave privada) para la lectura con <code>$export</code>
-</td>
-<td>OAuth2 / OpenID Connect (<code>fhir_authenticate()</code>) y autenticación básica</td>
-</tr>
-<tr>
-<td>Terminologías (SNOMED CT, LOINC, ValueSet)</td>
-<td>Sí: <code>$expand</code> (con paginación), <code>$lookup</code> y <code>$validate-code</code> con un servidor de terminología; <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code> guarda los códigos en la vista</td>
-<td>Sí, funciones <code>tx_*</code> con un servidor de terminología, también dentro de las consultas</td>
-<td>No</td>
-</tr>
-<tr>
-<td>Volumen de datos</td>
-<td>Motor V8: memoria de la sesión de R. Motor DuckDB: millones de recursos en un portátil</td>
-<td>Distribuido: grandes volúmenes en un clúster</td>
-<td>Memoria de una sesión de R</td>
-</tr>
-<tr>
-<td>Banco oficial de SQL on FHIR</td>
-<td>Incluido en el paquete (<code><a href="reference/vista_conformidad.html">vista_conformidad()</a></code>)</td>
-<td>Pathling figura en la <a href="https://sql-on-fhir.org/extra/impls.html" class="external-link">página de implementaciones</a>
-</td>
-<td>No aplica</td>
-</tr>
-<tr>
-<td>RStudio</td>
-<td>Panel <em>Connections</em> y addins</td>
-<td>Conexión de Spark</td>
-<td>No</td>
-</tr>
-<tr>
-<td>Documentación</td>
-<td>Español</td>
-<td>Inglés</td>
-<td>Inglés</td>
-</tr>
-</tbody>
-</table>
-<p><strong>¿Cuál elegir?</strong></p>
-<ul>
-<li>
-<strong>pathling</strong>, para grandes volúmenes en Spark o en un clúster, o si necesitas consultar el servidor de terminología dentro de cada expresión (por ejemplo, <code>subsumes()</code> o traducciones con <code>$translate</code>).</li>
-<li>
-<strong>fhirviews</strong>, para análisis en un portátil o un servidor sin instalar Java ni Spark (hasta millones de recursos con el motor DuckDB), para trabajar con un servidor FHIR (autenticarse, leer, escribir, validar, exportar) y llevar los resultados a <code>data.frame</code>, DuckDB o pobecu, y para enseñar.</li>
-<li>
-<strong>fhircrackr</strong>, si ya trabajas con su formato de diseño de tablas o con recursos en XML.</li>
-</ul>
-<p>Las vistas de SQL on FHIR son portables: un mismo <code>ViewDefinition</code> en JSON se puede ejecutar en fhirviews y en pathling. Los tres paquetes pueden convivir, porque sus funciones no comparten nombres.</p>
-</div>
-<div class="section level2">
-<h2 id="hoja-de-ruta">Hoja de ruta<a class="anchor" aria-label="anchor" href="#hoja-de-ruta"></a>
-</h2>
-<ul>
-<li>Motor de FHIRPath escrito en R, como alternativa a V8 (la capa ya está separada: <code>options(fhirviews.motor = ...)</code>).</li>
-<li>Búsquedas largas por <code>POST [tipo]/_search</code>.</li>
-<li>Motor DuckDB estable (ya traduce la mayor parte de FHIRPath, incluidos <code>lowBoundary()</code> / <code>highBoundary()</code> de fechas): <code>memberOf()</code>, decimales con su precisión y uso en producción.</li>
-<li>Terminologías: <code>memberOf()</code> en FHIRPath y <code>$translate</code> (las expansiones, <code>$lookup</code> y <code>$validate-code</code> ya están en las funciones <code>tx_*</code>).</li>
-<li>Operaciones de SQL on FHIR 3.0 (<code>$run</code>, <code>$export</code> de vistas) y <code>SQLQuery</code>.</li>
-<li>Caché del panel <em>Connections</em> para servidores lentos.</li>
-<li>Publicación en CRAN (el paquete ya pasa <code>R CMD check --as-cran</code> sin errores ni avisos).</li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="documentación">Documentación<a class="anchor" aria-label="anchor" href="#documentaci%C3%B3n"></a>
-</h2>
-<ul>
-<li>
-<a href="https://f-slg.github.io/fhirviews/articles/fhirviews.html">Primeros pasos</a>: cliente, recursos y primeras vistas con el caso clínico.</li>
-<li>
-<a href="https://f-slg.github.io/fhirviews/articles/vistas.html">ViewDefinition en detalle</a>: todos los elementos de la especificación, validación y DuckDB.</li>
-<li>
-<a href="https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html">Tasas por cantón con FHIR y pobecu</a>: vigilancia epidemiológica de punta a punta.</li>
-<li>
-<a href="https://f-slg.github.io/fhirviews/articles/servidores-y-volumen.html">Servidores reales y grandes volúmenes</a>: SMART on FHIR, <code>$export</code> y el motor DuckDB.</li>
-<li>
-<a href="https://f-slg.github.io/fhirviews/articles/arquitectura.html">Cómo funciona por dentro</a>: arquitectura, motor por lotes, tipos y seguridad.</li>
-<li>
-<a href="https://f-slg.github.io/fhirviews/reference/">Referencia de funciones</a>.</li>
-</ul>
-<div class="section level3">
-<h3 id="paquetes-relacionados">Paquetes relacionados<a class="anchor" aria-label="anchor" href="#paquetes-relacionados"></a>
-</h3>
-<ul>
-<li>
-<a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a>: población del Ecuador por provincia, cantón y parroquia.</li>
-<li>
-<a href="https://f-slg.github.io/geoecu/" class="external-link">geoecu</a>: límites territoriales del Ecuador.</li>
-<li>
-<a href="https://github.com/f-slg/aprende-fhir" class="external-link">aprende-fhir</a>: taller de HL7 FHIR con un caso clínico ecuatoriano ficticio.</li>
-</ul>
-</div>
-<div class="section level3">
-<h3 id="contribuir">Contribuir<a class="anchor" aria-label="anchor" href="#contribuir"></a>
-</h3>
-<p>Las preguntas van en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a> y los errores o propuestas en <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issues</a> (hay una plantilla para problemas de conformidad con SQL on FHIR). Revisa la <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md" class="external-link">guía de contribución</a>. Este proyecto sigue un <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md" class="external-link">código de conducta</a>; al participar, te comprometes a respetarlo.</p>
-</div>
-<div class="section level3">
-<h3 id="cita">Cita<a class="anchor" aria-label="anchor" href="#cita"></a>
-</h3>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="CONTRIBUTING.html">guía de contribución</a> y el <a href="CODE_OF_CONDUCT.html">código de conducta</a>.</p>
+<p>Para citar el paquete:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="licencia">Licencia<a class="anchor" aria-label="anchor" href="#licencia"></a>
-</h3>
-<p>MIT © Ronald Fabricio Salas Guerrero. El paquete incluye fhirpath.js (NLM y Health Samurai, licencia tipo BSD) y el banco de pruebas de SQL on FHIR (MIT), sin modificar; el detalle está en <a href="https://github.com/f-slg/fhirviews/blob/main/inst/COPYRIGHTS" class="external-link"><code>inst/COPYRIGHTS</code></a>.</p>
-<p>FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo de HL7.</p>
-</div>
+<p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="LICENSE.html">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
+<p>fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo institucional. Todos los datos de ejemplo incluidos son ficticios.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -986,10 +626,10 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
-<li><a href="https://f-slg.github.io/fhirviews/"><img src="https://github.com/f-slg/fhirviews/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a></li>
-<li><a href="https://f-slg.github.io/fhirviews/reference/vista_conformidad.html"><img src="https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-2a78d6.svg" alt="SQL on FHIR: 133/133 shareable"></a></li>
-<li><a href="https://hl7.org/fhir/R4/" class="external-link"><img src="https://img.shields.io/badge/HL7%20FHIR-R4-0F2233.svg" alt="HL7 FHIR R4"></a></li>
-<li><a href="https://github.com/f-slg/fhirviews/blob/main/LICENSE.md" class="external-link"><img src="https://img.shields.io/badge/licencia-MIT-blue.svg" alt="Licencia: MIT"></a></li>
+<li><a href="https://f-slg.github.io/fhirviews/"><img src="https://github.com/f-slg/fhirviews/actions/workflows/pkgdown.yaml/badge.svg" alt="Documentación"></a></li>
+<li><a href="#conformidad-y-pruebas"><img src="https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-2a78d6.svg" alt="SQL on FHIR: 133/133 shareable"></a></li>
+<li><a href="https://hl7.org/fhir/R4/" class="external-link"><img src="https://img.shields.io/badge/FHIR-R4-0F2233.svg" alt="FHIR R4"></a></li>
+<li><a href="LICENSE.html"><img src="https://img.shields.io/badge/licencia-MIT-blue.svg" alt="Licencia MIT"></a></li>
 </ul>
 </div>
 
