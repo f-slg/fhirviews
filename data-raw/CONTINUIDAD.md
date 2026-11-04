@@ -170,3 +170,16 @@ Código `6c14427`: aprobaron las cinco configuraciones de R-CMD-check, la integr
 La evidencia de HAPI para este código también se conservó en el directorio `estricto/` con prefijo `hapi-`. El borrador `v0.5.0` se actualizó al commit `6c14427da5f7ea45b6a48e1a46268500c20d9b37`, con el archivo fuente reconstruido y comprobado que contiene el modo estricto, la recuperación transaccional y las entregas anteriores. Sus notas reflejan las 1377 comprobaciones y las 2 NOTEs actuales. El lanzamiento continúa como borrador; no se publicó ni se envió a CRAN.
 
 Los pendientes anteriores sobre un artefacto desactualizado quedan resueltos para este candidato. El contrato estricto entre bloques y su ejemplo de recuperación también quedan implementados y verificados. Quedan el piloto externo y la decisión de acceso/distribución y documentación privada. La accesibilidad anónima de Pages devolvió 404; no cambiar privacidad ni permisos de colaboradores sin instrucciones. El piloto requiere definir usuarios y un entorno representativo, sin inventar resultados de adopción ni garantías clínicas.
+
+
+## Cambio de visibilidad por instrucción del mantenedor
+
+El 4 de noviembre de 2026 el mantenedor solicitó explícitamente convertir
+`f-slg/fhirviews` en público. Se aplicó el cambio con GitHub CLI y se verificó
+`visibility = PUBLIC`, `isPrivate = false`. Esta decisión sustituye las
+instrucciones anteriores de mantener privado el repositorio. No autoriza publicar
+el lanzamiento ni enviar a CRAN: el lanzamiento v0.5.0 continúa como borrador.
+
+El candidato del commit `2fde951` está construido y aceptado localmente en ambos
+perfiles en `data-raw/candidatos/piloto-0.5.0-2fde951/`. Su manifiesto es provisional
+hasta cerrar CI. El README se ajusta para describir el acceso público.
