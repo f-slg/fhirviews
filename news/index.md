@@ -2,9 +2,15 @@
 
 ## fhirviews 0.5.0
 
-- CI usa macOS 15 Intel para evitar la cola arm64, actualiza checkout y
-  upload-artifact a v6 y cancela comprobaciones sustituidas por otro
-  commit.
+- El workflow admite reintentos manuales con selección de imagen macOS
+  Intel y usa macOS 26 Intel por defecto, manteniendo obligatoria su
+  comprobación.
+
+- La guía del piloto incorpora tareas secuenciales, ficha de observación
+  y criterios de aceptación para participantes externos.
+
+- CI usa macOS Intel, actualiza checkout y upload-artifact a v6 y
+  cancela comprobaciones sustituidas por otro commit.
 
 - El piloto registra advertencias mediante códigos seguros y exige
   revisión antes de aprobar; añade diagnósticos numéricos y referencias
