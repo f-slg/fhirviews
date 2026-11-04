@@ -293,3 +293,12 @@ test_that("si el servidor rechaza el token, pide otro y reintenta", {
   expect_identical(httr2::req_get_headers(fhir[[2]], "reveal")$Authorization,
                    "Bearer t2")
 })
+
+
+test_that("Backend Services rechaza claves RSA de menos de 2048 bits", {
+  skip_if_not_installed("openssl")
+  skip_if_not_installed("jose")
+  expect_error(fhir_auth_backend("b", openssl::rsa_keygen(1024L)), "2048",
+               class = "fhirviews_error")
+  expect_identical(alg_clave(openssl::rsa_keygen(2048L)), "RS384")
+})

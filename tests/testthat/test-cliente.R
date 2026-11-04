@@ -90,7 +90,9 @@ test_that("fhir_leer y fhir_everything arman la ruta", {
   expect_match(p$lista[[3]]$url, "Patient/p1/\\$everything$")
 })
 
-test_that("los errores muestran el OperationOutcome", {
+test_that("los errores muestran el OperationOutcome al habilitar detalles", {
+  anterior <- options(fhirviews.mostrar_detalles = TRUE)
+  on.exit(options(anterior), add = TRUE)
   simular(function(req, ruta) {
     respuesta_fhir(oo("No existe {Patient/x}"), estado = 404L)
   })
@@ -117,7 +119,7 @@ test_that("errores sin OperationOutcome y respuestas que no son JSON", {
     }
   })
   con <- con_simulada()
-  expect_error(fhir_leer(con, "Patient", "x"), "fallo interno",
+  expect_error(fhir_leer(con, "Patient", "x"), "500",
                class = "fhirviews_error_http_500")
   expect_error(fhir_peticion(con, "GET", "html"), class = "fhirviews_error")
 })
@@ -175,10 +177,10 @@ test_that("fhir_validar acepta las respuestas de error de $validate", {
   v <- fhir_validar(con, list(resourceType = "Patient", gender = "mujer"),
                     perfil = "http://example.org/perfil")
   expect_s3_class(v, "fhir_validacion")
-  expect_false(attr(v, "valido"))
+  expect_identical(attr(v, "valido"), NA)
   expect_identical(v$severidad, "error")
   expect_identical(v$ubicacion, "Patient.gender")
-  expect_output(print(v), "No v.lido")
+  expect_output(print(v), "No se pudo determinar")
   v <- fhir_validar(con, list(resourceType = "Patient", gender = "female"))
   expect_true(attr(v, "valido"))
   expect_output(print(v), "V.lido")
@@ -290,4 +292,40 @@ test_that("los parametros numericos no usan notacion cientifica", {
   expect_identical(agregar_consulta("https://x.org/r4/Patient",
                                     list(`_count` = 1e5)),
                    "https://x.org/r4/Patient?_count=100000")
+})
+
+
+test_that("validar nunca acepta respuestas incompletas o fallos HTTP", {
+  for (estado in c(200L, 400L, 412L, 422L)) {
+    for (cuerpo in list(NULL, list(), list(resourceType = "Patient"),
+                       list(resourceType = "OperationOutcome"),
+                       list(resourceType = "OperationOutcome", issue = list(1)),
+                       list(resourceType = "OperationOutcome", issue = list(
+                         list(severity = "information"))))) {
+      simular(function(req, ruta) respuesta_fhir(cuerpo, estado))
+      v <- fhir_validar(con_simulada(), paciente("p"))
+      expect_identical(attr(v, "valido"), NA)
+      expect_identical(attr(v, "estado"), estado)
+    }
+  }
+  simular(function(req, ruta) respuesta_fhir(oo("Error")))
+  expect_false(attr(fhir_validar(con_simulada(), paciente("p")), "valido"))
+  simular(function(req, ruta) respuesta_fhir(oo("Informacion", "information"), 422L))
+  expect_identical(attr(fhir_validar(con_simulada(), paciente("p")), "valido"), NA)
+})
+
+test_that("los errores omiten datos del servidor salvo depuracion explicita", {
+  anterior <- options(fhirviews.mostrar_detalles = FALSE)
+  on.exit(options(anterior), add = TRUE)
+  simular(function(req, ruta) respuesta_fhir(oo("Paciente Ana documento 123456"), 422L))
+  e <- tryCatch(fhir_leer(con_simulada(), "Patient", "p"), error = identity)
+  expect_false(grepl("Ana|123456", conditionMessage(e)))
+  expect_match(e$outcome$issue[[1]]$diagnostics, "Ana")
+  expect_match(url_mensaje(paste0(base, "/Patient?_id=123456")), "_id=***", fixed = TRUE)
+  options(fhirviews.mostrar_detalles = TRUE)
+  expect_error(fhir_leer(con_simulada(), "Patient", "p"), "Ana")
+  options(fhirviews.mostrar_detalles = FALSE)
+  simular(function(req, ruta) httr2::response(200L, body = charToRaw("<html>Ana 123456</html>")))
+  e <- tryCatch(fhir_leer(con_simulada(), "Patient", "p"), error = identity)
+  expect_false(grepl("Ana|123456", conditionMessage(e)))
 })

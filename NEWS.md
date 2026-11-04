@@ -1,4 +1,18 @@
-# fhirviews (desarrollo)
+# fhirviews 0.5.0
+
+* `fhir_validar()` devuelve `valido = NA` ante errores HTTP o respuestas
+  incompletas y conserva el estado HTTP en el atributo `estado`.
+* Las exportaciones verifican cada recurso NDJSON por bloques (también gzip),
+  su tipo y el conteo del manifiesto antes de registrar la descarga completa.
+  Los registros anteriores se vuelven a descargar para aplicar la validación.
+* Los errores HTTP y de respuestas no JSON omiten el contenido del servidor
+  por defecto; `fhirviews.mostrar_detalles = TRUE` permite depurarlo.
+  El parámetro `_id` también se oculta en las URL de error.
+* La caché FHIRPath ya no confunde nombres con propiedades heredadas de
+  JavaScript. SMART Backend Services rechaza claves RSA menores de 2048 bits.
+* La viñeta de grandes volúmenes requiere `FHIRVIEWS_VINETAS_DUCKDB=true`
+  para ejecutar DuckDB, evitando descargas durante la construcción estándar.
+* CI añade R-devel y R 4.1 a las comprobaciones del paquete.
 
 * Se corrige un mensaje no ASCII de `vista_ejecutar_lotes()` que causaba
   una advertencia de portabilidad en R CMD check en los tres sistemas.

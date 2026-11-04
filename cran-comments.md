@@ -41,9 +41,10 @@ This is the first submission of 'fhirviews'.
 
 * The 'DuckDB' engine needs the 'json' extension, which 'duckdb' downloads
   the first time it is used (`INSTALL json`). It is never downloaded during
-  `R CMD check`: the examples that use it run only interactively, the tests
+  standard builds or `R CMD check`: the examples that use it run only interactively, the tests
   are skipped on CRAN and the vignette chunks are not evaluated when
-  `_R_CHECK_PACKAGE_NAME_` is set.
+  `_R_CHECK_PACKAGE_NAME_` is set. Vignette DuckDB chunks also require an
+  explicit `FHIRVIEWS_VINETAS_DUCKDB=true` opt-in, including during builds.
 
 * Authentication tokens are kept in memory only (on disk only if the user
   asks for it explicitly with `cache_disco = TRUE`, through 'httr2'), are never

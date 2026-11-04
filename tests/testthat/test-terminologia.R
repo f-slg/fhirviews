@@ -94,6 +94,8 @@ test_that("tx_expandir envia un ValueSet propio por POST", {
 })
 
 test_that("los errores del servidor muestran el OperationOutcome", {
+  anterior <- options(fhirviews.mostrar_detalles = TRUE)
+  on.exit(options(anterior), add = TRUE)
   simular(function(req, ruta) {
     respuesta_fhir(oo("ValueSet desconocido: http://x"), estado = 404L)
   })

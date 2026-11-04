@@ -137,3 +137,14 @@ test_that("informa el motor y la version de fhirpath.js", {
   on.exit(options(withr_opcion), add = TRUE)
   expect_error(motor_actual(), class = "fhirviews_error")
 })
+
+
+test_that("la cache no confunde propiedades heredadas con expresiones", {
+  recurso <- list(list(resourceType = "Patient", toString = "texto",
+                       constructor = "constructor", `__proto__` = "proto"))
+  for (i in seq_len(2L)) {
+    expect_identical(vista_fhirpath(recurso, "toString"), "texto")
+    expect_identical(vista_fhirpath(recurso, "constructor"), "constructor")
+    expect_identical(vista_fhirpath(recurso, "__proto__"), "proto")
+  }
+})

@@ -20,6 +20,8 @@ jobs:
           - {os: windows-latest, r: 'release'}
           - {os: macos-latest,   r: 'release'}
           - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-latest,  r: 'devel'}
+          - {os: ubuntu-22.04,   r: '4.1'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}

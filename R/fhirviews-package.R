@@ -24,6 +24,10 @@
 #'   pueden ser datos de pacientes o credenciales y terminar en registros o
 #'   capturas de pantalla; solo se ven los parámetros de control como
 #'   `_count`. Con `TRUE` se muestra la URL completa, útil para depurar.
+#' * `fhirviews.mostrar_detalles`: con `TRUE`, incluye el contenido del servidor
+#'   en los errores HTTP y respuestas no JSON. Por defecto se omite porque puede
+#'   contener datos de pacientes. El OperationOutcome sigue disponible en el
+#'   campo `outcome` de la condición de error.
 #' * `fhirviews.motor`: motor de FHIRPath (hoy solo `"v8"`).
 #' * `fhirviews.sql_profundidad`: niveles que recorre `repeat` en el motor
 #'   DuckDB (12 por defecto).

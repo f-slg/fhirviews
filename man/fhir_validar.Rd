@@ -17,7 +17,9 @@ contra el que validar.}
 \value{
 Un \code{data.frame} de clase \code{fhir_validacion} con una fila por
 problema (\code{severidad}, \code{codigo}, \code{mensaje}, \code{ubicacion}) y el atributo
-\code{valido} (\code{TRUE} si no hay errores). Al imprimirlo, resume el resultado.
+\code{valido} (\code{TRUE} sin errores, \code{FALSE} con errores, \code{NA} si el servidor
+no pudo validar o no devuelve un OperationOutcome completo). El atributo
+\code{estado} conserva el estado HTTP. Al imprimirlo, resume el resultado.
 }
 \description{
 Envía un recurso a la operación \verb{$validate} del servidor

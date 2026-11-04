@@ -9,11 +9,12 @@ vignette: >
 
 ```{r, include = FALSE}
 # El motor DuckDB descarga la extensión json la primera vez que se usa
-# (INSTALL json). Durante R CMD check (por ejemplo en CRAN) esos bloques no se
-# ejecutan, para no depender de la red ni descargar código.
+# (INSTALL json). Estos bloques requieren habilitación explícita para que
+# R CMD build y R CMD check no dependan de la red.
 tiene_duckdb <- requireNamespace("duckdb", quietly = TRUE) &&
   requireNamespace("DBI", quietly = TRUE) &&
   utils::packageVersion("duckdb") >= "1.3.0" &&
+  identical(Sys.getenv("FHIRVIEWS_VINETAS_DUCKDB"), "true") &&
   !nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_"))
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -198,6 +199,13 @@ controlan qué se exporta y cuánto se espera. Si el servidor informa problemas
 subcarpeta `errores/` y se avisan.
 
 ## 3. Motor DuckDB: millones de recursos {#motor-duckdb-millones-de-recursos}
+
+Los bloques de esta sección se ejecutan al construir la viñeta solo si se
+configura `FHIRVIEWS_VINETAS_DUCKDB=true`. La construcción estándar los omite
+para evitar descargas. En un entorno sin internet, instala previamente la
+extensión `json` con la misma versión de DuckDB y en el directorio de
+extensiones que usará el proceso; comprueba `LOAD json` antes de ejecutar el
+motor SQL.
 
 `vista_ejecutar()` evalúa FHIRPath con fhirpath.js dentro de R: es completo y
 preciso, pero trabaja en memoria y su tiempo crece con cada recurso. Para

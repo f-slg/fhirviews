@@ -95,7 +95,12 @@ test_that("ciclo completo de escritura en un servidor de pruebas", {
   expect_true(p$id %in% vapply(todo, `[[`, "", "id"))
 
   v <- fhir_validar(con, list(resourceType = "Patient", gender = "mujer"))
-  expect_false(attr(v, "valido"))
+  if (attr(v, "estado") >= 400L) {
+    expect_identical(attr(v, "valido"), NA)
+  } else {
+    expect_false(attr(v, "valido"))
+  }
+  expect_true(any(v$severidad %in% c("error", "fatal")))
   expect_true(attr(fhir_validar(con, creados[[2]]), "valido"))
 
   # fhir_peticion: cualquier petición, con la respuesta completa
@@ -226,7 +231,8 @@ test_that("terminologia del servidor: $expand y $validate-code en lote", {
   r <- tryCatch(tx_validar_codigo(con, recurso, sis, c("female", "other")),
                 fhirviews_error_http_400 = function(e) e)
   if (inherits(r, "fhirviews_error_http_400")) {
-    expect_match(conditionMessage(r), "HAPI-0901")
+    expect_match(paste(tabla_outcome(r$outcome)$mensaje, collapse = " "),
+                 "HAPI-0901")
     skip("El servidor no valida con un ValueSet en línea")
   }
   expect_identical(r$valido, c(TRUE, FALSE))

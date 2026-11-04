@@ -1,7 +1,7 @@
 Package: fhirviews
 Type: Package
 Title: 'HL7 FHIR' Client and 'SQL on FHIR' View Engine
-Version: 0.4.0
+Version: 0.5.0
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",

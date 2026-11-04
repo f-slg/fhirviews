@@ -383,7 +383,9 @@ fhir_borrar <- function(con, recurso, id = NULL) {
 #'
 #' @return Un `data.frame` de clase `fhir_validacion` con una fila por
 #'   problema (`severidad`, `codigo`, `mensaje`, `ubicacion`) y el atributo
-#'   `valido` (`TRUE` si no hay errores). Al imprimirlo, resume el resultado.
+#'   `valido` (`TRUE` sin errores, `FALSE` con errores, `NA` si el servidor
+#'   no pudo validar o no devuelve un OperationOutcome completo). El atributo
+#'   `estado` conserva el estado HTTP. Al imprimirlo, resume el resultado.
 #' @export
 #' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
@@ -395,8 +397,18 @@ fhir_validar <- function(con, recurso, perfil = NULL) {
   res <- peticion_json(con, "POST", paste0(datos$tipo, "/$validate"),
                        cuerpo = datos$json, parametros = parametros,
                        permitir = c(400L, 412L, 422L))
-  tabla <- tabla_outcome(res$datos)
-  attr(tabla, "valido") <- !any(tabla$severidad %in% c("error", "fatal"))
+  oo <- res$datos
+  completo <- is.list(oo) && identical(oo$resourceType, "OperationOutcome") &&
+    is.list(oo$issue) && length(oo$issue) > 0L &&
+    all(vapply(oo$issue, function(i) {
+      is.list(i) && es_texto(i$severity) &&
+        i$severity %in% c("fatal", "error", "warning", "information") &&
+        es_texto(i$code) && nzchar(i$code)
+    }, logical(1)))
+  tabla <- tabla_outcome(if (completo) oo else NULL)
+  attr(tabla, "estado") <- res$estado
+  attr(tabla, "valido") <- if (res$estado >= 400L || !completo) NA else
+    !any(tabla$severidad %in% c("error", "fatal"))
   class(tabla) <- c("fhir_validacion", "data.frame")
   tabla
 }
@@ -406,7 +418,9 @@ print.fhir_validacion <- function(x, ...) {
   errores <- sum(x$severidad %in% c("error", "fatal"))
   avisos <- sum(x$severidad %in% "warning")
   plural <- function(n, s, p) paste(n, if (n == 1L) s else p)
-  if (isTRUE(attr(x, "valido"))) {
+  if (is.na(attr(x, "valido"))) {
+    cat("No se pudo determinar la validez del recurso.\n")
+  } else if (isTRUE(attr(x, "valido"))) {
     cat("V\u00e1lido (", plural(avisos, "advertencia", "advertencias"),
         ").\n", sep = "")
   } else {
@@ -532,7 +546,9 @@ peticion_json <- function(con, metodo, ruta, cuerpo = NULL,
     cli::cli_abort(c(
       "La respuesta del servidor no es JSON.",
       "x" = "{metodo} {url_mensaje(url)}",
-      "i" = "Comienza con: {.val {substr(texto, 1, 80)}}"
+      "i" = if (isTRUE(getOption("fhirviews.mostrar_detalles")))
+        "Comienza con: {.val {substr(texto, 1, 80)}}" else
+        "El contenido del servidor se omite para proteger datos sensibles."
     ), class = "fhirviews_error", call = NULL)
   }
   list(estado = estado, cabeceras = httr2::resp_headers(resp), datos = datos,
@@ -597,7 +613,7 @@ enviar_peticion <- function(con, metodo, url, cuerpo, parametros, cabeceras,
 
 error_http <- function(metodo, url, estado, descripcion, datos, texto) {
   problemas <- character()
-  if (identical(datos$resourceType, "OperationOutcome")) {
+  if (is.list(datos) && identical(datos$resourceType, "OperationOutcome")) {
     tabla <- tabla_outcome(datos)
     problemas <- sprintf("[%s] %s%s", tabla$severidad, tabla$mensaje,
                          ifelse(is.na(tabla$ubicacion), "",
@@ -605,6 +621,7 @@ error_http <- function(metodo, url, estado, descripcion, datos, texto) {
   } else if (nzchar(trimws(texto))) {
     problemas <- substr(gsub("\\s+", " ", texto), 1, 200)
   }
+  if (!isTRUE(getOption("fhirviews.mostrar_detalles"))) problemas <- character()
   problemas <- escapar_cli(utils::head(problemas, 10L))
   cli::cli_abort(c(
     "El servidor respondi\u00f3 {estado} {descripcion %||% ''}.",
@@ -643,7 +660,7 @@ parametros_visibles <- c(
   "_count", "_sort", "_include", "_revinclude", "_summary", "_elements",
   "_total", "_format", "_type", "_since", "_outputFormat", "_pretty",
   "_getpages", "_getpagesoffset", "_bundletype", "_offset", "url", "system",
-  "version", "offset", "count", "property", "profile", "_id"
+  "version", "offset", "count", "property", "profile"
 )
 
 escapar_cli <- function(x) {

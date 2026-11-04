@@ -158,6 +158,8 @@ test_that("el modo as\u00edncrono consulta el estado y cancela", {
 })
 
 test_that("los errores del servidor se informan con el OperationOutcome", {
+  anterior <- options(fhirviews.mostrar_detalles = TRUE)
+  on.exit(options(anterior), add = TRUE)
   # Fallo de la exportación en la consulta de estado
   servidor_exportacion(respuesta_fhir(oo("Sin espacio en disco"), 500L))
   simular_espera()
@@ -312,7 +314,11 @@ test_that("con autenticaci\u00f3n SMART, los archivos reciben el token OAuth", {
       return(respuesta_fhir(NULL, 202L, list(
         `Content-Location` = paste0(base, "/estado/7"))))
     }
-    if (ruta == "estado/7") return(respuesta_fhir(manifiesto(token = TRUE)))
+    if (ruta == "estado/7") {
+      m <- manifiesto(token = TRUE)
+      m$output[[1]]$count <- 1
+      return(respuesta_fhir(m))
+    }
     if (ruta == "archivos/p.ndjson") {
       return(ndjson(list(resourceType = "Patient", id = "p1")))
     }
@@ -340,7 +346,8 @@ test_that("recupera descargas sin repetir archivos completos y detecta alteracio
   falla <- TRUE
   p <- simular(function(req, ruta) {
     if (ruta == "archivos/c.ndjson" && falla) stop("interrupcion simulada")
-    ndjson(paciente(if (ruta == "archivos/p.ndjson") "p1" else "p2"))
+    if (ruta == "archivos/p.ndjson") ndjson(paciente("p1"), paciente("p2")) else
+      ndjson(list(resourceType = "Condition", id = "c1"))
   })
   carpeta <- withr_tempfile()
   dir.create(carpeta)
@@ -384,4 +391,42 @@ test_that("otro trabajo y registros incompletos no reutilizan archivos", {
   expect_error(descargar_archivo_recuperable(x, paste0(base, "/otro"), archivo,
                                             FALSE), "descarga fallida")
   expect_identical(fhir_recursos(archivo)[[1]]$id, "nuevo")
+})
+
+
+test_that("las descargas invalidas no se guardan ni registran como completas", {
+  carpeta <- withr_tempfile()
+  dir.create(carpeta)
+  archivo <- file.path(carpeta, "Patient.ndjson")
+  x <- list(con = con_simulada(), url_estado = paste0(base, "/estado/1"),
+            manifiesto = manifiesto(FALSE))
+  for (texto in c("<html>login</html>", "{}", "42", "{truncado",
+                  '{"resourceType":"Patient"}\n{truncado',
+                  '{"resourceType":"Condition"}')) {
+    simular(function(req, ruta) httr2::response(200L,
+      headers = list(`Content-Type` = "text/html"), body = charToRaw(texto)))
+    expect_error(descargar_archivo_recuperable(x, paste0(base, "/archivo"),
+      archivo, FALSE, "Patient", 1), class = "fhirviews_error_exportacion")
+    expect_false(file.exists(archivo))
+    expect_false(file.exists(paste0(archivo, ".fhirviews.json")))
+  }
+  simular(function(req, ruta) ndjson(paciente("p")))
+  expect_error(descargar_archivo_recuperable(x, paste0(base, "/archivo"),
+    archivo, FALSE, "Patient", 2), class = "fhirviews_error_exportacion")
+  expect_false(file.exists(archivo))
+  descargar_archivo_recuperable(x, paste0(base, "/archivo"), archivo, FALSE, "Patient", 1)
+  expect_true(file.exists(archivo))
+})
+
+test_that("la validacion por bloques acepta gzip y detecta errores tardios", {
+  archivo <- withr_tempfile()
+  salida <- gzfile(archivo, "wt")
+  writeLines(rep('{"resourceType":"Patient"}', 1001), salida)
+  close(salida)
+  expect_equal(validar_archivo_exportacion(archivo, "Patient", 1001), 1001)
+  salida <- file(archivo, "wt")
+  writeLines(c(rep('{"resourceType":"Patient"}', 1001), "truncado"), salida)
+  close(salida)
+  expect_error(validar_archivo_exportacion(archivo, "Patient"),
+               class = "fhirviews_error_exportacion")
 })

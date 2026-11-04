@@ -248,6 +248,15 @@ leer_clave <- function(clave, contrasena = NULL) {
 # Algoritmo de firma SMART que corresponde a la clave (RS384 o ES384)
 alg_clave <- function(clave) {
   if (inherits(clave, "rsa")) {
+    modulo <- unclass(as.list(clave)$data$n)
+    # OpenSSL puede anteponer un byte cero para indicar signo positivo.
+    modulo <- modulo[cumsum(as.integer(modulo) != 0L) > 0L]
+    bits <- if (length(modulo)) (length(modulo) - 1L) * 8L +
+      floor(log2(as.integer(modulo[1L]))) + 1L else 0L
+    if (bits < 2048L) {
+      cli::cli_abort("La clave RSA debe tener al menos 2048 bits.",
+                     class = "fhirviews_error", call = NULL)
+    }
     return("RS384")
   }
   if (inherits(clave, "ecdsa") &&

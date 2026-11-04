@@ -353,7 +353,8 @@ descargar_exportacion <- function(x, progreso) {
     tipo <- f$type %||% "Recurso"
     tipos <- c(tipos, tipo)
     rutas <- c(rutas, file.path(x$carpeta, nombre_archivo(f$url, tipo, tipos)))
-    descargar_archivo_recuperable(x, f$url, rutas[length(rutas)], con_token)
+    descargar_archivo_recuperable(x, f$url, rutas[length(rutas)], con_token,
+                                  tipo, f$count)
     if (progreso) cli::cli_progress_update()
   }
   if (progreso && length(salida) > 0L) cli::cli_progress_done()
@@ -369,7 +370,7 @@ descargar_exportacion <- function(x, progreso) {
       tipos_error <- c(tipos_error, tipo)
       archivo <- file.path(carpeta_errores,
                            nombre_archivo(f$url, tipo, tipos_error))
-      descargar_archivo_recuperable(x, f$url, archivo, con_token)
+      descargar_archivo_recuperable(x, f$url, archivo, con_token, tipo, f$count)
       errores <- c(errores, archivo)
     }
     avisar_errores_exportacion(errores)
@@ -391,10 +392,13 @@ origen_url <- function(url) {
 }
 
 # Solo se reutilizan archivos completos de la misma exportación cuyo hash coincide.
-descargar_archivo_recuperable <- function(x, url, archivo, con_token) {
+descargar_archivo_recuperable <- function(x, url, archivo, con_token,
+                                           tipo = NULL, conteo = NULL) {
   registro <- paste0(archivo, ".fhirviews.json")
   identidad <- list(url = url, trabajo = x$url_estado,
-                    fecha = x$manifiesto$transactionTime)
+                    fecha = x$manifiesto$transactionTime, validacion = 1L,
+                    tipo = tipo,
+                    conteo = if (is.null(conteo)) NULL else as.character(conteo))
   anterior <- if (file.exists(registro)) {
     tryCatch(jsonlite::read_json(registro, simplifyVector = FALSE),
              error = function(e) NULL)
@@ -406,7 +410,7 @@ descargar_archivo_recuperable <- function(x, url, archivo, con_token) {
   }
   temporal <- tempfile(".fhirviews-", tmpdir = dirname(archivo))
   on.exit(unlink(temporal), add = TRUE)
-  descargar_archivo(x$con, url, temporal, con_token)
+  descargar_archivo(x$con, url, temporal, con_token, tipo, conteo)
   md5 <- unname(tools::md5sum(temporal))
   if (is.na(md5) || !file.rename(temporal, archivo)) {
     cli::cli_abort("No se pudo guardar el archivo {.file {archivo}}.",
@@ -419,7 +423,8 @@ descargar_archivo_recuperable <- function(x, url, archivo, con_token) {
   invisible(archivo)
 }
 
-descargar_archivo <- function(con, url, archivo, con_token) {
+descargar_archivo <- function(con, url, archivo, con_token,
+                               tipo = NULL, conteo = NULL) {
   if (!es_texto(url) || !grepl("^https?://", url)) {
     cli::cli_abort("El manifiesto tiene una URL de archivo no v\u00e1lida: {.val {url}}.",
                    class = "fhirviews_error_exportacion", call = NULL)
@@ -479,7 +484,38 @@ descargar_archivo <- function(con, url, archivo, con_token) {
                       error = function(e) NULL)
     error_http("GET", url, estado, httr2::resp_status_desc(resp), datos, texto)
   }
+  tryCatch(validar_archivo_exportacion(archivo, tipo, conteo), error = function(e) {
+    unlink(archivo)
+    stop(e)
+  })
   invisible(archivo)
+}
+
+# Lee también gzip por su cabecera, sin depender del nombre temporal.
+validar_archivo_exportacion <- function(archivo, tipo = NULL, conteo = NULL) {
+  entrada <- gzfile(archivo, open = "rt", encoding = "UTF-8")
+  on.exit(close(entrada), add = TRUE)
+  n <- 0
+  fallo <- function() cli::cli_abort(
+    "El archivo exportado no contiene NDJSON FHIR completo del tipo esperado.",
+    class = "fhirviews_error_exportacion", call = NULL)
+  tryCatch({
+    repeat {
+      lineas <- readLines(entrada, n = 1000L, warn = FALSE)
+      if (!length(lineas)) break
+      for (linea in lineas) {
+        recurso <- tryCatch(jsonlite::fromJSON(linea, simplifyVector = FALSE),
+                            error = function(e) NULL)
+        if (!is.list(recurso) || !es_texto(recurso$resourceType) ||
+            !nzchar(recurso$resourceType) ||
+            (!is.null(tipo) && !identical(recurso$resourceType, tipo))) fallo()
+      }
+      n <- n + length(lineas)
+    }
+  }, warning = function(w) fallo(), error = function(e) fallo())
+  if (!is.null(conteo) && (!is.numeric(conteo) || length(conteo) != 1L ||
+      is.na(conteo) || n != conteo)) fallo()
+  invisible(n)
 }
 
 avisar_errores_exportacion <- function(archivos) {

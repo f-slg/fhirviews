@@ -12,7 +12,7 @@ var fhirviews = (function () {
   var modelo = fhirpath_r4_model;
   var nodos = [];      // nodo (ResourceNode o dato JSON) por indice
   var raices = [];     // recurso de origen de cada nodo (para %resource)
-  var compiladas = {}; // cache de expresiones compiladas
+  var compiladas = Object.create(null); // cache de expresiones compiladas
 
   // --- Funciones de SQL on FHIR que fhirpath.js no trae --------------------
 
@@ -70,7 +70,7 @@ var fhirviews = (function () {
     if (f === undefined) {
       f = fhirpath.compile(expresion, modelo, opciones);
       if (nCompiladas >= maxCompiladas) {
-        compiladas = {};
+        compiladas = Object.create(null);
         nCompiladas = 0;
       }
       compiladas[expresion] = f;
