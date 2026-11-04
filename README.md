@@ -19,6 +19,12 @@ Está pensado para análisis clínico, investigación, vigilancia epidemiológic
 docencia desde R. Incluye autenticación SMART on FHIR, vistas para salud pública
 y procesamiento NDJSON por bloques, sin instalar Java ni Spark.
 
+El flujo técnico combina un cliente HTTP basado en `httr2`, un evaluador
+FHIRPath con `fhirpath.js` en V8 y un traductor SQL opcional para DuckDB.
+La definición de extracción es independiente del origen: un mismo
+`ViewDefinition` puede aplicarse a recursos obtenidos por REST o a archivos
+locales. La compatibilidad del motor SQL se comprueba por separado.
+
 [Documentación](https://f-slg.github.io/fhirviews/) ·
 [Referencia](https://f-slg.github.io/fhirviews/reference/) ·
 [Novedades de 0.5.0](NEWS.md) ·
@@ -26,7 +32,7 @@ y procesamiento NDJSON por bloques, sin instalar Java ni Spark.
 
 <img src="man/figures/README-json-tabla.png" width="100%" alt="Flujo de transformación: recurso Patient en JSON, columnas definidas en un ViewDefinition y tabla resultante en R" />
 
-> **Versión 0.5.0 · distribución en GitHub.** Procesamiento por bloques,
+> **Versión 0.5.0 · candidato de distribución privada.** Procesamiento por bloques,
 > recuperación de exportaciones con validación de contenido y mejoras de
 > privacidad. El motor SQL de DuckDB sigue siendo **experimental**.
 > El paquete todavía no se ha enviado a CRAN.
@@ -36,6 +42,8 @@ y procesamiento NDJSON por bloques, sin instalar Java ni Spark.
 - [Qué puedes hacer](#qué-puedes-hacer)
 - [Instalación](#instalación)
 - [Inicio rápido: de FHIR a una tabla](#inicio-rápido-de-fhir-a-una-tabla)
+- [Arquitectura y secuencia de procesamiento](#arquitectura-y-secuencia-de-procesamiento)
+- [Semántica de una vista](#semántica-de-una-vista)
 - [Elegir cómo procesar los datos](#elegir-cómo-procesar-los-datos)
 - [Consultar un servidor FHIR](#consultar-un-servidor-fhir)
 - [Autenticación y exportación masiva](#autenticación-y-exportación-masiva)
@@ -84,7 +92,12 @@ flowchart LR
 
 ## Instalación
 
-El cliente y el motor V8 requieren **R ≥ 4.1.0**. Instala desde GitHub:
+El cliente y el motor V8 requieren **R ≥ 4.1.0**. El acceso al repositorio
+privado requiere una cuenta autorizada y autenticación de GitHub configurada
+en tu entorno. Si el mantenedor te entregó un `.tar.gz`, usa las instrucciones
+del [piloto privado](#piloto-privado-y-documentación-local).
+
+Con acceso al repositorio, instala desde GitHub:
 
 ```r
 install.packages("pak")  # una sola vez
@@ -162,6 +175,104 @@ writeLines(json_vista, "signos-vitales.json")
 vista_reutilizable <- vista_leer("signos-vitales.json")
 ```
 
+## Arquitectura y secuencia de procesamiento
+
+Las responsabilidades se distribuyen en cuatro capas. El cliente obtiene
+recursos; la definición declara la extracción; los motores generan filas; el
+consumidor decide cómo guardar, resumir o consultar el resultado.
+
+```mermaid
+flowchart TB
+    subgraph EN["1. Entrada"]
+        REST["Servidor FHIR R4"]
+        FILE["JSON, Bundle, NDJSON o gzip"]
+        PAR["Parquet"]
+    end
+    subgraph AC["2. Acceso y definición"]
+        HTTP["httr2: REST, SMART y Bulk Data"]
+        RES["fhir_recursos(): listas y JSON de origen"]
+        VIEW["ViewDefinition: resource, where, select y constant"]
+        VALID["vista_validar(): estructura y expresiones"]
+    end
+    subgraph EX["3. Ejecución"]
+        V8["vista_ejecutar(): fhirpath.js en V8"]
+        LOT["vista_ejecutar_lotes(): lectura incremental y V8"]
+        SQL["vista_ejecutar_duckdb(): traducción SQL experimental"]
+    end
+    subgraph OUT["4. Consumo"]
+        DF["data.frame completo"]
+        CB["procesar(tabla, bloque)"]
+        DB["Tabla DuckDB o consulta diferida"]
+    end
+    REST --> HTTP --> RES
+    FILE --> RES --> V8 --> DF
+    FILE -->|"Solo NDJSON y gzip"| LOT --> CB
+    HTTP -->|"Archivos exportados"| LOT
+    HTTP -->|"Archivos exportados"| SQL
+    FILE -->|"NDJSON"| SQL
+    PAR --> SQL
+    VIEW --> VALID
+    VALID --> V8
+    VALID --> LOT
+    VALID --> SQL
+    SQL --> DF
+    SQL --> DB
+```
+
+Para construir un análisis reproducible, sigue esta secuencia:
+
+1. **Identifica la entrada:** servidor, archivos y versión FHIR esperada.
+2. **Define la vista:** recurso, filtros, columnas, tipos y expansión de listas.
+3. **Contrasta una muestra:** revisa las filas frente al JSON original con V8.
+4. **Elige la ejecución:** tabla en memoria, bloques o SQL sobre archivos.
+5. **Controla la persistencia:** transacción o destino temporal según el consumidor.
+6. **Reconcilia resultados:** eventos incluidos y excluidos, referencias y agregados.
+7. **Conserva evidencia:** vista JSON, identidad de la entrada, versiones y controles.
+
+La evaluación por lotes de `vista_ejecutar()` agrupa llamadas a V8 para los
+recursos ya cargados. La lectura por bloques de `vista_ejecutar_lotes()` divide
+además el archivo de entrada; son dos niveles diferentes de procesamiento.
+
+## Semántica de una vista
+
+Un `ViewDefinition` describe una transformación declarativa. No es una consulta
+SQL escrita por el usuario: sus rutas se expresan en FHIRPath y el motor las
+aplica sobre recursos del tipo indicado en `resource`.
+
+| Elemento | Responsabilidad | Efecto sobre las filas |
+|---|---|---|
+| `resource` | Elegir el tipo FHIR de entrada | Los otros tipos no participan |
+| `where` | Evaluar condiciones booleanas sobre el recurso | Descarta recursos que no cumplen |
+| `column` | Evaluar una ruta y asignarle nombre y tipo | Añade columnas al contexto actual |
+| `forEach` | Recorrer una colección | Genera una fila por elemento; cero si está vacía |
+| `forEachOrNull` | Recorrer conservando el contexto sin elementos | Mantiene una fila con valores ausentes |
+| `select` | Componer extracciones anidadas | Las partes se combinan dentro del mismo origen |
+| `unionAll` | Concatenar ramas con columnas compatibles | Conserva las filas de las ramas, incluidos duplicados |
+| `constant` | Declarar parámetros usados por las expresiones | Permite ajustar filtros sin reescribir rutas |
+| `repeat` | Recorrer estructuras anidadas por las rutas declaradas | Expande descendientes para extraer filas de estructuras recursivas |
+| `collection: true` | Conservar varios valores en una columna | Produce una columna de listas |
+
+```mermaid
+flowchart TD
+    A["Recursos del tipo declarado"] --> B["Evaluar where"]
+    B --> C["Recorrer select"]
+    C --> D["column: evaluar rutas"]
+    C --> E["forEach: expandir colección"]
+    C --> F["unionAll: ejecutar ramas"]
+    E --> G["Evaluar columnas en el elemento hijo"]
+    D --> H["Combinar filas por recurso de origen"]
+    G --> H
+    F --> H
+    H --> I["Aplicar tipos y construir data.frame"]
+```
+
+Una columna escalar que devuelve varios valores produce un error: declara
+`collection: true` para conservarlos o usa una expresión que devuelva uno.
+Dos colecciones expandidas en partes hermanas pueden multiplicar las filas de
+un mismo recurso. Por eso deben verificarse tanto la cardinalidad como las
+claves antes de contar eventos o unir tablas. `%rowIndex` identifica el índice
+del elemento en su contexto de expansión; no sustituye la clave del recurso.
+
 ## Elegir cómo procesar los datos
 
 | Situación | Función | Dónde queda el resultado |
@@ -196,6 +307,28 @@ vista_ejecutar(pacientes, vista_pacientes)
 La búsqueda sigue los enlaces `next` del servidor. `_count` solicita el tamaño
 de página; `max_paginas` limita las páginas descargadas. La disponibilidad y
 los resultados de los servidores públicos pueden variar.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant R as Sesión R
+    participant C as Cliente httr2
+    participant S as Servidor FHIR
+    R->>C: fhir_buscar(con, tipo, parámetros)
+    C->>S: GET con parámetros de búsqueda
+    S-->>C: Bundle con entry, total y link next
+    loop Mientras haya next y no se alcance max_paginas
+        C->>S: GET a la URL de next
+        S-->>C: Siguiente Bundle
+    end
+    C-->>R: fhir_recursos con recursos y JSON de origen
+    R->>R: vista_ejecutar(recursos, vista)
+    Note over C,S: Un enlace next repetido detiene la paginación con aviso
+```
+
+La paginación sigue el enlace entregado por el servidor; no calcula números de
+página. Las cabeceras de la conexión y su token se restringen a su base FHIR.
+Los archivos de Bulk Data tienen su propia política de origen y autorización.
 
 Usa `fhir_capacidades(con)` para consultar los recursos y operaciones que
 admite el servidor, `fhir_leer()` para leer un recurso concreto y
@@ -238,6 +371,41 @@ carpeta. Los archivos completos del mismo trabajo se reutilizan si su checksum
 coincide; los ausentes o alterados se descargan de nuevo. Cada archivo
 incompleto se reinicia desde el comienzo. La recuperación depende de que el
 servidor conserve el trabajo y sus URL de descarga.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant R as Sesión R
+    participant A as Servidor de autorización
+    participant F as Servidor FHIR
+    participant D as Archivos locales
+    R->>A: Solicitar token con credenciales SMART
+    A-->>R: access_token y caducidad
+    R->>F: GET Patient/$export con Prefer respond-async
+    F-->>R: 202 y Content-Location
+    loop Hasta finalizar o alcanzar max_espera
+        R->>F: Consultar Content-Location
+        F-->>R: 202 con Retry-After o 200 con manifiesto
+    end
+    loop Por cada archivo del manifiesto listo
+        R->>D: Comprobar identidad del trabajo y checksum
+        alt Archivo completo reutilizable
+            D-->>R: Usar archivo local
+        else Archivo ausente o alterado
+            R->>F: Descargar URL de salida según autorización
+            F-->>R: NDJSON o gzip
+            R->>R: Validar JSON, tipo y conteo declarado
+            R->>D: Publicar archivo completo y registro de checksum
+        end
+    end
+    Note over R,D: Una descarga fallida conserva los archivos anteriores completos
+```
+
+El manifiesto es el contrato de la descarga, no una garantía de calidad clínica.
+La validación de contenido y el checksum verifican aspectos distintos: el primero
+comprueba el NDJSON esperado; el segundo permite detectar cambios en el archivo
+local entre reintentos. La recuperación es por archivo completo, sin reanudar
+bytes parciales ni asegurar que las URL del servidor sigan vigentes.
 
 También están disponibles *client credentials* con secreto e inicio de sesión
 interactivo con PKCE. Consulta la
@@ -310,6 +478,35 @@ Con `estricto = FALSE`, el comportamiento sigue siendo el habitual: los tipos
 pueden inferirse por bloque y las conversiones incompatibles pueden generar
 avisos y conservar los valores sin convertir.
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant L as Lector NDJSON
+    participant V as Motor V8
+    participant T as Contrato estricto
+    participant P as procesar
+    L->>T: Comprobar type y collection antes de leer
+    loop Por cada bloque de líneas
+        L->>L: Parsear recursos y comprobar números finitos
+        L->>V: Evaluar filtros y columnas
+        V->>T: Validar valores antes de convertir
+        alt Bloque compatible
+            T-->>V: Columnas con tipos declarados
+            V-->>L: Tabla y liberación de nodos
+            L->>P: Entregar tabla y número de bloque
+            P-->>L: Retornar sin error
+            L->>L: Actualizar contadores completados
+        else Valor o cardinalidad incompatible
+            T-->>L: Error estructurado
+            Note over L,P: El bloque rechazado no se entrega al consumidor
+        end
+    end
+```
+
+El error termina la ejecución. La validación previa protege la entrega del
+bloque; la atomicidad de lo que escriba `procesar()` depende del destino y de
+la transacción configurada por el consumidor.
+
 ### Recuperación y escrituras parciales
 
 `vista_ejecutar_lotes()` detiene la carga al fallar y no reintenta escrituras.
@@ -333,6 +530,25 @@ Para archivos o destinos sin rollback, escribe en una carpeta temporal nueva y
 publica el conjunto solo después de validar la carga completa. Conserva la
 entrada, su orden, la vista y el tamaño de bloque; no reanudes mediante un
 `append` ciego sobre una salida parcial.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant R as Carga en R
+    participant B as Base de datos
+    R->>B: BEGIN y reemplazo del resultado dentro de la transacción
+    loop Bloques validados
+        R->>B: Insertar filas
+    end
+    alt Toda la carga termina correctamente
+        R->>B: COMMIT
+        B-->>R: Nuevo resultado persistido
+    else Falla la lectura, evaluación o escritura
+        R->>B: ROLLBACK
+        B-->>R: Resultado anterior conservado
+        R->>R: Corregir la causa y repetir toda la carga
+    end
+```
 
 ## Trabajar con DuckDB
 
@@ -361,6 +577,32 @@ habilitan explícitamente con `FHIRVIEWS_VINETAS_DUCKDB=true`.
 Para guardar varias vistas evaluadas con el motor V8 y consultarlas con SQL,
 usa `vista_duckdb()`. Esta función escribe las tablas en una transacción; no
 utiliza el traductor experimental.
+
+### Selección del resultado SQL
+
+| Opción | Ejecución y resultado | Uso habitual |
+|---|---|---|
+| Predeterminada | Ejecuta SQL y recoge el resultado en un `data.frame` | Tablas finales que caben en R |
+| `tabla = "nombre"` | Materializa el resultado en DuckDB y devuelve la conexión | Consultas posteriores sin transportar toda la tabla |
+| `diferido = TRUE` | Devuelve una consulta de dbplyr ligada a la conexión | Filtrar o agregar antes de `collect()` |
+
+```mermaid
+flowchart TD
+    A["ViewDefinition validado"] --> B["Traductor FHIRPath a SQL"]
+    B --> C{"¿Expresiones admitidas?"}
+    C -->|"No"| X["Error: revisar la vista o elegir V8"]
+    C -->|"Sí"| D["Consulta DuckDB sobre NDJSON o Parquet"]
+    D --> E["data.frame en R"]
+    D --> F["Tabla materializada en DuckDB"]
+    D --> G["Consulta diferida de dbplyr"]
+    G --> H["Filtrar, agrupar y collect"]
+```
+
+`tabla` y `diferido = TRUE` son opciones mutuamente excluyentes.
+No hay cambio automático a V8 cuando falla la traducción. Una consulta diferida
+puede volver a leer los archivos al ejecutarse, por lo que sus entradas deben
+permanecer disponibles. Cierra las conexiones creadas cuando termines; los
+resultados diferidos dependen de que su conexión siga abierta.
 
 ## Vistas de salud pública y terminologías
 
@@ -501,6 +743,34 @@ El workflow **Integracion HAPI** ejecuta este mismo script y conserva los
 resultados durante 14 días. En la primera ejecución puede descargar la imagen
 y la extensión JSON de DuckDB.
 
+### Secuencia de comprobación del candidato
+
+La matriz de R-CMD-check prueba primero el paquete y después instala el archivo
+fuente construido en una biblioteca nueva. La aceptación se ejecuta en otro
+proceso R y comprueba la ruta de carga, la ayuda, las viñetas y el informe del
+perfil solicitado. El perfil completo añade rollback y reintento transaccional.
+
+```mermaid
+flowchart TD
+    A["Commit en GitHub"] --> B["R CMD build con viñetas"]
+    B --> C["R CMD check y pruebas del paquete"]
+    C --> D["Instalar el mismo tar.gz en una biblioteca nueva"]
+    D --> E["Proceso R independiente: verificar paquete y documentación"]
+    E --> F["Piloto básico o completo según la matriz"]
+    F --> G{"Resultado técnico"}
+    G -->|"Sin errores ni advertencias"| H["Aprobado para ese perfil"]
+    G -->|"Advertencias"| I["Requiere revisión y salida distinta de cero"]
+    G -->|"Error"| J["No aprobado y salida distinta de cero"]
+    A --> K["Workflow HAPI: integración aislada"]
+    A --> L["Workflow pkgdown: construir documentación"]
+    H --> M["Evaluación con usuarios todavía pendiente"]
+```
+
+Los informes de aceptación se guardan como artefactos `piloto-*` durante 14 días.
+Una aprobación de un perfil básico no evalúa la recuperación con DuckDB; ese
+control queda como `no_evaluado`. Los workflows verifican el alcance declarado,
+y su resultado debe consultarse para el commit específico que se vaya a entregar.
+
 ## Rendimiento
 
 La siguiente medición compara ambos motores con pacientes sintéticos y una
@@ -594,6 +864,10 @@ construir y verificar el candidato, interpretar los códigos y cerrar el piloto.
 También se distribuye dentro del paquete, en `examples/PILOTO-MANTENEDOR.md`.
 
 ## Guías y referencia
+
+Los enlaces web requieren que el sitio esté disponible para tu cuenta. Con la
+distribución privada, la ayuda y las viñetas instaladas son la alternativa local
+descrita en la sección anterior.
 
 | Guía | Contenido |
 |---|---|
