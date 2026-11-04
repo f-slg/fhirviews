@@ -98,3 +98,69 @@ el tiempo, la ayuda necesaria, los obstáculos y la conclusión en
 `experiencia-usuario.txt`. El mantenedor revisa esa evidencia y acuerda las
 mejoras antes de cerrar el piloto. Todos los aprobados automáticos conservan
 `validacion_usuario_externo = pendiente`.
+
+
+## Protocolo del primer piloto externo
+
+Realizar dos sesiones iniciales: una con una persona que use R y otra con una
+persona que conozca FHIR. Pueden ser participantes distintos; registrar su
+experiencia previa sin asumir que representan a todos los usuarios potenciales.
+El mantenedor entrega el mismo candidato identificado por checksum y la guía.
+Nadie debe recibir datos de pacientes para esta primera sesión.
+
+Antes de empezar, registrar sistema operativo, versión de R, perfil elegido,
+fecha, identificador del participante y checksum del candidato. Identificar
+cuáles dependencias ya estaban instaladas. Usar una carpeta nueva en cada intento.
+
+| Paso | Tarea del participante | Evidencia y resultado esperado |
+|---|---|---|
+| 1 | Instalar el candidato y abrir la ayuda local | Paquete cargado desde la instalación esperada; anotar cualquier ayuda necesaria |
+| 2 | Ejecutar el perfil básico y abrir los informes | Aprobación técnica; recuperación marcada como no evaluada |
+| 3 | Explicar los controles de vigilancia | 755 eventos de entrada, 661 confirmados, 94 excluidos y 65 cantones; distinguir eventos de pacientes únicos y tasas |
+| 4 | Contrastar un evento con el JSON incluido | den-c0001 apunta a den-p0001, residencia 0701 e inicio 2025-02-27 |
+| 5 | Crear una vista Patient con id y gender, y modificarla para añadir birthDate | Conservar el JSON de ambas vistas y contrastar al menos un resultado con el recurso original |
+| 6 | Ejecutar el perfil completo si el entorno admite DuckDB | Recuperación aprobada; explicar rollback y repetición de la carga completa |
+| 7 | Repetir el análisis y registrar la experiencia | Obtener los mismos controles sin sobrescribir el primer informe; completar experiencia-usuario.txt |
+
+En el paso 5 se puede usar el caso clínico incluido. El participante debe encontrar
+las funciones y construir la vista con la documentación. El observador registra
+las intervenciones; si proporciona la solución, marca la tarea como realizada con
+ayuda. No convertir una tarea incompleta en una aprobación.
+
+### Ficha de observación
+
+Registrar por tarea, en una tabla local junto al informe:
+
+| Campo | Qué registrar |
+|---|---|
+| participante | Identificador acordado, sin datos clínicos |
+| tarea e intento | Paso del protocolo y número de intento |
+| inicio, fin y minutos | Tiempo real, separando instalación y transformación |
+| resultado | completada, completada_con_ayuda o incompleta |
+| intervenciones | Número y descripción de la ayuda del mantenedor |
+| obstáculo | Mensaje o paso confuso, usando solo ejemplos ficticios |
+| evidencia | Archivo de salida o vista que permite revisar el resultado |
+| interpretación | Si la persona explicó correctamente el indicador y sus límites |
+| próximo_cambio | Corrección concreta propuesta por participante u observador |
+
+No fijar tiempos de éxito sin una medición inicial. La primera sesión establece
+una línea base; la repetición después de las correcciones permite comparar tiempo,
+ayuda necesaria y exactitud. Separar los resultados del perfil básico de los del
+completo. Un control no ejecutado conserva no_evaluado o pendiente.
+
+### Criterios acordados para aceptar la sesión
+
+- Instalación y ayuda disponibles, con sus obstáculos documentados.
+- Controles y referencias coinciden, y el participante entiende la unidad contada.
+- Vista modificada guardada y contrastada con el recurso original.
+- Recuperación verificada si se acordó el perfil completo; en otro caso no evaluada.
+- Repetición con controles coincidentes y experiencia registrada.
+- El mantenedor revisa la evidencia con el participante y anota los pendientes.
+
+La sesión puede completarse con ayuda registrada. Para afirmar autonomía se
+requiere una repetición sin intervención en las tareas acordadas. Una sesión
+fallida aporta hallazgos y no se presenta como aprobación de producto.
+
+Un caso del entorno del participante y una comparación con su herramienta habitual
+son etapas posteriores: definir primero recursos, salida esperada y criterios
+comunes. No extrapolar la demostración ficticia a una implantación clínica.

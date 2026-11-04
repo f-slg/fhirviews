@@ -3,6 +3,15 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      macos_runner:
+        description: Ejecutor macOS Intel para reintentar problemas de disponibilidad
+        type: choice
+        default: macos-26-intel
+        options:
+          - macos-26-intel
+          - macos-15-intel
 
 name: R-CMD-check
 
@@ -17,14 +26,16 @@ jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
         config:
           - {os: windows-latest, r: 'release'}
-          # Intel evita la cola arm64; no sustituye una prueba de Apple Silicon.
-          - {os: macos-15-intel, r: 'release'}
+          # Mantener macOS obligatorio. El selector manual permite cambiar
+          # entre imagenes Intel sin editar el workflow ni ocultar sus fallos.
+          - {os: "${{ inputs.macos_runner || 'macos-26-intel' }}", r: 'release'}
           - {os: ubuntu-latest,  r: 'release'}
           - {os: ubuntu-latest,  r: 'devel'}
           - {os: ubuntu-22.04,   r: '4.1'}
