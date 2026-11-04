@@ -266,11 +266,72 @@ Para una exportación propia, sustituye `archivo` por sus rutas NDJSON o
 `.ndjson.gz`. El retorno contiene `bloques`, `recursos` y `filas`; los resultados
 de la función `procesar()` se descartan.
 
-Si `procesar()` falla, la ejecución se detiene y sus escrituras anteriores
-permanecen. Declara tipos de columna con `type` en el `ViewDefinition` y
-comprueba el esquema antes de insertar en una tabla existente. Los tipos
-inferidos pueden variar entre bloques; los valores incompatibles con un tipo
-explícito generan un aviso y pueden conservarse sin convertir.
+### Contrato estricto antes de escribir
+
+Activa `estricto = TRUE` y declara `type` en **todas** las columnas. El contrato
+se comprueba desde el inicio y debe coincidir entre las ramas de `unionAll`:
+
+```r
+vista <- vista_leer(list(
+  resource = "Observation",
+  where = list(list(path = "value.ofType(Quantity).exists()")),
+  select = list(list(column = list(
+    list(name = "id", path = "getResourceKey()", type = "id"),
+    list(name = "valor", path = "value.ofType(Quantity).value", type = "decimal")
+  )))
+))
+
+vista_ejecutar_lotes(
+  archivo, vista,
+  procesar = function(tabla, bloque) {
+    cat("Bloque validado:", bloque, "Filas:", nrow(tabla), "\n")
+  },
+  tamano_lote = 20, estricto = TRUE
+)
+```
+
+Cada valor se valida **antes** de entregar el bloque. No se convierten textos
+numéricos en números ni números en texto. Los enteros deben ser finitos,
+integrales y representables en R; se respetan los rangos de `positiveInt` y
+`unsignedInt`. Se rechazan números no finitos en la entrada y en los
+resultados antes de que la serialización pueda convertirlos en ausentes.
+Los decimales deben ser finitos. Los ausentes producen `NA`
+tipados; los elementos de colecciones también se comprueban. Los tipos de
+texto no validan aquí el formato de fechas, URI ni códigos clínicos.
+
+Un error de clase `fhirviews_error_lotes` informa `bloque`, `fase`,
+`indice_archivo`, `completados` y, cuando corresponde, `columna`,
+`tipo_esperado` y `motivo`. La fase distingue `esquema`, `lectura`, `evaluacion`
+y `procesar`. Los mensajes omiten los valores y el error original del destino.
+El bloque 0 corresponde a una definición incompatible detectada antes de leer.
+
+Con `estricto = FALSE`, el comportamiento sigue siendo el habitual: los tipos
+pueden inferirse por bloque y las conversiones incompatibles pueden generar
+avisos y conservar los valores sin convertir.
+
+### Recuperación y escrituras parciales
+
+`vista_ejecutar_lotes()` detiene la carga al fallar y no reintenta escrituras.
+El bloque que falla en `procesar()` puede haber escrito parcialmente. Los
+contadores `completados` indican llamadas que retornaron sin error; no son una
+confirmación de persistencia ni un checkpoint seguro para saltarse bloques.
+
+El ejemplo siguiente usa datos ficticios y una base DuckDB temporal. Ejecuta
+una carga dentro de una transacción, provoca un fallo después de escribir,
+comprueba el rollback y repite la carga completa dos veces:
+
+```r
+# Requiere DBI y duckdb; no necesita servidor ni extensión JSON de DuckDB
+source(system.file("examples", "lotes-transaccion.R", package = "fhirviews"))
+```
+
+La estrategia reemplaza el resultado completo dentro de la misma transacción;
+no acumula otra copia al reintentar. No deduplica eventos ya presentes en la
+entrada. Para usar otra base, verifica su soporte y límites de transacciones.
+Para archivos o destinos sin rollback, escribe en una carpeta temporal nueva y
+publica el conjunto solo después de validar la carga completa. Conserva la
+entrada, su orden, la vista y el tamaño de bloque; no reanudes mediante un
+`append` ciego sobre una salida parcial.
 
 ## Trabajar con DuckDB
 

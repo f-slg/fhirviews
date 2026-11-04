@@ -1,0 +1,313 @@
+ℹ Testing fhirviews
+✔ | F W  S  OK | Context
+
+⠏ |          0 | auditoria                                                      
+⠙ |          2 | auditoria                                                      
+⠹ |         13 | auditoria                                                      
+⠼ |         15 | auditoria                                                      
+⠴ |         26 | auditoria                                                      
+⠋ |         31 | auditoria                                                      
+⠦ |         37 | auditoria                                                      
+⠙ |         52 | auditoria                                                      
+✔ |         57 | auditoria
+
+⠏ |          0 | autenticacion                                                  
+⠦ |          7 | autenticacion                                                  
+⠙ |         22 | autenticacion                                                  
+⠹ |         33 | autenticacion                                                  
+⠹ |         53 | autenticacion                                                  
+⠙ |         62 | autenticacion                                                  
+✔ |         66 | autenticacion
+
+⠏ |          0 | bulk                                                           
+⠋ |          1 | bulk                                                           
+⠙ |         22 | bulk                                                           
+⠋ |         41 | bulk                                                           
+⠴ |         46 | bulk                                                           
+⠙ |         52 | bulk                                                           
+⠦ |         57 | bulk                                                           
+⠦ |         67 | bulk                                                           
+⠸ |         74 | bulk                                                           
+⠏ |         90 | bulk                                                           
+⠏ |        100 | bulk                                                           
+⠏ |        110 | bulk                                                           
+⠴ |        116 | bulk                                                           
+✔ |        116 | bulk [2.6s]
+
+⠏ |          0 | catalogo                                                       
+⠧ |         18 | catalogo                                                       
+⠧ |         38 | catalogo                                                       
+⠹ |         43 | catalogo                                                       
+⠧ |         48 | catalogo                                                       
+⠴ |         56 | catalogo                                                       
+⠦ |         57 | catalogo                                                       
+⠧ |         58 | catalogo                                                       
+⠇ |         59 | catalogo                                                       
+⠏ |         60 | catalogo                                                       
+⠋ |         61 | catalogo                                                       
+⠙ |         62 | catalogo                                                       
+⠹ |         63 | catalogo                                                       
+⠸ |         64 | catalogo                                                       
+⠼ |         65 | catalogo                                                       
+⠴ |         66 | catalogo                                                       
+⠦ |         67 | catalogo                                                       
+⠧ |         68 | catalogo                                                       
+⠇ |         69 | catalogo                                                       
+⠏ |         70 | catalogo                                                       
+⠋ |         71 | catalogo                                                       
+⠙ |         72 | catalogo                                                       
+⠹ |         73 | catalogo                                                       
+⠸ |         74 | catalogo                                                       
+⠼ |         75 | catalogo                                                       
+⠴ |         76 | catalogo                                                       
+⠦ |         77 | catalogo                                                       
+✔ |         78 | catalogo [6.2s]
+
+⠏ |          0 | cliente                                                        
+⠦ |         17 | cliente                                                        
+⠹ |         33 | cliente                                                        
+⠴ |         46 | cliente                                                        
+⠸ |         64 | cliente                                                        
+⠋ |         81 | cliente                                                        
+⠙ |        112 | cliente                                                        
+⠴ |        136 | cliente                                                        
+✔ |        140 | cliente
+
+⠏ |          0 | conformidad                                                    
+⠋ |          1 | conformidad                                                    
+⠏ |        140 | conformidad                                                    
+⠇ |        149 | conformidad                                                    
+✔ |        149 | conformidad [9.4s]
+
+⠏ |          0 | demo-vigilancia                                                
+⠋ |          1 | demo-vigilancia                                                
+✔ |         15 | demo-vigilancia
+
+⠏ |          0 | duckdb                                                         
+⠋ |          1 | duckdb                                                         
+⠸ |          4 | duckdb                                                         
+⠏ |         10 | duckdb                                                         
+✔ |         12 | duckdb
+
+⠏ |          0 | fhirpath                                                       
+⠇ |         19 | fhirpath                                                       
+⠧ |         38 | fhirpath                                                       
+✔ |         41 | fhirpath
+
+⠏ |          0 | lotes                                                          
+⠋ |          1 | lotes                                                          
+⠏ |         10 | lotes                                                          
+⠇ |         19 | lotes                                                          
+⠸ |         34 | lotes                                                          
+⠏ |         60 | lotes                                                          
+⠇ |         69 | lotes                                                          
+⠏ |         80 | lotes                                                          
+⠹ |         83 | lotes                                                          
+⠏ |         90 | lotes                                                          
+⠦ |         97 | lotes                                                          
+✔ |         97 | lotes [1.1s]
+
+⠏ |          0 | recursos                                                       
+⠏ |         20 | recursos                                                       
+✔ |         30 | recursos
+
+⠏ |          0 | rstudio                                                        
+⠧ |         18 | rstudio                                                        
+✔ |         42 | rstudio
+
+⠏ |          0 | servidor                                                       
+⠋ |          1 | servidor                                                       
+⠙ |          2 | servidor                                                       
+⠼ |          5 | servidor                                                       
+⠴ |          6 | servidor                                                       
+✔ |      5   6 | servidor [3.0s]
+
+⠏ |          0 | sql                                                            
+⠋ |         21 | sql                                                            
+⠇ |         29 | sql                                                            
+⠙ |         32 | sql                                                            
+⠴ |         36 | sql                                                            
+⠦ |         37 | sql                                                            
+⠧ |         38 | sql                                                            
+⠏ |         40 | sql                                                            
+⠋ |         41 | sql                                                            
+⠙ |         42 | sql                                                            
+⠹ |         43 | sql                                                            
+⠼ |         45 | sql                                                            
+⠦ |         47 | sql                                                            
+⠇ |         49 | sql                                                            
+⠋ |         51 | sql                                                            
+⠙ |         52 | sql                                                            
+⠹ |         53 | sql                                                            
+⠸ |         54 | sql                                                            
+⠼ |         55 | sql                                                            
+⠴ |         56 | sql                                                            
+⠦ |         57 | sql                                                            
+⠇ |         59 | sql                                                            
+⠋ |         61 | sql                                                            
+⠙ |         62 | sql                                                            
+⠹ |         63 | sql                                                            
+⠏ |         70 | sql                                                            
+⠋ |         71 | sql                                                            
+⠙ |         72 | sql                                                            
+⠼ |         75 | sql                                                            
+⠦ |         77 | sql                                                            
+⠧ |        198 | sql                                                            
+⠹ |        213 | sql                                                            
+⠸ |        214 | sql                                                            
+⠼ |        215 | sql                                                            
+⠴ |        216 | sql                                                            
+⠦ |        217 | sql                                                            
+⠧ |        218 | sql                                                            
+⠇ |        219 | sql                                                            
+⠏ |        220 | sql                                                            
+⠋ |        221 | sql                                                            
+⠙ |        222 | sql                                                            
+⠹ |        223 | sql                                                            
+⠸ |        224 | sql                                                            
+⠼ |        225 | sql                                                            
+⠴ |        226 | sql                                                            
+⠦ |        227 | sql                                                            
+⠧ |        228 | sql                                                            
+⠇ |        229 | sql                                                            
+⠏ |        230 | sql                                                            
+⠋ |        231 | sql                                                            
+⠙ |        232 | sql                                                            
+⠹ |        233 | sql                                                            
+⠸ |        234 | sql                                                            
+⠼ |        235 | sql                                                            
+⠴ |        236 | sql                                                            
+⠦ |        237 | sql                                                            
+⠧ |        238 | sql                                                            
+⠇ |        239 | sql                                                            
+⠏ |        240 | sql                                                            
+⠋ |        241 | sql                                                            
+⠙ |        242 | sql                                                            
+⠹ |        243 | sql                                                            
+⠸ |        244 | sql                                                            
+⠼ |        245 | sql                                                            
+⠴ |        246 | sql                                                            
+⠦ |        247 | sql                                                            
+⠧ |        248 | sql                                                            
+⠇ |        249 | sql                                                            
+⠏ |        250 | sql                                                            
+⠋ |        251 | sql                                                            
+⠙ |        252 | sql                                                            
+⠹ |        253 | sql                                                            
+⠸ |        254 | sql                                                            
+⠼ |        255 | sql                                                            
+⠴ |        256 | sql                                                            
+⠦ |        257 | sql                                                            
+⠧ |        258 | sql                                                            
+⠇ |        259 | sql                                                            
+⠏ |        260 | sql                                                            
+⠋ |        261 | sql                                                            
+⠙ |        262 | sql                                                            
+⠹ |        263 | sql                                                            
+⠸ |        264 | sql                                                            
+⠼ |        265 | sql                                                            
+⠴ |        266 | sql                                                            
+⠦ |        267 | sql                                                            
+⠧ |        268 | sql                                                            
+⠇ |        269 | sql                                                            
+⠏ |        270 | sql                                                            
+⠋ |        271 | sql                                                            
+⠙ |        272 | sql                                                            
+⠹ |        273 | sql                                                            
+⠸ |        274 | sql                                                            
+⠼ |        275 | sql                                                            
+⠴ |        276 | sql                                                            
+⠦ |        277 | sql                                                            
+⠧ |        278 | sql                                                            
+⠇ |        279 | sql                                                            
+⠏ |        280 | sql                                                            
+⠋ |        281 | sql                                                            
+⠙ |        282 | sql                                                            
+⠹ |        283 | sql                                                            
+⠸ |        284 | sql                                                            
+⠼ |        285 | sql                                                            
+⠴ |        286 | sql                                                            
+⠦ |        287 | sql                                                            
+⠧ |        288 | sql                                                            
+⠇ |        289 | sql                                                            
+⠏ |        290 | sql                                                            
+⠋ |        291 | sql                                                            
+⠙ |        292 | sql                                                            
+⠹ |        293 | sql                                                            
+⠸ |        294 | sql                                                            
+⠼ |        295 | sql                                                            
+⠴ |        296 | sql                                                            
+⠦ |        297 | sql                                                            
+⠧ |        298 | sql                                                            
+⠇ |        299 | sql                                                            
+⠏ |        300 | sql                                                            
+⠋ |        301 | sql                                                            
+⠙ |        302 | sql                                                            
+⠹ |        303 | sql                                                            
+⠸ |        304 | sql                                                            
+⠼ |        305 | sql                                                            
+⠴ |        306 | sql                                                            
+⠦ |        307 | sql                                                            
+⠧ |        308 | sql                                                            
+⠇ |        309 | sql                                                            
+⠏ |        310 | sql                                                            
+⠋ |        311 | sql                                                            
+⠙ |        312 | sql                                                            
+⠹ |        313 | sql                                                            
+⠸ |        314 | sql                                                            
+⠼ |        315 | sql                                                            
+⠴ |        316 | sql                                                            
+⠦ |        317 | sql                                                            
+⠧ |        318 | sql                                                            
+⠇ |        319 | sql                                                            
+⠏ |        320 | sql                                                            
+⠋ |        321 | sql                                                            
+⠙ |        322 | sql                                                            
+⠹ |        323 | sql                                                            
+⠴ |        326 | sql                                                            
+⠇ |        329 | sql                                                            
+⠙ |        332 | sql                                                            
+⠸ |        334 | sql                                                            
+⠴ |        336 | sql                                                            
+⠧ |        338 | sql                                                            
+⠇ |        339 | sql                                                            
+⠋ |        341 | sql                                                            
+⠹ |        343 | sql                                                            
+⠦ |        347 | sql                                                            
+⠋ |        351 | sql                                                            
+⠹ |        353 | sql                                                            
+✔ |        354 | sql [28.5s]
+
+⠏ |          0 | terminologia                                                   
+⠼ |         15 | terminologia                                                   
+⠏ |         30 | terminologia                                                   
+⠸ |         34 | terminologia                                                   
+⠼ |         55 | terminologia                                                   
+⠦ |         57 | terminologia                                                   
+⠋ |         81 | terminologia                                                   
+⠏ |         90 | terminologia                                                   
+⠸ |         94 | terminologia                                                   
+⠴ |         96 | terminologia                                                   
+⠦ |         97 | terminologia                                                   
+⠧ |         98 | terminologia                                                   
+✔ |         98 | terminologia [2.5s]
+
+⠏ |          0 | vista                                                          
+⠇ |         19 | vista                                                          
+⠏ |         30 | vista                                                          
+⠋ |         41 | vista                                                          
+⠼ |         45 | vista                                                          
+⠧ |         48 | vista                                                          
+⠸ |         54 | vista                                                          
+⠙ |         62 | vista                                                          
+✔ |         76 | vista
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 58.1 s
+
+── Skipped tests (5) ───────────────────────────────────────────────────────────
+• FHIRVIEWS_SERVIDOR_ESCRITURA no está definida (5): 'test-servidor.R:48:3',
+  'test-servidor.R:117:3', 'test-servidor.R:210:3', 'test-servidor.R:226:3',
+  'test-servidor.R:247:3'
+
+[ FAIL 0 | WARN 0 | SKIP 5 | PASS 1377 ]

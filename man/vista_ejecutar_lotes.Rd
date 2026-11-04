@@ -5,7 +5,13 @@
 \alias{vista_ejecutar_lotes}
 \title{Ejecutar una vista sobre archivos NDJSON por bloques}
 \usage{
-vista_ejecutar_lotes(archivos, vista, procesar, tamano_lote = 10000L)
+vista_ejecutar_lotes(
+  archivos,
+  vista,
+  procesar,
+  tamano_lote = 10000L,
+  estricto = FALSE
+)
 }
 \arguments{
 \item{archivos}{Rutas de archivos NDJSON, incluidos \code{.ndjson.gz}.}
@@ -19,6 +25,13 @@ filas resultantes. Los tipos sin \code{type} explícito se infieren por bloque;
 declara tipos en la vista si necesitas un esquema fijo para la salida.}
 
 \item{tamano_lote}{Número máximo de líneas leídas por bloque.}
+
+\item{estricto}{Con \code{TRUE}, exige \code{type} primitivo FHIR R4 en todas las
+columnas y el mismo contrato (\code{type} y \code{collection}) en cada rama.
+Valida cada valor antes de convertirlo y antes de llamar a \code{procesar}.
+No admite conversiones implícitas entre texto, números y lógicos.
+Los ausentes se conservan como \code{NA} del tipo declarado y las colecciones
+vacías como vectores vacíos de ese tipo. Por defecto es \code{FALSE}.}
 }
 \value{
 Invisiblemente, una lista con los totales \code{bloques}, \code{recursos}
@@ -31,6 +44,36 @@ Lee como máximo \code{tamano_lote} líneas a la vez y entrega cada tabla a
 siguiente. La memoria del resultado depende de lo que retenga \code{procesar}.
 Una línea debe contener un recurso FHIR completo. Se admiten líneas vacías
 y archivos gzip. El orden de archivos y recursos se conserva.
+}
+\details{
+El modo estricto comprueba tipos de R, cardinalidad y límites numéricos:
+enteros finitos representables en R, rangos de \code{positiveInt}/\code{unsignedInt}
+y decimales finitos. Rechaza números no finitos en la entrada y en los
+resultados antes de serializarlos. Los demás primitivos se representan como texto; no
+se validan aquí formatos de fechas, URI, códigos ni perfiles FHIR.
+
+Los errores estrictos tienen clase \code{fhirviews_error_lotes} (también
+\code{fhirviews_error_esquema} si falla el contrato). Incluyen \code{bloque}, \code{fase},
+\code{columna} y \code{tipo_esperado} cuando se conocen, \code{motivo}, \code{indice_archivo}
+y \code{completados} (totales de llamadas a \code{procesar} que retornaron sin error).
+El bloque 0 indica un fallo de definición antes de leer los archivos.
+Los mensajes no incorporan valores, rutas de entrada ni el error original
+del destino. Los mensajes o avisos que emita el propio consumidor quedan
+bajo su responsabilidad. Los avisos de lectura o evaluación detienen el
+bloque en modo estricto.
+
+La función no revierte escrituras, no reintenta y no guarda checkpoints.
+Si falla \code{procesar}, el bloque actual puede tener escrituras parciales;
+\code{completados} no demuestra persistencia y una transacción externa puede
+revertir incluso esos bloques. No lo uses para decidir automáticamente
+qué bloques omitir al reanudar.
+
+Para reintentar sin acumular duplicados, usa una transacción que abarque
+toda la carga y reemplace el resultado, o escribe en un destino temporal
+nuevo que solo publiques cuando termine. Conserva las mismas entradas,
+orden, vista y tamaño de bloque. El ejemplo instalado
+\code{system.file("examples", "lotes-transaccion.R", package = "fhirviews")}
+demuestra rollback y reemplazo completo con DuckDB y datos ficticios.
 }
 \examples{
 archivo <- system.file("extdata", "caso_clinico.ndjson", package = "fhirviews")

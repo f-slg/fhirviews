@@ -136,3 +136,24 @@ GitHub, Docker, commit `75d058c`: **Integracion HAPI aprobada**, 46 comprobacion
 - Documentación: https://github.com/f-slg/fhirviews/actions/runs/41815334795
 
 Los resúmenes y registros de Docker se guardan permanentemente en `data-raw/validacion-0.5.0/hapi-ci/`, además de los artefactos temporales del workflow. Los commits que solo conservan esta evidencia no cambian el código probado. El paquete continúa privado y no se publicó el lanzamiento ni se envió a CRAN. El siguiente pendiente funcional es el esquema estricto entre bloques; el piloto externo y la distribución privada siguen pendientes.
+
+
+## Continuación: esquema estricto y recuperación transaccional
+
+Se implementó `vista_ejecutar_lotes(..., estricto = TRUE)`. El valor por defecto es `FALSE` y conserva el comportamiento habitual.
+
+- Exige `type` primitivo FHIR R4 en todas las columnas y contratos iguales (`type`/`collection`) en cada rama. Falla en bloque 0 antes de leer si la definición no lo permite.
+- Valida los valores antes de las coerciones: no convierte entre texto, números y lógicos; comprueba enteros representables/rangos, decimales finitos y elementos de colecciones. Mantiene ausentes y vacíos tipados.
+- Comprueba números no finitos en el JSON de entrada y en los resultados de V8 antes de serializar. Se reprodujo y corrigió el caso `1e309` que podía terminar como un ausente.
+- Errores `fhirviews_error_lotes` y `fhirviews_error_esquema`: bloque, fase, índice de archivo, columna/tipo/motivo cuando se conocen y contadores de consumidores que retornaron sin error. No incluyen valores ni el error original del destino. No se confía en clases ni metadatos de errores emitidos por el consumidor.
+- Los contadores no prueban persistencia ni son checkpoints para omitir bloques. Una escritura del bloque fallido puede ser parcial; la función no revierte ni reintenta efectos externos. Las transacciones pueden revertir incluso bloques cuyos consumidores ya retornaron.
+- `inst/examples/lotes-transaccion.R`: ejemplo con datos ficticios y base temporal; una transacción abarca eliminación y carga completa. Demuestra rollback tras escribir y dos cargas completas sin acumular duplicados. No deduplica eventos que ya estén repetidos en el origen.
+- Los tipos de texto no validan formatos de fecha/URI/códigos ni perfiles FHIR. Los mensajes propios del consumidor siguen bajo su responsabilidad.
+
+Se actualizaron ayuda, README y NEWS. El motor V8 mantiene su comportamiento por defecto; la comprobación previa a serialización solo se activa para la ejecución estricta.
+
+Validación local: 271 comprobaciones específicas aprobadas, sin fallos/avisos; batería completa con red: 1377 aprobadas, sin fallos/avisos, cinco pruebas con servidor propio omitidas (a ejecutar por el workflow de HAPI). Construcción con viñetas e instalación independiente aprobadas. El ejemplo instalado verificó rollback y dos cargas completas con cinco filas sin acumulación.
+
+`R CMD check --as-cran --no-manual`: 0 errores, 0 advertencias y 2 NOTEs: comprobación incoming (nueva presentación y URLs inaccesibles para un visitante anónimo al estar el proyecto privado) y falta de verificación de hora actual. Los enlaces de Pages también devolvieron 404 en esa revisión anónima; no se verificó acceso autenticado. Se corrigieron las notas preparatorias de `cran-comments.md` para reflejar este estado; no se envió a CRAN.
+
+Evidencia en `data-raw/validacion-0.5.0/estricto/`. Falta confirmar los workflows para este código antes de cerrar la entrega. El borrador y su archivo fuente siguen siendo anteriores: no se actualizan ni publican automáticamente. Tras esta entrega quedan el piloto externo y la distribución/documentación privada, junto con los cambios que ese piloto identifique. No prometer producción clínica sin restricciones a partir de estos resultados técnicos.

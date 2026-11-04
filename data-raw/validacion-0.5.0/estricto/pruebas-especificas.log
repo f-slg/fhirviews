@@ -1,0 +1,44 @@
+ℹ Testing fhirviews
+✔ | F W  S  OK | Context
+
+⠏ |          0 | auditoria                                                      
+⠋ |          1 | auditoria                                                      
+⠹ |         13 | auditoria                                                      
+⠼ |         15 | auditoria                                                      
+⠴ |         26 | auditoria                                                      
+⠋ |         31 | auditoria                                                      
+⠦ |         37 | auditoria                                                      
+⠙ |         52 | auditoria                                                      
+✔ |         57 | auditoria
+
+⠏ |          0 | fhirpath                                                       
+⠦ |         17 | fhirpath                                                       
+⠹ |         33 | fhirpath                                                       
+✔ |         41 | fhirpath
+
+⠏ |          0 | lotes                                                          
+⠋ |          1 | lotes                                                          
+⠏ |         10 | lotes                                                          
+⠇ |         19 | lotes                                                          
+⠦ |         37 | lotes                                                          
+⠙ |         62 | lotes                                                          
+⠸ |         74 | lotes                                                          
+⠹ |         83 | lotes                                                          
+⠏ |         90 | lotes                                                          
+⠦ |         97 | lotes                                                          
+✔ |         97 | lotes [1.3s]
+
+⠏ |          0 | vista                                                          
+⠇ |         19 | vista                                                          
+⠋ |         31 | vista                                                          
+⠙ |         42 | vista                                                          
+⠦ |         47 | vista                                                          
+⠏ |         50 | vista                                                          
+⠋ |         61 | vista                                                          
+⠼ |         65 | vista                                                          
+✔ |         76 | vista
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 3.3 s
+
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 271 ]

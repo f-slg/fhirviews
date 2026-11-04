@@ -65,6 +65,11 @@
 #'   ]
 #' }')
 vista_ejecutar <- function(recursos, vista, validar = TRUE) {
+  ejecutar_vista(recursos, vista, validar = validar)
+}
+
+# Punto interno para validar valores antes de las conversiones de columnas.
+ejecutar_vista <- function(recursos, vista, validar = TRUE, convertir = NULL) {
   vista <- vista_leer(vista, validar = validar)
   recursos <- fhir_recursos(recursos)
   tipos <- vapply(recursos, function(r) {
@@ -79,6 +84,7 @@ vista_ejecutar <- function(recursos, vista, validar = TRUE) {
   entorno <- new.env(parent = emptyenv())
   entorno$m <- m
   entorno$constantes <- constantes_vista(vista$constant)
+  entorno$estricto <- !is.null(convertir)
 
   ids <- integer()
   if (any(usar)) {
@@ -111,7 +117,7 @@ vista_ejecutar <- function(recursos, vista, validar = TRUE) {
   }
 
   filas <- ejecutar_partes(list(select = vista$select), ctx, entorno)
-  armar_tabla(filas, vista, m)
+  armar_tabla(filas, vista, m, convertir)
 }
 
 # --- Evaluación por lotes ----------------------------------------------------
@@ -129,6 +135,10 @@ evaluar_ctx <- function(ctx, expresion, entorno, modo = "valores") {
   por_nodo <- NULL
   if (grepl("%rowIndex", expresion, fixed = TRUE)) {
     por_nodo <- list(rowIndex = ctx$fila)
+  }
+  if (isTRUE(entorno$estricto)) {
+    return(entorno$m$evaluar(ctx$nodo, expresion, entorno$constantes, por_nodo,
+                             modo, estricto = TRUE))
   }
   entorno$m$evaluar(ctx$nodo, expresion, entorno$constantes, por_nodo, modo)
 }
@@ -228,7 +238,8 @@ ejecutar_columnas <- function(columnas, ctx, entorno) {
           "i" = paste("Usa {.code \"collection\": true} para guardar todos",
                       "los valores, o una expresi\u00f3n que devuelva uno solo",
                       "(por ejemplo con {.code first()}).")
-        ), class = c("fhirviews_error_vista", "fhirviews_error"), call = NULL)
+        ), class = c("fhirviews_error_vista", "fhirviews_error"),
+        columna = cl$name, call = NULL)
       }
       valores <- lapply(res, function(x) if (length(x) == 0L) NULL else x[[1]])
     }
@@ -293,7 +304,7 @@ tipos_logicos <- "boolean"
 tipos_enteros <- c("integer", "positiveInt", "unsignedInt")
 tipos_decimales <- "decimal"
 
-armar_tabla <- function(filas, vista, motor) {
+armar_tabla <- function(filas, vista, motor, convertir = NULL) {
   defs <- definiciones_columnas(vista)
   nombres <- names(filas$cols)
   inferidos <- NULL
@@ -307,7 +318,8 @@ armar_tabla <- function(filas, vista, motor) {
       if (is.null(inferidos)) inferidos <<- inferir_tipos(vista, motor)
       def$type <- inferidos[[nm]]
     }
-    convertir_columna(valores, def, nm)
+    if (is.null(convertir)) convertir_columna(valores, def, nm) else
+      convertir(valores, def, nm)
   })
   names(cols) <- nombres
   structure(cols, row.names = .set_row_names(length(filas$origen)),

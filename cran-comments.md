@@ -1,18 +1,25 @@
 ## Submission
 
-This is the first submission of 'fhirviews'.
+Preparation notes for a possible first submission of 'fhirviews'.
+The package is currently private and has not been submitted to CRAN.
 
 ## Test environments
 
-* Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran`, with
-  `_R_CHECK_CRAN_INCOMING_REMOTE_=true`)
-* GitHub Actions: R release on Windows, macOS and Ubuntu
+* Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran --no-manual`)
+* GitHub Actions: R release on Windows, macOS and Ubuntu; client/V8 on
+  R 4.1 and R-devel; isolated HAPI integration on Ubuntu/R release
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 2 notes
 
-* This is a new submission.
+* Incoming check: new submission and URLs unavailable to anonymous checks
+  while the repository and documentation are private.
+* The check could not verify the current time.
+
+Before an actual submission, rebuild the final artifact and repeat the checks
+after deciding how the repository and documentation will be made accessible.
+These preparation notes do not authorize a submission.
 
 ## Notes for the reviewers
 

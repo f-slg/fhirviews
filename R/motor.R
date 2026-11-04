@@ -4,7 +4,8 @@
 # lista de funciones con esta interfaz:
 #
 #   cargar(recursos)                      -> enteros (un nodo por recurso)
-#   evaluar(ids, expresion, variables, por_nodo, modo)
+#   evaluar(ids, expresion, variables, por_nodo, modo, estricto = FALSE)
+#     estricto: rechaza resultados numericos no finitos antes de serializar
 #                                         (por_nodo: lista con nombre de
 #                                         vectores, un valor por nodo)
 #                                         -> lista, un elemento por nodo:
@@ -113,19 +114,24 @@ motor_v8 <- function() {
       as.integer(unlist(ids))
     },
     evaluar = function(ids, expresion, variables = NULL, por_nodo = NULL,
-                       modo = c("valores", "nodos")) {
+                       modo = c("valores", "nodos"), estricto = FALSE) {
       modo <- match.arg(modo)
       if (length(ids) == 0L) {
         return(list())
       }
+      # JSON.stringify convierte Infinity/NaN en null: comprobar antes de
+      # serializar para que el contrato estricto no los confunda con ausentes.
+      reemplazo <- if (estricto) paste0(
+        ", function(k, v) { if (typeof v === 'number' && !Number.isFinite(v)) ",
+        "throw new Error('Resultado numerico no finito'); return v; }") else ""
       codigo <- sprintf(
-        "JSON.stringify(fhirviews.evaluar(%s, %s, %s, %s, %s))",
+        "JSON.stringify(fhirviews.evaluar(%s, %s, %s, %s, %s)%s)",
         jsonlite::toJSON(as.integer(ids)),
         a_json(expresion, unbox = TRUE),
         a_json_variables(variables),
         if (is.null(por_nodo)) "null" else
           jsonlite::toJSON(por_nodo, digits = NA, na = "null"),
-        a_json(modo, unbox = TRUE)
+        a_json(modo, unbox = TRUE), reemplazo
       )
       res <- llamar(codigo, expresion)
       if (modo == "nodos") {
