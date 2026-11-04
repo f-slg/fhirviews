@@ -37,8 +37,12 @@ limpiar() {
       fi
     fi
   fi
-  if (( estado != 0 )) && [[ -f "$salida/pruebas.log" ]]; then
-    cat "$salida/pruebas.log" >&2
+  if (( estado != 0 )); then
+    if [[ -f "$salida/pruebas.log" ]]; then
+      cat "$salida/pruebas.log" >&2
+    elif [[ -f "$salida/arranque.log" ]]; then
+      cat "$salida/arranque.log" >&2
+    fi
   fi
   printf '%s\n' "$estado" > "$salida/codigo-salida.txt"
   echo "Resultados: $salida"
