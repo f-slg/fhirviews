@@ -43,7 +43,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="fhirviews-050">fhirviews 0.5.0<a class="anchor" aria-label="anchor" href="#fhirviews-050"></a></h2>
-<ul><li><p><code>vista_ejecutar_lotes(estricto = TRUE)</code> exige un contrato explícito de tipos, comprueba valores antes de convertir o entregar cada bloque y produce errores estructurados sin incluir datos ni mensajes del destino.</p></li>
+<ul><li><p>El piloto registra advertencias mediante códigos seguros y exige revisión antes de aprobar; añade diagnósticos numéricos y referencias de eventos, cantones y meses para detectar errores aunque se conserven los totales.</p></li>
+<li><p>CI verifica el archivo fuente construido en una instalación independiente y conserva sus informes. La guía del mantenedor viaja dentro del paquete.</p></li>
+<li><p>Nuevo kit de aceptación técnica del piloto, con perfiles básico y completo, informes locales y experiencia del usuario pendiente de evaluación humana. <code>data-raw/probar-candidato.R</code> instala el archivo fuente en una biblioteca nueva y verifica la copia instalada en un proceso R independiente.</p></li>
+<li><p><code>vista_ejecutar_lotes(estricto = TRUE)</code> exige un contrato explícito de tipos, comprueba valores antes de convertir o entregar cada bloque y produce errores estructurados sin incluir datos ni mensajes del destino.</p></li>
 <li><p>Nuevo ejemplo <code>lotes-transaccion.R</code>: rollback de una carga fallida y reemplazo completo al reintentar, sin acumular duplicados.</p></li>
 <li><p>La integración con HAPI se automatiza con una imagen fijada por digest, servidor aislado, limpieza y registros de resultados. Las operaciones obligatorias no pueden quedar omitidas; la variante de ValueSet en línea no admitida por HAPI se verifica por separado.</p></li>
 <li><p>Se añade una demostración reproducible de vigilancia con datos ficticios, controles de conteo, resúmenes territoriales y mensuales y procedencia de los resultados (<code>inst/examples/vigilancia.R</code>).</p></li>

@@ -101,6 +101,7 @@
 <li><a href="#conformidad-y-pruebas">Conformidad y pruebas</a></li>
 <li><a href="#rendimiento">Rendimiento</a></li>
 <li><a href="#alcance-y-l%C3%ADmites">Alcance y límites</a></li>
+<li><a href="#piloto-privado-y-documentaci%C3%B3n-local">Piloto privado y documentación local</a></li>
 <li><a href="#gu%C3%ADas-y-referencia">Guías y referencia</a></li>
 <li><a href="#contribuir-citar-y-licencia">Contribuir, citar y licencia</a></li>
 </ul>
@@ -589,6 +590,29 @@
 <p>Las prioridades de desarrollo incluyen estabilizar el motor DuckDB, mejorar la precisión decimal y ampliar las operaciones de búsqueda y terminología. Las propuestas y su seguimiento están en <a href="https://github.com/f-slg/fhirviews/issues" class="external-link">GitHub Issues</a>.</p>
 </div>
 <div class="section level2">
+<h2 id="piloto-privado-y-documentación-local">Piloto privado y documentación local<a class="anchor" aria-label="anchor" href="#piloto-privado-y-documentaci%C3%B3n-local"></a>
+</h2>
+<p>El piloto usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<p>Reinicia R, elige una carpeta nueva y ejecuta:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
+<span>  FHIRVIEWS_PILOTO_SALIDA <span class="op">=</span> <span class="st">"piloto-basico-01"</span>,</span>
+<span>  FHIRVIEWS_PILOTO_PERFIL <span class="op">=</span> <span class="st">"basico"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"piloto.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Abre <code>piloto-basico-01/aceptacion.csv</code> para ver los controles y <code>aceptacion.json</code> para sus diagnósticos. Los estados son <code>aprobado</code>, <code>fallo</code>, <code>requiere_revision</code>, <code>pendiente</code> y <code>no_evaluado</code>. Cualquier advertencia requiere revisión y evita la aprobación automática; el informe registra códigos seguros sin copiar los mensajes originales.</p>
+<p>El perfil <code>basico</code> comprueba la API, los resultados de vigilancia y el rechazo estricto de un bloque incompatible. Para comprobar también rollback y reintentos, instala <code>DBI</code> y <code>duckdb</code>, cambia el perfil a <code>completo</code> y usa otra carpeta nueva. Los archivos permanecen locales; completa <code>experiencia-usuario.txt</code> con los obstáculos, la ayuda necesaria y tu evaluación. La aprobación técnica deja pendiente esa evaluación humana y no valida un servidor ni datos propios.</p>
+<p>La ayuda y las viñetas están disponibles en la instalación:</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
+<p>La <a href="inst/examples/PILOTO-MANTENEDOR.html">guía del mantenedor</a> describe cómo construir y verificar el candidato, interpretar los códigos y cerrar el piloto. También se distribuye dentro del paquete, en <code>examples/PILOTO-MANTENEDOR.md</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="guías-y-referencia">Guías y referencia<a class="anchor" aria-label="anchor" href="#gu%C3%ADas-y-referencia"></a>
 </h2>
 <table class="table">
@@ -634,7 +658,7 @@
 </h2>
 <p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="CONTRIBUTING.html">guía de contribución</a> y el <a href="CODE_OF_CONDUCT.html">código de conducta</a>.</p>
 <p>Para citar el paquete:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="LICENSE.html">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
 <p>fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo institucional. Todos los datos de ejemplo incluidos son ficticios.</p>

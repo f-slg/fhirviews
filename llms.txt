@@ -44,6 +44,8 @@ R](reference/figures/README-json-tabla.png)
 - [Conformidad y pruebas](#conformidad-y-pruebas)
 - [Rendimiento](#rendimiento)
 - [Alcance y límites](#alcance-y-l%C3%ADmites)
+- [Piloto privado y documentación
+  local](#piloto-privado-y-documentaci%C3%B3n-local)
 - [Guías y referencia](#gu%C3%ADas-y-referencia)
 - [Contribuir, citar y licencia](#contribuir-citar-y-licencia)
 
@@ -614,6 +616,57 @@ Las prioridades de desarrollo incluyen estabilizar el motor DuckDB,
 mejorar la precisión decimal y ampliar las operaciones de búsqueda y
 terminología. Las propuestas y su seguimiento están en [GitHub
 Issues](https://github.com/f-slg/fhirviews/issues).
+
+## Piloto privado y documentación local
+
+El piloto usa los datos ficticios incluidos. Instala las dependencias y
+el archivo fuente que te entregue el mantenedor:
+
+``` r
+
+install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
+install.packages("fhirviews_0.5.0.tar.gz", repos = NULL, type = "source")
+```
+
+Reinicia R, elige una carpeta nueva y ejecuta:
+
+``` r
+
+Sys.setenv(
+  FHIRVIEWS_PILOTO_SALIDA = "piloto-basico-01",
+  FHIRVIEWS_PILOTO_PERFIL = "basico"
+)
+source(system.file("examples", "piloto.R", package = "fhirviews"))
+```
+
+Abre `piloto-basico-01/aceptacion.csv` para ver los controles y
+`aceptacion.json` para sus diagnósticos. Los estados son `aprobado`,
+`fallo`, `requiere_revision`, `pendiente` y `no_evaluado`. Cualquier
+advertencia requiere revisión y evita la aprobación automática; el
+informe registra códigos seguros sin copiar los mensajes originales.
+
+El perfil `basico` comprueba la API, los resultados de vigilancia y el
+rechazo estricto de un bloque incompatible. Para comprobar también
+rollback y reintentos, instala `DBI` y `duckdb`, cambia el perfil a
+`completo` y usa otra carpeta nueva. Los archivos permanecen locales;
+completa `experiencia-usuario.txt` con los obstáculos, la ayuda
+necesaria y tu evaluación. La aprobación técnica deja pendiente esa
+evaluación humana y no valida un servidor ni datos propios.
+
+La ayuda y las viñetas están disponibles en la instalación:
+
+``` r
+
+help(package = "fhirviews")
+help("vista_ejecutar_lotes", package = "fhirviews")
+browseVignettes("fhirviews")
+```
+
+La [guía del
+mantenedor](https://f-slg.github.io/fhirviews/inst/examples/PILOTO-MANTENEDOR.md)
+describe cómo construir y verificar el candidato, interpretar los
+códigos y cerrar el piloto. También se distribuye dentro del paquete, en
+`examples/PILOTO-MANTENEDOR.md`.
 
 ## Guías y referencia
 
