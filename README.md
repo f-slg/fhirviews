@@ -823,6 +823,33 @@ Las propuestas y su seguimiento están en
 
 ## Piloto y documentación local
 
+### Descargar el kit para participantes
+
+**[Descargar el kit del piloto ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip)**
+
+1. Descarga y descomprime el ZIP.
+2. Abre `FORMULARIO-PILOTO.html` en un navegador.
+3. Elige el perfil **R** o **FHIR**, registra el candidato y sigue las tareas.
+4. Exporta el JSON para conservar ambas fichas y prepara el aviso al mantenedor.
+   El envío se realiza manualmente por el canal acordado.
+
+El kit incluye protocolos detallados, casillas de comprobación, registro de
+tiempos y ayuda, incidencias, criterios de cierre y un anexo para el observador.
+El formulario funciona localmente y no transmite información automáticamente.
+El guardado del navegador no sustituye la exportación del informe.
+
+También puedes consultar los protocolos en el repositorio:
+
+- [Perfil R: analista, investigador o epidemiólogo](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/PROTOCOLO-PERFIL-R.md).
+- [Perfil FHIR: interoperabilidad e informática sanitaria](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/PROTOCOLO-PERFIL-FHIR.md).
+- [Instrucciones y archivos del kit](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/LEEME.md).
+
+El ZIP contiene los materiales de evaluación, no el paquete R. Mientras el
+lanzamiento siga en borrador, el mantenedor entrega el archivo candidato
+identificado en el manifiesto para evaluar exactamente la misma versión.
+
+### Instalar el candidato y ejecutar el ensayo
+
 El piloto usa los datos ficticios incluidos. Instala las dependencias y el
 archivo fuente que te entregue el mantenedor:
 

@@ -1,0 +1,353 @@
+{
+  "r": [
+    {
+      "id": "R01",
+      "title": "Preparar la sesión e instalar el candidato",
+      "required": true,
+      "goal": "Comprobar que la persona puede instalar la copia acordada y encontrar su ayuda.",
+      "steps": [
+        "Registrar identificador de participante y sesión, sistema operativo, versión de R, candidato y dependencias que ya estaban instaladas.",
+        "Instalar las dependencias y el archivo local entregado por el mantenedor; reiniciar R.",
+        "Abrir la ayuda del paquete y localizar vista_ejecutar_lotes()."
+      ],
+      "checks": [
+        "Se anotaron versión, commit y checksum del candidato.",
+        "El paquete se carga desde la instalación acordada.",
+        "La ayuda local abre y se registró la ayuda necesaria."
+      ],
+      "expected": "fhirviews 0.5.0 cargado. La ayuda y las viñetas locales están disponibles.",
+      "evidence": "Salida de packageVersion(), find.package(), versión de R y ayuda consultada.",
+      "code": "install.packages(c(\"cli\", \"httr2\", \"jsonlite\", \"rlang\", \"V8\"))\ninstall.packages(\"fhirviews_0.5.0.tar.gz\", repos = NULL, type = \"source\")\n# Reiniciar R antes de continuar\nlibrary(fhirviews)\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(package = \"fhirviews\")\nhelp(\"vista_ejecutar_lotes\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
+    },
+    {
+      "id": "R02",
+      "title": "Ejecutar el piloto básico y leer el informe",
+      "required": true,
+      "goal": "Ejecutar el flujo guiado y distinguir resultados técnicos, omisiones y evaluación humana.",
+      "steps": [
+        "Elegir una carpeta nueva por participante e intento.",
+        "Ejecutar el perfil basico y abrir aceptacion.csv y aceptacion.json en esa carpeta.",
+        "Identificar el estado de cada control y explicar por qué recuperacion figura como no_evaluado."
+      ],
+      "checks": [
+        "La carpeta era nueva y el comando terminó.",
+        "Se encontraron los informes y los tres controles básicos están aprobados.",
+        "Recuperación no evaluada no se interpretó como aprobada.",
+        "Se identificó que validacion_usuario_externo sigue pendiente."
+      ],
+      "expected": "resultado_tecnico = aprobado; recuperación = no_evaluado. Cualquier fallo o advertencia se registra y se investiga.",
+      "evidence": "Ruta relativa de aceptacion.csv y aceptacion.json, estado y código si hay incidencias.",
+      "code": "Sys.setenv(FHIRVIEWS_PILOTO_SALIDA = \"piloto-R01-intento01\",\n           FHIRVIEWS_PILOTO_PERFIL = \"basico\")\nsource(system.file(\"examples\", \"piloto.R\", package = \"fhirviews\"))\nread.csv(\"piloto-R01-intento01/aceptacion.csv\")"
+    },
+    {
+      "id": "R03",
+      "title": "Reconciliar la vigilancia y explicar el indicador",
+      "required": true,
+      "goal": "Interpretar correctamente las salidas, no limitarse a ejecutar el script.",
+      "steps": [
+        "Leer controles.csv, casos_confirmados.csv, resumen_canton.csv y resumen_mensual.csv dentro de vigilancia/.",
+        "Explicar el paso de 755 eventos a 661 confirmados y 94 excluidos.",
+        "Comparar la suma de ambos resúmenes con el número de eventos confirmados.",
+        "Explicar si el resultado cuenta eventos, pacientes únicos o tasas; indicar qué faltaría para una tasa."
+      ],
+      "checks": [
+        "Se identificaron 755 eventos, 661 confirmados y 94 excluidos.",
+        "Se identificaron 65 cantones con eventos.",
+        "Ambos resúmenes suman 661.",
+        "Se conservaron los ceros iniciales del código DPA.",
+        "La persona explica que son eventos ficticios y que no hay denominador poblacional para una tasa."
+      ],
+      "expected": "661 + 94 = 755. Los resúmenes suman 661; el conjunto tiene 65 cantones. La unidad es el evento Condition.",
+      "evidence": "Cálculos de reconciliación y explicación del participante, anotada antes de recibir pistas.",
+      "code": "base <- \"piloto-R01-intento01/vigilancia\"\ncasos <- read.csv(file.path(base, \"casos_confirmados.csv\"), colClasses = \"character\")\ncantones <- read.csv(file.path(base, \"resumen_canton.csv\"), colClasses = \"character\")\nmeses <- read.csv(file.path(base, \"resumen_mensual.csv\"), colClasses = \"character\")\nread.csv(file.path(base, \"controles.csv\"))\nc(eventos = nrow(casos), cantones = nrow(cantones),\n  suma_cantones = sum(as.integer(cantones$casos)),\n  suma_meses = sum(as.integer(meses$casos)))"
+    },
+    {
+      "id": "R04",
+      "title": "Contrastar un evento con el recurso original",
+      "required": true,
+      "goal": "Trazar una fila hasta su evento y paciente originales.",
+      "steps": [
+        "Localizar den-c0001 entre los eventos confirmados y revisar paciente, inicio y codigo_dpa.",
+        "Abrir los recursos originales den-c0001 y den-p0001 incluidos en el NDJSON.",
+        "Explicar de qué recurso viene la fecha y de cuál viene la residencia."
+      ],
+      "checks": [
+        "den-c0001 enlaza con den-p0001.",
+        "La fecha de inicio es 2025-02-27.",
+        "La residencia del paciente tiene DPA 0701.",
+        "Se contrastó el JSON y se distingue el recurso del evento del recurso del paciente."
+      ],
+      "expected": "La relación coincide con Condition.subject.reference = Patient/den-p0001; la residencia se toma del Patient.",
+      "evidence": "Fila seleccionada y campos del JSON contrastados, usando exclusivamente los datos ficticios.",
+      "code": "casos[casos$id == \"den-c0001\", c(\"id\", \"paciente\", \"inicio\", \"codigo_dpa\")]\nentrada <- system.file(\"extdata\", \"dengue_2025.ndjson.gz\", package = \"fhirviews\")\nrecursos <- fhir_recursos(entrada)\noriginales <- Filter(function(x) x$id %in% c(\"den-c0001\", \"den-p0001\"), recursos)\ncat(jsonlite::toJSON(originales, auto_unbox = TRUE, pretty = TRUE))"
+    },
+    {
+      "id": "R05",
+      "title": "Crear y modificar una vista de pacientes",
+      "required": true,
+      "goal": "Medir si la documentación permite construir una extracción propia sencilla.",
+      "steps": [
+        "Con la documentación, crear una vista Patient que devuelva la clave y gender.",
+        "Guardar su definición JSON y ejecutarla sobre caso_clinico.ndjson.",
+        "Modificarla para añadir birthDate y guardar una segunda definición.",
+        "Comparar una fila con el Patient original y explicar el tipo de fecha devuelto."
+      ],
+      "checks": [
+        "Se creó y guardó la primera vista.",
+        "Se añadió birthDate sin perder la clave.",
+        "Se guardó la vista modificada y se contrastó una fila con el JSON.",
+        "Se registraron las consultas a la documentación y las intervenciones del observador."
+      ],
+      "expected": "La clave se conserva, gender coincide y birthDate se representa como texto. El observador registra la ayuda en lugar de entregar la solución inicialmente.",
+      "evidence": "vista-pacientes-v1.json, vista-pacientes-v2.json y fila contrastada.",
+      "code": ""
+    },
+    {
+      "id": "R06",
+      "title": "Repetir el análisis y reconocer un bloque rechazado",
+      "required": true,
+      "goal": "Comprobar reproducibilidad e interpretación de un fallo controlado.",
+      "steps": [
+        "Repetir el perfil básico en una carpeta nueva de intento02.",
+        "Comparar los hallazgos del informe, no los tiempos ni rutas de ambos intentos.",
+        "Localizar contrato_estricto en el informe y explicar qué pasó con el bloque 2."
+      ],
+      "checks": [
+        "La repetición usa otra carpeta y conserva el primer informe.",
+        "Los hallazgos de ambos intentos coinciden.",
+        "Se identifica el bloque 2 rechazado y una sola entrega al consumidor.",
+        "Se entiende que un bloque rechazado esperado puede hacer aprobar el control de contrato."
+      ],
+      "expected": "Mismos controles y referencias. El bloque incompatible no se entrega; el primer bloque sí. Esto no prueba persistencia de escrituras.",
+      "evidence": "Informes de los dos intentos y explicación de bloque_rechazado / bloques_entregados.",
+      "code": "Sys.setenv(FHIRVIEWS_PILOTO_SALIDA = \"piloto-R01-intento02\")\nsource(system.file(\"examples\", \"piloto.R\", package = \"fhirviews\"))\na <- jsonlite::read_json(\"piloto-R01-intento01/aceptacion.json\")\nb <- jsonlite::read_json(\"piloto-R01-intento02/aceptacion.json\")\nidentical(a$hallazgos, b$hallazgos)"
+    },
+    {
+      "id": "R07",
+      "title": "Evaluar recuperación con DuckDB, si se acordó",
+      "required": false,
+      "goal": "Ampliar la sesión al perfil completo sin confundir el alcance básico.",
+      "steps": [
+        "Solo si se acordó y se dispone de DBI y duckdb compatibles, ejecutar completo en una carpeta nueva.",
+        "Leer el resultado de recuperacion y explicar qué significa rollback.",
+        "Si no se ejecuta, marcar no_evaluado y anotar la razón."
+      ],
+      "checks": [
+        "Se registró si el entorno y el alcance permiten el perfil completo.",
+        "Si se ejecutó, se revisó la recuperación; si no, se dejó constancia de su exclusión."
+      ],
+      "expected": "Alcance básico: recuperación no evaluada. Alcance ampliado: los cuatro controles deben aprobar.",
+      "evidence": "Informe del perfil completo o justificación de no evaluación.",
+      "code": "# Opcional: instalar solo si se acordó esta ampliación\ninstall.packages(c(\"DBI\", \"duckdb\"))\nSys.setenv(FHIRVIEWS_PILOTO_SALIDA = \"piloto-R01-completo01\",\n           FHIRVIEWS_PILOTO_PERFIL = \"completo\")\nsource(system.file(\"examples\", \"piloto.R\", package = \"fhirviews\"))"
+    },
+    {
+      "id": "R08",
+      "title": "Registrar la experiencia y preparar la notificación",
+      "required": true,
+      "goal": "Entregar evidencia revisable y propuestas de mejora.",
+      "steps": [
+        "Completar experiencia-usuario.txt y la ficha de tareas.",
+        "Registrar cada incidencia con pasos de reproducción y evidencia ficticia.",
+        "Preparar el aviso al mantenedor; revisar archivos y enviar solo por el canal acordado.",
+        "Registrar la referencia del envío y acordar qué debe repetirse."
+      ],
+      "checks": [
+        "La ficha contiene tiempos, ayuda y evidencia.",
+        "Se registraron incidencias o se indicó que no se observaron.",
+        "Se preparó el resumen para el mantenedor y se anotó el canal.",
+        "La evaluación humana conserva una decisión explícita o queda pendiente; no se deduce de CI."
+      ],
+      "expected": "Informe de sesión completo. El envío es manual y el mantenedor revisa el cierre.",
+      "evidence": "Ficha exportada, experiencia-usuario.txt, incidencias y referencia del aviso.",
+      "code": ""
+    }
+  ],
+  "fhir": [
+    {
+      "id": "F01",
+      "title": "Preparar el entorno y verificar el alcance",
+      "required": true,
+      "goal": "Identificar con precisión candidato, capacidades y dependencias.",
+      "steps": [
+        "Registrar candidato, commit, checksum, R y sistema operativo.",
+        "Instalar el archivo acordado, reiniciar R y localizar ayuda y viñetas.",
+        "Verificar DBI y duckdb para el perfil completo; si faltan, registrar el bloqueo.",
+        "Explicar que esta sesión usa recursos ficticios R4 y no valida un servidor propio ni perfiles clínicos."
+      ],
+      "checks": [
+        "Se identificó el candidato exacto y su instalación.",
+        "La ayuda local está disponible.",
+        "DBI y duckdb están disponibles o se registró la dependencia bloqueante.",
+        "Se documentó el alcance FHIR R4, datos ficticios y motor SQL experimental."
+      ],
+      "expected": "Entorno preparado para completo. No presentar una evaluación básica como recuperación aprobada.",
+      "evidence": "versiones, find.package(), dependencias y alcance acordado.",
+      "code": "library(fhirviews)\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\ninstall.packages(c(\"DBI\", \"duckdb\"))\nhelp(\"vista_validar\", package = \"fhirviews\")\nhelp(\"vista_ejecutar_lotes\", package = \"fhirviews\")"
+    },
+    {
+      "id": "F02",
+      "title": "Ejecutar el perfil completo e interpretar los controles",
+      "required": true,
+      "goal": "Verificar el kit y distinguir la aprobación técnica de la evaluación humana.",
+      "steps": [
+        "Ejecutar completo en una carpeta nueva.",
+        "Revisar los cuatro controles y los códigos de advertencias o fallos si aparecen.",
+        "Comprobar que validacion_usuario_externo permanece pendiente."
+      ],
+      "checks": [
+        "Se generaron informes JSON y CSV.",
+        "Los cuatro controles técnicos están aprobados sin advertencias.",
+        "Se comprende el significado de pendiente, no_evaluado y requiere_revision."
+      ],
+      "expected": "API, vigilancia, contrato estricto y recuperación aprobados. Cualquier advertencia exige investigación y repetición.",
+      "evidence": "aceptacion.json, aceptacion.csv y códigos revisados.",
+      "code": "Sys.setenv(FHIRVIEWS_PILOTO_SALIDA = \"piloto-F01-intento01\",\n           FHIRVIEWS_PILOTO_PERFIL = \"completo\")\nsource(system.file(\"examples\", \"piloto.R\", package = \"fhirviews\"))"
+    },
+    {
+      "id": "F03",
+      "title": "Auditar el vínculo Condition–Patient y el indicador",
+      "required": true,
+      "goal": "Revisar la semántica de la transformación y sus claves.",
+      "steps": [
+        "Inspeccionar den-c0001, den-p0001 y el evento excluido den-c0002 en los recursos originales.",
+        "Revisar subject.reference, onsetDateTime, verificationStatus y codificación CIE-10.",
+        "Contrastar el enlace a paciente y el DPA de residencia con la fila tabular.",
+        "Explicar por qué la residencia no demuestra el lugar de infección y por qué se cuentan eventos."
+      ],
+      "checks": [
+        "Se contrastó Condition.subject con la clave del Patient.",
+        "Se verificaron inicio 2025-02-27 y DPA 0701 para den-c0001.",
+        "Se revisó la razón de exclusión de den-c0002 en el recurso original.",
+        "Se contrastaron los totales 755, 661, 94 y 65 y la unidad contada."
+      ],
+      "expected": "La selección coincide con eventos confirmados A90/A91; fecha de inicio del evento y territorio de residencia. No inferir tasas ni pacientes únicos.",
+      "evidence": "Campos FHIR revisados, vistas JSON de vigilancia y explicación semántica.",
+      "code": "entrada <- system.file(\"extdata\", \"dengue_2025.ndjson.gz\", package = \"fhirviews\")\nrecursos <- fhir_recursos(entrada)\nr <- Filter(function(x) x$id %in% c(\"den-c0001\", \"den-p0001\", \"den-c0002\"), recursos)\ncat(jsonlite::toJSON(r, auto_unbox = TRUE, pretty = TRUE))"
+    },
+    {
+      "id": "F04",
+      "title": "Revisar la semántica de ViewDefinition y FHIRPath",
+      "required": true,
+      "goal": "Comprobar cardinalidad, tipos y contexto en una vista modificada.",
+      "steps": [
+        "Crear una vista Patient con clave y gender y añadir birthDate mediante la documentación.",
+        "Crear o adaptar una vista que recorra name con forEach y conserve given como colección.",
+        "Contrastar el número de filas con el JSON de un Patient; explicar first() frente a forEach.",
+        "Guardar las definiciones y anotar los efectos de listas vacías, ausentes y tipos explícitos."
+      ],
+      "checks": [
+        "La vista modificada conserva claves y columnas correctas.",
+        "Se contrastó al menos una expansión de name con el recurso original.",
+        "Se distingue columna escalar de collection:true.",
+        "Se explica el contexto de %rowIndex y la multiplicación potencial de filas."
+      ],
+      "expected": "La cardinalidad observada se justifica con las colecciones del recurso. Una salida escalar multivaluada no se acepta silenciosamente.",
+      "evidence": "Vistas JSON antes y después, recurso ficticio y conteo explicado.",
+      "code": ""
+    },
+    {
+      "id": "F05",
+      "title": "Probar un rechazo estricto antes de entregar el bloque",
+      "required": true,
+      "goal": "Verificar el contrato previo al consumidor y los errores estructurados.",
+      "steps": [
+        "Ejecutar el ejercicio de entrada incompatible del protocolo, con un recurso por bloque.",
+        "Capturar el error y revisar fase, bloque, columna y número de llamadas al consumidor.",
+        "Explicar que el ejemplo prueba tipo de salida, no formatos ni perfiles FHIR completos."
+      ],
+      "checks": [
+        "El primer bloque compatible se entregó una vez.",
+        "El segundo bloque fue rechazado con fase esquema y columna valor.",
+        "El consumidor no recibió el bloque incompatible.",
+        "No se usó completados como prueba de persistencia ni como checkpoint."
+      ],
+      "expected": "fhirviews_error_esquema, bloque 2, columna valor y una entrega al consumidor.",
+      "evidence": "Clase y campos estructurados del error y contador de entregas.",
+      "code": "entrada <- tempfile(fileext = \".ndjson\")\nwriteLines(c(\n  '{\"resourceType\":\"Observation\",\"id\":\"piloto-1\",\"valueQuantity\":{\"value\":1.5}}',\n  '{\"resourceType\":\"Observation\",\"id\":\"piloto-2\",\"valueQuantity\":{\"value\":\"incompatible\"}}'\n), entrada)\nvista <- vista_leer(list(resource = \"Observation\", select = list(list(column = list(\n  list(name = \"id\", path = \"getResourceKey()\", type = \"id\"),\n  list(name = \"valor\", path = \"value.ofType(Quantity).value\", type = \"decimal\")\n)))))\nentregas <- 0L\nerror <- tryCatch(\n  vista_ejecutar_lotes(entrada, vista, function(tabla, bloque) {\n    entregas <<- entregas + 1L\n  }, tamano_lote = 1, estricto = TRUE),\n  error = identity\n)\nlist(clase = class(error), bloque = error$bloque, fase = error$fase,\n     columna = error$columna, entregas = entregas)\nunlink(entrada)\n"
+    },
+    {
+      "id": "F06",
+      "title": "Comprobar rollback y reintento transaccional",
+      "required": true,
+      "goal": "Verificar que una carga fallida conserva el resultado anterior y que repetir no duplica filas.",
+      "steps": [
+        "Abrir y leer el ejemplo instalado lotes-transaccion.R.",
+        "Localizar BEGIN/ROLLBACK/COMMIT implícitos en DBI::dbWithTransaction y la escritura del consumidor.",
+        "Ejecutar el ejemplo y explicar qué sucede cuando falla después de escribir.",
+        "Distinguir reemplazo completo en transacción de reanudar bloques con append."
+      ],
+      "checks": [
+        "El ejemplo verificó que el resultado anterior se conserva tras el fallo.",
+        "Dos cargas completas dejaron cinco filas sin acumular copias.",
+        "La persona distingue rollback del destino de validación de tipos.",
+        "Se explica que el paquete de bloques no garantiza atomicidad por sí solo."
+      ],
+      "expected": "Mensaje de rollback verificado y cinco filas al repetir. El ejemplo usa una base temporal en memoria y datos ficticios.",
+      "evidence": "Salida del ejemplo y explicación del alcance de la transacción.",
+      "code": "ruta <- system.file(\"examples\", \"lotes-transaccion.R\", package = \"fhirviews\")\ncat(readLines(ruta), sep = \"\\n\")\nsource(ruta)"
+    },
+    {
+      "id": "F07",
+      "title": "Revisar la recuperación de Bulk Data y sus límites",
+      "required": true,
+      "goal": "Evaluar comprensión mediante revisión técnica, sin iniciar escrituras ni exportaciones en servidores ajenos.",
+      "steps": [
+        "Leer la ayuda de fhir_exportar y el flujo de recuperación del README.",
+        "Describir el inicio asíncrono, Content-Location, Retry-After y manifiesto.",
+        "Explicar validación de JSON/tipo/conteo frente a checksum y qué pasa con un archivo parcial.",
+        "Revisar la evidencia HAPI publicada y registrar que esta sesión no contactó un servidor propio."
+      ],
+      "checks": [
+        "Se distingue validación del contenido de comprobación de checksum.",
+        "Se comprende que un archivo parcial se reinicia desde el principio.",
+        "Se explica la dependencia de la vigencia del trabajo y sus URL.",
+        "La prueba de servidor propio del participante quedó no_evaluada."
+      ],
+      "expected": "Revisión documental completada, no prueba operativa de Bulk Data. Cualquier ensayo en infraestructura propia requiere un plan posterior acordado.",
+      "evidence": "Notas de revisión y enlace a la evidencia HAPI; alcance operativo no evaluado.",
+      "code": "help(\"fhir_exportar\", package = \"fhirviews\")"
+    },
+    {
+      "id": "F08",
+      "title": "Repetir y evaluar portabilidad declarada",
+      "required": true,
+      "goal": "Verificar repetibilidad y documentar qué se puede trasladar a otra implementación.",
+      "steps": [
+        "Repetir el perfil completo en una carpeta nueva.",
+        "Comparar los hallazgos y conservar versiones de las vistas y del paquete.",
+        "Explicar qué aporta ViewDefinition como artefacto estándar y qué exige contrastar otro motor.",
+        "Dejar explícitamente no_evaluada la interoperabilidad con otro motor si no se ejecutó."
+      ],
+      "checks": [
+        "La repetición conserva resultados y el primer informe.",
+        "Se guardaron las vistas y las versiones.",
+        "Se distingue conformidad del banco incluido de una garantía universal.",
+        "No se afirmó una comparación con Pathling u otra herramienta sin ejecutarla."
+      ],
+      "expected": "Mismos hallazgos del piloto; no se evalúan tiempos iguales ni se presume equivalencia universal de motores.",
+      "evidence": "Informes de dos intentos, vistas versionadas y límites documentados.",
+      "code": "Sys.setenv(FHIRVIEWS_PILOTO_SALIDA = \"piloto-F01-intento02\")\nsource(system.file(\"examples\", \"piloto.R\", package = \"fhirviews\"))\na <- jsonlite::read_json(\"piloto-F01-intento01/aceptacion.json\")\nb <- jsonlite::read_json(\"piloto-F01-intento02/aceptacion.json\")\nidentical(a$hallazgos, b$hallazgos)"
+    },
+    {
+      "id": "F09",
+      "title": "Notificar hallazgos y acordar el cierre técnico de la sesión",
+      "required": true,
+      "goal": "Entregar una evaluación técnica reproducible y acciones de mejora.",
+      "steps": [
+        "Clasificar incidencias por impacto y reproducibilidad.",
+        "Adjuntar solo evidencia ficticia y revisar que no haya tokens ni datos ajenos al piloto.",
+        "Preparar el aviso al mantenedor y registrar manualmente canal y referencia si se envía.",
+        "Acordar incidencias que requieren corrección y repetición antes de aceptar el alcance."
+      ],
+      "checks": [
+        "Las incidencias tienen pasos, esperado, observado e impacto.",
+        "Se identificaron pruebas no evaluadas.",
+        "Se revisaron los archivos que se van a compartir.",
+        "Se registró una decisión humana explícita o pendiente y los responsables del seguimiento."
+      ],
+      "expected": "Informe técnico revisable con tareas, evidencias y decisión separada de los resultados automáticos.",
+      "evidence": "Formulario exportado, experiencia-usuario.txt y registro de notificaciones.",
+      "code": ""
+    }
+  ]
+}

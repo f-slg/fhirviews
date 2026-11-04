@@ -1,0 +1,19 @@
+Kit de protocolo fhirviews v1.0 — 4 de noviembre de 2026.
+
+Comprobaciones realizadas:
+- Sintaxis JavaScript verificada con Node.
+- Pruebas DOM con jsdom: separación de perfiles, guardado y restauración,
+  decisión pendiente inicial, bloqueo por tareas e incidencias, autonomía,
+  exportación JSON/CSV/TXT, preparación de avisos e impresión del informe.
+- Funcionamiento sin localStorage en contexto file://.
+- Textos de usuario insertados como texto; CSV con protección ante celdas que
+  comiencen como fórmulas; formulario sin llamadas de red ni librerías externas.
+- Enlaces locales y bloques Markdown comprobados.
+- Ejercicio F05 y soluciones del observador ejecutados contra el código local
+  de fhirviews: rechazo en bloque 2, columna valor y una entrega; vistas Patient
+  contrastadas y cardinalidad de name verificada.
+
+Estos resultados verifican el kit, no completan una sesión con usuarios.
+No se ha realizado evaluación humana ni validación clínica por este procedimiento.
+La apariencia y el comportamiento de impresión pueden variar entre navegadores.
+Exportar siempre JSON para conservar la sesión, incluso si hay guardado local.
