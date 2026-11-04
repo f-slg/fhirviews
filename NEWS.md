@@ -1,5 +1,16 @@
 # fhirviews 0.5.0
 
+* El piloto registra advertencias mediante códigos seguros y exige revisión antes
+  de aprobar; añade diagnósticos numéricos y referencias de eventos, cantones y
+  meses para detectar errores aunque se conserven los totales.
+* CI verifica el archivo fuente construido en una instalación independiente y
+  conserva sus informes. La guía del mantenedor viaja dentro del paquete.
+
+* Nuevo kit de aceptación técnica del piloto, con perfiles básico y completo,
+  informes locales y experiencia del usuario pendiente de evaluación humana.
+  `data-raw/probar-candidato.R` instala el archivo fuente en una biblioteca
+  nueva y verifica la copia instalada en un proceso R independiente.
+
 * `vista_ejecutar_lotes(estricto = TRUE)` exige un contrato explícito de tipos,
   comprueba valores antes de convertir o entregar cada bloque y produce
   errores estructurados sin incluir datos ni mensajes del destino.

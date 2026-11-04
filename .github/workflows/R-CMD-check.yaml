@@ -84,3 +84,29 @@ jobs:
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
+
+      - name: Aceptar el archivo fuente construido en una instalacion independiente
+        shell: Rscript {0}
+        run: |
+          candidatos <- list.files("check", pattern = "^fhirviews_.*\\.tar\\.gz$",
+                                    recursive = TRUE, full.names = TRUE)
+          stopifnot(length(candidatos) == 1L)
+          perfil <- if (Sys.getenv("PILOTO_R") == "release") "completo" else "basico"
+          salida <- file.path(Sys.getenv("RUNNER_TEMP"), "aceptacion-candidato")
+          estado <- system2(file.path(R.home("bin"), "Rscript"),
+            c("--vanilla", "data-raw/probar-candidato.R", shQuote(candidatos),
+              shQuote(salida), perfil))
+          stopifnot(estado == 0L)
+        env:
+          PILOTO_R: ${{ matrix.config.r }}
+
+      - name: Conservar informes de aceptacion del candidato
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: piloto-${{ runner.os }}-${{ matrix.config.r }}
+          path: |
+            ${{ runner.temp }}/aceptacion-candidato/
+            !${{ runner.temp }}/aceptacion-candidato/biblioteca/**
+          if-no-files-found: ignore
+          retention-days: 14
