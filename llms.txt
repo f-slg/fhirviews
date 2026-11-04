@@ -473,8 +473,9 @@ admite. Consulta
 para preparar un HAPI aislado.
 
 Para ejecutar la integración completa de forma reproducible desde el
-repositorio, con Docker o Podman y las dependencias de prueba
-instaladas:
+repositorio, con Docker o Podman y las dependencias de prueba instaladas
+(además de las dependencias obligatorias del paquete: `pkgload`,
+`testthat`, `DBI` y `duckdb`):
 
 ``` sh
 bash data-raw/probar-hapi.sh
