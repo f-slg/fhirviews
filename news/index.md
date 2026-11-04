@@ -2,6 +2,11 @@
 
 ## fhirviews 0.5.0
 
+- La integración con HAPI se automatiza con una imagen fijada por
+  digest, servidor aislado, limpieza y registros de resultados. Las
+  operaciones obligatorias no pueden quedar omitidas; la variante de
+  ValueSet en línea no admitida por HAPI se verifica por separado.
+
 - Se añade una demostración reproducible de vigilancia con datos
   ficticios, controles de conteo, resúmenes territoriales y mensuales y
   procedencia de los resultados (`inst/examples/vigilancia.R`).

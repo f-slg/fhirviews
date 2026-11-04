@@ -477,6 +477,9 @@
 <div class="sourceCode" id="cb16"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
 <span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::test(filter = "servidor")'</span></span></code></pre></div>
 <p>Ese servidor debe permitir escritura; algunas pruebas requieren terminología y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta <a href="tests/testthat/test-servidor.R"><code>tests/testthat/test-servidor.R</code></a> para preparar un HAPI aislado.</p>
+<p>Para ejecutar la integración completa de forma reproducible desde el repositorio, con Docker o Podman y las dependencias de prueba instaladas:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="fu">bash</span> data-raw/probar-hapi.sh</span></code></pre></div>
+<p>El script usa una imagen fijada por digest, abre un puerto aleatorio solo en localhost y elimina su propio contenedor al terminar, incluso si las pruebas fallan. Imprime la carpeta que conserva los registros, el resumen JSON y CSV, las omisiones y el entorno de R. La ejecución exige escritura, transacciones, terminología básica y Bulk Data; una omisión inesperada hace fallar la prueba. La variante de ValueSet en línea no admitida por HAPI queda registrada aparte. El workflow <strong>Integracion HAPI</strong> ejecuta este mismo script y conserva los resultados durante 14 días. En la primera ejecución puede descargar la imagen y la extensión JSON de DuckDB.</p>
 </div>
 <div class="section level2">
 <h2 id="rendimiento">Rendimiento<a class="anchor" aria-label="anchor" href="#rendimiento"></a>
@@ -597,7 +600,7 @@
 </h2>
 <p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="CONTRIBUTING.html">guía de contribución</a> y el <a href="CODE_OF_CONDUCT.html">código de conducta</a>.</p>
 <p>Para citar el paquete:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="LICENSE.html">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
 <p>fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo institucional. Todos los datos de ejemplo incluidos son ficticios.</p>

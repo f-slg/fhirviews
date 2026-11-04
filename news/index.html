@@ -43,7 +43,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="fhirviews-050">fhirviews 0.5.0<a class="anchor" aria-label="anchor" href="#fhirviews-050"></a></h2>
-<ul><li><p>Se añade una demostración reproducible de vigilancia con datos ficticios, controles de conteo, resúmenes territoriales y mensuales y procedencia de los resultados (<code>inst/examples/vigilancia.R</code>).</p></li>
+<ul><li><p>La integración con HAPI se automatiza con una imagen fijada por digest, servidor aislado, limpieza y registros de resultados. Las operaciones obligatorias no pueden quedar omitidas; la variante de ValueSet en línea no admitida por HAPI se verifica por separado.</p></li>
+<li><p>Se añade una demostración reproducible de vigilancia con datos ficticios, controles de conteo, resúmenes territoriales y mensuales y procedencia de los resultados (<code>inst/examples/vigilancia.R</code>).</p></li>
 <li><p><code><a href="../reference/fhir_validar.html">fhir_validar()</a></code> devuelve <code>valido = NA</code> ante errores HTTP o respuestas incompletas y conserva el estado HTTP en el atributo <code>estado</code>.</p></li>
 <li><p>Las exportaciones verifican cada recurso NDJSON por bloques (también gzip), su tipo y el conteo del manifiesto antes de registrar la descarga completa. Los registros anteriores se vuelven a descargar para aplicar la validación.</p></li>
 <li><p>Los errores HTTP y de respuestas no JSON omiten el contenido del servidor por defecto; <code>fhirviews.mostrar_detalles = TRUE</code> permite depurarlo. El parámetro <code>_id</code> también se oculta en las URL de error.</p></li>
