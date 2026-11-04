@@ -48,8 +48,9 @@ vista_ejecutar_duckdb(
   Si es `TRUE`, no ejecuta la vista: devuelve una tabla diferida de
   dplyr (`tbl_dbi` de dbplyr) sobre la consulta, para filtrar, agrupar y
   resumir con dplyr dentro de DuckDB y traer a R solo el resultado con
-  `dplyr::collect()`. Requiere los paquetes dplyr y dbplyr. Cada vez que
-  se usa la tabla, DuckDB vuelve a leer los archivos.
+  [`dplyr::collect()`](https://dplyr.tidyverse.org/reference/compute.html).
+  Requiere los paquetes dplyr y dbplyr. Cada vez que se usa la tabla,
+  DuckDB vuelve a leer los archivos.
 
 ## Value
 
@@ -88,9 +89,10 @@ con `DBI::dbDisconnect(dbplyr::remote_con(tabla))` al terminar), y si
 `archivos` son recursos de R, el archivo temporal se borra al cerrar la
 sesión de R. Las columnas sin tipo deducible se convierten según los
 valores, lo que obliga a recorrer los datos una vez al crear la tabla.
-Al traer los datos con `dplyr::collect()`, los elementos complejos (como
-`name.first()`) llegan como texto JSON y las colecciones como listas de
-DuckDB, no como las listas de R de
+Al traer los datos con
+[`dplyr::collect()`](https://dplyr.tidyverse.org/reference/compute.html),
+los elementos complejos (como `name.first()`) llegan como texto JSON y
+las colecciones como listas de DuckDB, no como las listas de R de
 [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).
 
 ## Examples

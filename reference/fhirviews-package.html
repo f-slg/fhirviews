@@ -9,7 +9,7 @@ tablas siguiendo la especificación SQL on FHIR (ViewDefinition)."><meta propert
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,6 +76,10 @@ la petición sin los valores de la consulta (<code>identifier=***</code>), que
 pueden ser datos de pacientes o credenciales y terminar en registros o
 capturas de pantalla; solo se ven los parámetros de control como
 <code>_count</code>. Con <code>TRUE</code> se muestra la URL completa, útil para depurar.</p></li>
+<li><p><code>fhirviews.mostrar_detalles</code>: con <code>TRUE</code>, incluye el contenido del servidor
+en los errores HTTP y respuestas no JSON. Por defecto se omite porque puede
+contener datos de pacientes. El OperationOutcome sigue disponible en el
+campo <code>outcome</code> de la condición de error.</p></li>
 <li><p><code>fhirviews.motor</code>: motor de FHIRPath (hoy solo <code>"v8"</code>).</p></li>
 <li><p><code>fhirviews.sql_profundidad</code>: niveles que recorre <code>repeat</code> en el motor
 DuckDB (12 por defecto).</p></li>

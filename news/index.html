@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,6 +41,23 @@
       <small>Source: <a href="https://github.com/f-slg/fhirviews/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="fhirviews-050">fhirviews 0.5.0<a class="anchor" aria-label="anchor" href="#fhirviews-050"></a></h2>
+<ul><li><p><code><a href="../reference/fhir_validar.html">fhir_validar()</a></code> devuelve <code>valido = NA</code> ante errores HTTP o respuestas incompletas y conserva el estado HTTP en el atributo <code>estado</code>.</p></li>
+<li><p>Las exportaciones verifican cada recurso NDJSON por bloques (también gzip), su tipo y el conteo del manifiesto antes de registrar la descarga completa. Los registros anteriores se vuelven a descargar para aplicar la validación.</p></li>
+<li><p>Los errores HTTP y de respuestas no JSON omiten el contenido del servidor por defecto; <code>fhirviews.mostrar_detalles = TRUE</code> permite depurarlo. El parámetro <code>_id</code> también se oculta en las URL de error.</p></li>
+<li><p>La caché FHIRPath ya no confunde nombres con propiedades heredadas de JavaScript. SMART Backend Services rechaza claves RSA menores de 2048 bits.</p></li>
+<li><p>La viñeta de grandes volúmenes requiere <code>FHIRVIEWS_VINETAS_DUCKDB=true</code> para ejecutar DuckDB, evitando descargas durante la construcción estándar.</p></li>
+<li><p>CI añade R-devel y R 4.1 a las comprobaciones del paquete.</p></li>
+<li><p>Se corrige un mensaje no ASCII de <code><a href="../reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> que causaba una advertencia de portabilidad en R CMD check en los tres sistemas.</p></li>
+<li><p>Nueva <code><a href="../reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> para leer NDJSON y gzip por bloques y entregar cada tabla a una función de procesamiento, sin acumular la entrada ni la salida.</p></li>
+<li><p>Las exportaciones masivas usan archivos temporales y registros de checksum. Al consultar de nuevo el mismo trabajo se reutilizan los archivos completos; los ausentes o alterados se vuelven a descargar desde el inicio.</p></li>
+<li><p>Se corrigen los enlaces de paginación relativos al origen y los que contienen solo parámetros, sin duplicar la ruta base del servidor.</p></li>
+<li><p>Las cabeceras de la conexión se envían únicamente a su base FHIR.</p></li>
+<li><p><code><a href="../reference/vista_duckdb.html">vista_duckdb()</a></code> guarda todas las vistas en una transacción y cierra las conexiones propias si falla, evitando tablas parcialmente actualizadas.</p></li>
+<li><p>Los tipos de texto explícitos se convierten a caracteres; <code>positiveInt</code> y <code>unsignedInt</code> avisan ante valores fuera de rango, conservando los datos. Los enteros no finitos también generan un aviso.</p></li>
+<li><p>CI verifica que la extensión JSON de DuckDB pueda cargarse antes del check e instala las dependencias de autenticación y consultas diferidas.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="fhirviews-040">fhirviews 0.4.0<a class="anchor" aria-label="anchor" href="#fhirviews-040"></a></h2>
 <p>Correcciones de una auditoría del paquete, con pruebas de escritura contra un servidor HAPI FHIR propio, y preparación para CRAN. No hay cambios incompatibles.</p>

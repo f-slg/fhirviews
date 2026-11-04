@@ -29,14 +29,16 @@ fhir_validar(con, recurso, perfil = NULL)
 
 Un `data.frame` de clase `fhir_validacion` con una fila por problema
 (`severidad`, `codigo`, `mensaje`, `ubicacion`) y el atributo `valido`
-(`TRUE` si no hay errores). Al imprimirlo, resume el resultado.
+(`TRUE` sin errores, `FALSE` con errores, `NA` si el servidor no pudo
+validar o no devuelve un OperationOutcome completo). El atributo
+`estado` conserva el estado HTTP. Al imprimirlo, resume el resultado.
 
 ## Examples
 
 ``` r
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 fhir_validar(con, list(resourceType = "Patient", gender = "mujer"))
-#> No válido: 1 error y 0 advertencias.
+#> No se pudo determinar la validez del recurso.
 #>   severidad codigo     ubicacion
 #> 1 error     processing <NA>     
 #>   mensaje                                                                                                                                                                      

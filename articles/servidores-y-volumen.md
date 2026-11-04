@@ -199,6 +199,13 @@ descargan en la subcarpeta `errores/` y se avisan.
 
 ## 3. Motor DuckDB: millones de recursos
 
+Los bloques de esta sección se ejecutan al construir la viñeta solo si
+se configura `FHIRVIEWS_VINETAS_DUCKDB=true`. La construcción estándar
+los omite para evitar descargas. En un entorno sin internet, instala
+previamente la extensión `json` con la misma versión de DuckDB y en el
+directorio de extensiones que usará el proceso; comprueba `LOAD json`
+antes de ejecutar el motor SQL.
+
 [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
 evalúa FHIRPath con fhirpath.js dentro de R: es completo y preciso, pero
 trabaja en memoria y su tiempo crece con cada recurso. Para volúmenes
@@ -232,19 +239,10 @@ confirmados <- vista_leer(r"-({
 con_duckdb <- vista_ejecutar_duckdb(archivo, confirmados)
 con_v8 <- vista_ejecutar(fhir_recursos(archivo), confirmados)
 head(con_duckdb)
-#>    paciente     inicio grave
-#> 1 den-p0001 2025-02-27 FALSE
-#> 2 den-p0003 2025-02-27 FALSE
-#> 3 den-p0004 2025-04-05 FALSE
-#> 4 den-p0005 2025-04-27 FALSE
-#> 5 den-p0006 2025-03-02 FALSE
-#> 6 den-p0007 2025-02-26 FALSE
 nrow(con_duckdb)
-#> [1] 661
 
 ordenar <- function(d) d[order(d$paciente), ]
 all.equal(ordenar(con_duckdb), ordenar(con_v8), check.attributes = FALSE)
-#> [1] TRUE
 ```
 
 [`vista_sql()`](https://f-slg.github.io/fhirviews/reference/vista_sql.md)
@@ -256,9 +254,6 @@ correrla en otra herramienta que hable SQL de DuckDB:
 sql <- vista_sql(vista_crear("Patient", c(sexo = "gender")),
                  desde = "pacientes.ndjson")
 cat(substr(sql, 1, 400), "...\n")
-#> SELECT f."id" AS "id", f."sexo" AS "sexo"
-#> FROM (
-#>   SELECT unnest([{'id': json_extract_string(r, '$.id'), 'sexo': json_extract_string(list_extract(list_transform([flatten(list_transform([json_extract(r, '$."gender"')], lambda z1: CASE WHEN z1 IS NULL OR CAST(z1 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z1 AS VARCHAR), '[') THEN list_filter(CAST(z1 AS JSON[]), lambda z2: z2 IS NOT N ...
 ```
 
 ### Rendimiento
@@ -289,11 +284,6 @@ oficial:
 
 vista_conformidad(c("basic.json", "foreach.json", "union.json", "repeat.json"),
                   motor = "duckdb")
-#> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) 
-#> fhirviews 0.4.0 · motor DuckDB 2.0.0
-#> 
-#>   shareable       53 de  53 aprobadas
-#>   total           53 de  53 aprobadas
 ```
 
 Es un motor **experimental**:

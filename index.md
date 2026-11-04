@@ -21,11 +21,12 @@ Funciona dentro de R, sin instalar Java ni Spark. El motor V8 supera las
 Puedes probarlo con los datos ficticios incluidos, sin conectarte a un
 servidor.
 
-> **Versión de desarrollo:** incorpora
-> [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
-> y recuperación de descargas por archivo con comprobación de checksum.
-> Consulta [NEWS.md](https://f-slg.github.io/fhirviews/NEWS.md) para
-> conocer los cambios respecto a la versión 0.4.0.
+> **Versión 0.5.0:** incorpora
+> [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md),
+> recuperación de descargas con validación de contenido y correcciones
+> de robustez y privacidad. Consulta
+> [NEWS.md](https://f-slg.github.io/fhirviews/NEWS.md) para conocer los
+> cambios respecto a la versión 0.4.0.
 
 ![Tres paneles: un recurso Patient en JSON, un ViewDefinition con column
 y forEach, y el data.frame resultante con una fila por cada nombre del

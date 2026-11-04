@@ -1,5 +1,63 @@
 # Changelog
 
+## fhirviews 0.5.0
+
+- [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
+  devuelve `valido = NA` ante errores HTTP o respuestas incompletas y
+  conserva el estado HTTP en el atributo `estado`.
+
+- Las exportaciones verifican cada recurso NDJSON por bloques (también
+  gzip), su tipo y el conteo del manifiesto antes de registrar la
+  descarga completa. Los registros anteriores se vuelven a descargar
+  para aplicar la validación.
+
+- Los errores HTTP y de respuestas no JSON omiten el contenido del
+  servidor por defecto; `fhirviews.mostrar_detalles = TRUE` permite
+  depurarlo. El parámetro `_id` también se oculta en las URL de error.
+
+- La caché FHIRPath ya no confunde nombres con propiedades heredadas de
+  JavaScript. SMART Backend Services rechaza claves RSA menores de 2048
+  bits.
+
+- La viñeta de grandes volúmenes requiere
+  `FHIRVIEWS_VINETAS_DUCKDB=true` para ejecutar DuckDB, evitando
+  descargas durante la construcción estándar.
+
+- CI añade R-devel y R 4.1 a las comprobaciones del paquete.
+
+- Se corrige un mensaje no ASCII de
+  [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
+  que causaba una advertencia de portabilidad en R CMD check en los tres
+  sistemas.
+
+- Nueva
+  [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
+  para leer NDJSON y gzip por bloques y entregar cada tabla a una
+  función de procesamiento, sin acumular la entrada ni la salida.
+
+- Las exportaciones masivas usan archivos temporales y registros de
+  checksum. Al consultar de nuevo el mismo trabajo se reutilizan los
+  archivos completos; los ausentes o alterados se vuelven a descargar
+  desde el inicio.
+
+- Se corrigen los enlaces de paginación relativos al origen y los que
+  contienen solo parámetros, sin duplicar la ruta base del servidor.
+
+- Las cabeceras de la conexión se envían únicamente a su base FHIR.
+
+- [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
+  guarda todas las vistas en una transacción y cierra las conexiones
+  propias si falla, evitando tablas parcialmente actualizadas.
+
+- Los tipos de texto explícitos se convierten a caracteres;
+  `positiveInt` y `unsignedInt` avisan ante valores fuera de rango,
+  conservando los datos. Los enteros no finitos también generan un
+  aviso.
+
+- CI verifica que la extensión JSON de DuckDB pueda cargarse antes del
+  check e instala las dependencias de autenticación y consultas
+  diferidas.
+
 ## fhirviews 0.4.0
 
 Correcciones de una auditoría del paquete, con pruebas de escritura

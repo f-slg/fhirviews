@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -197,7 +197,7 @@ cliente:</p>
 <code class="sourceCode R"><span><span class="va">clave</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/keygen.html" class="external-link">rsa_keygen</a></span><span class="op">(</span><span class="fl">2048</span><span class="op">)</span></span>
 <span><span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/write_pem.html" class="external-link">write_pem</a></span><span class="op">(</span><span class="va">clave</span>, <span class="st">"~/.claves/fhir-privada.pem"</span><span class="op">)</span></span>
 <span><span class="co"># JWKS con la clave pública, para registrar el cliente</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">jose</span><span class="fu">::</span><span class="fu">write_jwk</span><span class="op">(</span><span class="va">clave</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">jose</span><span class="fu">::</span><span class="fu"><a href="https://r-lib.r-universe.dev/jose/reference/jwk.html" class="external-link">write_jwk</a></span><span class="op">(</span><span class="va">clave</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </li>
 <li>
 <p><strong>Conectarse.</strong> Las URL del servidor de autorización
@@ -377,6 +377,13 @@ lista <code>error</code> del manifiesto), se descargan en la subcarpeta
 <div class="section level2">
 <h2 id="motor-duckdb-millones-de-recursos">3. Motor DuckDB: millones de recursos<a class="anchor" aria-label="anchor" href="#motor-duckdb-millones-de-recursos"></a>
 </h2>
+<p>Los bloques de esta sección se ejecutan al construir la viñeta solo
+si se configura <code>FHIRVIEWS_VINETAS_DUCKDB=true</code>. La
+construcción estándar los omite para evitar descargas. En un entorno sin
+internet, instala previamente la extensión <code>json</code> con la
+misma versión de DuckDB y en el directorio de extensiones que usará el
+proceso; comprueba <code>LOAD json</code> antes de ejecutar el motor
+SQL.</p>
 <p><code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> evalúa FHIRPath con fhirpath.js dentro
 de R: es completo y preciso, pero trabaja en memoria y su tiempo crece
 con cada recurso. Para volúmenes grandes,
@@ -407,29 +414,17 @@ Requiere los paquetes duckdb (1.3.0 o posterior) y DBI.</p>
 <span><span class="va">con_duckdb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="va">archivo</span>, <span class="va">confirmados</span><span class="op">)</span></span>
 <span><span class="va">con_v8</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="fu"><a href="../reference/fhir_recursos.html">fhir_recursos</a></span><span class="op">(</span><span class="va">archivo</span><span class="op">)</span>, <span class="va">confirmados</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">con_duckdb</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    paciente     inicio grave</span></span>
-<span><span class="co">#&gt; 1 den-p0001 2025-02-27 FALSE</span></span>
-<span><span class="co">#&gt; 2 den-p0003 2025-02-27 FALSE</span></span>
-<span><span class="co">#&gt; 3 den-p0004 2025-04-05 FALSE</span></span>
-<span><span class="co">#&gt; 4 den-p0005 2025-04-27 FALSE</span></span>
-<span><span class="co">#&gt; 5 den-p0006 2025-03-02 FALSE</span></span>
-<span><span class="co">#&gt; 6 den-p0007 2025-02-26 FALSE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">con_duckdb</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 661</span></span>
 <span></span>
 <span><span class="va">ordenar</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">d</span><span class="op">)</span> <span class="va">d</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">paciente</span><span class="op">)</span>, <span class="op">]</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">ordenar</span><span class="op">(</span><span class="va">con_duckdb</span><span class="op">)</span>, <span class="fu">ordenar</span><span class="op">(</span><span class="va">con_v8</span><span class="op">)</span>, check.attributes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">ordenar</span><span class="op">(</span><span class="va">con_duckdb</span><span class="op">)</span>, <span class="fu">ordenar</span><span class="op">(</span><span class="va">con_v8</span><span class="op">)</span>, check.attributes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="../reference/vista_sql.html">vista_sql()</a></code> muestra la consulta que se ejecuta, útil
 para entender el motor o para correrla en otra herramienta que hable SQL
 de DuckDB:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_sql.html">vista_sql</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                 desde <span class="op">=</span> <span class="st">"pacientes.ndjson"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">sql</span>, <span class="fl">1</span>, <span class="fl">400</span><span class="op">)</span>, <span class="st">"...\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; SELECT f."id" AS "id", f."sexo" AS "sexo"</span></span>
-<span><span class="co">#&gt; FROM (</span></span>
-<span><span class="co">#&gt;   SELECT unnest([{'id': json_extract_string(r, '$.id'), 'sexo': json_extract_string(list_extract(list_transform([flatten(list_transform([json_extract(r, '$."gender"')], lambda z1: CASE WHEN z1 IS NULL OR CAST(z1 AS VARCHAR) = 'null' THEN []::JSON[] WHEN starts_with(CAST(z1 AS VARCHAR), '[') THEN list_filter(CAST(z1 AS JSON[]), lambda z2: z2 IS NOT N ...</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">sql</span>, <span class="fl">1</span>, <span class="fl">400</span><span class="op">)</span>, <span class="st">"...\n"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="rendimiento">Rendimiento<a class="anchor" aria-label="anchor" href="#rendimiento"></a>
@@ -490,12 +485,7 @@ máximo unos 1,3 GB.</p>
 <em>shareable</em></strong> del banco oficial:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"basic.json"</span>, <span class="st">"foreach.json"</span>, <span class="st">"union.json"</span>, <span class="st">"repeat.json"</span><span class="op">)</span>,</span>
-<span>                  motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) </span></span>
-<span><span class="co">#&gt; fhirviews 0.4.0 · motor DuckDB 2.0.0</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   shareable       53 de  53 aprobadas</span></span>
-<span><span class="co">#&gt;   total           53 de  53 aprobadas</span></span></code></pre></div>
+<span>                  motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span></span></code></pre></div>
 <p>Es un motor <strong>experimental</strong>:</p>
 <ul>
 <li>Traduce un subconjunto amplio de FHIRPath: navegación, elementos de
@@ -534,8 +524,8 @@ calculan en DuckDB y solo el resultado llega a R.</p>
 <code class="sourceCode R"><span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="st">"exportacion/Condition.ndjson"</span>, <span class="va">confirmados</span>,</span>
 <span>                               diferido <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">casos</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">count</span><span class="op">(</span><span class="va">grave</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">grave</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Con una base DuckDB propia, el resultado se puede guardar como tabla
 en lugar de traerlo a R:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
