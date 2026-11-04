@@ -2,6 +2,10 @@
 
 ## fhirviews 0.5.0
 
+- CI usa macOS 15 Intel para evitar la cola arm64, actualiza checkout y
+  upload-artifact a v6 y cancela comprobaciones sustituidas por otro
+  commit.
+
 - El piloto registra advertencias mediante códigos seguros y exige
   revisión antes de aprobar; añade diagnósticos numéricos y referencias
   de eventos, cantones y meses para detectar errores aunque se conserven

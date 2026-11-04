@@ -43,7 +43,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="fhirviews-050">fhirviews 0.5.0<a class="anchor" aria-label="anchor" href="#fhirviews-050"></a></h2>
-<ul><li><p>El piloto registra advertencias mediante códigos seguros y exige revisión antes de aprobar; añade diagnósticos numéricos y referencias de eventos, cantones y meses para detectar errores aunque se conserven los totales.</p></li>
+<ul><li><p>CI usa macOS 15 Intel para evitar la cola arm64, actualiza checkout y upload-artifact a v6 y cancela comprobaciones sustituidas por otro commit.</p></li>
+<li><p>El piloto registra advertencias mediante códigos seguros y exige revisión antes de aprobar; añade diagnósticos numéricos y referencias de eventos, cantones y meses para detectar errores aunque se conserven los totales.</p></li>
 <li><p>CI verifica el archivo fuente construido en una instalación independiente y conserva sus informes. La guía del mantenedor viaja dentro del paquete.</p></li>
 <li><p>Nuevo kit de aceptación técnica del piloto, con perfiles básico y completo, informes locales y experiencia del usuario pendiente de evaluación humana. <code>data-raw/probar-candidato.R</code> instala el archivo fuente en una biblioteca nueva y verifica la copia instalada en un proceso R independiente.</p></li>
 <li><p><code>vista_ejecutar_lotes(estricto = TRUE)</code> exige un contrato explícito de tipos, comprueba valores antes de convertir o entregar cada bloque y produce errores estructurados sin incluir datos ni mensajes del destino.</p></li>

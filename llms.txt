@@ -786,11 +786,13 @@ vista_conformidad(motor = "duckdb")   # requiere DuckDB y su extensión json
 shareable aprobadas y cuatro experimentales
 pendientes](reference/figures/README-conformidad.png)
 
-CI comprueba el paquete en Windows, macOS y Linux, además de R-devel y R
-4.1. En R 4.1 y R-devel se comprueban el cliente y V8. Los tres sistemas
-con R release incluyen DuckDB y sus pruebas SQL. Las pruebas HTTP usan
-respuestas simuladas. La integración de escritura se habilita por
-separado contra un **servidor de pruebas propio**:
+CI comprueba el paquete en Windows, macOS Intel y Linux, además de
+R-devel y R 4.1. macOS usa el ejecutor explícito `macos-15-intel`; esta
+matriz no valida Apple Silicon. En R 4.1 y R-devel se comprueban el
+cliente y V8. Los tres sistemas con R release incluyen DuckDB y sus
+pruebas SQL. Las pruebas HTTP usan respuestas simuladas. La integración
+de escritura se habilita por separado contra un **servidor de pruebas
+propio**:
 
 ``` sh
 FHIRVIEWS_SERVIDOR_ESCRITURA=http://localhost:8080/fhir \

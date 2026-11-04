@@ -58,11 +58,11 @@ glucosa <- tx_buscar_codigo(tx, "http://loinc.org", "2345-7")
 glucosa$display
 #> [1] "Glucose [Mass/volume] in Serum or Plasma"
 head(glucosa$propiedades)
-#>            propiedad valor      descripcion
-#> 1           inactive FALSE             <NA>
-#> 2          CLASSTYPE     1 Laboratory class
-#> 3          ORDER_OBS  Both             <NA>
-#> 4      EXAMPLE_UNITS mg/dL             <NA>
-#> 5 EXAMPLE_UCUM_UNITS mg/dL             <NA>
-#> 6      UNITSREQUIRED     Y             <NA>
+#>    propiedad     valor descripcion
+#> 1   inactive     FALSE        <NA>
+#> 2      CLASS      CHEM        <NA>
+#> 3  COMPONENT LP14635-4        <NA>
+#> 4   PROPERTY  LP6827-2        <NA>
+#> 5 TIME_ASPCT  LP6960-1        <NA>
+#> 6     SYSTEM  LP7576-4        <NA>
 ```
