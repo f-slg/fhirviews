@@ -402,8 +402,23 @@
 <span><span class="op">)</span></span>
 <span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">archivo_dengue</span>, <span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"notificacion_obligatoria"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Con un servidor de terminología, <code><a href="reference/tx_expandir.html">tx_expandir()</a></code> obtiene los códigos de un ValueSet, <code><a href="reference/tx_buscar_codigo.html">tx_buscar_codigo()</a></code> consulta <code>$lookup</code> y <code><a href="reference/tx_validar_codigo.html">tx_validar_codigo()</a></code> invoca <code>$validate-code</code>. <code><a href="reference/vista_con_valueset.html">vista_con_valueset()</a></code> incorpora los códigos expandidos a la vista para que su ejecución posterior no dependa de la red.</p>
+<div class="section level3">
+<h3 id="demostración-reproducible-de-vigilancia">Demostración reproducible de vigilancia<a class="anchor" aria-label="anchor" href="#demostraci%C3%B3n-reproducible-de-vigilancia"></a>
+</h3>
+<p>Para ejecutar un flujo completo con los datos ficticios incluidos:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"vigilancia.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>El script imprime la carpeta de salida y comprueba que los resúmenes coincidan con los eventos seleccionados. Con el conjunto incluido parte de 755 eventos, selecciona 661 confirmados con CIE-10 A90/A91 y excluye 94 refutados. Genera:</p>
+<ul>
+<li>Eventos confirmados y resúmenes por cantón y mes de inicio, en CSV.</li>
+<li>Controles de conteo para revisar la transformación.</li>
+<li>Las vistas JSON, la versión del paquete, el checksum de entrada y <code><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo()</a></code>.</li>
+<li>Un archivo <code>LEEME.txt</code> con la definición del indicador y sus límites.</li>
+</ul>
+<p>Son <strong>conteos de eventos ficticios</strong>, no pacientes únicos ni tasas poblacionales. Los códigos territoriales deben leerse como texto para conservar los ceros iniciales. Para elegir otra carpeta, configura <code>FHIRVIEWS_DEMO_SALIDA</code> antes de ejecutar el script; la carpeta debe ser nueva para evitar sobrescrituras.</p>
 <p>Para convertir casos en indicadores territoriales, consulta el <a href="https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html">ejemplo de tasas por cantón con FHIR y pobecu</a>.</p>
 <p><img src="reference/figures/README-tasas.png" width="90%" alt="Ejemplo de análisis de tasas por territorio con datos FHIR ficticios y población de pobecu"></p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="validación-y-privacidad">Validación y privacidad<a class="anchor" aria-label="anchor" href="#validaci%C3%B3n-y-privacidad"></a>
@@ -434,7 +449,7 @@
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requiere una conexión y un servidor que admita $validate</span></span>
 <span><span class="va">resultado</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_validar.html">fhir_validar</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>resourceType <span class="op">=</span> <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"female"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">resultado</span>, <span class="st">"valido"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -442,7 +457,7 @@
 <span><span class="op">}</span></span></code></pre></div>
 <p>El estado HTTP queda disponible en <code>attr(resultado, "estado")</code>. Una validación positiva no certifica la calidad clínica de los datos.</p>
 <p>Los errores HTTP omiten por defecto el contenido del servidor, que puede contener información de pacientes. También se ocultan los valores sensibles de la consulta, incluido <code>_id</code>. Para depuración controlada:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_detalles <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># contenido del servidor en errores</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_consulta <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># valores completos de la consulta</span></span>
 <span></span>
@@ -454,13 +469,13 @@
 <h2 id="conformidad-y-pruebas">Conformidad y pruebas<a class="anchor" aria-label="anchor" href="#conformidad-y-pruebas"></a>
 </h2>
 <p>El paquete incluye el <a href="https://github.com/FHIR/sql-on-fhir.js/tree/main/tests" class="external-link">banco oficial de SQL on FHIR</a>. Los dos motores superan <strong>133/133 pruebas del perfil shareable</strong> y <strong>7/11 experimentales</strong> del banco incluido. Las cuatro pendientes corresponden a <code>lowBoundary()</code> y <code>highBoundary()</code> y a diferencias de precisión o zona horaria. La conformidad se refiere a ese banco y no certifica un sistema clínico.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="op">)</span>                   <span class="co"># motor V8</span></span>
 <span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span>   <span class="co"># requiere DuckDB y su extensión json</span></span></code></pre></div>
 <p><img src="reference/figures/README-conformidad.png" width="80%" alt="Resultados por archivo del banco SQL on FHIR: todas las pruebas shareable aprobadas y cuatro experimentales pendientes"></p>
 <p>CI comprueba el paquete en Windows, macOS y Linux, además de R-devel y R 4.1. En R 4.1 y R-devel se comprueban el cliente y V8. Los tres sistemas con R release incluyen DuckDB y sus pruebas SQL. Las pruebas HTTP usan respuestas simuladas. La integración de escritura se habilita por separado contra un <strong>servidor de pruebas propio</strong>:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::test(filter = "servidor")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::test(filter = "servidor")'</span></span></code></pre></div>
 <p>Ese servidor debe permitir escritura; algunas pruebas requieren terminología y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta <a href="tests/testthat/test-servidor.R"><code>tests/testthat/test-servidor.R</code></a> para preparar un HAPI aislado.</p>
 </div>
 <div class="section level2">
@@ -582,7 +597,7 @@
 </h2>
 <p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="CONTRIBUTING.html">guía de contribución</a> y el <a href="CODE_OF_CONDUCT.html">código de conducta</a>.</p>
 <p>Para citar el paquete:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="LICENSE.html">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
 <p>fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo institucional. Todos los datos de ejemplo incluidos son ficticios.</p>
