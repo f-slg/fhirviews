@@ -83,7 +83,7 @@
 <p><a href="https://f-slg.github.io/fhirviews/">Documentación</a> · <a href="https://f-slg.github.io/fhirviews/reference/">Referencia</a> · <a href="NEWS.html">Novedades de 0.5.0</a> · <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">Reportar un problema</a></p>
 <p><img src="reference/figures/README-json-tabla.png" width="100%" alt="Flujo de transformación: recurso Patient en JSON, columnas definidas en un ViewDefinition y tabla resultante en R"></p>
 <blockquote>
-<p><strong>Versión 0.5.0 · candidato de distribución privada.</strong> Procesamiento por bloques, recuperación de exportaciones con validación de contenido y mejoras de privacidad. El motor SQL de DuckDB sigue siendo <strong>experimental</strong>. El paquete todavía no se ha enviado a CRAN.</p>
+<p><strong>Versión 0.5.0 · candidato en preparación.</strong> Procesamiento por bloques, recuperación de exportaciones con validación de contenido y mejoras de privacidad. El motor SQL de DuckDB sigue siendo <strong>experimental</strong>. El paquete todavía no se ha enviado a CRAN.</p>
 </blockquote>
 <div class="section level2">
 <h2 id="contenido">Contenido<a class="anchor" aria-label="anchor" href="#contenido"></a>
@@ -104,7 +104,7 @@
 <li><a href="#conformidad-y-pruebas">Conformidad y pruebas</a></li>
 <li><a href="#rendimiento">Rendimiento</a></li>
 <li><a href="#alcance-y-l%C3%ADmites">Alcance y límites</a></li>
-<li><a href="#piloto-privado-y-documentaci%C3%B3n-local">Piloto privado y documentación local</a></li>
+<li><a href="#piloto-y-documentaci%C3%B3n-local">Piloto y documentación local</a></li>
 <li><a href="#gu%C3%ADas-y-referencia">Guías y referencia</a></li>
 <li><a href="#contribuir-citar-y-licencia">Contribuir, citar y licencia</a></li>
 </ul>
@@ -195,8 +195,8 @@
 <div class="section level2">
 <h2 id="instalación">Instalación<a class="anchor" aria-label="anchor" href="#instalaci%C3%B3n"></a>
 </h2>
-<p>El cliente y el motor V8 requieren <strong>R ≥ 4.1.0</strong>. El acceso al repositorio privado requiere una cuenta autorizada y autenticación de GitHub configurada en tu entorno. Si el mantenedor te entregó un <code>.tar.gz</code>, usa las instrucciones del <a href="#piloto-privado-y-documentaci%C3%B3n-local">piloto privado</a>.</p>
-<p>Con acceso al repositorio, instala desde GitHub:</p>
+<p>El cliente y el motor V8 requieren <strong>R ≥ 4.1.0</strong>. El repositorio es público; puedes instalar desde GitHub. Si el mantenedor te entregó un <code>.tar.gz</code> para el piloto, usa las instrucciones de <a href="#piloto-y-documentaci%C3%B3n-local">instalación local</a>.</p>
+<p>Instala desde GitHub:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span>  <span class="co"># una sola vez</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"f-slg/fhirviews"</span><span class="op">)</span></span></code></pre></div>
@@ -879,7 +879,7 @@
 <p>Las prioridades de desarrollo incluyen estabilizar el motor DuckDB, mejorar la precisión decimal y ampliar las operaciones de búsqueda y terminología. Las propuestas y su seguimiento están en <a href="https://github.com/f-slg/fhirviews/issues" class="external-link">GitHub Issues</a>.</p>
 </div>
 <div class="section level2">
-<h2 id="piloto-privado-y-documentación-local">Piloto privado y documentación local<a class="anchor" aria-label="anchor" href="#piloto-privado-y-documentaci%C3%B3n-local"></a>
+<h2 id="piloto-y-documentación-local">Piloto y documentación local<a class="anchor" aria-label="anchor" href="#piloto-y-documentaci%C3%B3n-local"></a>
 </h2>
 <p>El piloto usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
@@ -904,7 +904,7 @@
 <div class="section level2">
 <h2 id="guías-y-referencia">Guías y referencia<a class="anchor" aria-label="anchor" href="#gu%C3%ADas-y-referencia"></a>
 </h2>
-<p>Los enlaces web requieren que el sitio esté disponible para tu cuenta. Con la distribución privada, la ayuda y las viñetas instaladas son la alternativa local descrita en la sección anterior.</p>
+<p>El código fuente está disponible en el repositorio público. La ayuda y las viñetas también se pueden consultar localmente, como se describe en la sección anterior, sin depender de la disponibilidad del sitio web.</p>
 <table class="table">
 <colgroup>
 <col width="50%">

@@ -28,9 +28,9 @@ problema](https://github.com/f-slg/fhirviews/issues/new/choose)
 en un ViewDefinition y tabla resultante en
 R](reference/figures/README-json-tabla.png)
 
-> **Versión 0.5.0 · candidato de distribución privada.** Procesamiento
-> por bloques, recuperación de exportaciones con validación de contenido
-> y mejoras de privacidad. El motor SQL de DuckDB sigue siendo
+> **Versión 0.5.0 · candidato en preparación.** Procesamiento por
+> bloques, recuperación de exportaciones con validación de contenido y
+> mejoras de privacidad. El motor SQL de DuckDB sigue siendo
 > **experimental**. El paquete todavía no se ha enviado a CRAN.
 
 ## Contenido
@@ -54,8 +54,7 @@ R](reference/figures/README-json-tabla.png)
 - [Conformidad y pruebas](#conformidad-y-pruebas)
 - [Rendimiento](#rendimiento)
 - [Alcance y límites](#alcance-y-l%C3%ADmites)
-- [Piloto privado y documentación
-  local](#piloto-privado-y-documentaci%C3%B3n-local)
+- [Piloto y documentación local](#piloto-y-documentaci%C3%B3n-local)
 - [Guías y referencia](#gu%C3%ADas-y-referencia)
 - [Contribuir, citar y licencia](#contribuir-citar-y-licencia)
 
@@ -94,13 +93,12 @@ flowchart LR
 
 ## Instalación
 
-El cliente y el motor V8 requieren **R ≥ 4.1.0**. El acceso al
-repositorio privado requiere una cuenta autorizada y autenticación de
-GitHub configurada en tu entorno. Si el mantenedor te entregó un
-`.tar.gz`, usa las instrucciones del [piloto
-privado](#piloto-privado-y-documentaci%C3%B3n-local).
+El cliente y el motor V8 requieren **R ≥ 4.1.0**. El repositorio es
+público; puedes instalar desde GitHub. Si el mantenedor te entregó un
+`.tar.gz` para el piloto, usa las instrucciones de [instalación
+local](#piloto-y-documentaci%C3%B3n-local).
 
-Con acceso al repositorio, instala desde GitHub:
+Instala desde GitHub:
 
 ``` r
 
@@ -913,7 +911,7 @@ mejorar la precisión decimal y ampliar las operaciones de búsqueda y
 terminología. Las propuestas y su seguimiento están en [GitHub
 Issues](https://github.com/f-slg/fhirviews/issues).
 
-## Piloto privado y documentación local
+## Piloto y documentación local
 
 El piloto usa los datos ficticios incluidos. Instala las dependencias y
 el archivo fuente que te entregue el mantenedor:
@@ -966,9 +964,9 @@ códigos y cerrar el piloto. También se distribuye dentro del paquete, en
 
 ## Guías y referencia
 
-Los enlaces web requieren que el sitio esté disponible para tu cuenta.
-Con la distribución privada, la ayuda y las viñetas instaladas son la
-alternativa local descrita en la sección anterior.
+El código fuente está disponible en el repositorio público. La ayuda y
+las viñetas también se pueden consultar localmente, como se describe en
+la sección anterior, sin depender de la disponibilidad del sitio web.
 
 | Guía | Contenido |
 |----|----|
