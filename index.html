@@ -79,10 +79,11 @@
 
 <p><strong>fhirviews</strong> consulta servidores <strong>HL7 FHIR R4</strong> y transforma sus recursos en <code>data.frame</code> mediante <strong>SQL on FHIR</strong> y <strong>FHIRPath</strong>. Define una vista una vez, guárdala como <code>ViewDefinition</code> y reutilízala sobre archivos locales, respuestas del servidor o exportaciones poblacionales.</p>
 <p>Está pensado para análisis clínico, investigación, vigilancia epidemiológica y docencia desde R. Incluye autenticación SMART on FHIR, vistas para salud pública y procesamiento NDJSON por bloques, sin instalar Java ni Spark.</p>
+<p>El flujo técnico combina un cliente HTTP basado en <code>httr2</code>, un evaluador FHIRPath con <code>fhirpath.js</code> en V8 y un traductor SQL opcional para DuckDB. La definición de extracción es independiente del origen: un mismo <code>ViewDefinition</code> puede aplicarse a recursos obtenidos por REST o a archivos locales. La compatibilidad del motor SQL se comprueba por separado.</p>
 <p><a href="https://f-slg.github.io/fhirviews/">Documentación</a> · <a href="https://f-slg.github.io/fhirviews/reference/">Referencia</a> · <a href="NEWS.html">Novedades de 0.5.0</a> · <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">Reportar un problema</a></p>
 <p><img src="reference/figures/README-json-tabla.png" width="100%" alt="Flujo de transformación: recurso Patient en JSON, columnas definidas en un ViewDefinition y tabla resultante en R"></p>
 <blockquote>
-<p><strong>Versión 0.5.0 · distribución en GitHub.</strong> Procesamiento por bloques, recuperación de exportaciones con validación de contenido y mejoras de privacidad. El motor SQL de DuckDB sigue siendo <strong>experimental</strong>. El paquete todavía no se ha enviado a CRAN.</p>
+<p><strong>Versión 0.5.0 · candidato de distribución privada.</strong> Procesamiento por bloques, recuperación de exportaciones con validación de contenido y mejoras de privacidad. El motor SQL de DuckDB sigue siendo <strong>experimental</strong>. El paquete todavía no se ha enviado a CRAN.</p>
 </blockquote>
 <div class="section level2">
 <h2 id="contenido">Contenido<a class="anchor" aria-label="anchor" href="#contenido"></a>
@@ -91,6 +92,8 @@
 <li><a href="#qu%C3%A9-puedes-hacer">Qué puedes hacer</a></li>
 <li><a href="#instalaci%C3%B3n">Instalación</a></li>
 <li><a href="#inicio-r%C3%A1pido-de-fhir-a-una-tabla">Inicio rápido: de FHIR a una tabla</a></li>
+<li><a href="#arquitectura-y-secuencia-de-procesamiento">Arquitectura y secuencia de procesamiento</a></li>
+<li><a href="#sem%C3%A1ntica-de-una-vista">Semántica de una vista</a></li>
 <li><a href="#elegir-c%C3%B3mo-procesar-los-datos">Elegir cómo procesar los datos</a></li>
 <li><a href="#consultar-un-servidor-fhir">Consultar un servidor FHIR</a></li>
 <li><a href="#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva">Autenticación y exportación masiva</a></li>
@@ -192,7 +195,8 @@
 <div class="section level2">
 <h2 id="instalación">Instalación<a class="anchor" aria-label="anchor" href="#instalaci%C3%B3n"></a>
 </h2>
-<p>El cliente y el motor V8 requieren <strong>R ≥ 4.1.0</strong>. Instala desde GitHub:</p>
+<p>El cliente y el motor V8 requieren <strong>R ≥ 4.1.0</strong>. El acceso al repositorio privado requiere una cuenta autorizada y autenticación de GitHub configurada en tu entorno. Si el mantenedor te entregó un <code>.tar.gz</code>, usa las instrucciones del <a href="#piloto-privado-y-documentaci%C3%B3n-local">piloto privado</a>.</p>
+<p>Con acceso al repositorio, instala desde GitHub:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pak"</span><span class="op">)</span>  <span class="co"># una sola vez</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"f-slg/fhirviews"</span><span class="op">)</span></span></code></pre></div>
@@ -278,6 +282,145 @@
 <span><span class="va">vista_reutilizable</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_leer.html">vista_leer</a></span><span class="op">(</span><span class="st">"signos-vitales.json"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="arquitectura-y-secuencia-de-procesamiento">Arquitectura y secuencia de procesamiento<a class="anchor" aria-label="anchor" href="#arquitectura-y-secuencia-de-procesamiento"></a>
+</h2>
+<p>Las responsabilidades se distribuyen en cuatro capas. El cliente obtiene recursos; la definición declara la extracción; los motores generan filas; el consumidor decide cómo guardar, resumir o consultar el resultado.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph EN["1. Entrada"]
+        REST["Servidor FHIR R4"]
+        FILE["JSON, Bundle, NDJSON o gzip"]
+        PAR["Parquet"]
+    end
+    subgraph AC["2. Acceso y definición"]
+        HTTP["httr2: REST, SMART y Bulk Data"]
+        RES["fhir_recursos(): listas y JSON de origen"]
+        VIEW["ViewDefinition: resource, where, select y constant"]
+        VALID["vista_validar(): estructura y expresiones"]
+    end
+    subgraph EX["3. Ejecución"]
+        V8["vista_ejecutar(): fhirpath.js en V8"]
+        LOT["vista_ejecutar_lotes(): lectura incremental y V8"]
+        SQL["vista_ejecutar_duckdb(): traducción SQL experimental"]
+    end
+    subgraph OUT["4. Consumo"]
+        DF["data.frame completo"]
+        CB["procesar(tabla, bloque)"]
+        DB["Tabla DuckDB o consulta diferida"]
+    end
+    REST --&gt; HTTP --&gt; RES
+    FILE --&gt; RES --&gt; V8 --&gt; DF
+    FILE --&gt;|"Solo NDJSON y gzip"| LOT --&gt; CB
+    HTTP --&gt;|"Archivos exportados"| LOT
+    HTTP --&gt;|"Archivos exportados"| SQL
+    FILE --&gt;|"NDJSON"| SQL
+    PAR --&gt; SQL
+    VIEW --&gt; VALID
+    VALID --&gt; V8
+    VALID --&gt; LOT
+    VALID --&gt; SQL
+    SQL --&gt; DF
+    SQL --&gt; DB</code></pre>
+<p>Para construir un análisis reproducible, sigue esta secuencia:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Identifica la entrada:</strong> servidor, archivos y versión FHIR esperada.</li>
+<li>
+<strong>Define la vista:</strong> recurso, filtros, columnas, tipos y expansión de listas.</li>
+<li>
+<strong>Contrasta una muestra:</strong> revisa las filas frente al JSON original con V8.</li>
+<li>
+<strong>Elige la ejecución:</strong> tabla en memoria, bloques o SQL sobre archivos.</li>
+<li>
+<strong>Controla la persistencia:</strong> transacción o destino temporal según el consumidor.</li>
+<li>
+<strong>Reconcilia resultados:</strong> eventos incluidos y excluidos, referencias y agregados.</li>
+<li>
+<strong>Conserva evidencia:</strong> vista JSON, identidad de la entrada, versiones y controles.</li>
+</ol>
+<p>La evaluación por lotes de <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code> agrupa llamadas a V8 para los recursos ya cargados. La lectura por bloques de <code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> divide además el archivo de entrada; son dos niveles diferentes de procesamiento.</p>
+</div>
+<div class="section level2">
+<h2 id="semántica-de-una-vista">Semántica de una vista<a class="anchor" aria-label="anchor" href="#sem%C3%A1ntica-de-una-vista"></a>
+</h2>
+<p>Un <code>ViewDefinition</code> describe una transformación declarativa. No es una consulta SQL escrita por el usuario: sus rutas se expresan en FHIRPath y el motor las aplica sobre recursos del tipo indicado en <code>resource</code>.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Elemento</th>
+<th>Responsabilidad</th>
+<th>Efecto sobre las filas</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>resource</code></td>
+<td>Elegir el tipo FHIR de entrada</td>
+<td>Los otros tipos no participan</td>
+</tr>
+<tr>
+<td><code>where</code></td>
+<td>Evaluar condiciones booleanas sobre el recurso</td>
+<td>Descarta recursos que no cumplen</td>
+</tr>
+<tr>
+<td><code>column</code></td>
+<td>Evaluar una ruta y asignarle nombre y tipo</td>
+<td>Añade columnas al contexto actual</td>
+</tr>
+<tr>
+<td><code>forEach</code></td>
+<td>Recorrer una colección</td>
+<td>Genera una fila por elemento; cero si está vacía</td>
+</tr>
+<tr>
+<td><code>forEachOrNull</code></td>
+<td>Recorrer conservando el contexto sin elementos</td>
+<td>Mantiene una fila con valores ausentes</td>
+</tr>
+<tr>
+<td><code>select</code></td>
+<td>Componer extracciones anidadas</td>
+<td>Las partes se combinan dentro del mismo origen</td>
+</tr>
+<tr>
+<td><code>unionAll</code></td>
+<td>Concatenar ramas con columnas compatibles</td>
+<td>Conserva las filas de las ramas, incluidos duplicados</td>
+</tr>
+<tr>
+<td><code>constant</code></td>
+<td>Declarar parámetros usados por las expresiones</td>
+<td>Permite ajustar filtros sin reescribir rutas</td>
+</tr>
+<tr>
+<td><code>repeat</code></td>
+<td>Recorrer estructuras anidadas por las rutas declaradas</td>
+<td>Expande descendientes para extraer filas de estructuras recursivas</td>
+</tr>
+<tr>
+<td><code>collection: true</code></td>
+<td>Conservar varios valores en una columna</td>
+<td>Produce una columna de listas</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart TD
+    A["Recursos del tipo declarado"] --&gt; B["Evaluar where"]
+    B --&gt; C["Recorrer select"]
+    C --&gt; D["column: evaluar rutas"]
+    C --&gt; E["forEach: expandir colección"]
+    C --&gt; F["unionAll: ejecutar ramas"]
+    E --&gt; G["Evaluar columnas en el elemento hijo"]
+    D --&gt; H["Combinar filas por recurso de origen"]
+    G --&gt; H
+    F --&gt; H
+    H --&gt; I["Aplicar tipos y construir data.frame"]</code></pre>
+<p>Una columna escalar que devuelve varios valores produce un error: declara <code>collection: true</code> para conservarlos o usa una expresión que devuelva uno. Dos colecciones expandidas en partes hermanas pueden multiplicar las filas de un mismo recurso. Por eso deben verificarse tanto la cardinalidad como las claves antes de contar eventos o unir tablas. <code>%rowIndex</code> identifica el índice del elemento en su contexto de expansión; no sustituye la clave del recurso.</p>
+</div>
+<div class="section level2">
 <h2 id="elegir-cómo-procesar-los-datos">Elegir cómo procesar los datos<a class="anchor" aria-label="anchor" href="#elegir-c%C3%B3mo-procesar-los-datos"></a>
 </h2>
 <table class="table">
@@ -320,7 +463,7 @@
 <h2 id="consultar-un-servidor-fhir">Consultar un servidor FHIR<a class="anchor" aria-label="anchor" href="#consultar-un-servidor-fhir"></a>
 </h2>
 <p>El siguiente ejemplo usa un servidor público de pruebas y requiere conexión:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span><span class="st">"https://hapi.fhir.org/baseR4"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">pacientes</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_buscar.html">fhir_buscar</a></span><span class="op">(</span></span>
@@ -332,13 +475,29 @@
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">pacientes</span>, <span class="va">vista_pacientes</span><span class="op">)</span></span></code></pre></div>
 <p>La búsqueda sigue los enlaces <code><a href="https://rdrr.io/r/base/Control.html" class="external-link">next</a></code> del servidor. <code>_count</code> solicita el tamaño de página; <code>max_paginas</code> limita las páginas descargadas. La disponibilidad y los resultados de los servidores públicos pueden variar.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant R as Sesión R
+    participant C as Cliente httr2
+    participant S as Servidor FHIR
+    R-&gt;&gt;C: fhir_buscar(con, tipo, parámetros)
+    C-&gt;&gt;S: GET con parámetros de búsqueda
+    S--&gt;&gt;C: Bundle con entry, total y link next
+    loop Mientras haya next y no se alcance max_paginas
+        C-&gt;&gt;S: GET a la URL de next
+        S--&gt;&gt;C: Siguiente Bundle
+    end
+    C--&gt;&gt;R: fhir_recursos con recursos y JSON de origen
+    R-&gt;&gt;R: vista_ejecutar(recursos, vista)
+    Note over C,S: Un enlace next repetido detiene la paginación con aviso</code></pre>
+<p>La paginación sigue el enlace entregado por el servidor; no calcula números de página. Las cabeceras de la conexión y su token se restringen a su base FHIR. Los archivos de Bulk Data tienen su propia política de origen y autorización.</p>
 <p>Usa <code>fhir_capacidades(con)</code> para consultar los recursos y operaciones que admite el servidor, <code><a href="reference/fhir_leer.html">fhir_leer()</a></code> para leer un recurso concreto y <code><a href="reference/fhir_everything.html">fhir_everything()</a></code> para solicitar <code>$everything</code>. En RStudio, el panel <strong>Connections</strong> permite explorar recursos y los addins ejecutan peticiones FHIR o vistas desde el editor.</p>
 </div>
 <div class="section level2">
 <h2 id="autenticación-y-exportación-masiva">Autenticación y exportación masiva<a class="anchor" aria-label="anchor" href="#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva"></a>
 </h2>
 <p>Para SMART Backend Services, registra previamente el cliente y su clave pública en el servidor de autorización. La clave privada debe ser RSA de al menos 2048 bits o EC P-384.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Sustituye la URL, el identificador y la clave por los de tu entorno</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_conectar.html">fhir_conectar</a></span><span class="op">(</span></span>
 <span>  <span class="st">"https://fhir.hospital.ejemplo/r4"</span>,</span>
@@ -356,13 +515,40 @@
 <span><span class="va">exp</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_exportar.html">fhir_exportar_estado</a></span><span class="op">(</span><span class="va">exp</span>, esperar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>El cliente obtiene y renueva el token. La exportación respeta <code>Retry-After</code> y verifica el NDJSON recibido antes de registrar cada archivo como completo: contenido JSON, tipo de recurso y conteo cuando el manifiesto lo incluye. También admite archivos gzip.</p>
 <p>Si una descarga se interrumpe, vuelve a ejecutar <code>exp &lt;- fhir_exportar_estado(exp, esperar = TRUE)</code> conservando el objeto y la carpeta. Los archivos completos del mismo trabajo se reutilizan si su checksum coincide; los ausentes o alterados se descargan de nuevo. Cada archivo incompleto se reinicia desde el comienzo. La recuperación depende de que el servidor conserve el trabajo y sus URL de descarga.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant R as Sesión R
+    participant A as Servidor de autorización
+    participant F as Servidor FHIR
+    participant D as Archivos locales
+    R-&gt;&gt;A: Solicitar token con credenciales SMART
+    A--&gt;&gt;R: access_token y caducidad
+    R-&gt;&gt;F: GET Patient/$export con Prefer respond-async
+    F--&gt;&gt;R: 202 y Content-Location
+    loop Hasta finalizar o alcanzar max_espera
+        R-&gt;&gt;F: Consultar Content-Location
+        F--&gt;&gt;R: 202 con Retry-After o 200 con manifiesto
+    end
+    loop Por cada archivo del manifiesto listo
+        R-&gt;&gt;D: Comprobar identidad del trabajo y checksum
+        alt Archivo completo reutilizable
+            D--&gt;&gt;R: Usar archivo local
+        else Archivo ausente o alterado
+            R-&gt;&gt;F: Descargar URL de salida según autorización
+            F--&gt;&gt;R: NDJSON o gzip
+            R-&gt;&gt;R: Validar JSON, tipo y conteo declarado
+            R-&gt;&gt;D: Publicar archivo completo y registro de checksum
+        end
+    end
+    Note over R,D: Una descarga fallida conserva los archivos anteriores completos</code></pre>
+<p>El manifiesto es el contrato de la descarga, no una garantía de calidad clínica. La validación de contenido y el checksum verifican aspectos distintos: el primero comprueba el NDJSON esperado; el segundo permite detectar cambios en el archivo local entre reintentos. La recuperación es por archivo completo, sin reanudar bytes parciales ni asegurar que las URL del servidor sigan vigentes.</p>
 <p>También están disponibles <em>client credentials</em> con secreto e inicio de sesión interactivo con PKCE. Consulta la <a href="https://f-slg.github.io/fhirviews/articles/servidores-y-volumen.html">guía de autenticación y Bulk Data</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="procesar-archivos-por-bloques">Procesar archivos por bloques<a class="anchor" aria-label="anchor" href="#procesar-archivos-por-bloques"></a>
 </h2>
 <p>Este ejemplo completo recorre el archivo incluido y muestra un resumen por bloque. La función de procesamiento puede escribir cada tabla en una base de datos o generar agregados:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"caso_clinico.ndjson"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="va">vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Observation"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>medida <span class="op">=</span> <span class="st">"code.text"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -379,7 +565,7 @@
 <h3 id="contrato-estricto-antes-de-escribir">Contrato estricto antes de escribir<a class="anchor" aria-label="anchor" href="#contrato-estricto-antes-de-escribir"></a>
 </h3>
 <p>Activa <code>estricto = TRUE</code> y declara <code>type</code> en <strong>todas</strong> las columnas. El contrato se comprueba desde el inicio y debe coincidir entre las ramas de <code>unionAll</code>:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_leer.html">vista_leer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  resource <span class="op">=</span> <span class="st">"Observation"</span>,</span>
 <span>  where <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>path <span class="op">=</span> <span class="st">"value.ofType(Quantity).exists()"</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -399,23 +585,62 @@
 <p>Cada valor se valida <strong>antes</strong> de entregar el bloque. No se convierten textos numéricos en números ni números en texto. Los enteros deben ser finitos, integrales y representables en R; se respetan los rangos de <code>positiveInt</code> y <code>unsignedInt</code>. Se rechazan números no finitos en la entrada y en los resultados antes de que la serialización pueda convertirlos en ausentes. Los decimales deben ser finitos. Los ausentes producen <code>NA</code> tipados; los elementos de colecciones también se comprueban. Los tipos de texto no validan aquí el formato de fechas, URI ni códigos clínicos.</p>
 <p>Un error de clase <code>fhirviews_error_lotes</code> informa <code>bloque</code>, <code>fase</code>, <code>indice_archivo</code>, <code>completados</code> y, cuando corresponde, <code>columna</code>, <code>tipo_esperado</code> y <code>motivo</code>. La fase distingue <code>esquema</code>, <code>lectura</code>, <code>evaluacion</code> y <code>procesar</code>. Los mensajes omiten los valores y el error original del destino. El bloque 0 corresponde a una definición incompatible detectada antes de leer.</p>
 <p>Con <code>estricto = FALSE</code>, el comportamiento sigue siendo el habitual: los tipos pueden inferirse por bloque y las conversiones incompatibles pueden generar avisos y conservar los valores sin convertir.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant L as Lector NDJSON
+    participant V as Motor V8
+    participant T as Contrato estricto
+    participant P as procesar
+    L-&gt;&gt;T: Comprobar type y collection antes de leer
+    loop Por cada bloque de líneas
+        L-&gt;&gt;L: Parsear recursos y comprobar números finitos
+        L-&gt;&gt;V: Evaluar filtros y columnas
+        V-&gt;&gt;T: Validar valores antes de convertir
+        alt Bloque compatible
+            T--&gt;&gt;V: Columnas con tipos declarados
+            V--&gt;&gt;L: Tabla y liberación de nodos
+            L-&gt;&gt;P: Entregar tabla y número de bloque
+            P--&gt;&gt;L: Retornar sin error
+            L-&gt;&gt;L: Actualizar contadores completados
+        else Valor o cardinalidad incompatible
+            T--&gt;&gt;L: Error estructurado
+            Note over L,P: El bloque rechazado no se entrega al consumidor
+        end
+    end</code></pre>
+<p>El error termina la ejecución. La validación previa protege la entrega del bloque; la atomicidad de lo que escriba <code>procesar()</code> depende del destino y de la transacción configurada por el consumidor.</p>
 </div>
 <div class="section level3">
 <h3 id="recuperación-y-escrituras-parciales">Recuperación y escrituras parciales<a class="anchor" aria-label="anchor" href="#recuperaci%C3%B3n-y-escrituras-parciales"></a>
 </h3>
 <p><code><a href="reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> detiene la carga al fallar y no reintenta escrituras. El bloque que falla en <code>procesar()</code> puede haber escrito parcialmente. Los contadores <code>completados</code> indican llamadas que retornaron sin error; no son una confirmación de persistencia ni un checkpoint seguro para saltarse bloques.</p>
 <p>El ejemplo siguiente usa datos ficticios y una base DuckDB temporal. Ejecuta una carga dentro de una transacción, provoca un fallo después de escribir, comprueba el rollback y repite la carga completa dos veces:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requiere DBI y duckdb; no necesita servidor ni extensión JSON de DuckDB</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"lotes-transaccion.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>La estrategia reemplaza el resultado completo dentro de la misma transacción; no acumula otra copia al reintentar. No deduplica eventos ya presentes en la entrada. Para usar otra base, verifica su soporte y límites de transacciones. Para archivos o destinos sin rollback, escribe en una carpeta temporal nueva y publica el conjunto solo después de validar la carga completa. Conserva la entrada, su orden, la vista y el tamaño de bloque; no reanudes mediante un <code>append</code> ciego sobre una salida parcial.</p>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant R as Carga en R
+    participant B as Base de datos
+    R-&gt;&gt;B: BEGIN y reemplazo del resultado dentro de la transacción
+    loop Bloques validados
+        R-&gt;&gt;B: Insertar filas
+    end
+    alt Toda la carga termina correctamente
+        R-&gt;&gt;B: COMMIT
+        B--&gt;&gt;R: Nuevo resultado persistido
+    else Falla la lectura, evaluación o escritura
+        R-&gt;&gt;B: ROLLBACK
+        B--&gt;&gt;R: Resultado anterior conservado
+        R-&gt;&gt;R: Corregir la causa y repetir toda la carga
+    end</code></pre>
 </div>
 </div>
 <div class="section level2">
 <h2 id="trabajar-con-duckdb">Trabajar con DuckDB<a class="anchor" aria-label="anchor" href="#trabajar-con-duckdb"></a>
 </h2>
 <p>El motor SQL <strong>experimental</strong> traduce un <code>ViewDefinition</code> a una consulta de DuckDB. Es útil cuando la entrada es grande y la vista puede expresarse en el subconjunto FHIRPath que admite el traductor:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"caso_clinico.ndjson"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="va">vista</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -424,12 +649,57 @@
 <p>Prueba primero la vista con <code><a href="reference/vista_ejecutar.html">vista_ejecutar()</a></code> sobre una muestra representativa. Las expresiones que el traductor no admite producen un error. Para NDJSON o Parquet propios, usa sus rutas en lugar de <code>archivo</code>.</p>
 <p>El motor SQL necesita la extensión <code>json</code> de DuckDB y puede descargarla la primera vez. En entornos sin internet, prepara esa extensión con la misma versión de DuckDB y comprueba <code>LOAD json</code> antes de ejecutar el proceso. La construcción estándar de las viñetas evita esa descarga; sus ejemplos SQL se habilitan explícitamente con <code>FHIRVIEWS_VINETAS_DUCKDB=true</code>.</p>
 <p>Para guardar varias vistas evaluadas con el motor V8 y consultarlas con SQL, usa <code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code>. Esta función escribe las tablas en una transacción; no utiliza el traductor experimental.</p>
+<div class="section level3">
+<h3 id="selección-del-resultado-sql">Selección del resultado SQL<a class="anchor" aria-label="anchor" href="#selecci%C3%B3n-del-resultado-sql"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Opción</th>
+<th>Ejecución y resultado</th>
+<th>Uso habitual</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Predeterminada</td>
+<td>Ejecuta SQL y recoge el resultado en un <code>data.frame</code>
+</td>
+<td>Tablas finales que caben en R</td>
+</tr>
+<tr>
+<td><code>tabla = "nombre"</code></td>
+<td>Materializa el resultado en DuckDB y devuelve la conexión</td>
+<td>Consultas posteriores sin transportar toda la tabla</td>
+</tr>
+<tr>
+<td><code>diferido = TRUE</code></td>
+<td>Devuelve una consulta de dbplyr ligada a la conexión</td>
+<td>Filtrar o agregar antes de <code>collect()</code>
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="mermaid"><code>flowchart TD
+    A["ViewDefinition validado"] --&gt; B["Traductor FHIRPath a SQL"]
+    B --&gt; C{"¿Expresiones admitidas?"}
+    C --&gt;|"No"| X["Error: revisar la vista o elegir V8"]
+    C --&gt;|"Sí"| D["Consulta DuckDB sobre NDJSON o Parquet"]
+    D --&gt; E["data.frame en R"]
+    D --&gt; F["Tabla materializada en DuckDB"]
+    D --&gt; G["Consulta diferida de dbplyr"]
+    G --&gt; H["Filtrar, agrupar y collect"]</code></pre>
+<p><code>tabla</code> y <code>diferido = TRUE</code> son opciones mutuamente excluyentes. No hay cambio automático a V8 cuando falla la traducción. Una consulta diferida puede volver a leer los archivos al ejecutarse, por lo que sus entradas deben permanecer disponibles. Cierra las conexiones creadas cuando termines; los resultados diferidos dependen de que su conexión siga abierta.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="vistas-de-salud-pública-y-terminologías">Vistas de salud pública y terminologías<a class="anchor" aria-label="anchor" href="#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas"></a>
 </h2>
 <p>El catálogo incluye siete vistas: pacientes, diagnósticos, encuentros, inmunizaciones, medicamentos, signos vitales y notificación obligatoria. Puedes inspeccionarlas y adaptar sus constantes:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_catalogo.html">vista_catalogo</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nombre"</span>, <span class="st">"recurso"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="va">archivo_dengue</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
@@ -441,7 +711,7 @@
 <h3 id="demostración-reproducible-de-vigilancia">Demostración reproducible de vigilancia<a class="anchor" aria-label="anchor" href="#demostraci%C3%B3n-reproducible-de-vigilancia"></a>
 </h3>
 <p>Para ejecutar un flujo completo con los datos ficticios incluidos:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"vigilancia.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>El script imprime la carpeta de salida y comprueba que los resúmenes coincidan con los eventos seleccionados. Con el conjunto incluido parte de 755 eventos, selecciona 661 confirmados con CIE-10 A90/A91 y excluye 94 refutados. Genera:</p>
 <ul>
@@ -484,7 +754,7 @@
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requiere una conexión y un servidor que admita $validate</span></span>
 <span><span class="va">resultado</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_validar.html">fhir_validar</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>resourceType <span class="op">=</span> <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"female"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">resultado</span>, <span class="st">"valido"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -492,7 +762,7 @@
 <span><span class="op">}</span></span></code></pre></div>
 <p>El estado HTTP queda disponible en <code>attr(resultado, "estado")</code>. Una validación positiva no certifica la calidad clínica de los datos.</p>
 <p>Los errores HTTP omiten por defecto el contenido del servidor, que puede contener información de pacientes. También se ocultan los valores sensibles de la consulta, incluido <code>_id</code>. Para depuración controlada:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_detalles <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># contenido del servidor en errores</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_consulta <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># valores completos de la consulta</span></span>
 <span></span>
@@ -504,17 +774,36 @@
 <h2 id="conformidad-y-pruebas">Conformidad y pruebas<a class="anchor" aria-label="anchor" href="#conformidad-y-pruebas"></a>
 </h2>
 <p>El paquete incluye el <a href="https://github.com/FHIR/sql-on-fhir.js/tree/main/tests" class="external-link">banco oficial de SQL on FHIR</a>. Los dos motores superan <strong>133/133 pruebas del perfil shareable</strong> y <strong>7/11 experimentales</strong> del banco incluido. Las cuatro pendientes corresponden a <code>lowBoundary()</code> y <code>highBoundary()</code> y a diferencias de precisión o zona horaria. La conformidad se refiere a ese banco y no certifica un sistema clínico.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="op">)</span>                   <span class="co"># motor V8</span></span>
 <span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span>   <span class="co"># requiere DuckDB y su extensión json</span></span></code></pre></div>
 <p><img src="reference/figures/README-conformidad.png" width="80%" alt="Resultados por archivo del banco SQL on FHIR: todas las pruebas shareable aprobadas y cuatro experimentales pendientes"></p>
 <p>CI comprueba el paquete en Windows, macOS y Linux, además de R-devel y R 4.1. En R 4.1 y R-devel se comprueban el cliente y V8. Los tres sistemas con R release incluyen DuckDB y sus pruebas SQL. Las pruebas HTTP usan respuestas simuladas. La integración de escritura se habilita por separado contra un <strong>servidor de pruebas propio</strong>:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::test(filter = "servidor")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'devtools::test(filter = "servidor")'</span></span></code></pre></div>
 <p>Ese servidor debe permitir escritura; algunas pruebas requieren terminología y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta <a href="tests/testthat/test-servidor.R"><code>tests/testthat/test-servidor.R</code></a> para preparar un HAPI aislado.</p>
 <p>Para ejecutar la integración completa de forma reproducible desde el repositorio, con Docker o Podman y las dependencias de prueba instaladas (además de las dependencias obligatorias del paquete: <code>pkgload</code>, <code>testthat</code>, <code>DBI</code> y <code>duckdb</code>):</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">bash</span> data-raw/probar-hapi.sh</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="fu">bash</span> data-raw/probar-hapi.sh</span></code></pre></div>
 <p>El script usa una imagen fijada por digest, abre un puerto aleatorio solo en localhost y elimina su propio contenedor al terminar, incluso si las pruebas fallan. Imprime la carpeta que conserva los registros, el resumen JSON y CSV, las omisiones y el entorno de R. La ejecución exige escritura, transacciones, terminología básica y Bulk Data; una omisión inesperada hace fallar la prueba. La variante de ValueSet en línea no admitida por HAPI queda registrada aparte. El workflow <strong>Integracion HAPI</strong> ejecuta este mismo script y conserva los resultados durante 14 días. En la primera ejecución puede descargar la imagen y la extensión JSON de DuckDB.</p>
+<div class="section level3">
+<h3 id="secuencia-de-comprobación-del-candidato">Secuencia de comprobación del candidato<a class="anchor" aria-label="anchor" href="#secuencia-de-comprobaci%C3%B3n-del-candidato"></a>
+</h3>
+<p>La matriz de R-CMD-check prueba primero el paquete y después instala el archivo fuente construido en una biblioteca nueva. La aceptación se ejecuta en otro proceso R y comprueba la ruta de carga, la ayuda, las viñetas y el informe del perfil solicitado. El perfil completo añade rollback y reintento transaccional.</p>
+<pre class="mermaid"><code>flowchart TD
+    A["Commit en GitHub"] --&gt; B["R CMD build con viñetas"]
+    B --&gt; C["R CMD check y pruebas del paquete"]
+    C --&gt; D["Instalar el mismo tar.gz en una biblioteca nueva"]
+    D --&gt; E["Proceso R independiente: verificar paquete y documentación"]
+    E --&gt; F["Piloto básico o completo según la matriz"]
+    F --&gt; G{"Resultado técnico"}
+    G --&gt;|"Sin errores ni advertencias"| H["Aprobado para ese perfil"]
+    G --&gt;|"Advertencias"| I["Requiere revisión y salida distinta de cero"]
+    G --&gt;|"Error"| J["No aprobado y salida distinta de cero"]
+    A --&gt; K["Workflow HAPI: integración aislada"]
+    A --&gt; L["Workflow pkgdown: construir documentación"]
+    H --&gt; M["Evaluación con usuarios todavía pendiente"]</code></pre>
+<p>Los informes de aceptación se guardan como artefactos <code>piloto-*</code> durante 14 días. Una aprobación de un perfil básico no evalúa la recuperación con DuckDB; ese control queda como <code>no_evaluado</code>. Los workflows verifican el alcance declarado, y su resultado debe consultarse para el commit específico que se vaya a entregar.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="rendimiento">Rendimiento<a class="anchor" aria-label="anchor" href="#rendimiento"></a>
@@ -593,11 +882,11 @@
 <h2 id="piloto-privado-y-documentación-local">Piloto privado y documentación local<a class="anchor" aria-label="anchor" href="#piloto-privado-y-documentaci%C3%B3n-local"></a>
 </h2>
 <p>El piloto usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <p>Reinicia R, elige una carpeta nueva y ejecuta:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
 <span>  FHIRVIEWS_PILOTO_SALIDA <span class="op">=</span> <span class="st">"piloto-basico-01"</span>,</span>
 <span>  FHIRVIEWS_PILOTO_PERFIL <span class="op">=</span> <span class="st">"basico"</span></span>
@@ -606,7 +895,7 @@
 <p>Abre <code>piloto-basico-01/aceptacion.csv</code> para ver los controles y <code>aceptacion.json</code> para sus diagnósticos. Los estados son <code>aprobado</code>, <code>fallo</code>, <code>requiere_revision</code>, <code>pendiente</code> y <code>no_evaluado</code>. Cualquier advertencia requiere revisión y evita la aprobación automática; el informe registra códigos seguros sin copiar los mensajes originales.</p>
 <p>El perfil <code>basico</code> comprueba la API, los resultados de vigilancia y el rechazo estricto de un bloque incompatible. Para comprobar también rollback y reintentos, instala <code>DBI</code> y <code>duckdb</code>, cambia el perfil a <code>completo</code> y usa otra carpeta nueva. Los archivos permanecen locales; completa <code>experiencia-usuario.txt</code> con los obstáculos, la ayuda necesaria y tu evaluación. La aprobación técnica deja pendiente esa evaluación humana y no valida un servidor ni datos propios.</p>
 <p>La ayuda y las viñetas están disponibles en la instalación:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
@@ -615,6 +904,7 @@
 <div class="section level2">
 <h2 id="guías-y-referencia">Guías y referencia<a class="anchor" aria-label="anchor" href="#gu%C3%ADas-y-referencia"></a>
 </h2>
+<p>Los enlaces web requieren que el sitio esté disponible para tu cuenta. Con la distribución privada, la ayuda y las viñetas instaladas son la alternativa local descrita en la sección anterior.</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -658,7 +948,7 @@
 </h2>
 <p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="CONTRIBUTING.html">guía de contribución</a> y el <a href="CODE_OF_CONDUCT.html">código de conducta</a>.</p>
 <p>Para citar el paquete:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="LICENSE.html">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
 <p>fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo institucional. Todos los datos de ejemplo incluidos son ficticios.</p>
