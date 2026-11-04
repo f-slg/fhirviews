@@ -1,5 +1,9 @@
 # fhirviews 0.5.0
 
+* Se añade una demostración reproducible de vigilancia con datos ficticios,
+  controles de conteo, resúmenes territoriales y mensuales y procedencia
+  de los resultados (`inst/examples/vigilancia.R`).
+
 * `fhir_validar()` devuelve `valido = NA` ante errores HTTP o respuestas
   incompletas y conserva el estado HTTP en el atributo `estado`.
 * Las exportaciones verifican cada recurso NDJSON por bloques (también gzip),

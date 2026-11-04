@@ -1,0 +1,23 @@
+* installing *source* package ‘fhirviews’ ...
+** this is package ‘fhirviews’ version ‘0.5.0’
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (fhirviews)
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/fhirviews-producto-salida-94dncl18 
+VERIFICACION INSTALADA OK

@@ -320,6 +320,28 @@ ValueSet, `tx_buscar_codigo()` consulta `$lookup` y `tx_validar_codigo()` invoca
 `$validate-code`. `vista_con_valueset()` incorpora los códigos expandidos a la
 vista para que su ejecución posterior no dependa de la red.
 
+### Demostración reproducible de vigilancia
+
+Para ejecutar un flujo completo con los datos ficticios incluidos:
+
+```r
+source(system.file("examples", "vigilancia.R", package = "fhirviews"))
+```
+
+El script imprime la carpeta de salida y comprueba que los resúmenes coincidan
+con los eventos seleccionados. Con el conjunto incluido parte de 755 eventos,
+selecciona 661 confirmados con CIE-10 A90/A91 y excluye 94 refutados. Genera:
+
+- Eventos confirmados y resúmenes por cantón y mes de inicio, en CSV.
+- Controles de conteo para revisar la transformación.
+- Las vistas JSON, la versión del paquete, el checksum de entrada y `sessionInfo()`.
+- Un archivo `LEEME.txt` con la definición del indicador y sus límites.
+
+Son **conteos de eventos ficticios**, no pacientes únicos ni tasas poblacionales.
+Los códigos territoriales deben leerse como texto para conservar los ceros
+iniciales. Para elegir otra carpeta, configura `FHIRVIEWS_DEMO_SALIDA` antes de
+ejecutar el script; la carpeta debe ser nueva para evitar sobrescrituras.
+
 Para convertir casos en indicadores territoriales, consulta el
 [ejemplo de tasas por cantón con FHIR y pobecu](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html).
 

@@ -68,3 +68,29 @@ Al cerrar esta sesión existe un directorio local `reports/` sin seguimiento de 
 ## Para retomar
 
 Leer esta nota, revisar `git status`, `git log` y `NEWS.md`, y confirmar el estado del borrador con `gh release view v0.5.0`. No depender de archivos en `/tmp` ni de recordar la conversación: pueden desaparecer o no estar disponibles en otra sesión.
+
+
+## Continuación: primera entrega para validar el producto
+
+Se añadió `inst/examples/vigilancia.R`, ejecutable desde una instalación del paquete:
+
+```r
+source(system.file("examples", "vigilancia.R", package = "fhirviews"))
+```
+
+El flujo usa exclusivamente datos ficticios incluidos. Selecciona eventos Condition A90/A91 confirmados, enlaza la residencia del paciente y genera CSV de eventos, resumen por cantón y mes de inicio, controles, vistas JSON, checksum de entrada y entorno de R. Rechaza carpetas existentes para evitar sobrescrituras. Cuenta eventos, no pacientes únicos ni tasas poblacionales.
+
+Resultado verificado: 755 eventos de entrada, 661 confirmados, 94 excluidos y 65 cantones con eventos. Las 15 comprobaciones nuevas pasaron sin fallos ni advertencias. Se construyó el paquete con las viñetas y se instaló en una biblioteca temporal independiente; el script instalado produjo los mismos resultados. Se actualizó README y NEWS.
+
+Registros de esta entrega: `data-raw/validacion-0.5.0/demo-pruebas.log` y `demo-instalado.log`.
+
+Esta entrega es posterior al archivo del borrador de GitHub. El borrador NO se ha actualizado con esta demostración. Antes de distribuirlo hay que reconstruir y verificar el artefacto que lo sustituya. La CI previa aprobada no debe confundirse con una nueva comprobación de este commit.
+
+### Criterios pendientes para cerrar la preparación del producto
+
+1. **Integración repetible:** automatizar el arranque de HAPI aislado, su disponibilidad, las pruebas de escritura/transacciones/exportación y la limpieza; usar una versión o digest de imagen identificable y registrar omisiones del servidor. La ejecución anterior fue manual.
+2. **Operación ETL:** definir y verificar un contrato de esquema entre bloques y una política de errores/recuperación del destino. Declarar tipos actualmente puede generar avisos y conservar valores incompatibles; no existe aún un modo estricto que lo rechace antes de entregar el bloque al consumidor.
+3. **Piloto externo:** un usuario que no haya desarrollado el paquete debe poder instalarlo, ejecutar la demostración y reconciliar sus resultados sin ayuda; después, validar una vista con datos representativos de su entorno y acordar criterios de aceptación. Esto no se puede dar por cumplido mediante pruebas automáticas o datos ficticios.
+4. **Distribución privada:** decidir el acceso de usuarios piloto y a la documentación, comprobar el efecto de la privacidad sobre Pages y preparar el artefacto final que se entregará. No cambiar permisos ni enviar a CRAN sin autorización.
+
+El primer caso completo reproducible ya está implementado. El siguiente pendiente técnico es automatizar la integración con HAPI; el piloto externo y las decisiones de acceso requieren participación del mantenedor y de usuarios reales.

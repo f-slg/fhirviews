@@ -1,0 +1,9 @@
+ℹ Testing fhirviews
+✔ | F W  S  OK | Context
+
+⠏ |          0 | demo-vigilancia                                                
+⠋ |          1 | demo-vigilancia                                                
+✔ |         15 | demo-vigilancia
+
+══ Results ═════════════════════════════════════════════════════════════════════
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 15 ]
