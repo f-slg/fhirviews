@@ -1,0 +1,5 @@
+Codigo validado: 6c14427da5f7ea45b6a48e1a46268500c20d9b37
+R-CMD-check (cinco configuraciones): https://github.com/f-slg/fhirviews/actions/runs/41826263862
+HAPI: https://github.com/f-slg/fhirviews/actions/runs/41826263929
+pkgdown: https://github.com/f-slg/fhirviews/actions/runs/41826263968
+Los tres workflows finalizaron correctamente.

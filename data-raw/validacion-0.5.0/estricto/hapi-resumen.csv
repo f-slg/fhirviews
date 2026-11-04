@@ -1,0 +1,7 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed","omision"
+"test-servidor.R","servidor","lectura y paginacion en el servidor publico",1,0,TRUE,FALSE,0,0.00600000000000023,0.001,0.00600000000000023,0,"Reason: Servidor publico excluido de la integracion aislada"
+"test-servidor.R","servidor","ciclo completo de escritura en un servidor de pruebas",18,0,FALSE,FALSE,0,0.488,0.012,4.396,18,""
+"test-servidor.R","servidor","transaccion, vistas con V8 y DuckDB y fhir_tabla con datos reales",17,0,FALSE,FALSE,0,2.414,0.086,2.618,17,""
+"test-servidor.R","servidor","terminologia del servidor: $expand y $validate-code en lote",3,0,FALSE,FALSE,0,0.226,0.00600000000000001,0.460000000000001,3,""
+"test-servidor.R","servidor","terminologia con ValueSet en linea",3,0,TRUE,FALSE,0,0.224,0.002,0.393000000000001,2,"Reason: El servidor no valida con un ValueSet en línea"
+"test-servidor.R","servidor","exportacion masiva ($export) de punta a punta",6,0,FALSE,FALSE,0,0.532,0.015,120.861,6,""
