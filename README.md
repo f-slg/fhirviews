@@ -709,7 +709,8 @@ vista_conformidad(motor = "duckdb")   # requiere DuckDB y su extensión json
 
 <img src="man/figures/README-conformidad.png" width="80%" alt="Resultados por archivo del banco SQL on FHIR: todas las pruebas shareable aprobadas y cuatro experimentales pendientes" />
 
-CI comprueba el paquete en Windows, macOS y Linux, además de R-devel y R 4.1.
+CI comprueba el paquete en Windows, macOS Intel y Linux, además de R-devel y R 4.1.
+macOS usa el ejecutor explícito `macos-15-intel`; esta matriz no valida Apple Silicon.
 En R 4.1 y R-devel se comprueban el cliente y V8. Los tres sistemas con
 R release incluyen DuckDB y sus pruebas SQL.
 Las pruebas HTTP usan respuestas simuladas. La integración de escritura se
