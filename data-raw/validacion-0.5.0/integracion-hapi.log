@@ -1,0 +1,30 @@
+ℹ Testing fhirviews
+✔ | F W  S  OK | Context
+
+⠏ |          0 | servidor                                                       
+⠋ |          1 | servidor                                                       
+⠙ |          2 | servidor                                                       
+⠸ |          4 | servidor                                                       
+⠼ |          5 | servidor                                                       
+⠴ |          6 | servidor                                                       
+⠦ |          7 | servidor                                                       
+⠏ |         10 | servidor                                                       
+⠦ |         17 | servidor                                                       
+⠋ |         21 | servidor                                                       
+⠼ |         25 | servidor                                                       
+⠇ |         29 | servidor                                                       
+⠦ |         37 | servidor                                                       
+⠧ |         38 | servidor                                                       
+⠏ |         40 | servidor                                                       
+⠙ |         42 | servidor                                                       
+⠼ |         45 | servidor                                                       
+⠧ |      1  47 | servidor                                                       
+✔ |      1  52 | servidor [128.2s]
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 128.2 s
+
+── Skipped tests (1) ───────────────────────────────────────────────────────────
+• El servidor no valida con un ValueSet en línea (1): 'test-servidor.R:236:5'
+
+[ FAIL 0 | WARN 0 | SKIP 1 | PASS 52 ]

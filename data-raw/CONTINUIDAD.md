@@ -1,0 +1,70 @@
+# Continuidad del proyecto fhirviews
+
+Actualizado: 4 de noviembre de 2026.
+
+## Decisiones del mantenedor
+
+- Repositorio `f-slg/fhirviews` privado por solicitud expresa del mantenedor.
+- No enviar el paquete a CRAN todavía. Una comprobación con `--as-cran` no es un envío.
+- La versión 0.5.0 queda preparada como borrador de lanzamiento en GitHub, con su archivo `fhirviews_0.5.0.tar.gz`. No publicar el lanzamiento ni enviar a CRAN sin una nueva instrucción.
+- Mantener el motor SQL de DuckDB identificado como experimental.
+
+## Trabajo realizado
+
+Se recuperó el contexto de codex1 y se implementaron los seis hallazgos de su auditoría:
+
+1. `fhir_validar()` diferencia `TRUE`, `FALSE` y `NA`; conserva el estado HTTP y evita declarar válido un resultado desconocido. HTTP 400, 412 y 422 o un OperationOutcome incompleto producen `NA`; otros fallos HTTP conservan el manejo de errores.
+2. Las descargas de Bulk Data validan NDJSON por bloques, admiten gzip y comprueban tipo y conteo cuando el manifiesto lo incluye antes de registrar el archivo completo. Los registros anteriores se invalidan para aplicar esta comprobación.
+3. Los errores HTTP y de respuestas no JSON ocultan el cuerpo del servidor por defecto; `_id` se oculta en la consulta. Depuración explícita mediante `fhirviews.mostrar_detalles` y `fhirviews.mostrar_consulta`.
+4. La caché FHIRPath usa objetos sin prototipo para evitar colisiones con `toString`, `constructor` y `__proto__`.
+5. La viñeta de grandes volúmenes requiere `FHIRVIEWS_VINETAS_DUCKDB=true` para ejecutar SQL, evitando descargas en la construcción estándar.
+6. SMART Backend Services rechaza claves RSA menores de 2048 bits.
+
+También se actualizaron documentación y pruebas de regresión, se preparó la versión 0.5.0 y se reorganizó el README con ejemplos ejecutados, guía de motores, privacidad, conformidad y límites conocidos.
+
+El procesamiento por bloques y la recuperación por archivo de exportaciones, iniciados antes de esta auditoría, forman parte de 0.5.0.
+
+## Commits de implementación
+
+- `d8af5ff`: versión 0.5.0 y correcciones de auditoría.
+- `49ca62a`: README profesional y ajuste de compatibilidad de R 4.1.
+- `ef76c24`: alcance final de CI y documentación correspondiente.
+
+## Validación y evidencia
+
+- Batería completa con red y DuckDB: 1278 comprobaciones aprobadas, sin fallos ni advertencias; entonces faltaban cuatro pruebas con servidor propio.
+- Integración posterior con HAPI aislado: 52 comprobaciones aprobadas, sin fallos ni advertencias. Se omitió una variante de validación con ValueSet en línea porque HAPI no la admite. Escritura, transacciones y exportación de punta a punta se probaron.
+- `R CMD build` construyó el paquete con sus viñetas dentro del entorno restringido de red.
+- `R CMD check --as-cran --no-manual`: 0 errores, 0 advertencias y 1 NOTE por nueva presentación. El registro conservado corresponde al archivo con el README renovado, antes del último ajuste de alcance de CI; no hubo cambios posteriores en el código R o JavaScript.
+- Los ejemplos locales del README se ejecutaron, incluidos DuckDB y la conformidad.
+- CI del commit final `ef76c24` aprobado en cinco configuraciones: Windows, macOS y Ubuntu con R release; Ubuntu con R 4.1 y R-devel.
+- R 4.1 y R-devel comprueban cliente y V8, con las otras dependencias opcionales salvo DuckDB. Los tres entornos release comprueban también DuckDB y sus pruebas SQL. DuckDB actual exige R >= 4.2 y su compilación desde fuente en R-devel resultó muy costosa.
+- pkgdown y la publicación de Pages aprobaron en GitHub antes de convertir el repositorio a privado. No se ha vuelto a verificar la disponibilidad pública de Pages tras ese cambio.
+
+CI final: https://github.com/f-slg/fhirviews/actions/runs/41775133622
+
+Los fallos de R 4.1 de ejecuciones anteriores son históricos; están corregidos. Las ejecuciones anteriores pendientes se cancelaron al ser sustituidas.
+
+Registros conservados en `data-raw/validacion-0.5.0/`: `00check.log` e `integracion-hapi.log`. Este directorio y esta nota quedan excluidos del paquete R por la regla existente `^data-raw$` en `.Rbuildignore`.
+
+## Estado del lanzamiento
+
+El borrador `v0.5.0` apunta al commit de implementación `ef76c24cff1e8bb0a7b2ef157db0381a2064448c` y contiene el archivo fuente. Se puede consultar con `gh release view v0.5.0` usando una cuenta autorizada. Esta nota se guarda después de ese commit y no cambia el código de la versión.
+
+El contenedor de pruebas `fhirviews-release-test` se creó con Podman, imagen `docker.io/hapiproject/hapi:latest`, puerto local `18080`, Bulk Data habilitado. Terminadas las pruebas se detuvo. No se modificaron los contenedores de otros proyectos.
+
+## Pendientes y próximos pasos
+
+- No confundir conformidad técnica con aprobación para uso clínico sin restricciones.
+- Validar utilidad con usuarios externos y un caso de uso reproducible; revisar sus resultados y necesidades antes de añadir funciones.
+- Mantener explícitos los límites de DuckDB, precisión decimal, tipos por bloque y capacidades del servidor.
+- Si se decide publicar más adelante, revisar cambios desde el commit del borrador, reconstruir y comprobar el artefacto que se vaya a distribuir.
+- Revisar GitHub Pages y permisos de colaboradores si se quiere ofrecer documentación con el repositorio privado; no cambiar accesos sin instrucciones.
+
+## Archivos ajenos al trabajo de implementación
+
+Al cerrar esta sesión existe un directorio local `reports/` sin seguimiento de Git. No se añadió al repositorio ni se modificó su contenido. Sus archivos no están respaldados en GitHub por estos commits. `.Rbuildignore` lo excluye de la distribución del paquete.
+
+## Para retomar
+
+Leer esta nota, revisar `git status`, `git log` y `NEWS.md`, y confirmar el estado del borrador con `gh release view v0.5.0`. No depender de archivos en `/tmp` ni de recordar la conversación: pueden desaparecer o no estar disponibles en otra sesión.
