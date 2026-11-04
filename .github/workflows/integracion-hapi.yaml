@@ -1,0 +1,64 @@
+name: Integracion HAPI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'R/**'
+      - 'inst/**'
+      - 'tests/**'
+      - 'DESCRIPTION'
+      - 'data-raw/*integracion.R'
+      - 'data-raw/probar-hapi.sh'
+      - 'data-raw/hapi-image.txt'
+      - '.github/workflows/integracion-hapi.yaml'
+  pull_request:
+    paths:
+      - 'R/**'
+      - 'inst/**'
+      - 'tests/**'
+      - 'DESCRIPTION'
+      - 'data-raw/*integracion.R'
+      - 'data-raw/probar-hapi.sh'
+      - 'data-raw/hapi-image.txt'
+      - '.github/workflows/integracion-hapi.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integracion-hapi-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hapi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      FHIRVIEWS_CONTENEDOR: docker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::testthat
+            any::pkgload
+            any::DBI
+            any::duckdb
+      - name: Probar contra un servidor propio aislado
+        run: bash data-raw/probar-hapi.sh "$RUNNER_TEMP/integracion-hapi"
+      - name: Conservar resultados y diagnosticos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integracion-hapi-${{ github.run_id }}
+          path: ${{ runner.temp }}/integracion-hapi/
+          if-no-files-found: warn
+          retention-days: 14

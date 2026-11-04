@@ -94,3 +94,28 @@ Esta entrega es posterior al archivo del borrador de GitHub. El borrador NO se h
 4. **Distribución privada:** decidir el acceso de usuarios piloto y a la documentación, comprobar el efecto de la privacidad sobre Pages y preparar el artefacto final que se entregará. No cambiar permisos ni enviar a CRAN sin autorización.
 
 El primer caso completo reproducible ya está implementado. El siguiente pendiente técnico es automatizar la integración con HAPI; el piloto externo y las decisiones de acceso requieren participación del mantenedor y de usuarios reales.
+
+
+## Continuación: integración HAPI automatizada
+
+Se implementó el siguiente pendiente técnico:
+
+```sh
+bash data-raw/probar-hapi.sh
+```
+
+- Usa Docker o Podman; `FHIRVIEWS_CONTENEDOR` permite elegir uno.
+- Imagen fijada en `data-raw/hapi-image.txt` por digest SHA-256 de la imagen local previamente probada.
+- Puerto aleatorio publicado exclusivamente en localhost, sin montar directorios del host.
+- Espera acotada de disponibilidad, comprobación FHIR R4 y precarga de JSON de DuckDB.
+- Resultados JSON y CSV, registros del servidor y pruebas, contexto y sesión R.
+- Limpieza del contenedor propio tanto al aprobar como al fallar; la carpeta de registros se conserva y no puede existir antes de iniciar.
+- Política probada con resultados simulados: no permite fallos, errores, advertencias, grupos obligatorios ausentes/duplicados ni omisiones inesperadas.
+- La lectura del servidor público se excluye deliberadamente para no depender de su disponibilidad. La variante de ValueSet en línea se separó del grupo de terminología general; solo se permite su omisión por la limitación conocida de HAPI.
+- Workflow `.github/workflows/integracion-hapi.yaml`: mismo script con Docker en Ubuntu/R release, disparo manual o por cambios relevantes, artefactos conservados por 14 días y cancelación de ejecuciones sustituidas.
+
+Validación local con Podman: 46 comprobaciones aprobadas y operaciones obligatorias ejecutadas (escritura, transacciones/V8/DuckDB, terminología básica y exportación). Código de salida 0 y eliminación del contenedor comprobados. Timeout de arranque provocado en otra ejecución: código no cero, registros conservados y eliminación del contenedor comprobados. Registros resumidos conservados en `data-raw/validacion-0.5.0/hapi-automatizado/`.
+
+La primera ejecución del lanzador se repitió porque se editó mientras corría. La evidencia conservada corresponde a la repetición con el archivo estable, que terminó con código 0. Podman elimina el archivo CID al retirar el contenedor; el script guarda ahora `contenedor-id.txt` para conservar esa evidencia.
+
+Queda por confirmar este workflow en GitHub con Docker. El siguiente pendiente funcional del producto es el contrato estricto de esquema entre bloques y la política de errores del destino, además del piloto externo y la distribución privada ya descritos. El borrador y su archivo fuente NO se actualizan con estos cambios sin reconstrucción y validación posteriores; no publicar ni enviar a CRAN.

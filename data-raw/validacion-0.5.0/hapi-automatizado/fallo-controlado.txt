@@ -1,0 +1,4 @@
+Timeout de arranque forzado con FHIRVIEWS_HAPI_ESPERA=1.
+Verificado: salida no cero, registros conservados y contenedor propio eliminado.
+Verificado tambien: ciclo exitoso con salida cero y contenedor propio eliminado.
+No se montaron directorios del host ni se modificaron contenedores de otros proyectos.

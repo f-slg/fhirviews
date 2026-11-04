@@ -2,16 +2,16 @@
 #
 # * Lectura: el servidor público https://hapi.fhir.org/baseR4.
 # * Escritura: solo si la variable de entorno FHIRVIEWS_SERVIDOR_ESCRITURA
-#   apunta a un servidor de pruebas propio, por ejemplo un HAPI local con
-#   Bulk Data activado:
-#     podman run -d -p 8080:8080 -e hapi.fhir.bulk_export_enabled=true \
-#       docker.io/hapiproject/hapi:latest
-#     FHIRVIEWS_SERVIDOR_ESCRITURA=http://localhost:8080/fhir
+#   apunta a un servidor de pruebas propio.
+# * Integracion automatizada aislada: bash data-raw/probar-hapi.sh
+#   (imagen fijada por digest, Docker o Podman, limpieza al terminar).
 
 publico <- "https://hapi.fhir.org/baseR4"
 
 test_that("lectura y paginacion en el servidor publico", {
   skip_on_cran()
+  skip_if(identical(Sys.getenv("FHIRVIEWS_SOLO_SERVIDOR_PROPIO"), "true"),
+          "Servidor publico excluido de la integracion aislada")
   skip_if_not(fhir_disponible(publico, tiempo = 10), "HAPI público no responde")
   con <- fhir_conectar(publico)
   expect_identical(con$version_fhir, "4.0.1")
@@ -220,6 +220,11 @@ test_that("terminologia del servidor: $expand y $validate-code en lote", {
   expect_identical(en_lote$valido, c(TRUE, FALSE, TRUE, TRUE))
   expect_identical(en_lote$valido, de_a_uno$valido)
 
+})
+
+test_that("terminologia con ValueSet en linea", {
+  con <- fhir_conectar(servidor_escritura(), panel = FALSE)
+  sis <- "http://hl7.org/fhir/administrative-gender"
   # Con el ValueSet como recurso (POST con un Parameters tipado)
   recurso <- list(resourceType = "ValueSet", url = "urn:fhirviews:vs",
                   status = "active",

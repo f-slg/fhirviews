@@ -421,6 +421,23 @@ y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta
 [`tests/testthat/test-servidor.R`](tests/testthat/test-servidor.R) para preparar
 un HAPI aislado.
 
+Para ejecutar la integración completa de forma reproducible desde el repositorio,
+con Docker o Podman y las dependencias de prueba instaladas:
+
+```sh
+bash data-raw/probar-hapi.sh
+```
+
+El script usa una imagen fijada por digest, abre un puerto aleatorio solo en
+localhost y elimina su propio contenedor al terminar, incluso si las pruebas
+fallan. Imprime la carpeta que conserva los registros, el resumen JSON y CSV,
+las omisiones y el entorno de R. La ejecución exige escritura, transacciones,
+terminología básica y Bulk Data; una omisión inesperada hace fallar la prueba.
+La variante de ValueSet en línea no admitida por HAPI queda registrada aparte.
+El workflow **Integracion HAPI** ejecuta este mismo script y conserva los
+resultados durante 14 días. En la primera ejecución puede descargar la imagen
+y la extensión JSON de DuckDB.
+
 ## Rendimiento
 
 La siguiente medición compara ambos motores con pacientes sintéticos y una
