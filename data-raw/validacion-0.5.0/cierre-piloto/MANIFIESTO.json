@@ -1,0 +1,45 @@
+{
+  "commit": "f9d758ca67435b1e417c57bce79b6c6aafe6e7e7",
+  "commit_codigo_probado_CI": "2fde951bb433543ab9f91793e19f880a1f24f56a",
+  "diferencia_desde_CI": "Solo README y notas de continuidad sobre visibilidad publica",
+  "archivo": "fhirviews_0.5.0.tar.gz",
+  "bytes": 1119382,
+  "md5": "17fc4fb28ae2a5cf8462731af692b3bc",
+  "sha256": "babcae8cc46e91a7114a95376d2fb7d9fc499cc42ad5ac747d6a5f76bee781e9",
+  "aceptacion_local": {
+    "basico": "aprobado",
+    "completo": "aprobado"
+  },
+  "rcmdcheck_local": "Status: OK",
+  "ci": "https://github.com/f-slg/fhirviews/actions/runs/41867215558",
+  "estado": "validado_tecnicamente_piloto_externo_pendiente",
+  "evaluacion_usuarios": "pendiente",
+  "repositorio_publico": true,
+  "lanzamiento_publicado": false,
+  "ci_resultado": "success",
+  "ci_configuraciones": [
+    {
+      "nombre": "macos-26-intel (release)",
+      "resultado": "success"
+    },
+    {
+      "nombre": "windows-latest (release)",
+      "resultado": "success"
+    },
+    {
+      "nombre": "ubuntu-latest (devel)",
+      "resultado": "success"
+    },
+    {
+      "nombre": "ubuntu-22.04 (4.1)",
+      "resultado": "success"
+    },
+    {
+      "nombre": "ubuntu-latest (release)",
+      "resultado": "success"
+    }
+  ],
+  "informes_CI_aprobados": 5,
+  "hapi": "https://github.com/f-slg/fhirviews/actions/runs/41867215825",
+  "pkgdown_publico": "https://github.com/f-slg/fhirviews/actions/runs/41869711046"
+}

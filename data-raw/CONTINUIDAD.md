@@ -183,3 +183,29 @@ el lanzamiento ni enviar a CRAN: el lanzamiento v0.5.0 continúa como borrador.
 El candidato del commit `2fde951` está construido y aceptado localmente en ambos
 perfiles en `data-raw/candidatos/piloto-0.5.0-2fde951/`. Su manifiesto es provisional
 hasta cerrar CI. El README se ajusta para describir el acceso público.
+
+
+## Cierre técnico del candidato para piloto
+
+El código `2fde951` aprobó las cinco configuraciones de R-CMD-check, HAPI y
+pkgdown. macOS 26 Intel aprobó la comprobación y la aceptación del candidato;
+el primer intento falló solo al subir informes por ETIMEDOUT, y el reintento
+terminó correctamente: https://github.com/f-slg/fhirviews/actions/runs/41867215558
+
+Se reconstruyó el candidato del commit `f9d758ca67435b1e417c57bce79b6c6aafe6e7e7` para incluir el README
+de acceso público. Respecto al código probado en GitHub solo cambian README y
+notas de continuidad. El archivo pasó check local (Status: OK) y ambos perfiles
+en instalaciones independientes. Manifesto y CI se conservan en
+`data-raw/validacion-0.5.0/cierre-piloto/`; el archivo y la evidencia local están
+en `data-raw/candidatos/piloto-0.5.0-f9d758c/` (no incorporados como binarios a Git).
+SHA-256 del archivo: `babcae8cc46e91a7114a95376d2fb7d9fc499cc42ad5ac747d6a5f76bee781e9`.
+
+El piloto externo sigue pendiente: seleccionar participantes, ejecutar el
+protocolo y registrar observaciones. El lanzamiento debe permanecer como borrador
+y no se ha autorizado un envío a CRAN.
+
+El borrador v0.5.0 se actualizó al commit f9d758c con el archivo fuente actual,
+MANIFIESTO.json y evidencia-piloto-0.5.0.zip. Se confirmó isDraft=true y se
+volvió a descargar el archivo para verificar su SHA-256 frente al manifiesto.
+No se publicó el lanzamiento ni se envió a CRAN. El siguiente paso requiere
+seleccionar participantes y ejecutar el protocolo, sin inventar evaluación humana.
