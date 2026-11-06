@@ -260,8 +260,9 @@ cat(substr(sql, 1, 400), "...\n")
 
 Tiempo de punta a punta, desde el archivo NDJSON hasta el `data.frame`,
 con pacientes sintéticos y una vista con `where`, cuatro columnas y
-`forEach` sobre `name` (`data-raw/motor-duckdb.R`; Linux, 8 núcleos, R
-4.5.2, duckdb 1.5.6):
+`forEach` sobre `name`
+([`data-raw/motor-duckdb.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.R)
+del repositorio; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6):
 
 | Pacientes | Motor V8 (s) | Motor DuckDB (s) | Veces más rápido |
 |----------:|-------------:|-----------------:|-----------------:|
@@ -298,7 +299,9 @@ Es un motor **experimental**:
   `toInteger()`, `toDecimal()`, `toBoolean()`), funciones de texto,
   aritmética, redondeo, fechas con su precisión y
   `lowBoundary()`/`highBoundary()` de fechas y horas. El inventario
-  completo está en `data-raw/motor-duckdb.md` del repositorio.
+  completo está en
+  [`data-raw/motor-duckdb.md`](https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.md)
+  del repositorio.
 - Lo que no sabe traducir no lo adivina: da un error de clase
   `fhirviews_error_sql` que sugiere usar
   [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).

@@ -43,31 +43,42 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="fhirviews-050">fhirviews 0.5.0<a class="anchor" aria-label="anchor" href="#fhirviews-050"></a></h2>
-<ul><li><p>El workflow admite reintentos manuales con selección de imagen macOS Intel y usa macOS 26 Intel por defecto, manteniendo obligatoria su comprobación.</p></li>
-<li><p>La guía del piloto incorpora tareas secuenciales, ficha de observación y criterios de aceptación para participantes externos.</p></li>
-<li><p>CI usa macOS Intel, actualiza checkout y upload-artifact a v6 y cancela comprobaciones sustituidas por otro commit.</p></li>
-<li><p>El piloto registra advertencias mediante códigos seguros y exige revisión antes de aprobar; añade diagnósticos numéricos y referencias de eventos, cantones y meses para detectar errores aunque se conserven los totales.</p></li>
-<li><p>CI verifica el archivo fuente construido en una instalación independiente y conserva sus informes. La guía del mantenedor viaja dentro del paquete.</p></li>
-<li><p>Nuevo kit de aceptación técnica del piloto, con perfiles básico y completo, informes locales y experiencia del usuario pendiente de evaluación humana. <code>data-raw/probar-candidato.R</code> instala el archivo fuente en una biblioteca nueva y verifica la copia instalada en un proceso R independiente.</p></li>
-<li><p><code>vista_ejecutar_lotes(estricto = TRUE)</code> exige un contrato explícito de tipos, comprueba valores antes de convertir o entregar cada bloque y produce errores estructurados sin incluir datos ni mensajes del destino.</p></li>
-<li><p>Nuevo ejemplo <code>lotes-transaccion.R</code>: rollback de una carga fallida y reemplazo completo al reintentar, sin acumular duplicados.</p></li>
-<li><p>La integración con HAPI se automatiza con una imagen fijada por digest, servidor aislado, limpieza y registros de resultados. Las operaciones obligatorias no pueden quedar omitidas; la variante de ValueSet en línea no admitida por HAPI se verifica por separado.</p></li>
-<li><p>Se añade una demostración reproducible de vigilancia con datos ficticios, controles de conteo, resúmenes territoriales y mensuales y procedencia de los resultados (<code>inst/examples/vigilancia.R</code>).</p></li>
-<li><p><code><a href="../reference/fhir_validar.html">fhir_validar()</a></code> devuelve <code>valido = NA</code> ante errores HTTP o respuestas incompletas y conserva el estado HTTP en el atributo <code>estado</code>.</p></li>
-<li><p>Las exportaciones verifican cada recurso NDJSON por bloques (también gzip), su tipo y el conteo del manifiesto antes de registrar la descarga completa. Los registros anteriores se vuelven a descargar para aplicar la validación.</p></li>
-<li><p>Los errores HTTP y de respuestas no JSON omiten el contenido del servidor por defecto; <code>fhirviews.mostrar_detalles = TRUE</code> permite depurarlo. El parámetro <code>_id</code> también se oculta en las URL de error.</p></li>
-<li><p>La caché FHIRPath ya no confunde nombres con propiedades heredadas de JavaScript. SMART Backend Services rechaza claves RSA menores de 2048 bits.</p></li>
-<li><p>La viñeta de grandes volúmenes requiere <code>FHIRVIEWS_VINETAS_DUCKDB=true</code> para ejecutar DuckDB, evitando descargas durante la construcción estándar.</p></li>
-<li><p>CI añade R-devel y R 4.1 a las comprobaciones del paquete.</p></li>
-<li><p>Se corrige un mensaje no ASCII de <code><a href="../reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> que causaba una advertencia de portabilidad en R CMD check en los tres sistemas.</p></li>
-<li><p>Nueva <code><a href="../reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> para leer NDJSON y gzip por bloques y entregar cada tabla a una función de procesamiento, sin acumular la entrada ni la salida.</p></li>
-<li><p>Las exportaciones masivas usan archivos temporales y registros de checksum. Al consultar de nuevo el mismo trabajo se reutilizan los archivos completos; los ausentes o alterados se vuelven a descargar desde el inicio.</p></li>
-<li><p>Se corrigen los enlaces de paginación relativos al origen y los que contienen solo parámetros, sin duplicar la ruta base del servidor.</p></li>
-<li><p>Las cabeceras de la conexión se envían únicamente a su base FHIR.</p></li>
-<li><p><code><a href="../reference/vista_duckdb.html">vista_duckdb()</a></code> guarda todas las vistas en una transacción y cierra las conexiones propias si falla, evitando tablas parcialmente actualizadas.</p></li>
-<li><p>Los tipos de texto explícitos se convierten a caracteres; <code>positiveInt</code> y <code>unsignedInt</code> avisan ante valores fuera de rango, conservando los datos. Los enteros no finitos también generan un aviso.</p></li>
-<li><p>CI verifica que la extensión JSON de DuckDB pueda cargarse antes del check e instala las dependencias de autenticación y consultas diferidas.</p></li>
+<p>Primera versión preparada para enviarse a CRAN.</p>
+<div class="section level3">
+<h3 id="nuevas-funciones-0-5-0">Nuevas funciones<a class="anchor" aria-label="anchor" href="#nuevas-funciones-0-5-0"></a></h3>
+<ul><li>
+<code><a href="../reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> lee NDJSON y gzip por bloques y entrega cada tabla a una función de procesamiento, sin acumular la entrada ni la salida. Con <code>estricto = TRUE</code> exige un contrato explícito de tipos, comprueba los valores antes de convertir o entregar cada bloque y produce errores estructurados sin incluir datos ni mensajes del destino.</li>
+<li>Nuevos ejemplos en <code>inst/examples/</code>: <code>vigilancia.R</code>, una demostración reproducible de vigilancia con datos ficticios, controles de conteo, resúmenes territoriales y mensuales y procedencia de los resultados; y <code>lotes-transaccion.R</code>, con el rollback de una carga fallida y el reemplazo completo al reintentar, sin acumular duplicados.</li>
 </ul></div>
+<div class="section level3">
+<h3 id="exportación-masiva-0-5-0">Exportación masiva<a class="anchor" aria-label="anchor" href="#exportaci%C3%B3n-masiva-0-5-0"></a></h3>
+<ul><li>Las exportaciones usan archivos temporales y registros de checksum. Al consultar de nuevo el mismo trabajo se reutilizan los archivos completos; los ausentes o alterados se vuelven a descargar desde el inicio.</li>
+<li>Cada recurso NDJSON (también gzip) se verifica por bloques, con su tipo y el conteo del manifiesto, antes de registrar la descarga como completa. Los registros anteriores se vuelven a descargar para aplicar la validación.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="privacidad-y-seguridad-0-5-0">Privacidad y seguridad<a class="anchor" aria-label="anchor" href="#privacidad-y-seguridad-0-5-0"></a></h3>
+<ul><li>Los errores HTTP y de respuestas no JSON omiten el contenido del servidor por defecto; <code>fhirviews.mostrar_detalles = TRUE</code> permite depurarlo. El parámetro <code>_id</code> también se oculta en las URL de error.</li>
+<li>Las cabeceras de la conexión se envían únicamente a su base FHIR.</li>
+<li>SMART Backend Services rechaza claves RSA menores de 2048 bits.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="correcciones-0-5-0">Correcciones<a class="anchor" aria-label="anchor" href="#correcciones-0-5-0"></a></h3>
+<ul><li>
+<code><a href="../reference/fhir_validar.html">fhir_validar()</a></code> devuelve <code>valido = NA</code> ante errores HTTP o respuestas incompletas y conserva el estado HTTP en el atributo <code>estado</code>.</li>
+<li>Se corrigen los enlaces de paginación relativos al origen y los que contienen solo parámetros, sin duplicar la ruta base del servidor.</li>
+<li>
+<code><a href="../reference/vista_duckdb.html">vista_duckdb()</a></code> guarda todas las vistas en una transacción y cierra las conexiones propias si falla, evitando tablas parcialmente actualizadas.</li>
+<li>Los tipos de texto explícitos se convierten a caracteres; <code>positiveInt</code> y <code>unsignedInt</code> avisan ante valores fuera de rango, conservando los datos. Los enteros no finitos también generan un aviso.</li>
+<li>La caché FHIRPath ya no confunde nombres con propiedades heredadas de JavaScript.</li>
+<li>Se corrige un mensaje no ASCII de <code><a href="../reference/vista_ejecutar_lotes.html">vista_ejecutar_lotes()</a></code> que causaba una advertencia de portabilidad en <code>R CMD check</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentación-y-desarrollo-0-5-0">Documentación y desarrollo<a class="anchor" aria-label="anchor" href="#documentaci%C3%B3n-y-desarrollo-0-5-0"></a></h3>
+<ul><li>La viñeta de grandes volúmenes requiere <code>FHIRVIEWS_VINETAS_DUCKDB=true</code> para ejecutar DuckDB, evitando descargas durante la construcción estándar.</li>
+<li>La guía del mantenedor (<code>inst/examples/PILOTO-MANTENEDOR.md</code>) describe el kit de aceptación técnica del piloto, con perfiles básico y completo.</li>
+<li>La integración continua comprueba el paquete en R-devel y R 4.1, verifica el archivo fuente construido en una instalación independiente y prueba el cliente contra un servidor HAPI aislado con una imagen fijada por digest.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="fhirviews-040">fhirviews 0.4.0<a class="anchor" aria-label="anchor" href="#fhirviews-040"></a></h2>
 <p>Correcciones de una auditoría del paquete, con pruebas de escritura contra un servidor HAPI FHIR propio, y preparación para CRAN. No hay cambios incompatibles.</p>

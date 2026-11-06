@@ -881,6 +881,31 @@
 <div class="section level2">
 <h2 id="piloto-y-documentación-local">Piloto y documentación local<a class="anchor" aria-label="anchor" href="#piloto-y-documentaci%C3%B3n-local"></a>
 </h2>
+<div class="section level3">
+<h3 id="descargar-el-kit-para-participantes">Descargar el kit para participantes<a class="anchor" aria-label="anchor" href="#descargar-el-kit-para-participantes"></a>
+</h3>
+<p><strong><a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip" class="external-link">Descargar el kit del piloto ZIP</a></strong></p>
+<ol style="list-style-type: decimal">
+<li>Descarga y descomprime el ZIP.</li>
+<li>Abre <code>FORMULARIO-PILOTO.html</code> en un navegador.</li>
+<li>Elige el perfil <strong>R</strong> o <strong>FHIR</strong>, registra el candidato y sigue las tareas.</li>
+<li>Exporta el JSON para conservar ambas fichas y prepara el aviso al mantenedor. El envío se realiza manualmente por el canal acordado.</li>
+</ol>
+<p>El kit incluye protocolos detallados, casillas de comprobación, registro de tiempos y ayuda, incidencias, criterios de cierre y un anexo para el observador. El formulario funciona localmente y no transmite información automáticamente. El guardado del navegador no sustituye la exportación del informe.</p>
+<p>También puedes consultar los protocolos en el repositorio:</p>
+<ul>
+<li>
+<a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/PROTOCOLO-PERFIL-R.md" class="external-link">Perfil R: analista, investigador o epidemiólogo</a>.</li>
+<li>
+<a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/PROTOCOLO-PERFIL-FHIR.md" class="external-link">Perfil FHIR: interoperabilidad e informática sanitaria</a>.</li>
+<li>
+<a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/LEEME.md" class="external-link">Instrucciones y archivos del kit</a>.</li>
+</ul>
+<p>El ZIP contiene los materiales de evaluación, no el paquete R. Mientras el lanzamiento siga en borrador, el mantenedor entrega el archivo candidato identificado en el manifiesto para evaluar exactamente la misma versión.</p>
+</div>
+<div class="section level3">
+<h3 id="instalar-el-candidato-y-ejecutar-el-ensayo">Instalar el candidato y ejecutar el ensayo<a class="anchor" aria-label="anchor" href="#instalar-el-candidato-y-ejecutar-el-ensayo"></a>
+</h3>
 <p>El piloto usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
@@ -900,6 +925,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
 <p>La <a href="inst/examples/PILOTO-MANTENEDOR.html">guía del mantenedor</a> describe cómo construir y verificar el candidato, interpretar los códigos y cerrar el piloto. También se distribuye dentro del paquete, en <code>examples/PILOTO-MANTENEDOR.md</code>.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="guías-y-referencia">Guías y referencia<a class="anchor" aria-label="anchor" href="#gu%C3%ADas-y-referencia"></a>

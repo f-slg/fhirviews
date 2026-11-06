@@ -2,103 +2,73 @@
 
 ## fhirviews 0.5.0
 
-- El workflow admite reintentos manuales con selección de imagen macOS
-  Intel y usa macOS 26 Intel por defecto, manteniendo obligatoria su
-  comprobación.
+Primera versión preparada para enviarse a CRAN.
 
-- La guía del piloto incorpora tareas secuenciales, ficha de observación
-  y criterios de aceptación para participantes externos.
+### Nuevas funciones
 
-- CI usa macOS Intel, actualiza checkout y upload-artifact a v6 y
-  cancela comprobaciones sustituidas por otro commit.
-
-- El piloto registra advertencias mediante códigos seguros y exige
-  revisión antes de aprobar; añade diagnósticos numéricos y referencias
-  de eventos, cantones y meses para detectar errores aunque se conserven
-  los totales.
-
-- CI verifica el archivo fuente construido en una instalación
-  independiente y conserva sus informes. La guía del mantenedor viaja
-  dentro del paquete.
-
-- Nuevo kit de aceptación técnica del piloto, con perfiles básico y
-  completo, informes locales y experiencia del usuario pendiente de
-  evaluación humana. `data-raw/probar-candidato.R` instala el archivo
-  fuente en una biblioteca nueva y verifica la copia instalada en un
-  proceso R independiente.
-
-- `vista_ejecutar_lotes(estricto = TRUE)` exige un contrato explícito de
-  tipos, comprueba valores antes de convertir o entregar cada bloque y
-  produce errores estructurados sin incluir datos ni mensajes del
-  destino.
-
-- Nuevo ejemplo `lotes-transaccion.R`: rollback de una carga fallida y
+- [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
+  lee NDJSON y gzip por bloques y entrega cada tabla a una función de
+  procesamiento, sin acumular la entrada ni la salida. Con
+  `estricto = TRUE` exige un contrato explícito de tipos, comprueba los
+  valores antes de convertir o entregar cada bloque y produce errores
+  estructurados sin incluir datos ni mensajes del destino.
+- Nuevos ejemplos en `inst/examples/`: `vigilancia.R`, una demostración
+  reproducible de vigilancia con datos ficticios, controles de conteo,
+  resúmenes territoriales y mensuales y procedencia de los resultados; y
+  `lotes-transaccion.R`, con el rollback de una carga fallida y el
   reemplazo completo al reintentar, sin acumular duplicados.
 
-- La integración con HAPI se automatiza con una imagen fijada por
-  digest, servidor aislado, limpieza y registros de resultados. Las
-  operaciones obligatorias no pueden quedar omitidas; la variante de
-  ValueSet en línea no admitida por HAPI se verifica por separado.
+### Exportación masiva
 
-- Se añade una demostración reproducible de vigilancia con datos
-  ficticios, controles de conteo, resúmenes territoriales y mensuales y
-  procedencia de los resultados (`inst/examples/vigilancia.R`).
+- Las exportaciones usan archivos temporales y registros de checksum. Al
+  consultar de nuevo el mismo trabajo se reutilizan los archivos
+  completos; los ausentes o alterados se vuelven a descargar desde el
+  inicio.
+- Cada recurso NDJSON (también gzip) se verifica por bloques, con su
+  tipo y el conteo del manifiesto, antes de registrar la descarga como
+  completa. Los registros anteriores se vuelven a descargar para aplicar
+  la validación.
 
-- [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
-  devuelve `valido = NA` ante errores HTTP o respuestas incompletas y
-  conserva el estado HTTP en el atributo `estado`.
-
-- Las exportaciones verifican cada recurso NDJSON por bloques (también
-  gzip), su tipo y el conteo del manifiesto antes de registrar la
-  descarga completa. Los registros anteriores se vuelven a descargar
-  para aplicar la validación.
+### Privacidad y seguridad
 
 - Los errores HTTP y de respuestas no JSON omiten el contenido del
   servidor por defecto; `fhirviews.mostrar_detalles = TRUE` permite
   depurarlo. El parámetro `_id` también se oculta en las URL de error.
+- Las cabeceras de la conexión se envían únicamente a su base FHIR.
+- SMART Backend Services rechaza claves RSA menores de 2048 bits.
 
-- La caché FHIRPath ya no confunde nombres con propiedades heredadas de
-  JavaScript. SMART Backend Services rechaza claves RSA menores de 2048
-  bits.
+### Correcciones
 
-- La viñeta de grandes volúmenes requiere
-  `FHIRVIEWS_VINETAS_DUCKDB=true` para ejecutar DuckDB, evitando
-  descargas durante la construcción estándar.
-
-- CI añade R-devel y R 4.1 a las comprobaciones del paquete.
-
-- Se corrige un mensaje no ASCII de
-  [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
-  que causaba una advertencia de portabilidad en R CMD check en los tres
-  sistemas.
-
-- Nueva
-  [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
-  para leer NDJSON y gzip por bloques y entregar cada tabla a una
-  función de procesamiento, sin acumular la entrada ni la salida.
-
-- Las exportaciones masivas usan archivos temporales y registros de
-  checksum. Al consultar de nuevo el mismo trabajo se reutilizan los
-  archivos completos; los ausentes o alterados se vuelven a descargar
-  desde el inicio.
-
+- [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
+  devuelve `valido = NA` ante errores HTTP o respuestas incompletas y
+  conserva el estado HTTP en el atributo `estado`.
 - Se corrigen los enlaces de paginación relativos al origen y los que
   contienen solo parámetros, sin duplicar la ruta base del servidor.
-
-- Las cabeceras de la conexión se envían únicamente a su base FHIR.
-
 - [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
   guarda todas las vistas en una transacción y cierra las conexiones
   propias si falla, evitando tablas parcialmente actualizadas.
-
 - Los tipos de texto explícitos se convierten a caracteres;
   `positiveInt` y `unsignedInt` avisan ante valores fuera de rango,
   conservando los datos. Los enteros no finitos también generan un
   aviso.
+- La caché FHIRPath ya no confunde nombres con propiedades heredadas de
+  JavaScript.
+- Se corrige un mensaje no ASCII de
+  [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md)
+  que causaba una advertencia de portabilidad en `R CMD check`.
 
-- CI verifica que la extensión JSON de DuckDB pueda cargarse antes del
-  check e instala las dependencias de autenticación y consultas
-  diferidas.
+### Documentación y desarrollo
+
+- La viñeta de grandes volúmenes requiere
+  `FHIRVIEWS_VINETAS_DUCKDB=true` para ejecutar DuckDB, evitando
+  descargas durante la construcción estándar.
+- La guía del mantenedor (`inst/examples/PILOTO-MANTENEDOR.md`) describe
+  el kit de aceptación técnica del piloto, con perfiles básico y
+  completo.
+- La integración continua comprueba el paquete en R-devel y R 4.1,
+  verifica el archivo fuente construido en una instalación independiente
+  y prueba el cliente contra un servidor HAPI aislado con una imagen
+  fijada por digest.
 
 ## fhirviews 0.4.0
 
