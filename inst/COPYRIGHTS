@@ -1,10 +1,17 @@
 fhirviews includes third-party material, copied without modification:
 
-* inst/js/fhirpath/: JavaScript code from the browser build of fhirpath.js
-  (release asset 'fhirpath.zip'); see data-raw/fhirpath_js.R.
+* inst/js/fhirpath/: minified JavaScript from the browser build of
+  fhirpath.js, version 5.2.2 (see inst/js/fhirpath/VERSION), taken from the
+  release asset 'fhirpath.zip' of <https://github.com/HL7/fhirpath.js/releases>.
+  The unminified source code is available at
+  <https://github.com/HL7/fhirpath.js> (tag 5.2.2; the browser build is
+  produced by webpack from the browser-build/ folder). The script that
+  downloads and updates these files is
+  <https://github.com/f-slg/fhirviews/blob/main/data-raw/fhirpath_js.R>.
 * inst/sof-tests/: the official SQL on FHIR conformance test suite (JSON
-  files from the tests/ folder of FHIR/sql-on-fhir.js); see
-  data-raw/sof_tests.R.
+  files from the tests/ folder of <https://github.com/FHIR/sql-on-fhir.js>;
+  the commit used is recorded in inst/sof-tests/FUENTE). The update script is
+  <https://github.com/f-slg/fhirviews/blob/main/data-raw/sof_tests.R>.
 
 The package code written by the package author is under the MIT license
 (see LICENSE). The bundled code keeps its own licenses, listed below.

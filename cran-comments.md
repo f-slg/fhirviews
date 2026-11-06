@@ -1,25 +1,27 @@
 ## Submission
 
-Preparation notes for a possible first submission of 'fhirviews'.
-The package is currently private and has not been submitted to CRAN.
+This is a new submission of 'fhirviews'. The source repository
+(<https://github.com/f-slg/fhirviews>) and the documentation site
+(<https://f-slg.github.io/fhirviews/>) are public.
 
 ## Test environments
 
-* Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran --no-manual`)
+* Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran`)
+* win-builder: R-devel
+* mac-builder: R release
+* R-hub: Linux, Windows and clang-asan
 * GitHub Actions: R release on Windows, macOS and Ubuntu; client/V8 on
   R 4.1 and R-devel; isolated HAPI integration on Ubuntu/R release
 
+<!-- PENDIENTE: confirmar cada entorno tras el check final del tarball. -->
+
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 1 note
 
-* Incoming check: new submission and URLs unavailable to anonymous checks
-  while the repository and documentation are private.
-* The check could not verify the current time.
+* This is a new submission.
 
-Before an actual submission, rebuild the final artifact and repeat the checks
-after deciding how the repository and documentation will be made accessible.
-These preparation notes do not authorize a submission.
+<!-- PENDIENTE: sustituir por el resultado real del check final. -->
 
 ## Notes for the reviewers
 
@@ -31,7 +33,9 @@ These preparation notes do not authorize a submission.
     It bundles 'ucum-lhc' (NLM, BSD-style; includes the UCUM table under the
     UCUM license <https://ucum.org/license>), 'antlr4' (BSD-3), 'date-fns',
     'decimal.js', 'url-join', 'is-finite' (MIT) and 'is-integer' (ISC).
-    It is evaluated with the 'V8' package. The minified file contains 0x1A
+    It is evaluated with the 'V8' package. The unminified source code is
+    available at <https://github.com/HL7/fhirpath.js> (tag 5.2.2), as
+    stated in `inst/COPYRIGHTS`. The minified file contains 0x1A
     bytes inside the ANTLR parser tables, so it is read in binary mode.
   - `inst/sof-tests/`: the official SQL on FHIR conformance test suite
     (<https://github.com/FHIR/sql-on-fhir.js>, MIT), unmodified, used by

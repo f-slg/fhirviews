@@ -5,7 +5,12 @@ la evaluación con usuarios ni valida datos clínicos o un servidor del particip
 
 ## Construir y probar el archivo de entrega
 
-Desde el repositorio, con las dependencias y herramientas de construcción instaladas:
+Estos pasos se ejecutan desde una copia del repositorio
+(<https://github.com/f-slg/fhirviews>), no desde el paquete instalado: el
+script
+[`data-raw/probar-candidato.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/probar-candidato.R)
+no se distribuye con el paquete. Con las dependencias y herramientas de
+construcción instaladas:
 
 ```sh
 R CMD build . --no-manual
