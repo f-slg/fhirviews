@@ -29,8 +29,13 @@ navbar:
   bg: primary
   structure:
     left: [intro, reference, articles, news]
-    right: [search, github]
+    right: [english, search, github]
   components:
+    english:
+      text: English
+      icon: fa-language
+      href: https://github.com/f-slg/fhirviews/blob/main/README.en.md
+      aria-label: README in English
     reference:
       text: Funciones
       href: reference/index.html
