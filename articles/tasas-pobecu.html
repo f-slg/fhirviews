@@ -243,8 +243,24 @@ habitantes:</p>
 <p><code><a href="https://f-slg.github.io/pobecu/reference/pob_mapa.html" class="external-link">pob_mapa()</a></code> de pobecu entrega los límites cantonales de
 <a href="https://f-slg.github.io/geoecu/" class="external-link">geoecu</a> agrupados a las
 unidades del Censo 2022, que son las mismas que usa la población del
-INEC. Basta con unir las tasas por código DPA. Los cantones sin casos
-quedan en gris (<code>NA</code>).</p>
+INEC. Las tasas se unen por código DPA.</p>
+<p><strong>Cero casos no es lo mismo que sin dato.</strong> La
+agregación anterior solo tiene filas para los cantones con algún caso
+confirmado, así que tras la unión los demás quedan con <code>NA</code>.
+Hay que decidir qué significa ese <code>NA</code>:</p>
+<ul>
+<li>Si el cantón <strong>está dentro de la cobertura</strong> del
+sistema (aquí: todos los cantones de las cuatro provincias simuladas) y
+no notificó casos, tiene <strong>0 casos</strong> y su tasa es 0.
+Dejarlo en <code>NA</code> lo confundiría con un territorio sin
+información.</li>
+<li>Si <strong>no hay cobertura</strong> o falta el denominador, el
+valor es desconocido y debe seguir siendo <code>NA</code>. Aquí es el
+caso de la zona en estudio Jaramijó–Manta, que no tiene población
+asignada.</li>
+</ul>
+<p>Si tu sistema no cubre todo el territorio, usa la lista de unidades
+que sí notifican en lugar de “todos los cantones con población”.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mapa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://f-slg.github.io/pobecu/reference/pob_mapa.html" class="external-link">pob_mapa</a></span><span class="op">(</span><span class="st">"canton"</span>, anio <span class="op">=</span> <span class="fl">2025</span>,</span>
 <span>                 provincia <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"El Oro"</span>, <span class="st">"Guayas"</span>, <span class="st">"Los Ríos"</span>, <span class="st">"Manabí"</span><span class="op">)</span><span class="op">)</span></span>
@@ -253,17 +269,37 @@ quedan en gris (<code>NA</code>).</p>
 <span><span class="va">mapa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">mapa</span>, <span class="va">tasas</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dpa_canton"</span>, <span class="st">"casos"</span>, <span class="st">"tasa"</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>              by <span class="op">=</span> <span class="st">"dpa_canton"</span>, all.x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Cobertura: los cantones con población son parte del universo simulado.</span></span>
+<span><span class="va">cubierto</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">$</span><span class="va">poblacion</span><span class="op">)</span></span>
+<span><span class="va">sin_casos</span> <span class="op">&lt;-</span> <span class="va">cubierto</span> <span class="op">&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">$</span><span class="va">casos</span><span class="op">)</span></span>
+<span><span class="va">mapa</span><span class="op">$</span><span class="va">casos</span><span class="op">[</span><span class="va">sin_casos</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span><span class="va">mapa</span><span class="op">$</span><span class="va">tasa</span><span class="op">[</span><span class="va">sin_casos</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span>estado <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="op">!</span><span class="va">cubierto</span>, <span class="st">"sin dato (NA)"</span>,</span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">sin_casos</span>, <span class="st">"0 casos"</span>, <span class="st">"con casos"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; estado</span></span>
+<span><span class="co">#&gt;       0 casos     con casos sin dato (NA) </span></span>
+<span><span class="co">#&gt;             9            65             1</span></span>
+<span></span>
 <span><span class="va">provincias</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://f-slg.github.io/pobecu/reference/pob_mapa.html" class="external-link">pob_mapa</a></span><span class="op">(</span><span class="st">"provincia"</span>, anio <span class="op">=</span> <span class="fl">2025</span>,</span>
 <span>                       provincia <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"El Oro"</span>, <span class="st">"Guayas"</span>, <span class="st">"Los Ríos"</span>, <span class="st">"Manabí"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">[</span><span class="st">"tasa"</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="st">"quantile"</span>, nbreaks <span class="op">=</span> <span class="fl">6</span>,</span>
+<span><span class="co"># Escala de color solo para tasas positivas; 0 y NA se dibujan aparte</span></span>
+<span><span class="va">positivos</span> <span class="op">&lt;-</span> <span class="va">mapa</span></span>
+<span><span class="va">positivos</span><span class="op">$</span><span class="va">tasa</span><span class="op">[</span><span class="va">positivos</span><span class="op">$</span><span class="va">tasa</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NA</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">positivos</span><span class="op">[</span><span class="st">"tasa"</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="st">"quantile"</span>, nbreaks <span class="op">=</span> <span class="fl">6</span>,</span>
 <span>     pal <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="fl">6</span>, <span class="st">"YlOrRd"</span>, rev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
 <span>     border <span class="op">=</span> <span class="st">"white"</span>, lwd <span class="op">=</span> <span class="fl">0.3</span>, key.pos <span class="op">=</span> <span class="fl">1</span>, reset <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>     main <span class="op">=</span> <span class="st">"Dengue 2025 por 100 000 habitantes (datos ficticios)"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">$</span><span class="va">tasa</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"grey85"</span>,</span>
-<span>     border <span class="op">=</span> <span class="st">"white"</span>, lwd <span class="op">=</span> <span class="fl">0.3</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">[</span><span class="va">sin_casos</span>, <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"white"</span>,</span>
+<span>     border <span class="op">=</span> <span class="st">"grey55"</span>, lwd <span class="op">=</span> <span class="fl">0.3</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">[</span><span class="op">!</span><span class="va">cubierto</span>, <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"grey60"</span>,</span>
+<span>     border <span class="op">=</span> <span class="st">"white"</span>, density <span class="op">=</span> <span class="fl">25</span>, lwd <span class="op">=</span> <span class="fl">0.6</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">provincias</span><span class="op">)</span>, col <span class="op">=</span> <span class="cn">NA</span>, border <span class="op">=</span> <span class="st">"#0F2233"</span>, lwd <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>     add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span>     add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">legend</a></span><span class="op">(</span><span class="st">"topleft"</span>, bty <span class="op">=</span> <span class="st">"n"</span>, cex <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>       fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>, <span class="st">"grey60"</span><span class="op">)</span>, border <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"grey55"</span>, <span class="st">"grey60"</span><span class="op">)</span>,</span>
+<span>       density <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">25</span><span class="op">)</span>,</span>
+<span>       legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0 casos confirmados"</span>, <span class="st">"Sin dato: zona en estudio"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="tasas-pobecu_files/figure-html/mapa-tasas-1.png" class="r-plt" alt="Mapa de los cantones de El Oro, Guayas, Los Ríos y Manabí coloreados por la tasa ficticia de dengue por 100 000 habitantes" width="672"></p>
 <p>Si prefieres ggplot2:
 <code>ggplot(mapa) + geom_sf(aes(fill = tasa))</code>. Para un mapa
@@ -328,32 +364,51 @@ se hace después en R:</p>
 <h2 id="reproducibilidad">Reproducibilidad<a class="anchor" aria-label="anchor" href="#reproducibilidad"></a>
 </h2>
 <p>Este artículo se genera automáticamente con cada cambio del
-repositorio. Las cifras y el mapa corresponden a estas versiones:</p>
+repositorio. Las cifras y el mapa corresponden a estas versiones. Dos
+instalaciones desde GitHub pueden compartir número de versión con código
+distinto, por eso se registra también el <em>commit</em> de cada paquete
+instalado desde GitHub:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">paquetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fhirviews"</span>, <span class="st">"pobecu"</span>, <span class="st">"geoecu"</span>, <span class="st">"sf"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">commit_de</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">d</span> <span class="op">&lt;-</span> <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageDescription</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span>
+<span>  <span class="va">sha</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">RemoteSha</span><span class="op">)</span><span class="op">)</span> <span class="va">d</span><span class="op">$</span><span class="va">RemoteSha</span> <span class="kw">else</span> <span class="va">d</span><span class="op">$</span><span class="va">GithubSHA1</span></span>
+<span>  <span class="co"># fhirviews se instala desde la copia local al construir el sitio</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">sha</span><span class="op">)</span> <span class="op">&amp;&amp;</span> <span class="va">p</span> <span class="op">==</span> <span class="st">"fhirviews"</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/nchar.html" class="external-link">nzchar</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"GITHUB_SHA"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="va">sha</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"GITHUB_SHA"</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">sha</span><span class="op">)</span> <span class="op">||</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"^[0-9a-f]{7,40}$"</span>, <span class="va">sha</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">Repository</span><span class="op">)</span><span class="op">)</span> <span class="va">d</span><span class="op">$</span><span class="va">Repository</span> <span class="kw">else</span> <span class="st">"-"</span><span class="op">)</span>  <span class="co"># p. ej. CRAN</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">sha</span>, <span class="fl">1</span>, <span class="fl">7</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">paquetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fhirviews"</span>, <span class="st">"pobecu"</span>, <span class="st">"geoecu"</span>, <span class="st">"sf"</span><span class="op">)</span></span>
+<span><span class="va">instalados</span> <span class="op">&lt;-</span> <span class="va">paquetes</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">paquetes</span>, <span class="va">requireNamespace</span>, <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>,</span>
+<span>                              quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  paquete <span class="op">=</span> <span class="va">paquetes</span>,</span>
-<span>  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">paquetes</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="va">p</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span><span class="op">)</span></span>
-<span>    <span class="kw">else</span> <span class="st">"no instalado"</span></span>
-<span>  <span class="op">}</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  paquete <span class="op">=</span> <span class="va">instalados</span>,</span>
+<span>  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">instalados</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  commit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">instalados</span>, <span class="va">commit_de</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt;     paquete    version</span></span>
-<span><span class="co">#&gt; 1 fhirviews      0.5.0</span></span>
-<span><span class="co">#&gt; 2    pobecu 0.2.0.9000</span></span>
-<span><span class="co">#&gt; 3    geoecu      0.4.1</span></span>
-<span><span class="co">#&gt; 4        sf      1.1.3</span></span></code></pre></div>
+<span><span class="co">#&gt;     paquete    version  commit</span></span>
+<span><span class="co">#&gt; 1 fhirviews      0.5.0 3b270c9</span></span>
+<span><span class="co">#&gt; 2    pobecu 0.2.0.9000 bd6d23f</span></span>
+<span><span class="co">#&gt; 3    geoecu      0.4.1    RSPM</span></span>
+<span><span class="co">#&gt; 4        sf      1.1.3    RSPM</span></span>
+<span><span class="va">R.version.string</span></span>
+<span><span class="co">#&gt; [1] "R version 4.6.2 (2026-10-29)"</span></span></code></pre></div>
 <p>Para instalar los tres paquetes:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"f-slg/fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"f-slg/pobecu"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"geoecu"</span><span class="op">)</span>                <span class="co"># CRAN</span></span></code></pre></div>
-<p>Para fijar una versión concreta de un paquete de GitHub, añade la
-etiqueta o el <em>commit</em> al nombre del repositorio, por ejemplo
+<p>Para reproducir exactamente estas cifras, instala cada paquete de
+GitHub en el <em>commit</em> de la tabla, por ejemplo
 <code>remotes::install_github("f-slg/pobecu@&lt;commit&gt;")</code>, y
-guarda la tabla de versiones anterior junto con tus resultados.</p>
+guarda la tabla de versiones junto con tus resultados. Para un proyecto
+propio, <a href="https://rstudio.github.io/renv/" class="external-link">renv</a> registra
+todas las dependencias en un archivo <code>renv.lock</code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

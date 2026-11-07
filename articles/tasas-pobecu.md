@@ -163,9 +163,23 @@ par(op)
 [`pob_mapa()`](https://f-slg.github.io/pobecu/reference/pob_mapa.html)
 de pobecu entrega los límites cantonales de
 [geoecu](https://f-slg.github.io/geoecu/) agrupados a las unidades del
-Censo 2022, que son las mismas que usa la población del INEC. Basta con
-unir las tasas por código DPA. Los cantones sin casos quedan en gris
-(`NA`).
+Censo 2022, que son las mismas que usa la población del INEC. Las tasas
+se unen por código DPA.
+
+**Cero casos no es lo mismo que sin dato.** La agregación anterior solo
+tiene filas para los cantones con algún caso confirmado, así que tras la
+unión los demás quedan con `NA`. Hay que decidir qué significa ese `NA`:
+
+- Si el cantón **está dentro de la cobertura** del sistema (aquí: todos
+  los cantones de las cuatro provincias simuladas) y no notificó casos,
+  tiene **0 casos** y su tasa es 0. Dejarlo en `NA` lo confundiría con
+  un territorio sin información.
+- Si **no hay cobertura** o falta el denominador, el valor es
+  desconocido y debe seguir siendo `NA`. Aquí es el caso de la zona en
+  estudio Jaramijó–Manta, que no tiene población asignada.
+
+Si tu sistema no cubre todo el territorio, usa la lista de unidades que
+sí notifican en lugar de “todos los cantones con población”.
 
 ``` r
 
@@ -176,17 +190,37 @@ mapa <- pob_mapa("canton", anio = 2025,
 mapa <- merge(mapa, tasas[, c("dpa_canton", "casos", "tasa")],
               by = "dpa_canton", all.x = TRUE)
 
+# Cobertura: los cantones con población son parte del universo simulado.
+cubierto <- !is.na(mapa$poblacion)
+sin_casos <- cubierto & is.na(mapa$casos)
+mapa$casos[sin_casos] <- 0
+mapa$tasa[sin_casos] <- 0
+table(estado = ifelse(!cubierto, "sin dato (NA)",
+                      ifelse(sin_casos, "0 casos", "con casos")))
+#> estado
+#>       0 casos     con casos sin dato (NA) 
+#>             9            65             1
+
 provincias <- pob_mapa("provincia", anio = 2025,
                        provincia = c("El Oro", "Guayas", "Los Ríos", "Manabí"))
 
-plot(mapa["tasa"], breaks = "quantile", nbreaks = 6,
+# Escala de color solo para tasas positivas; 0 y NA se dibujan aparte
+positivos <- mapa
+positivos$tasa[positivos$tasa %in% 0] <- NA
+plot(positivos["tasa"], breaks = "quantile", nbreaks = 6,
      pal = grDevices::hcl.colors(6, "YlOrRd", rev = TRUE),
      border = "white", lwd = 0.3, key.pos = 1, reset = FALSE,
      main = "Dengue 2025 por 100 000 habitantes (datos ficticios)")
-plot(sf::st_geometry(mapa[is.na(mapa$tasa), ]), col = "grey85",
-     border = "white", lwd = 0.3, add = TRUE)
+plot(sf::st_geometry(mapa[sin_casos, ]), col = "white",
+     border = "grey55", lwd = 0.3, add = TRUE)
+plot(sf::st_geometry(mapa[!cubierto, ]), col = "grey60",
+     border = "white", density = 25, lwd = 0.6, add = TRUE)
 plot(sf::st_geometry(provincias), col = NA, border = "#0F2233", lwd = 1,
      add = TRUE)
+legend("topleft", bty = "n", cex = 0.8,
+       fill = c("white", "grey60"), border = c("grey55", "grey60"),
+       density = c(NA, 25),
+       legend = c("0 casos confirmados", "Sin dato: zona en estudio"))
 ```
 
 ![Mapa de los cantones de El Oro, Guayas, Los Ríos y Manabí coloreados
@@ -257,24 +291,41 @@ DBI::dbDisconnect(db)
 ## Reproducibilidad
 
 Este artículo se genera automáticamente con cada cambio del repositorio.
-Las cifras y el mapa corresponden a estas versiones:
+Las cifras y el mapa corresponden a estas versiones. Dos instalaciones
+desde GitHub pueden compartir número de versión con código distinto, por
+eso se registra también el *commit* de cada paquete instalado desde
+GitHub:
 
 ``` r
 
+commit_de <- function(p) {
+  d <- utils::packageDescription(p)
+  sha <- if (!is.null(d$RemoteSha)) d$RemoteSha else d$GithubSHA1
+  # fhirviews se instala desde la copia local al construir el sitio
+  if (is.null(sha) && p == "fhirviews" && nzchar(Sys.getenv("GITHUB_SHA")))
+    sha <- Sys.getenv("GITHUB_SHA")
+  if (is.null(sha) || !grepl("^[0-9a-f]{7,40}$", sha)) {
+    return(if (!is.null(d$Repository)) d$Repository else "-")  # p. ej. CRAN
+  }
+  substr(sha, 1, 7)
+}
 paquetes <- c("fhirviews", "pobecu", "geoecu", "sf")
+instalados <- paquetes[vapply(paquetes, requireNamespace, logical(1),
+                              quietly = TRUE)]
 data.frame(
-  paquete = paquetes,
-  version = vapply(paquetes, function(p) {
-    if (requireNamespace(p, quietly = TRUE)) as.character(packageVersion(p))
-    else "no instalado"
-  }, character(1)),
+  paquete = instalados,
+  version = vapply(instalados, function(p) as.character(packageVersion(p)),
+                   character(1)),
+  commit = vapply(instalados, commit_de, character(1)),
   row.names = NULL
 )
-#>     paquete    version
-#> 1 fhirviews      0.5.0
-#> 2    pobecu 0.2.0.9000
-#> 3    geoecu      0.4.1
-#> 4        sf      1.1.3
+#>     paquete    version  commit
+#> 1 fhirviews      0.5.0 3b270c9
+#> 2    pobecu 0.2.0.9000 bd6d23f
+#> 3    geoecu      0.4.1    RSPM
+#> 4        sf      1.1.3    RSPM
+R.version.string
+#> [1] "R version 4.6.2 (2026-10-29)"
 ```
 
 Para instalar los tres paquetes:
@@ -287,7 +338,9 @@ remotes::install_github("f-slg/pobecu")
 install.packages("geoecu")                # CRAN
 ```
 
-Para fijar una versión concreta de un paquete de GitHub, añade la
-etiqueta o el *commit* al nombre del repositorio, por ejemplo
+Para reproducir exactamente estas cifras, instala cada paquete de GitHub
+en el *commit* de la tabla, por ejemplo
 `remotes::install_github("f-slg/pobecu@<commit>")`, y guarda la tabla de
-versiones anterior junto con tus resultados.
+versiones junto con tus resultados. Para un proyecto propio,
+[renv](https://rstudio.github.io/renv/) registra todas las dependencias
+en un archivo `renv.lock`.
