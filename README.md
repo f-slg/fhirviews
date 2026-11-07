@@ -34,10 +34,10 @@ locales. La compatibilidad del motor SQL se comprueba por separado.
 
 <img src="man/figures/README-json-tabla.png" width="100%" alt="Flujo de transformación: recurso Patient en JSON, columnas definidas en un ViewDefinition y tabla resultante en R" />
 
-> **Versión 0.5.0 · candidato en preparación.** Procesamiento por bloques,
-> recuperación de exportaciones con validación de contenido y mejoras de
-> privacidad. El motor SQL de DuckDB sigue siendo **experimental**.
-> El paquete todavía no se ha enviado a CRAN.
+> **Versión 0.5.0 · enviada a CRAN el 6 de noviembre de 2026, en revisión.**
+> Procesamiento por bloques, recuperación de exportaciones con validación de
+> contenido y mejoras de privacidad. El motor SQL de DuckDB sigue siendo
+> **experimental**. Mientras CRAN la publica, instálala desde GitHub.
 
 ## Contenido
 

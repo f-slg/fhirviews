@@ -39,9 +39,10 @@ files. Compatibility of the SQL engine is tested separately.
 
 <img src="man/figures/README-json-tabla.png" width="100%" alt="Transformation pipeline: a Patient resource in JSON, columns defined in a ViewDefinition and the resulting table in R" />
 
-> **Version 0.5.0 · release candidate.** Block-wise processing, export recovery
-> with content validation and privacy improvements. The DuckDB SQL engine is
-> still **experimental**. The package has not yet been submitted to CRAN.
+> **Version 0.5.0 · submitted to CRAN on 6 November 2026, under review.**
+> Block-wise processing, export recovery with content validation and privacy
+> improvements. The DuckDB SQL engine is still **experimental**. Until CRAN
+> publishes it, install it from GitHub.
 
 ## Contents
 
