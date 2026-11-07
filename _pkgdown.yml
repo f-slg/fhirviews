@@ -41,7 +41,7 @@ navbar:
         href: articles/fhirviews.html
       - text: ViewDefinition en detalle
         href: articles/vistas.html
-      - text: Tasas por cantón con FHIR y pobecu
+      - text: "Ejemplo completo: de FHIR a un mapa de tasas"
         href: articles/tasas-pobecu.html
       - text: Servidores reales y grandes volúmenes
         href: articles/servidores-y-volumen.html

@@ -41,6 +41,7 @@ jobs:
             any::duckdb
             any::rstudioapi
             github::f-slg/pobecu
+            any::geoecu
             local::.
           needs: website
 
