@@ -563,6 +563,66 @@ fechas.</li>
 </ul>
 <p>El script reproducible es <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr.R" class="external-link"><code>data-raw/benchmark-fhircrackr.R</code></a>
 del repositorio.</p>
+<p>Con un recurso más anidado, 100 000 <code>Observation</code> con dos
+codificaciones por recurso, elementos de elección, referencias y una
+fila por componente (<code>forEachOrNull</code>), el patrón se
+repite:</p>
+<table class="table">
+<colgroup>
+<col width="12%">
+<col width="7%">
+<col width="22%">
+<col width="23%">
+<col width="15%">
+<col width="18%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">Observaciones</th>
+<th align="right">Filas</th>
+<th align="right">fhircrackr, 1 núcleo (s)</th>
+<th align="right">fhircrackr, 8 núcleos (s)</th>
+<th align="right">fhirviews V8 (s)</th>
+<th align="right">fhirviews DuckDB (s)</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1 000</td>
+<td align="right">1 274</td>
+<td align="right">0,44</td>
+<td align="right">0,32</td>
+<td align="right">0,18</td>
+<td align="right">0,07</td>
+</tr>
+<tr class="even">
+<td align="right">10 000</td>
+<td align="right">12 639</td>
+<td align="right">4,1</td>
+<td align="right">1,6</td>
+<td align="right">1,6</td>
+<td align="right">0,18</td>
+</tr>
+<tr class="odd">
+<td align="right">50 000</td>
+<td align="right">63 059</td>
+<td align="right">20,8</td>
+<td align="right">7,2</td>
+<td align="right">8,4</td>
+<td align="right">0,72</td>
+</tr>
+<tr class="even">
+<td align="right">100 000</td>
+<td align="right">125 578</td>
+<td align="right">44,0</td>
+<td align="right">sin memoria</td>
+<td align="right">17,6</td>
+<td align="right">1,42</td>
+</tr>
+</tbody>
+</table>
+<p>Con un núcleo, V8 es unas 2,5 veces más rápido. Con ocho, fhircrackr
+iguala a V8 o lo supera ligeramente, pero cada proceso paralelo copia
+los datos: con 100 000 observaciones los ocho procesos superaron los 14
+GB de memoria del equipo. El script es <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr-observation.R" class="external-link"><code>data-raw/benchmark-fhircrackr-observation.R</code></a>.</p>
 </div>
 <div class="section level3">
 <h3 id="conformidad-y-límites">Conformidad y límites<a class="anchor" aria-label="anchor" href="#conformidad-y-l%C3%ADmites"></a>

@@ -316,6 +316,23 @@ El script reproducible es
 [`data-raw/benchmark-fhircrackr.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr.R)
 del repositorio.
 
+Con un recurso más anidado, 100 000 `Observation` con dos codificaciones
+por recurso, elementos de elección, referencias y una fila por
+componente (`forEachOrNull`), el patrón se repite:
+
+| Observaciones | Filas | fhircrackr, 1 núcleo (s) | fhircrackr, 8 núcleos (s) | fhirviews V8 (s) | fhirviews DuckDB (s) |
+|---:|---:|---:|---:|---:|---:|
+| 1 000 | 1 274 | 0,44 | 0,32 | 0,18 | 0,07 |
+| 10 000 | 12 639 | 4,1 | 1,6 | 1,6 | 0,18 |
+| 50 000 | 63 059 | 20,8 | 7,2 | 8,4 | 0,72 |
+| 100 000 | 125 578 | 44,0 | sin memoria | 17,6 | 1,42 |
+
+Con un núcleo, V8 es unas 2,5 veces más rápido. Con ocho, fhircrackr
+iguala a V8 o lo supera ligeramente, pero cada proceso paralelo copia
+los datos: con 100 000 observaciones los ocho procesos superaron los 14
+GB de memoria del equipo. El script es
+[`data-raw/benchmark-fhircrackr-observation.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr-observation.R).
+
 ### Conformidad y límites
 
 El motor DuckDB pasa también **las 133 pruebas *shareable*** del banco

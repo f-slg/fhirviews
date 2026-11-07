@@ -75,6 +75,7 @@
 </h1>
 </div>
 <p><strong>De recursos FHIR a tablas reproducibles en R.</strong></p>
+<p><strong>Español</strong> · <a href="https://github.com/f-slg/fhirviews/blob/main/README.en.md" class="external-link">English</a></p>
 <!-- badges: start -->
 
 <p><strong>fhirviews</strong> consulta servidores <strong>HL7 FHIR R4</strong> y transforma sus recursos en <code>data.frame</code> mediante <strong>SQL on FHIR</strong> y <strong>FHIRPath</strong>. Define una vista una vez, guárdala como <code>ViewDefinition</code> y reutilízala sobre archivos locales, respuestas del servidor o exportaciones poblacionales.</p>
@@ -857,7 +858,7 @@
 </tbody>
 </table>
 <p>Tiempo de punta a punta, desde el archivo NDJSON hasta el <code>data.frame</code>, con pacientes sintéticos y una vista con <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code> (<code>data-raw/motor-duckdb.R</code>; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6).</p>
-<p>Son resultados de ese equipo y esa vista, no una garantía de rendimiento. La expansión de colecciones, el tamaño del resultado, el disco y la memoria pueden cambiar el comportamiento. El script reproducible está en <a href="data-raw/motor-duckdb.R"><code>data-raw/motor-duckdb.R</code></a>.</p>
+<p>Son resultados de ese equipo y esa vista, no una garantía de rendimiento. La expansión de colecciones, el tamaño del resultado, el disco y la memoria pueden cambiar el comportamiento. El script reproducible está en <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.R" class="external-link"><code>data-raw/motor-duckdb.R</code></a>.</p>
 <div class="section level3">
 <h3 id="comparación-con-fhircrackr">Comparación con fhircrackr<a class="anchor" aria-label="anchor" href="#comparaci%C3%B3n-con-fhircrackr"></a>
 </h3>
@@ -921,7 +922,66 @@
 <li>Se usó un solo tipo de recurso (<code>Patient</code>) sintético y sencillo, en un solo equipo (Linux, 12 núcleos, R 4.5.2, duckdb 2.0.0). Con recursos más anidados el resultado puede cambiar.</li>
 <li>En fhirviews la extracción es un <code>ViewDefinition</code> estándar y portable. En fhircrackr, el filtro por fecha y la numeración de los nombres se hacen en R después de <code>fhir_crack()</code>, porque XPath 1.0 no compara fechas.</li>
 </ul>
-<p>El script reproducible está en <a href="data-raw/benchmark-fhircrackr.R"><code>data-raw/benchmark-fhircrackr.R</code></a> y los resultados en <a href="data-raw/benchmark-fhircrackr.csv"><code>data-raw/benchmark-fhircrackr.csv</code></a> (un núcleo) y <a href="data-raw/benchmark-fhircrackr-ncores8.csv"><code>data-raw/benchmark-fhircrackr-ncores8.csv</code></a> (ocho núcleos).</p>
+<p>El script reproducible está en <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr.R" class="external-link"><code>data-raw/benchmark-fhircrackr.R</code></a> y los resultados en <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr.csv" class="external-link"><code>data-raw/benchmark-fhircrackr.csv</code></a> (un núcleo) y <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr-ncores8.csv" class="external-link"><code>data-raw/benchmark-fhircrackr-ncores8.csv</code></a> (ocho núcleos).</p>
+<div class="section level4">
+<h4 id="un-recurso-más-anidado-observation">Un recurso más anidado: Observation<a class="anchor" aria-label="anchor" href="#un-recurso-m%C3%A1s-anidado-observation"></a>
+</h4>
+<p>La misma comparación con 100 000 <code>Observation</code> más complejas: dos codificaciones por recurso que hay que filtrar por sistema, elementos de elección (<code>effective[x]</code>, <code>value[x]</code>), la referencia al paciente y una fila por componente de la presión arterial (<code>forEachOrNull</code>).</p>
+<table style="width:100%;" class="table">
+<colgroup>
+<col width="16%">
+<col width="16%">
+<col width="16%">
+<col width="16%">
+<col width="16%">
+<col width="16%">
+</colgroup>
+<thead><tr>
+<th align="right">Observaciones</th>
+<th align="right">Filas</th>
+<th align="right">fhircrackr · 1 núcleo</th>
+<th align="right">fhircrackr · 8 núcleos</th>
+<th align="right">fhirviews · V8</th>
+<th align="right">fhirviews · DuckDB</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="right">1 000</td>
+<td align="right">1 274</td>
+<td align="right">0,44 s</td>
+<td align="right">0,32 s</td>
+<td align="right">0,18 s</td>
+<td align="right">0,07 s</td>
+</tr>
+<tr>
+<td align="right">10 000</td>
+<td align="right">12 639</td>
+<td align="right">4,1 s</td>
+<td align="right">1,6 s</td>
+<td align="right">1,6 s</td>
+<td align="right">0,18 s</td>
+</tr>
+<tr>
+<td align="right">50 000</td>
+<td align="right">63 059</td>
+<td align="right">20,8 s</td>
+<td align="right">7,2 s</td>
+<td align="right">8,4 s</td>
+<td align="right">0,72 s</td>
+</tr>
+<tr>
+<td align="right">100 000</td>
+<td align="right">125 578</td>
+<td align="right">44,0 s</td>
+<td align="right">sin memoria</td>
+<td align="right">17,6 s</td>
+<td align="right">1,42 s</td>
+</tr>
+</tbody>
+</table>
+<p>El resultado se mantiene con un núcleo: V8 es unas 2,5 veces más rápido que fhircrackr. Con ocho núcleos, fhircrackr iguala a V8 o lo supera ligeramente, pero cada proceso paralelo copia los datos: con 100 000 observaciones los ocho procesos superaron los 14 GB de memoria del equipo y el sistema los detuvo. V8 y DuckDB procesaron ese tamaño sin problemas.</p>
+<p>Script: <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr-observation.R" class="external-link"><code>data-raw/benchmark-fhircrackr-observation.R</code></a>.</p>
+</div>
 </div>
 </div>
 <div class="section level2">
@@ -1037,11 +1097,11 @@
 <div class="section level2">
 <h2 id="contribuir-citar-y-licencia">Contribuir, citar y licencia<a class="anchor" aria-label="anchor" href="#contribuir-citar-y-licencia"></a>
 </h2>
-<p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="CONTRIBUTING.html">guía de contribución</a> y el <a href="CODE_OF_CONDUCT.html">código de conducta</a>.</p>
+<p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md" class="external-link">guía de contribución</a> y el <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md" class="external-link">código de conducta</a>.</p>
 <p>Para citar el paquete:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="LICENSE.html">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
+<p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="https://github.com/f-slg/fhirviews/blob/main/LICENSE.md" class="external-link">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
 <p>fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo institucional. Todos los datos de ejemplo incluidos son ficticios.</p>
 </div>
 </div>
@@ -1086,7 +1146,7 @@
 <li><a href="https://f-slg.github.io/fhirviews/"><img src="https://github.com/f-slg/fhirviews/actions/workflows/pkgdown.yaml/badge.svg" alt="Documentación"></a></li>
 <li><a href="#conformidad-y-pruebas"><img src="https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-2a78d6.svg" alt="SQL on FHIR: 133/133 shareable"></a></li>
 <li><a href="https://hl7.org/fhir/R4/" class="external-link"><img src="https://img.shields.io/badge/FHIR-R4-0F2233.svg" alt="FHIR R4"></a></li>
-<li><a href="LICENSE.html"><img src="https://img.shields.io/badge/licencia-MIT-blue.svg" alt="Licencia MIT"></a></li>
+<li><a href="https://github.com/f-slg/fhirviews/blob/main/LICENSE.md" class="external-link"><img src="https://img.shields.io/badge/licencia-MIT-blue.svg" alt="Licencia MIT"></a></li>
 </ul>
 </div>
 
