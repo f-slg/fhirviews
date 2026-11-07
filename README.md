@@ -798,6 +798,48 @@ La expansión de colecciones, el tamaño del resultado, el disco y la memoria
 pueden cambiar el comportamiento. El script reproducible está en
 [`data-raw/motor-duckdb.R`](data-raw/motor-duckdb.R).
 
+### Comparación con fhircrackr
+
+[fhircrackr](https://CRAN.R-project.org/package=fhircrackr) es el paquete de
+CRAN más usado para aplanar recursos FHIR en R. Describe las columnas con
+XPath sobre Bundles XML y expande las colecciones con `fhir_melt()`. La
+comparación obtiene **la misma tabla** con ambos paquetes: filtro por fecha,
+cuatro columnas por paciente y una fila por nombre. Antes de medir, el script
+comprueba que los tres resultados sean idénticos.
+
+| Pacientes | Filas | fhircrackr 2.4.0 · 1 núcleo | fhircrackr 2.4.0 · 8 núcleos | fhirviews · V8 | fhirviews · DuckDB |
+|---:|---:|---:|---:|---:|---:|
+| 1 000 | 1 752 | 0,56 s | 0,35 s | 0,16 s | 0,10 s |
+| 10 000 | 17 824 | 4,4 s | 1,6 s | 1,3 s | 0,18 s |
+| 50 000 | 89 180 | 25,1 s | 6,9 s | 7,2 s | 0,60 s |
+| 100 000 | 178 316 | 48,5 s | 15,8 s | 15,4 s | 1,11 s |
+
+Tiempo de punta a punta, desde los archivos hasta el `data.frame`, mediana de
+tres corridas. Cada paquete lee su formato natural: NDJSON en fhirviews y
+Bundles XML de 500 recursos en fhircrackr. Con los datos ya en memoria, solo la
+transformación, el motor V8 es entre 4 y 5 veces más rápido que
+`fhir_crack()` + `fhir_melt()`.
+
+Cómo leer estos números:
+
+- El motor V8 usa un solo núcleo. Frente a fhircrackr con un núcleo es unas
+  **3 veces más rápido**; con `ncores = 8`, fhircrackr alcanza tiempos
+  similares a los de V8. DuckDB usa todos los núcleos disponibles, de modo que
+  su ventaja combina el motor con el paralelismo.
+- Se usó un solo tipo de recurso (`Patient`) sintético y sencillo, en un solo
+  equipo (Linux, 12 núcleos, R 4.5.2, duckdb 2.0.0). Con recursos más anidados
+  el resultado puede cambiar.
+- En fhirviews la extracción es un `ViewDefinition` estándar y portable. En
+  fhircrackr, el filtro por fecha y la numeración de los nombres se hacen en R
+  después de `fhir_crack()`, porque XPath 1.0 no compara fechas.
+
+El script reproducible está en
+[`data-raw/benchmark-fhircrackr.R`](data-raw/benchmark-fhircrackr.R) y los
+resultados en [`data-raw/benchmark-fhircrackr.csv`](data-raw/benchmark-fhircrackr.csv)
+(un núcleo) y
+[`data-raw/benchmark-fhircrackr-ncores8.csv`](data-raw/benchmark-fhircrackr-ncores8.csv)
+(ocho núcleos).
+
 ## Alcance y límites
 
 - **FHIR R4 y JSON.** El modelo incluido es R4; no se declara compatibilidad

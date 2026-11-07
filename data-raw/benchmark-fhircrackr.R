@@ -13,8 +13,10 @@
 #   - total: desde los archivos en disco hasta el data.frame final
 #   - transformacion: solo la conversión, con los datos ya leídos en memoria
 #
-# Uso: Rscript data-raw/benchmark-fhircrackr.R [tamaños] [repeticiones] [csv]
+# Uso: Rscript data-raw/benchmark-fhircrackr.R [tamaños] [repeticiones] [csv] [núcleos]
 #   Rscript data-raw/benchmark-fhircrackr.R 1000,10000,50000 3
+# [núcleos] es el argumento ncores de fhir_crack() (por defecto 1, como el
+# motor V8); DuckDB usa siempre todos los núcleos.
 # -----------------------------------------------------------------------------
 if (requireNamespace("devtools", quietly = TRUE) && file.exists("DESCRIPTION")) {
   devtools::load_all(quiet = TRUE)
@@ -27,6 +29,7 @@ tamanos <- if (length(args) >= 1) as.numeric(strsplit(args[1], ",")[[1]]) else
   c(1000, 10000, 50000)
 repeticiones <- if (length(args) >= 2) as.integer(args[2]) else 3L
 salida <- if (length(args) >= 3) args[3] else "data-raw/benchmark-fhircrackr.csv"
+nucleos <- if (length(args) >= 4) as.integer(args[4]) else 1L
 por_bundle <- 500L
 
 # --- Datos sintéticos ---------------------------------------------------------
@@ -96,7 +99,7 @@ diseno <- fhir_table_description(
   sep = "|", brackets = c("[", "]"), format = "compact"
 )
 crackr_tabla <- function(bundles) {
-  df <- fhir_crack(bundles, diseno, verbose = 0)
+  df <- fhir_crack(bundles, diseno, verbose = 0, ncores = nucleos)
   # where: XPath 1.0 no compara fechas, se filtra en R antes de expandir
   fecha <- as.Date(sub("^\\[[0-9.]+\\]", "", df$nacimiento))
   df <- df[fecha > as.Date("1940-01-01"), , drop = FALSE]
@@ -174,6 +177,7 @@ res[grep("^fhir", names(res))] <- lapply(res[grep("^fhir", names(res))], round, 
 res$equipo <- paste(Sys.info()[["sysname"]], parallel::detectCores(), "nucleos,",
                     "R", paste(R.version$major, R.version$minor, sep = "."),
                     "fhircrackr", as.character(utils::packageVersion("fhircrackr")),
+                    paste0("(ncores = ", nucleos, ")"),
                     "duckdb", as.character(utils::packageVersion("duckdb")))
 utils::write.csv(res, salida, row.names = FALSE)
 print(res)
