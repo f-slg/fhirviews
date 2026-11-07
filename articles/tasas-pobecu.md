@@ -319,11 +319,11 @@ data.frame(
   commit = vapply(instalados, commit_de, character(1)),
   row.names = NULL
 )
-#>     paquete    version  commit
-#> 1 fhirviews      0.5.0 c0105e2
-#> 2    pobecu 0.2.0.9000 bd6d23f
-#> 3    geoecu      0.4.1    RSPM
-#> 4        sf      1.1.3    RSPM
+#>     paquete version  commit
+#> 1 fhirviews   0.5.0 7c2990f
+#> 2    pobecu   0.3.0 8f1cedf
+#> 3    geoecu   0.4.1    RSPM
+#> 4        sf   1.1.3    RSPM
 R.version.string
 #> [1] "R version 4.6.2 (2026-10-29)"
 ```
@@ -332,14 +332,13 @@ Para instalar los tres paquetes:
 
 ``` r
 
+install.packages(c("pobecu", "geoecu"))  # CRAN
 install.packages("remotes")
 remotes::install_github("f-slg/fhirviews")
-remotes::install_github("f-slg/pobecu")
-install.packages("geoecu")                # CRAN
 ```
 
-Para reproducir exactamente estas cifras, instala cada paquete de GitHub
-en el *commit* de la tabla, por ejemplo
+Para reproducir exactamente estas cifras, instala cada paquete en la
+versión o el *commit* de GitHub de la tabla, por ejemplo
 `remotes::install_github("f-slg/pobecu@<commit>")`, y guarda la tabla de
 versiones junto con tus resultados. Para un proyecto propio,
 [renv](https://rstudio.github.io/renv/) registra todas las dependencias
