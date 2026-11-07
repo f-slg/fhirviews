@@ -261,14 +261,13 @@ R.version.string
 Para instalar los tres paquetes:
 
 ```r
+install.packages(c("pobecu", "geoecu"))  # CRAN
 install.packages("remotes")
 remotes::install_github("f-slg/fhirviews")
-remotes::install_github("f-slg/pobecu")
-install.packages("geoecu")                # CRAN
 ```
 
-Para reproducir exactamente estas cifras, instala cada paquete de GitHub en
-el *commit* de la tabla, por ejemplo
+Para reproducir exactamente estas cifras, instala cada paquete en la versión
+o el *commit* de GitHub de la tabla, por ejemplo
 `remotes::install_github("f-slg/pobecu@<commit>")`, y guarda la tabla de
 versiones junto con tus resultados. Para un proyecto propio,
 [renv](https://rstudio.github.io/renv/) registra todas las dependencias en un
