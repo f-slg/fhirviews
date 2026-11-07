@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Tasas por cantón con FHIR y pobecu • fhirviews</title>
+<title>De FHIR a un mapa de tasas: fhirviews, pobecu y geoecu • fhirviews</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -18,9 +18,9 @@
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><link href="../extra.css" rel="stylesheet">
-<script src="../extra.js"></script><meta property="og:title" content="Tasas por cantón con FHIR y pobecu">
-<meta name="description" content="Casos de dengue desde recursos FHIR, unidos a la población oficial del Ecuador del paquete pobecu para calcular tasas por cantón.">
-<meta property="og:description" content="Casos de dengue desde recursos FHIR, unidos a la población oficial del Ecuador del paquete pobecu para calcular tasas por cantón.">
+<script src="../extra.js"></script><meta property="og:title" content="De FHIR a un mapa de tasas: fhirviews, pobecu y geoecu">
+<meta name="description" content="Ejemplo completo y reproducible: casos de dengue desde recursos FHIR, tasas por cantón con la población oficial del INEC (pobecu) y mapa con la cartografía del CONALI (geoecu).">
+<meta property="og:description" content="Ejemplo completo y reproducible: casos de dengue desde recursos FHIR, tasas por cantón con la población oficial del INEC (pobecu) y mapa con la cartografía del CONALI (geoecu).">
 <meta property="og:image" content="https://f-slg.github.io/fhirviews/logo.png">
 </head>
 <body>
@@ -47,7 +47,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-art-culos">
 <li><a class="dropdown-item" href="../articles/fhirviews.html">Primeros pasos</a></li>
     <li><a class="dropdown-item" href="../articles/vistas.html">ViewDefinition en detalle</a></li>
-    <li><a class="dropdown-item" href="../articles/tasas-pobecu.html">Tasas por cantón con FHIR y pobecu</a></li>
+    <li><a class="dropdown-item" href="../articles/tasas-pobecu.html">Ejemplo completo: de FHIR a un mapa de tasas</a></li>
     <li><a class="dropdown-item" href="../articles/servidores-y-volumen.html">Servidores reales y grandes volúmenes</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="../articles/arquitectura.html">Cómo funciona por dentro</a></li>
@@ -73,7 +73,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Tasas por cantón con FHIR y pobecu</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>De FHIR a un mapa de tasas: fhirviews, pobecu y geoecu</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/vignettes/articles/tasas-pobecu.Rmd" class="external-link"><code>vignettes/articles/tasas-pobecu.Rmd</code></a></small>
@@ -84,10 +84,40 @@
     
 <p>Los sistemas de información en salud guardan cada caso como un
 recurso FHIR; para vigilancia epidemiológica hace falta otra cosa:
-<strong>cuántos casos hay por territorio y cuántos son en relación con
-la población</strong>. Esta viñeta va de recursos FHIR a tasas por 100
-000 habitantes por cantón, uniendo las vistas de fhirviews con la
-población oficial del INEC que trae el paquete <a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a>.</p>
+<strong>cuántos casos hay por territorio, cuántos son en relación con la
+población y dónde están</strong>. Este artículo recorre todo el camino
+con los tres paquetes:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Paso</th>
+<th>Paquete</th>
+<th>Resultado</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Recursos FHIR → tablas</td>
+<td>fhirviews</td>
+<td>Un caso por fila, con el código DPA del cantón</td>
+</tr>
+<tr class="even">
+<td>Tablas → tasas</td>
+<td><a href="https://f-slg.github.io/pobecu/" class="external-link">pobecu</a></td>
+<td>Casos por 100 000 habitantes con la población oficial del INEC</td>
+</tr>
+<tr class="odd">
+<td>Tasas → mapa</td>
+<td><a href="https://f-slg.github.io/geoecu/" class="external-link">geoecu</a></td>
+<td>Mapa cantonal con la cartografía del CONALI</td>
+</tr>
+</tbody>
+</table>
+<p>Al final se listan las versiones con las que se generó este
+artículo.</p>
 <blockquote>
 <p>Los datos son <strong>ficticios</strong>: 755 casos simulados de
 dengue en 2025 en El Oro, Guayas, Los Ríos y Manabí, generados a partir
@@ -208,13 +238,46 @@ habitantes:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="por-provincia-y-sexo">4. Por provincia y sexo<a class="anchor" aria-label="anchor" href="#por-provincia-y-sexo"></a>
+<h2 id="en-el-mapa">4. En el mapa<a class="anchor" aria-label="anchor" href="#en-el-mapa"></a>
+</h2>
+<p><code><a href="https://f-slg.github.io/pobecu/reference/pob_mapa.html" class="external-link">pob_mapa()</a></code> de pobecu entrega los límites cantonales de
+<a href="https://f-slg.github.io/geoecu/" class="external-link">geoecu</a> agrupados a las
+unidades del Censo 2022, que son las mismas que usa la población del
+INEC. Basta con unir las tasas por código DPA. Los cantones sin casos
+quedan en gris (<code>NA</code>).</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mapa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://f-slg.github.io/pobecu/reference/pob_mapa.html" class="external-link">pob_mapa</a></span><span class="op">(</span><span class="st">"canton"</span>, anio <span class="op">=</span> <span class="fl">2025</span>,</span>
+<span>                 provincia <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"El Oro"</span>, <span class="st">"Guayas"</span>, <span class="st">"Los Ríos"</span>, <span class="st">"Manabí"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Descargando capas geoecu (resolución baja) por única vez...</span></span>
+<span><span class="co">#&gt;   https://github.com/f-slg/geoecu/releases/download/datos-v0.3.0/geoecu_dpa_baja.gpkg</span></span>
+<span><span class="va">mapa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">mapa</span>, <span class="va">tasas</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dpa_canton"</span>, <span class="st">"casos"</span>, <span class="st">"tasa"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>              by <span class="op">=</span> <span class="st">"dpa_canton"</span>, all.x <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">provincias</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://f-slg.github.io/pobecu/reference/pob_mapa.html" class="external-link">pob_mapa</a></span><span class="op">(</span><span class="st">"provincia"</span>, anio <span class="op">=</span> <span class="fl">2025</span>,</span>
+<span>                       provincia <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"El Oro"</span>, <span class="st">"Guayas"</span>, <span class="st">"Los Ríos"</span>, <span class="st">"Manabí"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">[</span><span class="st">"tasa"</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="st">"quantile"</span>, nbreaks <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>     pal <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="fl">6</span>, <span class="st">"YlOrRd"</span>, rev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>     border <span class="op">=</span> <span class="st">"white"</span>, lwd <span class="op">=</span> <span class="fl">0.3</span>, key.pos <span class="op">=</span> <span class="fl">1</span>, reset <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>     main <span class="op">=</span> <span class="st">"Dengue 2025 por 100 000 habitantes (datos ficticios)"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">mapa</span><span class="op">$</span><span class="va">tasa</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"grey85"</span>,</span>
+<span>     border <span class="op">=</span> <span class="st">"white"</span>, lwd <span class="op">=</span> <span class="fl">0.3</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">provincias</span><span class="op">)</span>, col <span class="op">=</span> <span class="cn">NA</span>, border <span class="op">=</span> <span class="st">"#0F2233"</span>, lwd <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>     add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="tasas-pobecu_files/figure-html/mapa-tasas-1.png" class="r-plt" alt="Mapa de los cantones de El Oro, Guayas, Los Ríos y Manabí coloreados por la tasa ficticia de dengue por 100 000 habitantes" width="672"></p>
+<p>Si prefieres ggplot2:
+<code>ggplot(mapa) + geom_sf(aes(fill = tasa))</code>. Para un mapa
+nacional con Galápagos en recuadro, usa
+<code><a href="https://f-slg.github.io/geoecu/reference/reubicar_galapagos.html" class="external-link">geoecu::reubicar_galapagos()</a></code>.</p>
+</div>
+<div class="section level2">
+<h2 id="por-provincia-y-sexo">5. Por provincia y sexo<a class="anchor" aria-label="anchor" href="#por-provincia-y-sexo"></a>
 </h2>
 <p>pobecu también da la población por sexo. Se recodifica el sexo de
 FHIR (<code>female</code>/<code>male</code>) al de pobecu
 (<code>mujer</code>/<code>hombre</code>) y se agrega la provincia (los
 dos primeros dígitos del código DPA del cantón):</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">casos</span><span class="op">$</span><span class="va">dpa_provin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">casos</span><span class="op">$</span><span class="va">dpa_canton</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">casos</span><span class="op">$</span><span class="va">sexo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>female <span class="op">=</span> <span class="st">"mujer"</span>, male <span class="op">=</span> <span class="st">"hombre"</span><span class="op">)</span><span class="op">[</span><span class="va">casos</span><span class="op">$</span><span class="va">sexo</span><span class="op">]</span></span>
 <span><span class="va">por_sexo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/aggregate.html" class="external-link">aggregate</a></span><span class="op">(</span><span class="va">paciente</span> <span class="op">~</span> <span class="va">dpa_provin</span> <span class="op">+</span> <span class="va">sexo</span>, data <span class="op">=</span> <span class="va">casos</span>, FUN <span class="op">=</span> <span class="va">length</span><span class="op">)</span></span>
@@ -235,12 +298,12 @@ dos primeros dígitos del código DPA del cantón):</p>
 <span><span class="co">#&gt; 8         13  mujer    64    867684  7.4</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="con-sql">5. Con SQL<a class="anchor" aria-label="anchor" href="#con-sql"></a>
+<h2 id="con-sql">6. Con SQL<a class="anchor" aria-label="anchor" href="#con-sql"></a>
 </h2>
 <p>Las mismas vistas se pueden guardar en DuckDB con
 <code><a href="../reference/vista_duckdb.html">vista_duckdb()</a></code> y contar con SQL; la unión con la población
 se hace después en R:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_duckdb.html">vista_duckdb</a></span><span class="op">(</span><span class="va">dengue</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">v_paciente</span>, <span class="va">v_dengue</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">por_mes</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbGetQuery.html" class="external-link">dbGetQuery</a></span><span class="op">(</span><span class="va">db</span>, <span class="st">"</span></span>
 <span><span class="st">  SELECT strftime(CAST(d.inicio AS DATE), '%m') AS mes,</span></span>
@@ -260,6 +323,37 @@ se hace después en R:</p>
 <span><span class="co">#&gt; 8  08     6      0</span></span>
 <span><span class="co">#&gt; 9  09     2      1</span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="reproducibilidad">Reproducibilidad<a class="anchor" aria-label="anchor" href="#reproducibilidad"></a>
+</h2>
+<p>Este artículo se genera automáticamente con cada cambio del
+repositorio. Las cifras y el mapa corresponden a estas versiones:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">paquetes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fhirviews"</span>, <span class="st">"pobecu"</span>, <span class="st">"geoecu"</span>, <span class="st">"sf"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  paquete <span class="op">=</span> <span class="va">paquetes</span>,</span>
+<span>  version <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">paquetes</span>, <span class="kw">function</span><span class="op">(</span><span class="va">p</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="va">p</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="kw">else</span> <span class="st">"no instalado"</span></span>
+<span>  <span class="op">}</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  row.names <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt;     paquete    version</span></span>
+<span><span class="co">#&gt; 1 fhirviews      0.5.0</span></span>
+<span><span class="co">#&gt; 2    pobecu 0.2.0.9000</span></span>
+<span><span class="co">#&gt; 3    geoecu      0.4.1</span></span>
+<span><span class="co">#&gt; 4        sf      1.1.3</span></span></code></pre></div>
+<p>Para instalar los tres paquetes:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"f-slg/fhirviews"</span><span class="op">)</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"f-slg/pobecu"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"geoecu"</span><span class="op">)</span>                <span class="co"># CRAN</span></span></code></pre></div>
+<p>Para fijar una versión concreta de un paquete de GitHub, añade la
+etiqueta o el <em>commit</em> al nombre del repositorio, por ejemplo
+<code>remotes::install_github("f-slg/pobecu@&lt;commit&gt;")</code>, y
+guarda la tabla de versiones anterior junto con tus resultados.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

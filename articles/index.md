@@ -15,11 +15,12 @@
 - [Servidores reales y grandes
   volúmenes](https://f-slg.github.io/fhirviews/articles/servidores-y-volumen.md):
 
-- [Tasas por cantón con FHIR y
-  pobecu](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.md):
+- [De FHIR a un mapa de tasas: fhirviews, pobecu y
+  geoecu](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.md):
 
-  Casos de dengue desde recursos FHIR, unidos a la población oficial del
-  Ecuador del paquete pobecu para calcular tasas por cantón.
+  Ejemplo completo y reproducible: casos de dengue desde recursos FHIR,
+  tasas por cantón con la población oficial del INEC (pobecu) y mapa con
+  la cartografía del CONALI (geoecu).
 
 - [ViewDefinition en
   detalle](https://f-slg.github.io/fhirviews/articles/vistas.md):

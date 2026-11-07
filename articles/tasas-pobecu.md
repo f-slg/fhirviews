@@ -1,11 +1,18 @@
-# Tasas por cantón con FHIR y pobecu
+# De FHIR a un mapa de tasas: fhirviews, pobecu y geoecu
 
 Los sistemas de información en salud guardan cada caso como un recurso
 FHIR; para vigilancia epidemiológica hace falta otra cosa: **cuántos
-casos hay por territorio y cuántos son en relación con la población**.
-Esta viñeta va de recursos FHIR a tasas por 100 000 habitantes por
-cantón, uniendo las vistas de fhirviews con la población oficial del
-INEC que trae el paquete [pobecu](https://f-slg.github.io/pobecu/).
+casos hay por territorio, cuántos son en relación con la población y
+dónde están**. Este artículo recorre todo el camino con los tres
+paquetes:
+
+| Paso | Paquete | Resultado |
+|----|----|----|
+| Recursos FHIR → tablas | fhirviews | Un caso por fila, con el código DPA del cantón |
+| Tablas → tasas | [pobecu](https://f-slg.github.io/pobecu/) | Casos por 100 000 habitantes con la población oficial del INEC |
+| Tasas → mapa | [geoecu](https://f-slg.github.io/geoecu/) | Mapa cantonal con la cartografía del CONALI |
+
+Al final se listan las versiones con las que se generó este artículo.
 
 > Los datos son **ficticios**: 755 casos simulados de dengue en 2025 en
 > El Oro, Guayas, Los Ríos y Manabí, generados a partir de la población
@@ -151,7 +158,46 @@ altas](tasas-pobecu_files/figure-html/grafico-tasas-1.png)
 par(op)
 ```
 
-## 4. Por provincia y sexo
+## 4. En el mapa
+
+[`pob_mapa()`](https://f-slg.github.io/pobecu/reference/pob_mapa.html)
+de pobecu entrega los límites cantonales de
+[geoecu](https://f-slg.github.io/geoecu/) agrupados a las unidades del
+Censo 2022, que son las mismas que usa la población del INEC. Basta con
+unir las tasas por código DPA. Los cantones sin casos quedan en gris
+(`NA`).
+
+``` r
+
+mapa <- pob_mapa("canton", anio = 2025,
+                 provincia = c("El Oro", "Guayas", "Los Ríos", "Manabí"))
+#> Descargando capas geoecu (resolución baja) por única vez...
+#>   https://github.com/f-slg/geoecu/releases/download/datos-v0.3.0/geoecu_dpa_baja.gpkg
+mapa <- merge(mapa, tasas[, c("dpa_canton", "casos", "tasa")],
+              by = "dpa_canton", all.x = TRUE)
+
+provincias <- pob_mapa("provincia", anio = 2025,
+                       provincia = c("El Oro", "Guayas", "Los Ríos", "Manabí"))
+
+plot(mapa["tasa"], breaks = "quantile", nbreaks = 6,
+     pal = grDevices::hcl.colors(6, "YlOrRd", rev = TRUE),
+     border = "white", lwd = 0.3, key.pos = 1, reset = FALSE,
+     main = "Dengue 2025 por 100 000 habitantes (datos ficticios)")
+plot(sf::st_geometry(mapa[is.na(mapa$tasa), ]), col = "grey85",
+     border = "white", lwd = 0.3, add = TRUE)
+plot(sf::st_geometry(provincias), col = NA, border = "#0F2233", lwd = 1,
+     add = TRUE)
+```
+
+![Mapa de los cantones de El Oro, Guayas, Los Ríos y Manabí coloreados
+por la tasa ficticia de dengue por 100 000
+habitantes](tasas-pobecu_files/figure-html/mapa-tasas-1.png)
+
+Si prefieres ggplot2: `ggplot(mapa) + geom_sf(aes(fill = tasa))`. Para
+un mapa nacional con Galápagos en recuadro, usa
+[`geoecu::reubicar_galapagos()`](https://f-slg.github.io/geoecu/reference/reubicar_galapagos.html).
+
+## 5. Por provincia y sexo
 
 pobecu también da la población por sexo. Se recodifica el sexo de FHIR
 (`female`/`male`) al de pobecu (`mujer`/`hombre`) y se agrega la
@@ -179,7 +225,7 @@ tasas_sexo[order(tasas_sexo$dpa_provin, tasas_sexo$sexo),
 #> 8         13  mujer    64    867684  7.4
 ```
 
-## 5. Con SQL
+## 6. Con SQL
 
 Las mismas vistas se pueden guardar en DuckDB con
 [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
@@ -207,3 +253,41 @@ por_mes
 #> 9  09     2      1
 DBI::dbDisconnect(db)
 ```
+
+## Reproducibilidad
+
+Este artículo se genera automáticamente con cada cambio del repositorio.
+Las cifras y el mapa corresponden a estas versiones:
+
+``` r
+
+paquetes <- c("fhirviews", "pobecu", "geoecu", "sf")
+data.frame(
+  paquete = paquetes,
+  version = vapply(paquetes, function(p) {
+    if (requireNamespace(p, quietly = TRUE)) as.character(packageVersion(p))
+    else "no instalado"
+  }, character(1)),
+  row.names = NULL
+)
+#>     paquete    version
+#> 1 fhirviews      0.5.0
+#> 2    pobecu 0.2.0.9000
+#> 3    geoecu      0.4.1
+#> 4        sf      1.1.3
+```
+
+Para instalar los tres paquetes:
+
+``` r
+
+install.packages("remotes")
+remotes::install_github("f-slg/fhirviews")
+remotes::install_github("f-slg/pobecu")
+install.packages("geoecu")                # CRAN
+```
+
+Para fijar una versión concreta de un paquete de GitHub, añade la
+etiqueta o el *commit* al nombre del repositorio, por ejemplo
+`remotes::install_github("f-slg/pobecu@<commit>")`, y guarda la tabla de
+versiones anterior junto con tus resultados.
