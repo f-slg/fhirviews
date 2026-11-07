@@ -7,21 +7,21 @@ This is a new submission of 'fhirviews'. The source repository
 ## Test environments
 
 * Local: Ubuntu Linux, R 4.5.2 (`R CMD check --as-cran`)
-* win-builder: R-devel
-* mac-builder: R release
-* R-hub: Linux, Windows and clang-asan
+* win-builder: R-devel (only NOTE: new submission, after replacing relative
+  README links to files excluded from the build with full URLs)
+* R-hub: Linux (R-devel), Windows (R-devel), macOS arm64 (R-devel) and
+  clang-asan; all with Status OK and no sanitizer reports
 * GitHub Actions: R release on Windows, macOS and Ubuntu; client/V8 on
   R 4.1 and R-devel; isolated HAPI integration on Ubuntu/R release
 
-<!-- PENDIENTE: confirmar cada entorno tras el check final del tarball. -->
+mac-builder was unavailable (HTTP 502) when this release was prepared; macOS
+is covered by R-hub (arm64, R-devel) and GitHub Actions (R release).
 
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
 * This is a new submission.
-
-<!-- PENDIENTE: sustituir por el resultado real del check final. -->
 
 ## Notes for the reviewers
 

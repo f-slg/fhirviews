@@ -2,12 +2,14 @@
 
 **De recursos FHIR a tablas reproducibles en R.**
 
+**Español** · [English](https://github.com/f-slg/fhirviews/blob/main/README.en.md)
+
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml)
 [![Documentación](https://github.com/f-slg/fhirviews/actions/workflows/pkgdown.yaml/badge.svg)](https://f-slg.github.io/fhirviews/)
 [![SQL on FHIR: 133/133 shareable](https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-2a78d6.svg)](#conformidad-y-pruebas)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-0F2233.svg)](https://hl7.org/fhir/R4/)
-[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE.md)
+[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md)
 <!-- badges: end -->
 
 **fhirviews** consulta servidores **HL7 FHIR R4** y transforma sus recursos en
@@ -796,7 +798,7 @@ pacientes sintéticos y una vista con `where`, cuatro columnas y `forEach` sobre
 Son resultados de ese equipo y esa vista, no una garantía de rendimiento.
 La expansión de colecciones, el tamaño del resultado, el disco y la memoria
 pueden cambiar el comportamiento. El script reproducible está en
-[`data-raw/motor-duckdb.R`](data-raw/motor-duckdb.R).
+[`data-raw/motor-duckdb.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.R).
 
 ### Comparación con fhircrackr
 
@@ -834,11 +836,33 @@ Cómo leer estos números:
   después de `fhir_crack()`, porque XPath 1.0 no compara fechas.
 
 El script reproducible está en
-[`data-raw/benchmark-fhircrackr.R`](data-raw/benchmark-fhircrackr.R) y los
-resultados en [`data-raw/benchmark-fhircrackr.csv`](data-raw/benchmark-fhircrackr.csv)
+[`data-raw/benchmark-fhircrackr.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr.R) y los
+resultados en [`data-raw/benchmark-fhircrackr.csv`](https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr.csv)
 (un núcleo) y
-[`data-raw/benchmark-fhircrackr-ncores8.csv`](data-raw/benchmark-fhircrackr-ncores8.csv)
+[`data-raw/benchmark-fhircrackr-ncores8.csv`](https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr-ncores8.csv)
 (ocho núcleos).
+
+#### Un recurso más anidado: Observation
+
+La misma comparación con 100 000 `Observation` más complejas: dos codificaciones
+por recurso que hay que filtrar por sistema, elementos de elección
+(`effective[x]`, `value[x]`), la referencia al paciente y una fila por
+componente de la presión arterial (`forEachOrNull`).
+
+| Observaciones | Filas | fhircrackr · 1 núcleo | fhircrackr · 8 núcleos | fhirviews · V8 | fhirviews · DuckDB |
+|---:|---:|---:|---:|---:|---:|
+| 1 000 | 1 274 | 0,44 s | 0,32 s | 0,18 s | 0,07 s |
+| 10 000 | 12 639 | 4,1 s | 1,6 s | 1,6 s | 0,18 s |
+| 50 000 | 63 059 | 20,8 s | 7,2 s | 8,4 s | 0,72 s |
+| 100 000 | 125 578 | 44,0 s | sin memoria | 17,6 s | 1,42 s |
+
+El resultado se mantiene con un núcleo: V8 es unas 2,5 veces más rápido que
+fhircrackr. Con ocho núcleos, fhircrackr iguala a V8 o lo supera ligeramente,
+pero cada proceso paralelo copia los datos: con 100 000 observaciones los ocho
+procesos superaron los 14 GB de memoria del equipo y el sistema los detuvo.
+V8 y DuckDB procesaron ese tamaño sin problemas.
+
+Script: [`data-raw/benchmark-fhircrackr-observation.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr-observation.R).
 
 ## Alcance y límites
 
@@ -961,8 +985,8 @@ clínico ficticio.
 Para dudas de uso, participa en [Discussions](https://github.com/f-slg/fhirviews/discussions).
 Para errores o propuestas, abre un [issue](https://github.com/f-slg/fhirviews/issues/new/choose)
 con un ejemplo mínimo reproducible y datos ficticios. Consulta la
-[guía de contribución](.github/CONTRIBUTING.md) y el
-[código de conducta](.github/CODE_OF_CONDUCT.md).
+[guía de contribución](https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md) y el
+[código de conducta](https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md).
 
 Para citar el paquete:
 
@@ -971,7 +995,7 @@ citation("fhirviews")
 ```
 
 **Autor y mantenedor:** Ronald Fabricio Salas Guerrero.
-Licencia [MIT](LICENSE.md). Las licencias y atribuciones del código y los datos
+Licencia [MIT](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md). Las licencias y atribuciones del código y los datos
 incluidos se detallan en [`inst/COPYRIGHTS`](inst/COPYRIGHTS).
 
 fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de

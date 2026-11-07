@@ -1,0 +1,4 @@
+"recursos","filas","mb_ndjson","mb_xml","fhircrackr_total","fhircrackr_transformacion","fhirviews_v8_total","fhirviews_v8_transformacion","fhirviews_duckdb_total","equipo"
+1000,1274,0.4,0.6,0.324,0.282,0.175,0.132,0.07,"Linux 12 nucleos, R 4.5.2 fhircrackr 2.4.0 (ncores = 8) duckdb 2.0.0"
+10000,12639,4.2,6.3,1.621,1.169,1.626,1.219,0.179,"Linux 12 nucleos, R 4.5.2 fhircrackr 2.4.0 (ncores = 8) duckdb 2.0.0"
+50000,63059,20.9,31.7,7.153,4.921,8.886,6.026,0.718,"Linux 12 nucleos, R 4.5.2 fhircrackr 2.4.0 (ncores = 8) duckdb 2.0.0"
