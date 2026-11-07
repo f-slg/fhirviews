@@ -45,7 +45,7 @@ problem](https://github.com/f-slg/fhirviews/issues/new/choose)
 in a ViewDefinition and the resulting table in
 R](reference/figures/README-json-tabla.png)
 
-> **Version 0.5.0 · submitted to CRAN on 6 November 2026, under
+> **Version 0.5.0 · submitted to CRAN on 7 November 2026, under
 > review.** Block-wise processing, export recovery with content
 > validation and privacy improvements. The DuckDB SQL engine is still
 > **experimental**. Until CRAN publishes it, install it from GitHub.
