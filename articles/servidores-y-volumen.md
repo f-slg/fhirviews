@@ -276,6 +276,46 @@ El motor V8 no se midió con un millón de pacientes: necesita más memoria
 de la que tiene un portátil típico. El motor DuckDB usó como máximo unos
 1,3 GB.
 
+### Comparación con fhircrackr
+
+[fhircrackr](https://CRAN.R-project.org/package=fhircrackr) es el
+paquete de CRAN más usado para aplanar recursos FHIR en R: describe las
+columnas con XPath sobre Bundles XML y expande las colecciones con
+`fhir_melt()`. Con los mismos pacientes sintéticos y la misma tabla de
+salida (filtro por fecha, cuatro columnas por paciente y una fila por
+nombre), estos son los tiempos de punta a punta, desde los archivos
+hasta el `data.frame`, con fhircrackr en uno y en ocho núcleos
+(`ncores`). Son la mediana de tres corridas, después de comprobar que
+los resultados fueran idénticos:
+
+| Pacientes | Filas | fhircrackr, 1 núcleo (s) | fhircrackr, 8 núcleos (s) | fhirviews V8 (s) | fhirviews DuckDB (s) |
+|---:|---:|---:|---:|---:|---:|
+| 1 000 | 1 752 | 0,56 | 0,35 | 0,16 | 0,10 |
+| 10 000 | 17 824 | 4,4 | 1,6 | 1,3 | 0,18 |
+| 50 000 | 89 180 | 25,1 | 6,9 | 7,2 | 0,60 |
+| 100 000 | 178 316 | 48,5 | 15,8 | 15,4 | 1,11 |
+
+Cada paquete leyó su formato natural: NDJSON en fhirviews y Bundles XML
+de 500 recursos en fhircrackr. Al interpretar los números conviene tener
+en cuenta:
+
+- El motor V8 usa un solo núcleo. Frente a fhircrackr con un núcleo es
+  unas **3 veces más rápido** (de 4 a 5 veces solo en la transformación,
+  con los datos ya en memoria); con `ncores = 8`, fhircrackr alcanza
+  tiempos similares a los de V8. DuckDB usa todos los núcleos, así que
+  su ventaja combina el motor con el paralelismo.
+- Es un solo tipo de recurso (`Patient`) sintético y sencillo, medido en
+  un solo equipo (Linux, 12 núcleos, R 4.5.2, duckdb 2.0.0). Con
+  recursos más anidados el resultado puede cambiar.
+- En fhirviews la extracción es un `ViewDefinition` estándar que se
+  puede reutilizar en otras herramientas. En fhircrackr, el filtro por
+  fecha y la numeración de los nombres se resuelven en R después de
+  `fhir_crack()`, porque XPath 1.0 no compara fechas.
+
+El script reproducible es
+[`data-raw/benchmark-fhircrackr.R`](https://github.com/f-slg/fhirviews/blob/main/data-raw/benchmark-fhircrackr.R)
+del repositorio.
+
 ### Conformidad y límites
 
 El motor DuckDB pasa también **las 133 pruebas *shareable*** del banco
