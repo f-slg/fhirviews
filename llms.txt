@@ -31,10 +31,11 @@ problema](https://github.com/f-slg/fhirviews/issues/new/choose)
 en un ViewDefinition y tabla resultante en
 R](reference/figures/README-json-tabla.png)
 
-> **Versión 0.5.0 · candidato en preparación.** Procesamiento por
-> bloques, recuperación de exportaciones con validación de contenido y
-> mejoras de privacidad. El motor SQL de DuckDB sigue siendo
-> **experimental**. El paquete todavía no se ha enviado a CRAN.
+> **Versión 0.5.0 · enviada a CRAN el 6 de noviembre de 2026, en
+> revisión.** Procesamiento por bloques, recuperación de exportaciones
+> con validación de contenido y mejoras de privacidad. El motor SQL de
+> DuckDB sigue siendo **experimental**. Mientras CRAN la publica,
+> instálala desde GitHub.
 
 ## Contenido
 
