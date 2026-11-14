@@ -10,9 +10,11 @@ test_that("pasan todas las pruebas shareable del banco oficial", {
   }
 })
 
-test_that("las experimentales no retroceden", {
+test_that("pasan todas las experimentales del banco oficial", {
   experimental <- res[res$perfil %in% "experimental", ]
-  expect_gte(sum(experimental$aprobada), 7L)
+  expect_gte(nrow(experimental), 11L)
+  expect_true(all(experimental$aprobada), info = paste(
+    experimental$detalle[!experimental$aprobada], collapse = "\n"))
 })
 
 test_that("el resumen y el informe oficial", {

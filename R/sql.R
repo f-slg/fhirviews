@@ -25,7 +25,16 @@
 #' `toInteger()`, `toDecimal()`, `toBoolean()` y sus `convertsTo...()`),
 #' aritmética, `abs()`, `ceiling()`, `floor()`, `round()`, `truncate()`,
 #' `sqrt()`, `power()` exacta, comparaciones de fechas y horas con su
-#' precisión y `lowBoundary()`/`highBoundary()` de fechas y horas.
+#' precisión y `lowBoundary()`/`highBoundary()` de fechas, horas y decimales.
+#' Los limites decimales conservan el literal JSON mediante sus tokens y
+#' las rutas de `json_tree()`. Admiten literales numericos sin signo o rutas desde el
+#' recurso con indices explicitos (por ejemplo
+#' `component[0].value.ofType(Quantity).value.lowBoundary()`), escalas de
+#' -18 a 8 y valores representables en `DECIMAL(38,18)`. No se infiere la
+#' escala despues de operaciones, filtros o iteraciones; esas expresiones
+#' se rechazan. No se admite el argumento opcional de precision en SQL.
+#' Con Parquet o tablas previamente normalizadas, la precision disponible
+#' es la de su JSON actual; no se recupera la representacion FHIR original.
 #'
 #' La traducción reproduce el resultado de `fhirpath.js`
 #' ([vista_ejecutar()]). Si una expresión usa algo que no se puede traducir
@@ -220,6 +229,9 @@ son_recursos_texto <- function(x) {
 escribir_ndjson_temporal <- function(recursos) {
   recursos <- fhir_recursos(recursos)
   fuente <- fuente_alineada(recursos)
+  if (is.null(fuente) && !is.null(attr(recursos, "fuente"))) {
+    fuente <- motor_actual()$recursos_json(attr(recursos, "fuente"))
+  }
   if (!is.null(fuente)) {
     lineas <- gsub("[\r\n]+", " ", fuente)
   } else {
@@ -738,12 +750,14 @@ traducir_vista <- function(vista, desde) {
     x <- traducir_expresion(w$path, ctx)
     condiciones <- c(condiciones, condicion_where(x, w$path, ctx))
   }
+  origen <- if (isTRUE(ctx$n$decimales)) origen_decimales_sql(desde) else
+    sprintf("(SELECT json AS r FROM %s)", desde)
   sql <- sprintf(paste0(
     "SELECT %s\nFROM (\n  SELECT unnest(%s) AS f\n",
-    "  FROM (SELECT json AS r FROM %s)\n  WHERE %s\n)"),
+    "  FROM %s\n  WHERE %s\n)"),
     paste(sprintf("f.%s AS %s", comillas(nombres), comillas(nombres)),
           collapse = ", "),
-    filas_sql, desde, paste(condiciones, collapse = "\n    AND "))
+    filas_sql, origen, paste(condiciones, collapse = "\n    AND "))
   tipos <- tipos[nombres]
   names(tipos) <- nombres
   sin_tipo <- vapply(defs, function(d) is.null(d$type), logical(1))

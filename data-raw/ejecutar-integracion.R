@@ -4,7 +4,8 @@ comprobar_integracion <- function(tabla) {
     "ciclo completo de escritura en un servidor de pruebas",
     "transaccion, vistas con V8 y DuckDB y fhir_tabla con datos reales",
     "terminologia del servidor: $expand y $validate-code en lote",
-    "exportacion masiva ($export) de punta a punta"
+    "exportacion masiva ($export) de punta a punta",
+    "SQL a FHIR, perfiles R4, referencias y retorno a tablas"
   )
   if (!all(requeridas %in% tabla$test) || anyDuplicated(tabla$test)) {
     stop("Faltan grupos obligatorios o hay resultados duplicados.")

@@ -209,3 +209,31 @@ MANIFIESTO.json y evidencia-piloto-0.5.0.zip. Se confirmó isDraft=true y se
 volvió a descargar el archivo para verificar su SHA-256 frente al manifiesto.
 No se publicó el lanzamiento ni se envió a CRAN. El siguiente paso requiere
 seleccionar participantes y ejecutar el protocolo, sin inventar evaluación humana.
+
+## Desarrollo 0.5.0.9000: conformidad y SQL a FHIR
+
+El 14 de noviembre de 2026 se implementaron las 144/144 pruebas SQL on FHIR
+en V8 y DuckDB, incluido el banco descargado `7fba790` del 10 de noviembre.
+El banco y fhirpath.js permanecen sin modificar. Se incluye lossless-json
+4.3.3 para V8 sin context.source y se conservan tokens decimales en SQL.
+
+`fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` y `fhir_escribir()`
+construyen Patient/Observation con mapeos explicitos. No se invierten vistas,
+agrupan filas ni validan todos los perfiles automaticamente. Los ejemplos,
+README en ambos idiomas, ayuda y viñetas explican el alcance y los limites.
+
+La integracion aislada encontro que `fhir_leer()` devolvia solo la lista R y
+perdia la escala del JSON. Se añadio `como_recursos = TRUE`, optativo y
+compatible con el valor anterior por defecto, para conservar la fuente.
+El recorrido SQL -> FHIR -> perfiles base R4 -> servidor -> tablas paso sus
+16 comprobaciones, incluidos un control negativo y limites de `72.00`.
+
+La integracion HAPI completa aprobo 62 comprobaciones, sin fallos, errores
+ni advertencias. Solo se omitieron lectura publica y ValueSet en linea no
+admitido por HAPI; los cinco grupos obligatorios se ejecutaron. Evidencia en
+`validacion-0.5.0.9000/sql-fhir-hapi/`. El contenedor se elimino al terminar.
+
+No confundir esta version de desarrollo con el candidato 0.5.0 enviado a CRAN.
+Quedan comprobar PostgreSQL/SQL Server reales, revisar la CI del nuevo commit
+y decidir una version estable antes de publicar un lanzamiento o enviar a CRAN.
+No se ha hecho evaluacion con usuarios ni validado perfiles clinicos nacionales.

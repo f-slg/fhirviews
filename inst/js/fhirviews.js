@@ -4,7 +4,7 @@
 // devueltos por FHIRPath, con su tipo) para que R los maneje por su indice y
 // pueda evaluar una expresion sobre muchos nodos en una sola llamada.
 //
-// Requiere que antes se carguen fhirpath.min.js y fhirpath.r4.min.js.
+// Requiere fhirpath.min.js, fhirpath.r4.min.js y lossless-json.js.
 
 var fhirviews = (function () {
   'use strict';
@@ -48,9 +48,75 @@ var fhirviews = (function () {
     return salida;
   }
 
+  // context.source no existe en todos los V8 distribuidos con R. La copia
+  // local de lossless-json permite el mismo resultado en esas plataformas.
+  var reviverConFuente = false;
+  JSON.parse('1.0', function (k, v, c) {
+    if (c && c.source === '1.0') reviverConFuente = true;
+    return v;
+  });
+
+  function numeroPreciso(texto) {
+    return /[.eE]/.test(texto) ?
+      fhirpath.FP_Decimal.getDecimal(texto) : Number(texto);
+  }
+
+  function leerJSONPreciso(texto) {
+    if (reviverConFuente) {
+      return JSON.parse(texto, function (k, v, c) {
+        return typeof v === 'number' ? numeroPreciso(c.source) : v;
+      });
+    }
+    return LosslessJSON.parse(texto, null, {parseNumber: numeroPreciso});
+  }
+
+  // Delega el calculo y la precision a fhirpath.js. Solo completa la zona
+  // desconocida de DateTime; Date y Time conservan su tipo y las zonas
+  // explicitas permanecen intactas. No se modifica la biblioteca incluida.
+  function limiteSoF(entrada, precision, alto) {
+    if (precision instanceof fhirpath.FP_Decimal) precision = precision.toNumber();
+    if (entrada.length === 0) return [];
+    if (entrada.length !== 1) throw new Error('Se esperaba un solo valor');
+    var v = fhirpath.util.valDataConverted(entrada[0]);
+    if (v == null) return [];
+    if (typeof v === 'number' || typeof v === 'bigint') {
+      v = fhirpath.FP_Decimal.getDecimal(v);
+    }
+    if (v instanceof fhirpath.FP_Decimal) {
+      var exponente = /^-?\d+(?:\.(\d+))?[eE]([+-]?\d+)$/.exec(v.toString());
+      if (exponente) {
+        // La escala de 1.0e-2 es 3, y la de 1e2 es -2. La version
+        // incluida normaliza esos dos casos antes de calcular el limite.
+        // Ajustar una copia conserva intacto el valor del recurso.
+        v = fhirpath.FP_Decimal.getDecimal(v);
+        v.decimalPlaces = (exponente[1] || '').length - Number(exponente[2]);
+      }
+    }
+    var fn = alto ? 'highBoundary' : 'lowBoundary';
+    if (typeof v[fn] !== 'function') throw new Error('Tipo no admitido');
+    var resultado = v[fn](precision);
+    if (resultado && fhirpath.types([v])[0] === 'System.DateTime') {
+      var texto = resultado.toString();
+      if (texto.indexOf('T') >= 0 && !/(Z|[+-]\d{2}:\d{2})$/.test(texto)) {
+        resultado = fhirpath.evaluate({},
+          '@' + texto + (alto ? '-12:00' : '+14:00'), null, modelo,
+          {resolveInternalTypes: false})[0];
+      }
+    }
+    return resultado === null ? [] : resultado;
+  }
+
   var opciones = {
     resolveInternalTypes: false,
     userInvocationTable: {
+      lowBoundary: {
+        fn: function (xs, p) { return limiteSoF(xs, p, false); },
+        arity: {0: [], 1: ['Integer']}, internalStructures: true
+      },
+      highBoundary: {
+        fn: function (xs, p) { return limiteSoF(xs, p, true); },
+        arity: {0: [], 1: ['Integer']}, internalStructures: true
+      },
       getResourceKey: { fn: getResourceKey, arity: { 0: [] } },
       getReferenceKey: {
         fn: getReferenceKey,
@@ -298,6 +364,39 @@ var fhirviews = (function () {
       return fhirpath.version;
     },
 
+    // Extrae recursos de JSON/Bundle sin normalizar los numeros. Se usa al
+    // escribir NDJSON y al leer el banco oficial, antes de pasar por R.
+    recursosJSON: function (textos, campo) {
+      var salida = [];
+      function agregar(x) {
+        if (Array.isArray(x)) x.forEach(agregar);
+        else if (x && x.resourceType === 'Bundle') {
+          (x.entry || []).forEach(function (e) {
+            if (e && e.resource) salida.push(LosslessJSON.stringify(e.resource));
+          });
+        } else salida.push(LosslessJSON.stringify(x));
+      }
+      textos.forEach(function (t) {
+        var x = LosslessJSON.parse(t);
+        agregar(campo === null ? x : x[campo]);
+      });
+      return salida;
+    },
+
+    // Marcadores internos del constructor SQL -> FHIR: se convierten en
+    // numeros JSON, manteniendo escala y ceros finales, nunca en cadenas.
+    serializarRecursos: function (json) {
+      var recursos = JSON.parse(json, function (k, v) {
+        if (v && typeof v === 'object' &&
+            Object.keys(v).length === 1 &&
+            typeof v.__fhirviews_decimal === 'string') {
+          return new LosslessJSON.LosslessNumber(v.__fhirviews_decimal);
+        }
+        return v;
+      });
+      return recursos.map(function (r) { return LosslessJSON.stringify(r); });
+    },
+
     // Agrega recursos a partir de los textos JSON originales (recursos,
     // Bundles o arreglos de ellos) con las mismas reglas que fhir_recursos():
     // de un Bundle se toman entry[].resource. Devuelve los indices.
@@ -322,14 +421,14 @@ var fhirviews = (function () {
         }
       }
       textos.forEach(function (t) {
-        agregar(JSON.parse(t));
+        agregar(leerJSONPreciso(t));
       });
       return ids;
     },
 
     // Agrega recursos (texto JSON con un arreglo) y devuelve sus indices.
     cargar: function (json) {
-      var recursos = JSON.parse(json);
+      var recursos = leerJSONPreciso(json);
       var ids = [];
       recursos.forEach(function (r) {
         ids.push(nodos.length);
@@ -427,7 +526,7 @@ var fhirviews = (function () {
         return vistos[k];
       }).concat(otros);
       function simple(v) {
-        return v === null || typeof v !== 'object';
+        return v === null || typeof v !== 'object' || v instanceof fhirpath.FP_Decimal;
       }
       function recortar(texto) {
         var letras = Array.from(texto);

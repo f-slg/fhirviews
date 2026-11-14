@@ -84,6 +84,7 @@ jobs:
             any::openssl
             any::rmarkdown
             any::rstudioapi
+            any::RSQLite
             any::testthat
           needs: check
 

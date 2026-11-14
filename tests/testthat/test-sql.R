@@ -43,7 +43,7 @@ test_that("vista_sql genera la consulta", {
 
 test_that("lo que no se traduce da un error que sugiere vista_ejecutar()", {
   v <- vista_crear("Observation",
-                   c(x = "value.ofType(Quantity).value.lowBoundary()"))
+                   c(x = "value.ofType(Quantity).value.round().lowBoundary()"))
   expect_error(vista_sql(v), class = "fhirviews_error_sql")
   expect_error(vista_sql(v), "vista_ejecutar")
   expect_error(vista_sql(vista_crear("Patient", c(x = "%nada"))),
@@ -388,8 +388,8 @@ test_that("lo que no se puede traducir con certeza da error", {
     expect_error(vista_ejecutar_duckdb(r, vista_crear(recurso, c(x = e))),
                  class = "fhirviews_error_vista", label = e)
   }
-  # Decimales: su precisión se pierde al leer el JSON
-  traduccion("Observation", "value.ofType(Quantity).value.lowBoundary()")
+  # Una operacion no conserva la precision declarada en el JSON
+  traduccion("Observation", "value.ofType(Quantity).value.round().lowBoundary()")
   # Expresiones regulares que JavaScript y RE2 leen distinto
   traduccion("Patient", "gender.matches('\\\\s')")
   traduccion("Patient", "gender.matches('(?<n>a)')")

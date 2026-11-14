@@ -329,3 +329,20 @@ test_that("los errores omiten datos del servidor salvo depuracion explicita", {
   e <- tryCatch(fhir_leer(con_simulada(), "Patient", "p"), error = identity)
   expect_false(grepl("Ana|123456", conditionMessage(e)))
 })
+test_that("leer conserva opcionalmente el JSON original y la escala decimal", {
+  texto <- '{"resourceType":"Observation","id":"o1","valueQuantity":{"value":72.00}}'
+  simular(function(req, ruta) httr2::response(status_code = 200L,
+    headers = list(`Content-Type` = "application/fhir+json"), body = charToRaw(texto)))
+  con <- con_simulada()
+  lista <- fhir_leer(con, "Observation", "o1")
+  expect_identical(class(lista), "list")
+  expect_equal(lista$valueQuantity$value, 72)
+  recursos <- fhir_leer(con, "Observation", "o1", como_recursos = TRUE)
+  expect_s3_class(recursos, "fhir_recursos")
+  expect_identical(attr(recursos, "fuente"), texto)
+  expect_equal(vista_fhirpath(recursos, "value.ofType(Quantity).value.lowBoundary()"), 71.995)
+  recursos[[1]]$valueQuantity$value <- 80
+  expect_null(attr(recursos, "fuente"))
+  expect_equal(vista_fhirpath(recursos, "value.ofType(Quantity).value"), 80)
+  expect_error(fhir_leer(con, "Observation", "o1", como_recursos = NA), class = "fhirviews_error")
+})

@@ -1184,21 +1184,18 @@ limite_fecha <- function(s, clase, alto, ctx) {
       "%s || '-' || coalesce(nullif(%s, ''), %s) || '-' || coalesce(nullif(%s, ''), %s)",
       g("y"), g("mo"), mes, g("d"), dia)
     relleno <- if (alto) c(":59", ":59", ".999") else c(":00", ":00", ".000")
-    # fhirpath.js no agrega la zona horaria que pide la especificación
-    sin_zona <- error_sql(paste("lowBoundary()/highBoundary() de una fecha y hora",
-                                "sin hora o sin zona horaria no se traduce"))
     hora <- sprintf(paste0(
-      "'T' || %1$s || CASE WHEN %2$s = '' THEN '%5$s' ELSE ':' || %2$s END || ",
+      "'T' || coalesce(nullif(%1$s, ''), '%8$s') || CASE WHEN %2$s = '' THEN '%5$s' ELSE ':' || %2$s END || ",
       "CASE WHEN %3$s = '' THEN '%6$s' ELSE ':' || %3$s END || ",
       "CASE WHEN %4$s = '' THEN '%7$s' ELSE '.' || rpad(%4$s, 3, '0') END"),
-      g("h"), g("mi"), g("se"), g("f"), relleno[1], relleno[2], relleno[3])
+      g("h"), g("mi"), g("se"), g("f"), relleno[1], relleno[2], relleno[3],
+      if (alto) "23" else "00")
     sprintf(paste0(
       "CASE WHEN %1$s = '' OR length(%2$s) > 3 THEN %3$s ",
-      "WHEN %4$s = '' THEN %5$s ",
-      "WHEN %6$s = '' THEN %7$s ELSE %8$s || %9$s || %6$s END"),
+      "ELSE %4$s END"),
       g("y"), g("f"), error_sql("fecha mal escrita"),
-      g("h"), if (clase == "date") fecha else sin_zona, g("tz"), sin_zona,
-      fecha, hora)
+      if (clase == "date") fecha else sprintf("%s || %s || coalesce(nullif(%s, ''), %s)",
+        fecha, hora, g("tz"), texto_sql(if (alto) "-12:00" else "+14:00")))
   }, ctx)
 }
 
@@ -1680,7 +1677,7 @@ fp_funcion <- function(n, ctx) {
           if (grepl("T", base$sql, fixed = TRUE)) "dateTime" else "date"
         }
       if (is.null(clase)) {
-        no_traducible("{.code {fn}()} solo se traduce con fechas, fechas y horas u horas (los decimales pierden su precisi\u00f3n al leer el JSON).")
+        return(limite_decimal_sql(n$base, base, fn == "highBoundary", ctx))
       }
       s <- a_val(base, "VARCHAR", ctx, estricto = paste0(fn, "()"))
       val(ligar(s, function(x) limite_fecha(x, clase, fn == "highBoundary", ctx), ctx),

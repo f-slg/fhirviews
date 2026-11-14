@@ -4,7 +4,7 @@
 \alias{fhir_leer}
 \title{Leer un recurso}
 \usage{
-fhir_leer(con, recurso, id = NULL, version = NULL)
+fhir_leer(con, recurso, id = NULL, version = NULL, como_recursos = FALSE)
 }
 \arguments{
 \item{con}{Conexión creada con \code{\link[=fhir_conectar]{fhir_conectar()}}.}
@@ -15,9 +15,16 @@ fhir_leer(con, recurso, id = NULL, version = NULL)
 \item{id}{Id del recurso; no hace falta si \code{recurso} es una referencia.}
 
 \item{version}{Versión opcional (\code{vid}) para leer el historial.}
+
+\item{como_recursos}{Con \code{TRUE}, devuelve \code{\link[=fhir_recursos]{fhir_recursos()}} con la fuente
+JSON original, para conservar escala decimal al ejecutar vistas o
+escribir NDJSON. Con \code{FALSE} (por defecto), devuelve la lista habitual
+de R, cuyos numeros no conservan ceros finales. Para un Bundle se
+aplican las reglas de extraccion de \code{\link[=fhir_recursos]{fhir_recursos()}}.}
 }
 \value{
-El recurso como lista de R.
+El recurso como lista de R; con \code{como_recursos = TRUE}, una
+coleccion \code{fhir_recursos} con su JSON fuente.
 }
 \description{
 Lee un recurso por su tipo e id (\verb{GET [base]/[tipo]/[id]}), o una versión

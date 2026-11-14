@@ -1,7 +1,7 @@
 Package: fhirviews
 Type: Package
 Title: 'HL7 FHIR' Client and 'SQL on FHIR' View Engine
-Version: 0.5.0
+Version: 0.5.0.9000
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",
@@ -17,6 +17,10 @@ Authors@R:
              comment = "date-fns library bundled in fhirpath.js"),
       person("Michael Mclaughlin", role = "cph",
              comment = "decimal.js library bundled in fhirpath.js"),
+      person("Jos", "de Jong", role = "cph",
+             comment = "lossless-json library in inst/js"),
+      person("Health Level Seven International", role = "cph",
+             comment = "FHIR R4 mapping metadata in inst/schema"),
       person("Regenstrief Institute, Inc.", role = "cph",
              comment = "UCUM table bundled in fhirpath.js"),
       person("SQL on FHIR project contributors", role = "cph",
@@ -33,7 +37,8 @@ Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     the 'fhirpath.js' library through the 'V8' package; an experimental
     second engine translates views to 'DuckDB' SQL to process millions of
     resources from 'NDJSON' or 'Parquet' files. Includes the official 'SQL on
-    FHIR' conformance test suite, export of views to 'DuckDB', and
+    FHIR' conformance test suite, explicit mappings from database query
+    results to FHIR R4 Patient and Observation resources, export of views to 'DuckDB', and
     integration with the 'RStudio' Connections pane and addins.
     Documentation is in Spanish.
 License: MIT + file LICENSE
@@ -60,6 +65,7 @@ Suggests:
     openssl,
     rmarkdown,
     rstudioapi,
+    RSQLite,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3

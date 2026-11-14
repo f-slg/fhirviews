@@ -250,19 +250,31 @@ fhir_buscar <- function(con, recurso, ..., parametros = list(),
 #'   (`"Patient/123"`).
 #' @param id Id del recurso; no hace falta si `recurso` es una referencia.
 #' @param version Versión opcional (`vid`) para leer el historial.
+#' @param como_recursos Con `TRUE`, devuelve [fhir_recursos()] con la fuente
+#'   JSON original, para conservar escala decimal al ejecutar vistas o
+#'   escribir NDJSON. Con `FALSE` (por defecto), devuelve la lista habitual
+#'   de R, cuyos numeros no conservan ceros finales. Para un Bundle se
+#'   aplican las reglas de extraccion de [fhir_recursos()].
 #'
-#' @return El recurso como lista de R.
+#' @return El recurso como lista de R; con `como_recursos = TRUE`, una
+#'   coleccion `fhir_recursos` con su JSON fuente.
 #' @export
 #' @examplesIf (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://hapi.fhir.org/baseR4")
 #' con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 #' uno <- fhir_buscar(con, "Patient", `_count` = 1, max_paginas = 1)
 #' paciente <- fhir_leer(con, "Patient", uno[[1]]$id)
 #' paciente$resourceType
-fhir_leer <- function(con, recurso, id = NULL, version = NULL) {
+fhir_leer <- function(con, recurso, id = NULL, version = NULL,
+                      como_recursos = FALSE) {
   comprobar_conexion(con)
+  if (!is.logical(como_recursos) || length(como_recursos) != 1L || is.na(como_recursos)) {
+    cli::cli_abort("{.arg como_recursos} debe ser TRUE o FALSE.", class = "fhirviews_error")
+  }
   ruta <- ruta_recurso(recurso, id)
   if (!is.null(version)) ruta <- paste0(ruta, "/_history/", version)
-  peticion_json(con, "GET", ruta)$datos
+  res <- peticion_json(con, "GET", ruta)
+  if (como_recursos) return(fhir_recursos(nueva_respuesta(res)))
+  res$datos
 }
 
 #' Todos los datos de un paciente u otro compartimento ($everything)

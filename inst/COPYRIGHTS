@@ -1,4 +1,5 @@
-fhirviews includes third-party material, copied without modification:
+fhirviews includes third-party libraries and tests copied without modification,
+and derived FHIR mapping metadata as described below:
 
 * inst/js/fhirpath/: minified JavaScript from the browser build of
   fhirpath.js, version 5.2.2 (see inst/js/fhirpath/VERSION), taken from the
@@ -15,6 +16,26 @@ fhirviews includes third-party material, copied without modification:
 
 The package code written by the package author is under the MIT license
 (see LICENSE). The bundled code keeps its own licenses, listed below.
+
+=============================================================================
+lossless-json 4.3.3
+https://github.com/josdejong/lossless-json
+Files: inst/js/lossless-json/lossless-json.js (unmodified UMD distribution)
+Copyright (c) 2016-2026 Jos de Jong.
+License: MIT; full text in inst/js/lossless-json/LICENSE.md.
+Update script: data-raw/lossless_json.R
+
+FHIR R4 4.0.1 mapping metadata
+Source: https://hl7.org/fhir/R4/definitions.json.zip
+File: inst/schema/mapeo-r4.json
+Derived from the base StructureDefinition snapshots; only element names,
+types, cardinalities and content references are retained. No terminologies.
+Copyright (c) 2011+ Health Level Seven International.
+License: CC0, https://hl7.org/fhir/R4/license.html
+https://creativecommons.org/publicdomain/zero/1.0/
+Generation script: data-raw/mapeo_r4.py
+HL7 and FHIR are registered trademarks of Health Level Seven International.
+Their use does not constitute endorsement by HL7.
 
 =============================================================================
 fhirpath.js 5.2.2

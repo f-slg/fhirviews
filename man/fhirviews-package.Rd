@@ -20,6 +20,9 @@ las operaciones \verb{$everything}, \verb{$validate} y \verb{$export} (Bulk Data
 \item \strong{Vistas} (funciones \verb{vista_*}): ejecutar un \code{ViewDefinition} sobre una
 lista de recursos, un Bundle o un archivo NDJSON y obtener un
 \code{data.frame}, con fhirpath.js o con DuckDB.
+\item \strong{SQL a FHIR}: \code{fhir_mapa()}, \code{fhir_desde_tabla()} y
+\code{fhir_desde_sql()} construyen Patient y Observation con mapeos
+explicitos. \code{fhir_escribir()} guarda JSON o NDJSON.
 }
 
 Las expresiones FHIRPath se evalúan con la biblioteca \code{fhirpath.js} a
@@ -47,10 +50,14 @@ RStudio (5 por defecto).
 
 \subsection{Limitaciones conocidas}{
 \itemize{
-\item Los decimales de FHIR se leen como números de JavaScript (y de R), así
-que pierden los ceros finales que indican la precisión: \code{1.10} se lee
-como \code{1.1}. Esto afecta a \code{toString()} y a las comparaciones de
-precisión de FHIRPath, no al valor numérico.
+\item La evaluacion y escritura JSON conservan los literales decimales de la
+fuente. Los numeros ordinarios de R no conservan escala; modificar las
+listas descarta el JSON original. Los limites decimales SQL admiten
+rutas estaticas con indices explicitos y escalas de -18 a 8, sin
+inferir precision despues de operaciones o iteraciones.
+\item SQL a FHIR admite Patient y Observation, una fila por recurso, sin
+agrupacion automatica ni recursos contained. Las comprobaciones locales
+no sustituyen la validacion de perfiles con \code{fhir_validar()}.
 }
 }
 }
@@ -78,6 +85,8 @@ Other contributors:
   \item The ANTLR Project (antlr4 runtime bundled in fhirpath.js) [copyright holder]
   \item Sasha Koss (date-fns library bundled in fhirpath.js) [copyright holder]
   \item Michael Mclaughlin (decimal.js library bundled in fhirpath.js) [copyright holder]
+  \item Jos de Jong (lossless-json library in inst/js) [copyright holder]
+  \item Health Level Seven International (FHIR R4 mapping metadata in inst/schema) [copyright holder]
   \item Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js) [copyright holder]
   \item SQL on FHIR project contributors (conformance test suite in inst/sof-tests) [copyright holder]
 }
