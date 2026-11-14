@@ -1,0 +1,2 @@
+time="2026-11-14T19:23:35Z" level=warning msg="StopSignal SIGTERM failed to stop container recursing_williams in 10 seconds, resorting to SIGKILL"
+376973dcb5620cf74b4c52c94c69e3b998871168a913c94b15c7be78fd484d5b

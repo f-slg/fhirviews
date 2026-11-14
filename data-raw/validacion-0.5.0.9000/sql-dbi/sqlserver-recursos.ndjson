@@ -1,0 +1,4 @@
+{"resourceType":"Patient","id":"9007199254740993","gender":"female","birthDate":"2000-02-29","name":[{"family":"Muñoz","given":["María"]}],"active":true}
+{"resourceType":"Patient","id":"9007199254740994","name":[{"given":["José"]}],"active":false}
+{"resourceType":"Observation","id":"o1","subject":{"reference":"Patient/9007199254740993"},"valueQuantity":{"value":72.00,"unit":"mg/dL"},"effectiveDateTime":"2026-01-14T15:00:00.000000Z","status":"final","code":{"text":"Medición ficticia"}}
+{"resourceType":"Observation","id":"o2","subject":{"reference":"Patient/9007199254740994"},"status":"final","code":{"text":"Medición ficticia"}}

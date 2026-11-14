@@ -1,0 +1,1 @@
+docker.io/library/postgres:17-alpine@sha256:47a2bc7522e20909a4c654f3ab986aa7c0fa49f2f872741b3b820ef4c3b29445

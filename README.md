@@ -776,6 +776,57 @@ automática de filas, recursos `contained`, envío masivo ni traducción de `Str
 ejecutable se instala en `system.file("examples", "sql-a-fhir.R", package =
 "fhirviews")`.
 
+### Ampliación prevista a otros recursos
+
+El lector y las vistas ya pueden trabajar con otros tipos de recursos FHIR.
+La lista **Patient y Observation** limita por ahora la construcción desde
+SQL o tablas. La ampliación de esa lista se hará por grupos comprobados;
+los recursos de la tabla siguiente **todavía no están habilitados** en
+`fhir_mapa()`.
+
+| Orden propuesto | Recursos | Recorrido que se busca cubrir |
+|---|---|---|
+| 1. Encuentros y diagnósticos | `Encounter`, `Condition` | Paciente → encuentro → diagnóstico, con referencias entre los tres. |
+| 2. Vacunación | `Immunization` | Paciente → evento de vacunación, con vacuna, estado y fecha explícitos. |
+| 3. Laboratorio | `Specimen`, `DiagnosticReport` | Muestra → observaciones → informe, con varias referencias a resultados. |
+| 4. Medicamentos | `MedicationRequest`, `MedicationDispense` | Prescripción y dispensación, con medicamento y datos de dosificación declarados. |
+| Según el origen | `Organization`, `Practitioner` | Instituciones y profesionales referenciados por los recursos anteriores. |
+
+El orden prioriza vigilancia y puede adaptarse al origen de datos. No hace
+falta un conversor independiente por recurso: el motor de rutas, tipos,
+cardinalidades y campos de elección ya usa metadatos de los snapshots
+canónicos de **FHIR R4 4.0.1**. Antes de ampliar el soporte se requiere:
+
+1. Ampliar el generador `data-raw/mapeo_r4.py` con una lista explícita de
+   recursos y sus tipos dependientes, manteniendo la versión y procedencia
+   del esquema. Conservar además los bindings a ValueSets y los tipos de
+   destino permitidos para `Reference`.
+2. Generalizar la validación de códigos, que actualmente comprueba
+   `Patient.gender` y `Observation.status`. Añadir un recurso al esquema no
+   comprueba por sí solo sus estados, terminología ni invariantes. Los
+   bindings que necesiten terminología externa y los perfiles se validarán
+   con el servidor correspondiente.
+3. Comprobar los obligatorios y las elecciones de cada recurso. Por ejemplo,
+   `Encounter` exige `status` y `class`; `Condition`, `subject`;
+   `Immunization`, `status`, `vaccineCode`, `patient` y una de las variantes
+   `occurrence[x]`. Los perfiles del proyecto pueden exigir campos adicionales.
+4. Diseñar las colecciones de objetos antes de ofrecer referencias o grupos
+   de longitud variable. Hoy se admite `result[0].reference`, pero `[]` solo
+   construye colecciones de primitivos; no construye por sí solo una lista
+   variable de objetos `Reference` o `dosageInstruction`.
+5. Exigir por recurso casos válidos e inválidos y un recorrido reproducible:
+   SQL → FHIR → `$validate` del perfil base → guardar y leer → tabla con V8
+   y DuckDB. Revisar referencias, ausentes, códigos inválidos y elecciones
+   incompatibles; añadir la URL canónica del perfil del proyecto cuando se
+   disponga de él. La documentación y los ejemplos se amplían con cada grupo.
+
+Una exploración local del esquema permitió construir `Condition`, `Encounter`,
+`Immunization`, `DiagnosticReport` y `MedicationRequest` con el motor actual.
+El control negativo de un estado inexistente de `Encounter` fue aceptado:
+esto identifica una validación que falta y **no acredita soporte** para esos
+recursos. La primera ampliación propuesta es completar esas validaciones y
+probar conjuntamente `Encounter` y `Condition`.
+
 ## Vistas de salud pública y terminologías
 
 El catálogo incluye siete vistas: pacientes, diagnósticos, encuentros,
@@ -967,15 +1018,76 @@ HAPI 8.12.0-2 fijado por digest, 62 comprobaciones aprobadas y sin fallos,
 errores ni advertencias. Las 16 comprobaciones de SQL → FHIR se ejecutaron;
 se registraron las dos omisiones previstas (lectura pública y ValueSet en
 línea). El contenedor se eliminó al finalizar. La
-[evidencia de integración](data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json)
+[evidencia de integración](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json)
 incluye el resultado de cada grupo; los registros y el entorno de R se
 conservan en la misma carpeta. Es una comprobación técnica con datos ficticios.
 
-La validación local de consultas usa DuckDB y SQLite. PostgreSQL y SQL Server
-requieren todavía pruebas con sus controladores y bases reales. La matriz
-Windows/macOS/Linux está configurada, pero el resultado de una ejecución
-anterior no acredita los cambios locales de esta versión: hay que revisar
-la CI del commit que se vaya a publicar.
+### SQL → FHIR con PostgreSQL y SQL Server
+
+Además de las pruebas locales con DuckDB y SQLite, el script
+`data-raw/probar-sql-dbi.sh` ejecuta consultas contra **dos bases reales y
+aisladas**. Crea contenedores propios de PostgreSQL y SQL Server Developer,
+fijados por digest en `data-raw/postgres-image.txt` y
+`data-raw/sqlserver-image.txt`, y los elimina al finalizar. Publica puertos
+aleatorios solamente en localhost y usa credenciales aleatorias de un solo
+uso, que no escribe en los informes. Los datos son ficticios.
+
+Requisitos: Docker o Podman, `openssl`, los paquetes R siguientes y un
+controlador **Microsoft ODBC Driver 18 for SQL Server** disponible para
+`odbc`. `RPostgres` requiere las bibliotecas de PostgreSQL y `odbc`, unixODBC.
+El script inicia SQL Server con `ACCEPT_EULA=Y` y edición Developer, para
+desarrollo y pruebas, conforme a las condiciones de la imagen de Microsoft.
+
+```r
+install.packages(c("DBI", "RPostgres", "odbc", "duckdb", "pkgload", "testthat"))
+```
+
+```sh
+# Ejecutar desde la raíz del repositorio; la carpeta indicada debe ser nueva.
+FHIRVIEWS_CONTENEDOR=podman bash data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi
+# También se admite FHIRVIEWS_CONTENEDOR=docker.
+```
+
+`FHIRVIEWS_ODBC_DRIVER` permite indicar otro nombre registrado o la ruta
+absoluta de la biblioteca del controlador; por defecto usa
+`ODBC Driver 18 for SQL Server`. `FHIRVIEWS_SQL_ESPERA` ajusta la espera de
+conexión, en segundos, cuyo valor predeterminado es 120. La conexión de
+prueba ODBC cifra el tráfico y acepta el certificado del contenedor local;
+esa configuración corresponde a este ensayo aislado.
+
+Cada base debe superar cinco grupos obligatorios:
+
+1. Tipos nativos: fechas `Date`, booleanos, tildes y claves BIGINT mayores
+   que `2^53`, extraídas como texto sin redondeo.
+2. Construcción de Patient con nombres, fecha de nacimiento, estado activo
+   y omisión de valores SQL `NULL`.
+3. Consultas con parámetros (`$1` en RPostgres; `?` en ODBC), cero filas,
+   texto con caracteres SQL y rechazo de identificadores duplicados o
+   códigos inválidos.
+4. Construcción de Observation con referencias al paciente, fecha con hora
+   en UTC y un `DECIMAL(12,2)` extraído como texto para conservar `72.00`.
+   En SQL Server se convierte explícitamente `DATETIMEOFFSET` a UTC y
+   `DATETIME2` antes de leerlo como `POSIXct`.
+5. Escritura y lectura NDJSON y comparación de valores y límites decimales
+   al regresar a tablas mediante V8 y DuckDB.
+
+Las consultas y los `CAST` son específicos de cada base; `fhir_desde_sql()`
+los ejecuta mediante DBI. La validación de perfiles base R4 se comprueba
+por separado en la integración HAPI descrita arriba.
+
+**Resultado local del 14 de noviembre de 2026:** 72 comprobaciones aprobadas,
+sin fallos, errores, advertencias ni omisiones. Se probaron PostgreSQL
+17.11 con RPostgres 1.4.10 y SQL Server 2022 CU28 (16.0.4325.4) con
+`odbc` 1.7.2 y Microsoft ODBC 18.6.1.1. Ambos contenedores se eliminaron.
+La [evidencia DBI](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-dbi/resumen.json)
+incluye las versiones y el resultado de cada grupo; la misma carpeta guarda
+los recursos de salida ficticios, los registros y el entorno de R. Las
+consultas ejecutables están en el script del repositorio.
+
+El workflow **Integracion SQL DBI** ejecuta el mismo ensayo y conserva sus
+resultados durante 14 días; exige los diez grupos y rechaza cualquier fallo,
+advertencia u omisión. Consulta la CI del commit que se vaya a publicar para
+comprobar también la matriz de R en Windows, macOS y Linux.
 
 ### Secuencia de comprobación del candidato
 
