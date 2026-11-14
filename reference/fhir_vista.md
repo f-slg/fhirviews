@@ -68,12 +68,12 @@ fhir_vista(con, vista_crear("Patient", c(sexo = "gender",
 #>               id   sexo nacimiento
 #> 1  nhanes-120412   male 1973-02-28
 #> 2  nhanes-117807 female 1958-12-24
-#> 3  nhanes-115106 female 2010-12-25
-#> 4  nhanes-123231   male 1958-05-23
-#> 5  nhanes-116163 female 1988-11-19
-#> 6  nhanes-123867 female 1957-07-04
-#> 7  nhanes-111640   male 1974-03-10
-#> 8  nhanes-117806   male 1963-03-18
-#> 9  nhanes-120218   male 1960-09-19
-#> 10 nhanes-121480   male 1957-04-08
+#> 3  nhanes-123231   male 1958-05-23
+#> 4  nhanes-116163 female 1988-11-19
+#> 5  nhanes-123867 female 1957-07-04
+#> 6  nhanes-111640   male 1974-03-10
+#> 7  nhanes-117806   male 1963-03-18
+#> 8  nhanes-120218   male 1960-09-19
+#> 9  nhanes-121480   male 1957-04-08
+#> 10 nhanes-122691   male 1983-07-03
 ```

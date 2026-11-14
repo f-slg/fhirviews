@@ -1,6 +1,7 @@
 # fhirviews
 
-**De recursos FHIR a tablas reproducibles en R.**
+**De recursos FHIR a tablas reproducibles en R, y de SQL a FHIR mediante
+mapeos explícitos.**
 
 **Español** ·
 [English](https://github.com/f-slg/fhirviews/blob/main/README.en.md)
@@ -9,6 +10,11 @@
 recursos en `data.frame` mediante **SQL on FHIR** y **FHIRPath**. Define
 una vista una vez, guárdala como `ViewDefinition` y reutilízala sobre
 archivos locales, respuestas del servidor o exportaciones poblacionales.
+
+También construye recursos **Patient** y **Observation** desde un
+`data.frame` o una consulta SQL por DBI, con un mapeo explícito de
+columnas, constantes y referencias. La salida se guarda como JSON o
+NDJSON conservando la escala decimal.
 
 Está pensado para análisis clínico, investigación, vigilancia
 epidemiológica y docencia desde R. Incluye autenticación SMART on FHIR,
@@ -37,6 +43,10 @@ R](reference/figures/README-json-tabla.png)
 > DuckDB sigue siendo **experimental**. Mientras CRAN la publica,
 > instálala desde GitHub.
 
+> **Desarrollo 0.5.0.9000:** añade SQL → FHIR y conformidad 144/144 en
+> ambos motores. Estas mejoras pertenecen al código de desarrollo, no al
+> candidato 0.5.0 enviado previamente a CRAN.
+
 ## Contenido
 
 - [Qué puedes hacer](#qu%C3%A9-puedes-hacer)
@@ -52,6 +62,7 @@ R](reference/figures/README-json-tabla.png)
   masiva](#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva)
 - [Procesar archivos por bloques](#procesar-archivos-por-bloques)
 - [Trabajar con DuckDB](#trabajar-con-duckdb)
+- [De SQL a FHIR](#de-sql-a-fhir)
 - [Vistas de salud pública y
   terminologías](#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas)
 - [Validación y privacidad](#validaci%C3%B3n-y-privacidad)
@@ -73,6 +84,8 @@ R](reference/figures/README-json-tabla.png)
 | Recorrer NDJSON y gzip sin reunir toda la salida en memoria | [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md) |
 | Ejecutar una vista traducible a SQL sobre NDJSON o Parquet | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md) — experimental |
 | Consultar varias tablas con SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) — vistas evaluadas con V8 y guardadas en una transacción |
+| Construir Patient y Observation desde tablas o consultas SQL | [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md) |
+| Guardar recursos conservando decimales del JSON original | [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md) — JSON o NDJSON |
 | Partir de vistas para salud pública | [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md), [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md) |
 | Definir cohortes con códigos de un ValueSet | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md), [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) |
 | Escribir y validar recursos en el servidor | [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_borrar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md) |
@@ -659,6 +672,183 @@ deben permanecer disponibles. Cierra las conexiones creadas cuando
 termines; los resultados diferidos dependen de que su conexión siga
 abierta.
 
+## De SQL a FHIR
+
+[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+ejecuta una consulta mediante una conexión **DBI**, lee sus filas y
+construye recursos con un
+[`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
+[`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+aplica el mismo mapeo a un `data.frame`. Esta primera versión admite
+**Patient y Observation de FHIR R4 4.0.1**.
+
+``` mermaid
+flowchart LR
+    DB["Consulta SQL / data.frame"] --> M["Mapeo explícito de campos y tipos R4"]
+    M --> R["Patient / Observation"]
+    R --> J["JSON / NDJSON"]
+    R --> V["ViewDefinition → tabla"]
+    R --> C["Validación de perfiles con fhir_validar"]
+```
+
+SQL on FHIR define una **proyección** de recursos a tablas. El camino de
+regreso necesita un mapeo propio: `where()`, `first()`, `join()`,
+agregaciones o columnas omitidas pueden perder información. Un
+`ViewDefinition` no se invierte automáticamente y no se promete
+reconstruir el recurso original.
+
+### Ejemplo completo con una base SQL
+
+Este ejemplo usa SQLite en memoria y datos ficticios. Instala `DBI` y
+`RSQLite` si los necesitas. Con DuckDB, PostgreSQL o SQL Server, cambia
+la conexión por la de su controlador DBI y adapta la sintaxis de la
+consulta.
+
+``` r
+
+library(fhirviews)
+con_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+
+DBI::dbWriteTable(con_db, "pacientes", data.frame(
+  paciente_id = c("p1", "p2"), sexo = c("female", "male"),
+  nacimiento = c("1985-03-12", "2001-11-30"),
+  apellido = c("Paredes", "Salazar"), nombre = c("Ana", "Jorge")
+))
+DBI::dbWriteTable(con_db, "resultados", data.frame(
+  resultado_id = c("o1", "o2"), paciente_id = c("p1", "p2"),
+  valor = c("98.00", "131.0"), unidad = c("mg/dL", "mg/dL")
+))
+
+mapa_pacientes <- fhir_mapa("Patient", c(
+  id = "paciente_id", gender = "sexo", birthDate = "nacimiento",
+  "name[0].family" = "apellido", "name[0].given[0]" = "nombre"
+))
+pacientes <- fhir_desde_sql(con_db,
+  "SELECT * FROM pacientes ORDER BY paciente_id", mapa_pacientes)
+
+mapa_resultados <- fhir_mapa("Observation", c(
+  id = "resultado_id", "subject.reference" = "paciente_id",
+  "valueQuantity.value" = "valor", "valueQuantity.unit" = "unidad"
+), constantes = list(
+  status = "final", "code.text" = "Glucosa"
+), referencias = c("subject.reference" = "Patient"))
+observaciones <- fhir_desde_sql(con_db,
+  "SELECT * FROM resultados ORDER BY resultado_id", mapa_resultados)
+
+observaciones[[1]]$subject$reference  # "Patient/p1"
+vista_fhirpath(observaciones, "value.ofType(Quantity).value")  # 98, 131
+
+salida <- tempfile(fileext = ".ndjson")
+fhir_escribir(c(pacientes, observaciones), salida)
+fhir_escribir(observaciones, tempfile(fileext = ".json"), formato = "json")
+
+# Comprobar los campos extraídos de los recursos construidos
+vista <- vista_crear("Observation", c(
+  paciente = "subject.getReferenceKey(Patient)",
+  valor = "value.ofType(Quantity).value"
+))
+vista_ejecutar(salida, vista)
+#   id paciente valor
+# 1 o1       p1    98
+# 2 o2       p2   131
+
+# Parámetros enlazados por el controlador, sin interpolar valores
+uno <- fhir_desde_sql(con_db,
+  "SELECT * FROM pacientes WHERE paciente_id = ?", mapa_pacientes,
+  parametros = list("p1"))
+DBI::dbDisconnect(con_db)
+```
+
+Los nombres de las funciones y argumentos permanecen en español. El
+marcador de parámetro depende del controlador: `?` en SQLite/DuckDB; por
+ejemplo, `$1` en RPostgres. Las uniones, filtros y traducciones de
+códigos se definen en la consulta o antes de construir los recursos.
+`status = "final"` y el nombre de la medición son decisiones explícitas
+del ejemplo, no valores predeterminados. En una implementación real
+declara los sistemas, códigos y unidades que correspondan a tus datos y
+perfiles.
+
+### Reglas del mapeo
+
+| Elemento | Comportamiento |
+|----|----|
+| `campos` | Los nombres son destinos JSON FHIR y los valores son columnas de origen. |
+| `constantes` | Lista con destinos y valores fijos. No puede repetir un destino de `campos`. |
+| `referencias` | Destino `.reference` → tipo FHIR; una clave `p1` produce `Patient/p1`. Recibe claves, no URLs ni referencias ya prefijadas. |
+| `name[0].family` | Índices desde cero; los campos repetidos deben indicar un índice. |
+| `name[0].given[]` | Colección de primitivos desde una columna de listas; `[]` solo puede aparecer al final. |
+| Campos de elección | Se usa el nombre JSON concreto: `valueQuantity.value`, `deceasedBoolean`, etc. No se evalúan expresiones FHIRPath. |
+| `NA`, `NULL`, `""`, colecciones vacías | Se omiten; los objetos y posiciones sin contenido se compactan. Los índices identifican posiciones de construcción, no huecos que se guardan como `null`. |
+| `id` | Debe estar mapeado, ser válido y único en el resultado. Los enteros seguros se convierten a texto. |
+| Booleanos y enteros | Se exigen valores lógicos o enteros dentro del rango FHIR; no se convierte `"false"` en booleano ni se trunca `1.7`. |
+| Fechas | Se aceptan fechas FHIR parciales válidas y `Date`. Las fechas con hora requieren zona; `POSIXct`/`POSIXlt` se convierten a UTC. |
+| Errores | Clase `fhirviews_error_mapeo`, con `fila` y `campo` cuando se conocen. |
+
+Para varios nombres por paciente, prepara una fila por paciente y
+columnas de listas, por ejemplo:
+
+``` r
+
+datos <- data.frame(id = "p1")
+datos$nombres <- list(c("Ana", "Lucía"))
+mapa <- fhir_mapa("Patient", c(id = "id", "name[0].given[]" = "nombres"))
+fhir_desde_tabla(datos, mapa)
+```
+
+Las filas con el mismo `id` se rechazan; no se agrupan ni sobrescriben
+silenciosamente. Una consulta con varias filas por paciente debe
+agruparse antes. Una consulta sin filas produce cero recursos.
+
+### Decimales, validación y salida
+
+Una columna decimal acepta números o **literales numéricos como texto**.
+`"1.00"` se escribe como el número JSON `1.00`, sin comillas. Si el
+controlador convierte un `DECIMAL(p,s)` a `double`, ya se han perdido
+sus ceros finales: extráelo como texto con el `CAST` apropiado de tu
+motor. Para BIGINT y claves fuera del rango de enteros seguros, usa
+también texto. Se rechazan `NaN`, infinitos numéricos y conversiones
+incompatibles.
+
+[`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
+conserva los literales de la fuente JSON y reemplaza el archivo
+indicado: NDJSON contiene un recurso por línea; `formato = "json"`
+contiene un arreglo, no un Bundle de transacción. Modificar las listas
+de recursos descarta la fuente original; a partir de números de R no es
+posible recuperar la escala perdida. La conversión no envía recursos al
+servidor.
+
+Al volver a leer recursos de un servidor, utiliza el modo que conserva
+la fuente. La lectura habitual devuelve una lista de R y no retiene la
+escala:
+
+``` r
+
+# con_fhir es una conexión creada con fhir_conectar()
+originales <- fhir_leer(con_fhir, "Observation", "o1", como_recursos = TRUE)
+vista_fhirpath(originales, "value.ofType(Quantity).value.lowBoundary()")
+fhir_escribir(originales, tempfile(fileext = ".ndjson"))
+```
+
+`como_recursos = TRUE` devuelve una colección `fhir_recursos`; por
+defecto,
+[`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md)
+mantiene la lista habitual para conservar compatibilidad. No se puede
+recuperar `72.00` desde una lista que ya lo convirtió en `72`.
+
+Las comprobaciones locales cubren rutas, tipos, cardinalidades,
+obligatorios del modelo base, elecciones incompatibles y los códigos
+`Patient.gender` y `Observation.status`. **No son validación completa de
+FHIR**: los perfiles, invariantes y terminologías se comprueban con
+`fhir_validar(con, recurso, perfil = "URL-canónica")` sobre los recursos
+y el servidor elegidos.
+
+[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+recoge toda la consulta en memoria y conserva la conexión abierta;
+ciérrala cuando termines. Este módulo no ofrece todavía agrupación
+automática de filas, recursos `contained`, envío masivo ni traducción de
+`StructureMap`. El ejemplo ejecutable se instala en
+`system.file("examples", "sql-a-fhir.R", package = "fhirviews")`.
+
 ## Vistas de salud pública y terminologías
 
 El catálogo incluye siete vistas: pacientes, diagnósticos, encuentros,
@@ -772,21 +962,39 @@ en memoria salvo que se solicite explícitamente caché en disco con
 
 El paquete incluye el [banco oficial de SQL on
 FHIR](https://github.com/FHIR/sql-on-fhir.js/tree/main/tests). Los dos
-motores superan **133/133 pruebas del perfil shareable** y **7/11
-experimentales** del banco incluido. Las cuatro pendientes corresponden
-a `lowBoundary()` y `highBoundary()` y a diferencias de precisión o zona
-horaria. La conformidad se refiere a ese banco y no certifica un sistema
-clínico.
+motores superan **144/144 pruebas del banco incluido**:
+
+| Motor               | Shareable | Experimental |   Total |
+|---------------------|----------:|-------------:|--------:|
+| V8 / fhirpath.js    |   133/133 |        11/11 | 144/144 |
+| DuckDB / SQL nativo |   133/133 |        11/11 | 144/144 |
+
+Las cuatro pruebas experimentales de límites ahora conservan la
+precisión de `1.0` y completan las zonas desconocidas de DateTime
+(`+14:00` en el límite inferior, `-12:00` en el superior), conservando
+zonas explícitas. El banco se lee sin alterar sus literales ni
+resultados esperados. V8 usa un lector JSON portable; DuckDB relaciona
+los tokens numéricos originales con `json_tree()`. La conformidad se
+refiere a ese banco y no certifica un sistema clínico.
 
 ``` r
 
 vista_conformidad()                   # motor V8
 vista_conformidad(motor = "duckdb")   # requiere DuckDB y su extensión json
+vista_conformidad(descargar = TRUE)  # contrastar con el banco actual de GitHub
+vista_conformidad(informe = "sof-test-results.json") # formato de la matriz pública
 ```
 
-![Resultados por archivo del banco SQL on FHIR: todas las pruebas
-shareable aprobadas y cuatro experimentales
-pendientes](reference/figures/README-conformidad.png)
+El 144/144 no significa que toda expresión FHIRPath sea traducible a
+SQL. Los límites decimales en DuckDB admiten literales sin signo o rutas
+estáticas desde el recurso con índices explícitos, escalas entre -18 y 8
+y números representables en `DECIMAL(38,18)`. Las escalas negativas
+corresponden a exponentes positivos. No se admite el argumento opcional
+de precisión ni se infiere escala tras operaciones, filtros o
+iteraciones. Esos casos fallan con un mensaje explícito. Con Parquet o
+tablas ya normalizadas se usa la representación JSON disponible; no se
+recupera una escala que se haya perdido antes. Las vistas que no usan
+límites decimales no pagan el coste de extraer los tokens y rutas.
 
 CI comprueba el paquete en Windows, macOS Intel y Linux, además de
 R-devel y R 4.1. macOS usa por defecto `macos-26-intel`; esta matriz no
@@ -801,7 +1009,8 @@ de pruebas propio**:
 
 ``` sh
 FHIRVIEWS_SERVIDOR_ESCRITURA=http://localhost:8080/fhir \
-  Rscript -e 'devtools::test(filter = "servidor")'
+FHIRVIEWS_SOLO_SERVIDOR_PROPIO=true NOT_CRAN=true \
+  Rscript -e 'testthat::test_local(filter = "^servidor$")'
 ```
 
 Ese servidor debe permitir escritura; algunas pruebas requieren
@@ -823,12 +1032,55 @@ El script usa una imagen fijada por digest, abre un puerto aleatorio
 solo en localhost y elimina su propio contenedor al terminar, incluso si
 las pruebas fallan. Imprime la carpeta que conserva los registros, el
 resumen JSON y CSV, las omisiones y el entorno de R. La ejecución exige
-escritura, transacciones, terminología básica y Bulk Data; una omisión
-inesperada hace fallar la prueba. La variante de ValueSet en línea no
-admitida por HAPI queda registrada aparte. El workflow **Integracion
-HAPI** ejecuta este mismo script y conserva los resultados durante 14
-días. En la primera ejecución puede descargar la imagen y la extensión
-JSON de DuckDB.
+escritura, transacciones, terminología básica, Bulk Data y el nuevo
+recorrido SQL → FHIR → servidor → tabla; una omisión inesperada hace
+fallar la prueba. La variante de ValueSet en línea no admitida por HAPI
+queda registrada aparte. El workflow **Integracion HAPI** ejecuta este
+mismo script y conserva los resultados durante 14 días. En la primera
+ejecución puede descargar la imagen y la extensión JSON de DuckDB.
+
+### Validación de SQL → FHIR contra perfiles R4
+
+El grupo obligatorio
+`SQL a FHIR, perfiles R4, referencias y retorno a tablas` usa un Patient
+y dos Observation ficticios obtenidos de consultas DuckDB con
+parámetros. Realiza estas comprobaciones:
+
+1.  Construye y escribe los recursos conservando un decimal `72.00`.
+2.  Ejecuta `$validate` con los perfiles base explícitos
+    `http://hl7.org/fhir/StructureDefinition/Patient` y
+    `http://hl7.org/fhir/StructureDefinition/Observation`.
+3.  Guarda los recursos de prueba con sus identificadores y comprueba
+    que `Observation.subject.reference` apunta al Patient creado.
+4.  Envía un `gender` inválido y exige que el validador detecte el
+    error.
+5.  Lee con `fhir_leer(..., como_recursos = TRUE)` y compara los
+    valores, referencias y límites decimales usando V8 y SQL nativo.
+6.  Elimina los recursos de prueba; el script elimina además su
+    contenedor.
+
+El resumen incluye fallos, errores, advertencias, comprobaciones y
+razones de omisión. La política de aceptación impide aprobar si falta
+este grupo. Esta validación cubre perfiles **base R4**; los perfiles
+clínicos o nacionales del proyecto deben comprobarse expresamente con su
+URL canónica.
+
+**Resultado local del 14 de noviembre de 2026:** integración aprobada
+con HAPI 8.12.0-2 fijado por digest, 62 comprobaciones aprobadas y sin
+fallos, errores ni advertencias. Las 16 comprobaciones de SQL → FHIR se
+ejecutaron; se registraron las dos omisiones previstas (lectura pública
+y ValueSet en línea). El contenedor se eliminó al finalizar. La
+[evidencia de
+integración](https://f-slg.github.io/fhirviews/data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json)
+incluye el resultado de cada grupo; los registros y el entorno de R se
+conservan en la misma carpeta. Es una comprobación técnica con datos
+ficticios.
+
+La validación local de consultas usa DuckDB y SQLite. PostgreSQL y SQL
+Server requieren todavía pruebas con sus controladores y bases reales.
+La matriz Windows/macOS/Linux está configurada, pero el resultado de una
+ejecución anterior no acredita los cambios locales de esta versión: hay
+que revisar la CI del commit que se vaya a publicar.
 
 ### Secuencia de comprobación del candidato
 
@@ -861,6 +1113,9 @@ verifican el alcance declarado, y su resultado debe consultarse para el
 commit específico que se vaya a entregar.
 
 ## Rendimiento
+
+Las mediciones de esta sección son anteriores a los cambios de precisión
+de 0.5.0.9000; no se han vuelto a medir con esta versión de desarrollo.
 
 La siguiente medición compara ambos motores con pacientes sintéticos y
 una vista que incluye `where`, cuatro columnas y `forEach` sobre `name`.
@@ -965,9 +1220,11 @@ Script:
 - **FHIRPath.** La evaluación ocurre en V8. La resolución remota con
   `resolve()` está desactivada; las consultas de terminología se
   realizan con las funciones `tx_*` antes de ejecutar la vista.
-- **Precisión y fechas.** Los números de JSON pierden los ceros
-  decimales finales al leerse. Las fechas se conservan como texto ISO
-  8601 para admitir valores parciales como `2025` o `2025-03`.
+- **Precisión y fechas.** La evaluación y salida JSON/NDJSON conservan
+  los literales decimales de la fuente original. Las columnas numéricas
+  ordinarias de R no conservan su escala; modificar recursos descarta su
+  fuente JSON. Las fechas quedan como texto ISO 8601 para admitir `2025`
+  o `2025-03`.
 - **Memoria y esquema.**
   [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
   reúne el resultado en memoria; el procesamiento por bloques requiere
@@ -1215,6 +1472,17 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
   : Convertir un ViewDefinition en JSON
 - [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
   : Guardar vistas en DuckDB
+
+## De SQL a FHIR
+
+Construir Patient y Observation con mapeos explicitos desde R o DBI.
+
+- [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  : Construir recursos FHIR R4 desde tablas o consultas SQL
+- [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
+  : Escribir recursos FHIR como JSON o NDJSON
 
 ## Catálogo de vistas
 

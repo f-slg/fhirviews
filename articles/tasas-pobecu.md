@@ -319,11 +319,11 @@ data.frame(
   commit = vapply(instalados, commit_de, character(1)),
   row.names = NULL
 )
-#>     paquete version  commit
-#> 1 fhirviews   0.5.0 fb22511
-#> 2    pobecu   0.3.0 947b069
-#> 3    geoecu   0.4.1    RSPM
-#> 4        sf   1.1.3    RSPM
+#>     paquete    version  commit
+#> 1 fhirviews 0.5.0.9000 138a7ae
+#> 2    pobecu 0.3.0.9000 21e7c50
+#> 3    geoecu      0.4.1    RSPM
+#> 4        sf      1.1.3    RSPM
 R.version.string
 #> [1] "R version 4.6.2 (2026-10-29)"
 ```
