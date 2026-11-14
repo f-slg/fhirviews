@@ -1,7 +1,7 @@
 #' Construir recursos FHIR R4 desde tablas o consultas SQL
 #'
 #' Define un mapeo explicito de columnas a destinos FHIR y construye un
-#' recurso por fila. La primera version admite `Patient` y `Observation`.
+#' recurso por fila. Admite `Patient`, `Observation`, `Encounter` y `Condition`.
 #' No intenta invertir un `ViewDefinition`, que puede haber perdido datos.
 #'
 #' Los destinos usan nombres JSON de FHIR, puntos e indices desde cero:
@@ -18,7 +18,9 @@
 #'
 #' Los tipos y cardinalidades se comprueban con metadatos base de FHIR
 #' R4 4.0.1. Se revisan campos obligatorios, elementos de eleccion, fechas,
-#' identificadores, tipos primitivos y los codigos de `gender` y `status`.
+#' identificadores, tipos primitivos, destinos de referencias y bindings
+#' requeridos que pueden enumerarse con la terminologia R4 incluida. Para
+#' `Coding` y `CodeableConcept` se comprueba el par `system`/`code`.
 #' Esto no sustituye la validacion de invariantes, terminologias y perfiles
 #' con [fhir_validar()]. No se inventan codigos, unidades o estados.
 #'
@@ -30,7 +32,8 @@
 #' tambien aceptan enteros seguros, convertidos a texto; para BIGINT usa un
 #' CAST a texto en SQL. El resto de textos no admite conversion implicita.
 #'
-#' @param recurso Tipo FHIR: `"Patient"` u `"Observation"`.
+#' @param recurso Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"` o
+#'   `"Condition"`.
 #' @param campos Vector de texto con destinos FHIR como nombres y columnas
 #'   de origen como valores.
 #' @param constantes Lista con nombre de valores fijos, con destinos FHIR
@@ -65,7 +68,7 @@ fhir_mapa <- function(recurso, campos = character(), constantes = list(),
                        referencias = character()) {
   esquema <- esquema_mapeo()
   if (!es_texto(recurso) || !recurso %in% esquema$recursos) {
-    error_mapeo("{.arg recurso} debe ser Patient u Observation.")
+    error_mapeo("{.arg recurso} debe ser uno de {.val {unlist(esquema$recursos)}}.")
   }
   comprobar_vector_mapeo(campos, "campos")
   comprobar_vector_mapeo(referencias, "referencias")
@@ -97,6 +100,8 @@ fhir_mapa <- function(recurso, campos = character(), constantes = list(),
       error_mapeo("Cada referencia debe indicar un destino .reference y un tipo FHIR R4.",
                   campo = destino)
     }
+    validar_destino_referencia(referencias[[destino]], rutas[[destino]]$destinos,
+                               campo = destino)
   }
   structure(list(recurso = recurso, campos = campos, constantes = constantes,
                  referencias = referencias, rutas = rutas), class = "fhir_mapa")
@@ -242,6 +247,7 @@ elemento_mapeo <- function(ctx, nombre) {
   } else if (!is.null(tipo) && tipo %in% c("BackboneElement", "Element")) {
     list(tipo = ctx$tipo, prefijo = ruta)
   } else list(tipo = tipo, prefijo = "")
+  if (identical(tipo, "Reference")) siguiente$destinos <- e$destinos
   c(e, list(tipo = tipo, ruta = ruta, siguiente = siguiente))
 }
 
@@ -253,6 +259,7 @@ ruta_mapeo <- function(campo, recurso) {
   ctx <- list(tipo = recurso, prefijo = "")
   pasos <- list()
   normal <- character()
+  destinos <- NULL
   for (i in seq_along(partes)) {
     m <- regmatches(partes[i], regexec(
       "^([A-Za-z][A-Za-z0-9]*)(\\[([0-9]*)\\])?$", partes[i]))[[1]]
@@ -283,12 +290,14 @@ ruta_mapeo <- function(campo, recurso) {
       pasos <- c(pasos, list(as.integer(indice) + 1L))
       normal <- c(normal, as.character(indice))
     }
+    if (identical(ctx$tipo, "Reference") && m[2] == "reference") destinos <- ctx$destinos
     ctx <- e$siguiente
   }
   if (is.null(e$tipo) || !grepl("^[a-z]", e$tipo)) {
     error_mapeo("El destino debe ser un campo primitivo, no un objeto completo.", campo = campo)
   }
   list(pasos = pasos, tipo = e$tipo, coleccion = coleccion,
+       destinos = destinos,
        normalizada = paste(normal, collapse = "/"))
 }
 
@@ -421,17 +430,81 @@ validar_recurso_mapeado <- function(r, ctx, fila, prefijo = "") {
     if (length(valores) < e$min || (e$max != "*" && length(valores) > as.numeric(e$max))) {
       error_mapeo("Cardinalidad FHIR incompatible.", fila, paste0(prefijo, nombre))
     }
+    for (v in valores) {
+      validar_vinculo_mapeo(v, e, fila, paste0(prefijo, nombre))
+      if (identical(e$tipo, "Reference")) {
+        validar_referencia_mapeo(v, e$destinos, fila, paste0(prefijo, nombre))
+      }
+    }
     if (!is.null(e$tipo) && grepl("^[A-Z]", e$tipo) || !is.null(e$ref)) {
       for (v in valores) validar_recurso_mapeado(v, e$siguiente, fila, paste0(prefijo, nombre, "."))
     }
   }
-  if (ctx$tipo == "Patient" && !nzchar(ctx$prefijo) && !is.null(r$gender) &&
-      !r$gender %in% c("male", "female", "other", "unknown")) {
-    error_mapeo("gender debe usar un codigo FHIR.", fila, "gender")
+}
+
+validar_vinculo_mapeo <- function(valor, elemento, fila, campo) {
+  vinculo <- elemento$vinculo
+  if (is.null(vinculo) || !identical(vinculo$fuerza, "required")) return(invisible(NULL))
+  tipo <- elemento$tipo
+  if (identical(tipo, "CodeableConcept")) {
+    valores <- valor$coding %||% list()
+    if (!length(valores) || !any(vapply(valores, function(x) !is.null(x$code), logical(1)))) {
+      error_mapeo("El binding requerido necesita al menos un Coding con code; text no lo sustituye.", fila, campo)
+    }
+  } else if (identical(tipo, "Coding")) valores <- list(valor) else valores <- list(list(code = valor))
+  # Un ValueSet externo o con filtros no se sustituye por una lista parcial.
+  if (is.null(vinculo$codigos)) return(invisible(NULL))
+  coincide <- function(coding) {
+    if (is.null(coding$code)) return(FALSE)
+    any(vapply(vinculo$codigos, function(codigo) {
+      mismo_codigo <- if (isTRUE(codigo$caseSensitive)) identical(coding$code, codigo$code) else
+        identical(tolower(coding$code), tolower(codigo$code))
+      mismo_sistema <- !tipo %in% c("Coding", "CodeableConcept") ||
+        identical(coding$system, codigo$system)
+      mismo_codigo && mismo_sistema
+    }, logical(1)))
   }
-  if (ctx$tipo == "Observation" && !nzchar(ctx$prefijo) &&
-      !r$status %in% c("registered", "preliminary", "final", "amended", "corrected",
-                       "cancelled", "entered-in-error", "unknown")) {
-    error_mapeo("status debe usar un codigo FHIR.", fila, "status")
+  if (!any(vapply(valores, coincide, logical(1)))) {
+    error_mapeo("El codigo o par system/code no pertenece al ValueSet requerido {.val {vinculo$valueSet}}.",
+                fila, campo)
   }
+  invisible(NULL)
+}
+
+validar_destino_referencia <- function(tipo, destinos, fila = NULL, campo) {
+  destinos <- unlist(destinos, use.names = FALSE)
+  if (!isTRUE(motor_actual()$es_recurso(tipo)) ||
+      (length(destinos) && !"Resource" %in% destinos && !tipo %in% destinos)) {
+    error_mapeo("El tipo {.val {tipo}} no es un destino FHIR permitido para esta referencia.", fila, campo)
+  }
+  invisible(NULL)
+}
+
+validar_referencia_mapeo <- function(referencia, destinos, fila, campo) {
+  declarada <- referencia$type
+  if (!is.null(declarada)) {
+    declarada <- sub("^http://hl7.org/fhir/StructureDefinition/", "", declarada)
+    if (!grepl("^[A-Z][A-Za-z0-9]+$", declarada)) declarada <- NULL
+  }
+  literal <- referencia$reference
+  tipo <- NULL
+  if (!is.null(literal)) {
+    if (startsWith(literal, "#")) {
+      error_mapeo("No se construyen referencias a recursos contained.", fila, paste0(campo, ".reference"))
+    }
+    patron <- "([A-Z][A-Za-z0-9]+)/[A-Za-z0-9.-]{1,64}(/_history/[A-Za-z0-9.-]{1,64})?$"
+    absoluto <- grepl("^https?://", literal)
+    relativo <- !grepl("^[A-Za-z][A-Za-z0-9+.-]*:", literal)
+    if (absoluto || relativo) {
+      m <- regmatches(literal, regexec(paste0(if (absoluto) "^https?://.+/" else "^", patron), literal))[[1]]
+      if (length(m)) tipo <- m[2] else if (relativo) {
+        error_mapeo("Una referencia relativa debe tener la forma Tipo/id.", fila, paste0(campo, ".reference"))
+      }
+    }
+  }
+  for (t in unique(c(tipo, declarada))) validar_destino_referencia(t, destinos, fila, campo)
+  if (!is.null(tipo) && !is.null(declarada) && tipo != declarada) {
+    error_mapeo("Reference.type no coincide con el tipo de la referencia literal.", fila, campo)
+  }
+  invisible(NULL)
 }

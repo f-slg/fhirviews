@@ -118,6 +118,89 @@ test_that("SQL a FHIR, perfiles R4, referencias y retorno a tablas", {
   expect_equal(sql, v8)
 })
 
+test_that("Encounter y Condition desde SQL, perfiles R4 y referencias", {
+  con <- fhir_conectar(servidor_escritura(), panel = FALSE)
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("duckdb", "1.3.0")
+  db <- conectar_duckdb()
+  on.exit(DBI::dbDisconnect(db), add = TRUE)
+  creados <- list()
+  on.exit(for (r in rev(creados)) try(fhir_borrar(con, r), silent = TRUE), add = TRUE)
+  marca <- marca_prueba()
+  ip <- paste0(marca, "-p")
+  ie <- paste0(marca, "-e")
+  ic <- paste0(marca, "-c")
+  base <- "http://hl7.org/fhir/StructureDefinition/"
+  DBI::dbWriteTable(db, "pacientes_ec", data.frame(id = ip, sexo = "female"))
+  DBI::dbWriteTable(db, "encuentros_ec", data.frame(id = ie, paciente = ip,
+    estado = "finished", clase = "AMB", inicio = "2026-01-14T10:00:00-05:00",
+    fin = "2026-01-14T11:00:00-05:00"))
+  DBI::dbWriteTable(db, "diagnosticos_ec", data.frame(id = ic, paciente = ip,
+    encuentro = ie, estado = "active", verificacion = "confirmed", inicio = "2026-01-14"))
+  mp <- fhir_mapa("Patient", c(id = "id", gender = "sexo"),
+    constantes = list("meta.profile[0]" = paste0(base, "Patient")))
+  me <- fhir_mapa("Encounter", c(id = "id", status = "estado", "class.code" = "clase",
+    "subject.reference" = "paciente", "period.start" = "inicio", "period.end" = "fin"),
+    constantes = list("class.system" = "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+      "meta.profile[0]" = paste0(base, "Encounter")), referencias = c("subject.reference" = "Patient"))
+  mc <- fhir_mapa("Condition", c(id = "id", "subject.reference" = "paciente",
+    "encounter.reference" = "encuentro", "clinicalStatus.coding[0].code" = "estado",
+    "verificationStatus.coding[0].code" = "verificacion", onsetDateTime = "inicio"),
+    constantes = list("clinicalStatus.coding[0].system" = "http://terminology.hl7.org/CodeSystem/condition-clinical",
+      "verificationStatus.coding[0].system" = "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+      "category[0].coding[0].system" = "http://terminology.hl7.org/CodeSystem/condition-category",
+      "category[0].coding[0].code" = "encounter-diagnosis", "code.text" = "Diagnostico ficticio de integracion",
+      "meta.profile[0]" = paste0(base, "Condition")),
+    referencias = c("subject.reference" = "Patient", "encounter.reference" = "Encounter"))
+  p <- fhir_desde_sql(db, "SELECT * FROM pacientes_ec WHERE id = ?", mp, list(ip))
+  e <- fhir_desde_sql(db, "SELECT * FROM encuentros_ec WHERE id = ?", me, list(ie))
+  cnd <- fhir_desde_sql(db, "SELECT * FROM diagnosticos_ec WHERE id = ?", mc, list(ic))
+  archivo <- withr_tempfile(".ndjson")
+  fhir_escribir(c(p, e, cnd), archivo)
+  textos <- readLines(archivo, encoding = "UTF-8")
+  expect_length(textos, 3L)
+  for (i in seq_along(textos)) {
+    perfil <- paste0(base, c("Patient", "Encounter", "Condition")[i])
+    expect_true(attr(fhir_validar(con, textos[i], perfil = perfil), "valido"))
+    creado <- fhir_actualizar(con, textos[i])
+    creados <- c(creados, list(creado))
+    expect_identical(creado$id, c(ip, ie, ic)[i])
+  }
+  expect_identical(creados[[2]]$subject$reference, paste0("Patient/", ip))
+  expect_identical(creados[[3]]$subject$reference, paste0("Patient/", ip))
+  expect_identical(creados[[3]]$encounter$reference, paste0("Encounter/", ie))
+  # Probar tambien que el validador aplica los perfiles nuevos.
+  invalido <- e[[1]]
+  invalido$status <- "inexistente"
+  validacion <- fhir_validar(con, invalido, perfil = paste0(base, "Encounter"))
+  expect_false(isTRUE(attr(validacion, "valido")))
+  expect_true(any(validacion$severidad %in% c("error", "fatal")))
+  invalido <- cnd[[1]]
+  invalido$subject$reference <- paste0("Encounter/", ie)
+  invalido$subject$type <- "Encounter"
+  validacion <- fhir_validar(con, invalido, perfil = paste0(base, "Condition"))
+  detalle <- paste(capture.output(as.data.frame(validacion)), collapse = "\n")
+  expect_false(isTRUE(attr(validacion, "valido")), info = detalle)
+  expect_true(any(validacion$severidad %in% c("error", "fatal")), info = detalle)
+  invalido <- cnd[[1]]
+  invalido$clinicalStatus$coding[[1]]$code <- "inexistente"
+  validacion <- fhir_validar(con, invalido, perfil = paste0(base, "Condition"))
+  expect_false(isTRUE(attr(validacion, "valido")))
+  expect_true(any(validacion$severidad %in% c("error", "fatal")))
+  le <- fhir_leer(con, "Encounter", ie, como_recursos = TRUE)
+  lc <- fhir_leer(con, "Condition", ic, como_recursos = TRUE)
+  ve <- vista_crear("Encounter", c(paciente = "subject.getReferenceKey(Patient)",
+    estado = "status", clase = "class.code"))
+  vc <- vista_crear("Condition", c(paciente = "subject.getReferenceKey(Patient)",
+    encuentro = "encounter.getReferenceKey(Encounter)", estado = "clinicalStatus.coding.code"))
+  te <- vista_ejecutar(le, ve)
+  tc <- vista_ejecutar(lc, vc)
+  expect_identical(te, data.frame(id = ie, paciente = ip, estado = "finished", clase = "AMB"))
+  expect_identical(tc, data.frame(id = ic, paciente = ip, encuentro = ie, estado = "active"))
+  expect_equal(vista_ejecutar_duckdb(le, ve, con_db = db), te)
+  expect_equal(vista_ejecutar_duckdb(lc, vc, con_db = db), tc)
+})
+
 test_that("ciclo completo de escritura en un servidor de pruebas", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   marca <- marca_prueba()

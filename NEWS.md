@@ -1,12 +1,17 @@
 # fhirviews 0.5.0.9000
 
+* SQL a FHIR admite tambien Encounter y Condition. Los metadatos R4 incluyen
+  bindings, codigos requeridos enumerables y destinos de Reference; se
+  comprueban pares system/code, traducciones y tipos de referencia. Los
+  bindings extensibles no se convierten en enumeraciones cerradas.
+* Se anade un ejemplo instalado de paciente, encuentro y diagnostico, y un
+  grupo obligatorio de integracion con perfiles base Encounter y Condition.
 * La integracion SQL DBI prueba PostgreSQL y SQL Server Developer reales en
   contenedores fijados por digest: parametros, tipos nativos, BIGINT,
   escala decimal, valores ausentes y retorno a tablas con V8 y DuckDB.
   Incluye ejecucion automatica, evidencia local y limpieza de contenedores.
-* Los README documentan la ampliacion prevista de SQL a FHIR por grupos,
-  comenzando por Encounter y Condition; estos recursos aun no se habilitan
-  para construccion y necesitan validacion de codigos y referencias.
+* Los README documentan la ampliacion de SQL a FHIR por grupos y los recursos
+  pendientes: Immunization, laboratorio y medicamentos.
 * `fhir_leer(..., como_recursos = TRUE)` conserva el JSON recibido para
   mantener la escala decimal al volver del servidor a las vistas. El valor
   por defecto mantiene la lista de R habitual.

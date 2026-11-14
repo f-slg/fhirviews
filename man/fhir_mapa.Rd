@@ -18,7 +18,8 @@ fhir_desde_tabla(datos, mapa)
 fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
 }
 \arguments{
-\item{recurso}{Tipo FHIR: \code{"Patient"} u \code{"Observation"}.}
+\item{recurso}{Tipo FHIR: \code{"Patient"}, \code{"Observation"}, \code{"Encounter"} o
+\code{"Condition"}.}
 
 \item{campos}{Vector de texto con destinos FHIR como nombres y columnas
 de origen como valores.}
@@ -52,7 +53,7 @@ Usa \code{\link[=fhir_escribir]{fhir_escribir()}} para guardar JSON o NDJSON con
 }
 \description{
 Define un mapeo explicito de columnas a destinos FHIR y construye un
-recurso por fila. La primera version admite \code{Patient} y \code{Observation}.
+recurso por fila. Admite \code{Patient}, \code{Observation}, \code{Encounter} y \code{Condition}.
 No intenta invertir un \code{ViewDefinition}, que puede haber perdido datos.
 }
 \details{
@@ -70,7 +71,9 @@ usando columnas de listas para las colecciones.
 
 Los tipos y cardinalidades se comprueban con metadatos base de FHIR
 R4 4.0.1. Se revisan campos obligatorios, elementos de eleccion, fechas,
-identificadores, tipos primitivos y los codigos de \code{gender} y \code{status}.
+identificadores, tipos primitivos, destinos de referencias y bindings
+requeridos que pueden enumerarse con la terminologia R4 incluida. Para
+\code{Coding} y \code{CodeableConcept} se comprueba el par \code{system}/\code{code}.
 Esto no sustituye la validacion de invariantes, terminologias y perfiles
 con \code{\link[=fhir_validar]{fhir_validar()}}. No se inventan codigos, unidades o estados.
 

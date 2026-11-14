@@ -115,3 +115,87 @@ test_that("SQL con parametros funciona en dos controladores DBI", {
     }, finally = DBI::dbDisconnect(con))
   }
 })
+
+test_that("Encounter comprueba obligatorios y codigos tambien en elementos anidados", {
+  m <- fhir_mapa("Encounter", c(id = "id", status = "estado", "class.code" = "clase",
+    "subject.reference" = "paciente", "period.start" = "inicio"),
+    constantes = list("class.system" = "http://terminology.hl7.org/CodeSystem/v3-ActCode"),
+    referencias = c("subject.reference" = "Patient"))
+  d <- data.frame(id = "e1", estado = "finished", clase = "AMB", paciente = "p1", inicio = "2026-01-14T10:00:00-05:00")
+  r <- fhir_desde_tabla(d, m)
+  expect_identical(r[[1]]$class$code, "AMB")
+  expect_identical(r[[1]]$subject$reference, "Patient/p1")
+  expect_identical(r[[1]]$period$start, d$inicio)
+  expect_error(fhir_desde_tabla(transform(d, estado = "inexistente"), m), "ValueSet requerido")
+  expect_error(fhir_desde_tabla(transform(d, estado = NA_character_), m), "obligatorio")
+  expect_error(fhir_desde_tabla(data.frame(id = "e1"),
+    fhir_mapa("Encounter", c(id = "id"), constantes = list(status = "finished"))), "obligatorio")
+  historia <- fhir_mapa("Encounter", c(id = "id"), constantes = list(status = "finished",
+    "class.code" = "AMB", "statusHistory[0].status" = "inexistente",
+    "statusHistory[0].period.start" = "2026-01-01"))
+  expect_error(fhir_desde_tabla(data.frame(id = "e1"), historia), "ValueSet requerido")
+  # La clase tiene binding extensible, no una enumeracion cerrada.
+  local <- m
+  local$constantes[["class.system"]] <- "https://example.org/clases"
+  expect_identical(fhir_desde_tabla(transform(d, clase = "local"), local)[[1]]$class$code, "local")
+  expect_error(fhir_desde_tabla(data.frame(id = "p1", uso = "inexistente"),
+    fhir_mapa("Patient", c(id = "id", "name[0].use" = "uso"))), "ValueSet requerido")
+})
+
+test_that("Condition valida pares system/code, traducciones y elecciones", {
+  cs <- "http://terminology.hl7.org/CodeSystem/condition-clinical"
+  vs <- "http://terminology.hl7.org/CodeSystem/condition-ver-status"
+  m <- fhir_mapa("Condition", c(id = "id", "subject.reference" = "paciente",
+    "encounter.reference" = "encuentro", "clinicalStatus.coding[0].code" = "estado",
+    onsetDateTime = "inicio"), constantes = list("clinicalStatus.coding[0].system" = cs,
+      "verificationStatus.coding[0].system" = vs, "verificationStatus.coding[0].code" = "confirmed",
+      "code.text" = "Diagnostico ficticio"),
+    referencias = c("subject.reference" = "Patient", "encounter.reference" = "Encounter"))
+  d <- data.frame(id = "c1", paciente = "p1", encuentro = "e1", estado = "active", inicio = "2026-01-14")
+  r <- fhir_desde_tabla(d, m)
+  expect_identical(r[[1]]$encounter$reference, "Encounter/e1")
+  expect_identical(r[[1]]$clinicalStatus$coding[[1]]$code, "active")
+  for (estado in c("inexistente", "ACTIVE")) {
+    invalido <- d
+    invalido$estado <- estado
+    expect_error(fhir_desde_tabla(invalido, m), "ValueSet requerido")
+  }
+  incorrecto <- m
+  incorrecto$constantes[["clinicalStatus.coding[0].system"]] <- "https://example.org/estados"
+  expect_error(fhir_desde_tabla(d, incorrecto), "system/code")
+  expect_error(fhir_desde_tabla(data.frame(id = "c1"), fhir_mapa("Condition", c(id = "id"),
+    constantes = list("subject.reference" = "Patient/p1", "clinicalStatus.text" = "activo"))), "Coding")
+  expect_error(fhir_desde_tabla(data.frame(id = "c1"),
+    fhir_mapa("Condition", c(id = "id"))), "obligatorio")
+  ambos <- fhir_mapa("Condition", c(id = "id"), constantes = list(
+    "subject.reference" = "Patient/p1", onsetDateTime = "2026", "onsetAge.value" = "1"))
+  expect_error(fhir_desde_tabla(data.frame(id = "c1"), ambos), "eleccion")
+  # Se permite una traduccion adicional cuando hay al menos un codigo del ValueSet.
+  traduccion <- fhir_mapa("Condition", c(id = "id"), constantes = list(
+    "subject.reference" = "Patient/p1", "clinicalStatus.coding[0].system" = "https://example.org/local",
+    "clinicalStatus.coding[0].code" = "activo", "clinicalStatus.coding[1].system" = cs,
+    "clinicalStatus.coding[1].code" = "active"))
+  expect_length(fhir_desde_tabla(data.frame(id = "c1"), traduccion)[[1]]$clinicalStatus$coding, 2L)
+})
+
+test_that("las referencias comprueban destinos R4 declarados y literales", {
+  expect_error(fhir_mapa("Condition", c(id = "id", "encounter.reference" = "encuentro"),
+    referencias = c("encounter.reference" = "Observation")), "destino FHIR permitido")
+  expect_error(fhir_mapa("Patient", c(id = "id", "generalPractitioner[0].reference" = "profesional"),
+    referencias = c("generalPractitioner[0].reference" = "Observation")), "destino FHIR permitido")
+  m <- fhir_mapa("Condition", c(id = "id", "subject.reference" = "referencia"))
+  for (r in c("Observation/o1", "https://fhir.example.org/Observation/o1", "p1", "#p1")) {
+    expect_error(fhir_desde_tabla(data.frame(id = "c1", referencia = r), m), class = "fhirviews_error_mapeo")
+  }
+  expect_identical(fhir_desde_tabla(data.frame(id = "c1", referencia = "Group/g1"), m)[[1]]$subject$reference, "Group/g1")
+  expect_identical(fhir_desde_tabla(data.frame(id = "c1", referencia = "https://fhir.example.org/Patient/p1/_history/2"), m)[[1]]$subject$reference,
+    "https://fhir.example.org/Patient/p1/_history/2")
+  tipo <- fhir_mapa("Condition", c(id = "id"), constantes = list(
+    "subject.reference" = "Patient/p1", "subject.type" = "Group"))
+  expect_error(fhir_desde_tabla(data.frame(id = "c1"), tipo), "no coincide")
+  # Los destinos pueden ser recursos referenciados que el constructor aun no ofrece.
+  profesional <- fhir_mapa("Patient", c(id = "id", "generalPractitioner[0].reference" = "profesional"),
+    referencias = c("generalPractitioner[0].reference" = "Practitioner"))
+  expect_identical(fhir_desde_tabla(data.frame(id = "p1", profesional = "pr1"), profesional)[[1]]$generalPractitioner[[1]]$reference,
+    "Practitioner/pr1")
+})

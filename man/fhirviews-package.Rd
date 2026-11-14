@@ -21,7 +21,7 @@ las operaciones \verb{$everything}, \verb{$validate} y \verb{$export} (Bulk Data
 lista de recursos, un Bundle o un archivo NDJSON y obtener un
 \code{data.frame}, con fhirpath.js o con DuckDB.
 \item \strong{SQL a FHIR}: \code{fhir_mapa()}, \code{fhir_desde_tabla()} y
-\code{fhir_desde_sql()} construyen Patient y Observation con mapeos
+\code{fhir_desde_sql()} construyen Patient, Observation, Encounter y Condition con mapeos
 explicitos. \code{fhir_escribir()} guarda JSON o NDJSON.
 }
 
@@ -55,7 +55,7 @@ fuente. Los numeros ordinarios de R no conservan escala; modificar las
 listas descarta el JSON original. Los limites decimales SQL admiten
 rutas estaticas con indices explicitos y escalas de -18 a 8, sin
 inferir precision despues de operaciones o iteraciones.
-\item SQL a FHIR admite Patient y Observation, una fila por recurso, sin
+\item SQL a FHIR admite Patient, Observation, Encounter y Condition, una fila por recurso, sin
 agrupacion automatica ni recursos contained. Las comprobaciones locales
 no sustituyen la validacion de perfiles con \code{fhir_validar()}.
 }

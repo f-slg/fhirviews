@@ -38,7 +38,8 @@ Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     second engine translates views to 'DuckDB' SQL to process millions of
     resources from 'NDJSON' or 'Parquet' files. Includes the official 'SQL on
     FHIR' conformance test suite, explicit mappings from database query
-    results to FHIR R4 Patient and Observation resources, export of views to 'DuckDB', and
+    results to FHIR R4 Patient, Observation, Encounter and Condition resources,
+    export of views to 'DuckDB', and
     integration with the 'RStudio' Connections pane and addins.
     Documentation is in Spanish.
 License: MIT + file LICENSE
