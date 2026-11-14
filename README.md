@@ -1077,7 +1077,7 @@ por separado en la integración HAPI descrita arriba.
 
 **Resultado local del 14 de noviembre de 2026:** 72 comprobaciones aprobadas,
 sin fallos, errores, advertencias ni omisiones. Se probaron PostgreSQL
-17.11 con RPostgres 1.4.10 y SQL Server 2022 CU28 (16.0.4325.4) con
+17.12 con RPostgres 1.4.10 y SQL Server 2022 CU27 (16.0.4295.3) con
 `odbc` 1.7.2 y Microsoft ODBC 18.6.1.1. Ambos contenedores se eliminaron.
 La [evidencia DBI](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-dbi/resumen.json)
 incluye las versiones y el resultado de cada grupo; la misma carpeta guarda

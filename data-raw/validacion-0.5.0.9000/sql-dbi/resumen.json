@@ -2,13 +2,13 @@
   "version_fhirviews": "0.5.0.9000",
   "motores": {
     "postgres": {
-      "servidor": "PostgreSQL 17.11 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+      "servidor": "PostgreSQL 17.12 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
       "controlador_R": "RPostgres",
       "version_controlador_R": "1.4.10",
       "version_driver": null
     },
     "sqlserver": {
-      "servidor": "Microsoft SQL Server 2022 (RTM-CU28) (KB5125472) - 16.0.4325.4 (X64) \n\tNov  4 2026 14:09:11 \n\tCopyright (C) 2022 Microsoft Corporation\n\tDeveloper Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) <X64>",
+      "servidor": "Microsoft SQL Server 2022 (RTM-CU27) (KB5104824) - 16.0.4295.3 (X64) \n\tAug 26 2026 11:02:22 \n\tCopyright (C) 2022 Microsoft Corporation\n\tDeveloper Edition (64-bit) on Linux (Ubuntu 22.04.5 LTS) <X64>",
       "controlador_R": "odbc",
       "version_controlador_R": "1.7.2",
       "version_driver": "18.06.0001"
@@ -25,9 +25,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.04,
-      "system": 0,
-      "real": 0.04,
+      "user": 0.036,
+      "system": 0.001,
+      "real": 0.037,
       "passed": 5,
       "detalle": ""
     },
@@ -40,8 +40,8 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.04,
-      "system": 0,
+      "user": 0.038,
+      "system": 0.001,
       "real": 0.04,
       "passed": 10,
       "detalle": ""
@@ -55,9 +55,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.222,
-      "system": 0.001,
-      "real": 0.228,
+      "user": 0.213,
+      "system": 0,
+      "real": 0.216,
       "passed": 7,
       "detalle": ""
     },
@@ -72,7 +72,7 @@
       "warning": 0,
       "user": 0.064,
       "system": 0.001,
-      "real": 0.061,
+      "real": 0.06,
       "passed": 9,
       "detalle": ""
     },
@@ -85,9 +85,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 1.871,
-      "system": 0.101,
-      "real": 2.698,
+      "user": 1.963,
+      "system": 0.093,
+      "real": 3.023,
       "passed": 5,
       "detalle": ""
     },
@@ -100,9 +100,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.022,
-      "system": 0.001,
-      "real": 0.023,
+      "user": 0.023,
+      "system": 0,
+      "real": 0.022,
       "passed": 5,
       "detalle": ""
     },
@@ -115,9 +115,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.033,
+      "user": 0.028,
       "system": 0,
-      "real": 0.032,
+      "real": 0.028,
       "passed": 10,
       "detalle": ""
     },
@@ -130,9 +130,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.074,
-      "system": 0,
-      "real": 0.084,
+      "user": 0.065,
+      "system": 0.001,
+      "real": 0.072,
       "passed": 7,
       "detalle": ""
     },
@@ -145,9 +145,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.042,
+      "user": 0.04,
       "system": 0,
-      "real": 0.043,
+      "real": 0.04,
       "passed": 9,
       "detalle": ""
     },
@@ -160,9 +160,9 @@
       "skipped": false,
       "error": false,
       "warning": 0,
-      "user": 0.683,
-      "system": 0.025,
-      "real": 0.346,
+      "user": 0.669,
+      "system": 0.021,
+      "real": 0.333,
       "passed": 5,
       "detalle": ""
     }

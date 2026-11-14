@@ -1095,8 +1095,8 @@ them through DBI. Base R4 profile validation is covered separately by the
 HAPI integration described above.
 
 **Local result on 14 November 2026:** 72 passing assertions with no failures,
-errors, warnings or skips. Tested PostgreSQL 17.11 with RPostgres 1.4.10 and
-SQL Server 2022 CU28 (16.0.4325.4) with `odbc` 1.7.2 and Microsoft ODBC
+errors, warnings or skips. Tested PostgreSQL 17.12 with RPostgres 1.4.10 and
+SQL Server 2022 CU27 (16.0.4295.3) with `odbc` 1.7.2 and Microsoft ODBC
 18.6.1.1. Both containers were removed. The
 [DBI evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-dbi/resumen.json)
 records versions and each group's results; fictional output resources,
