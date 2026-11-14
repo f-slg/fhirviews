@@ -28,8 +28,10 @@ Update script: data-raw/lossless_json.R
 FHIR R4 4.0.1 mapping metadata
 Source: https://hl7.org/fhir/R4/definitions.json.zip
 File: inst/schema/mapeo-r4.json
-Derived from the base StructureDefinition snapshots; only element names,
-types, cardinalities and content references are retained. No terminologies.
+Derived from base StructureDefinition snapshots and complete CodeSystems in
+the R4 distribution. Retains element names, types, cardinalities, content
+references, reference targets, bindings and finite required code lists.
+External terminologies, filters and imported ValueSets are not expanded.
 Copyright (c) 2011+ Health Level Seven International.
 License: CC0, https://hl7.org/fhir/R4/license.html
 https://creativecommons.org/publicdomain/zero/1.0/

@@ -7,14 +7,15 @@ nombres <- c(
   "terminologia del servidor: $expand y $validate-code en lote",
   "exportacion masiva ($export) de punta a punta",
   "SQL a FHIR, perfiles R4, referencias y retorno a tablas",
+  "Encounter y Condition desde SQL, perfiles R4 y referencias",
   "terminologia con ValueSet en linea"
 )
 bien <- data.frame(test = nombres, failed = 0L, error = FALSE, warning = 0L,
-                   skipped = c(rep(FALSE, 5L), TRUE), passed = 1L,
-                   omision = c(rep("", 5L),
+                   skipped = c(rep(FALSE, 6L), TRUE), passed = 1L,
+                   omision = c(rep("", 6L),
                      "Reason: El servidor no valida con un ValueSet en l\u00ednea"))
 stopifnot(isTRUE(comprobar_integracion(bien)))
-publico <- bien[6L, ]
+publico <- bien[7L, ]
 publico$test <- "lectura y paginacion en el servidor publico"
 publico$passed <- 0L
 publico$omision <- "Reason: Servidor publico excluido de la integracion aislada"
@@ -29,9 +30,11 @@ for (columna in c("failed", "error", "warning", "skipped")) {
   stopifnot(falla(malo))
 }
 stopifnot(falla(bien[-1L, ]), falla(rbind(bien, bien[1L, ])))
-stopifnot(falla(bien[-5L, ])) # SQL -> FHIR debe estar presente y ejecutarse.
-malo <- bien; malo$skipped[5L] <- TRUE; stopifnot(falla(malo))
-malo <- bien; malo$passed[5L] <- 0L; stopifnot(falla(malo))
-malo <- bien; malo$omision[6L] <- "Otra causa"; stopifnot(falla(malo))
+for (i in c(5L, 6L)) { # Ambos recorridos SQL -> FHIR deben ejecutarse.
+  stopifnot(falla(bien[-i, ]))
+  malo <- bien; malo$skipped[i] <- TRUE; stopifnot(falla(malo))
+  malo <- bien; malo$passed[i] <- 0L; stopifnot(falla(malo))
+}
+malo <- bien; malo$omision[7L] <- "Otra causa"; stopifnot(falla(malo))
 malo <- bien; malo$passed[1L] <- 0L; stopifnot(falla(malo))
 cat("Politica verificada: fallos, omisiones, grupos ausentes y duplicados rechazados.\n")

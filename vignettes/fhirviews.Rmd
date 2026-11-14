@@ -18,7 +18,7 @@ fhirviews tiene tres partes que se pueden combinar:
 2. un **motor de vistas** (`vista_*`) que convierte recursos FHIR en tablas
    con el estándar [SQL on FHIR](https://sql-on-fhir.org/) (`ViewDefinition`);
 3. un **constructor de recursos** que convierte tablas de R o consultas SQL
-   en Patient y Observation mediante `fhir_mapa()`, `fhir_desde_tabla()` y
+   en Patient, Observation, Encounter y Condition mediante `fhir_mapa()`, `fhir_desde_tabla()` y
    `fhir_desde_sql()`, con salida JSON o NDJSON por `fhir_escribir()`.
 
 Esta viñeta recorre el cliente y las vistas con el caso clínico ficticio del taller
@@ -31,6 +31,9 @@ El recorrido SQL → FHIR → tabla está en el ejemplo instalado
 `system.file("examples", "sql-a-fhir.R", package = "fhirviews")` y en las
 ayudas de `fhir_mapa()` y `fhir_escribir()`. No es una inversión automática
 de un `ViewDefinition`: requiere declarar los campos que se van a construir.
+El ejemplo `system.file("examples", "encuentros-diagnosticos.R", package =
+"fhirviews")` añade el recorrido paciente → encuentro → diagnóstico con
+códigos, estados y referencias explícitos.
 
 ```{r}
 library(fhirviews)

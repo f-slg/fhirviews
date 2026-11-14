@@ -22,7 +22,7 @@
 as a `ViewDefinition` and reuse it on local files, server responses or
 population-level exports.
 
-It also builds **Patient** and **Observation** resources from a `data.frame`
+It also builds **Patient, Observation, Encounter and Condition** from a `data.frame`
 or a SQL query through DBI, with explicit column, constant and reference
 mappings. JSON and NDJSON output preserve decimal scale.
 
@@ -104,7 +104,7 @@ files. Compatibility of the SQL engine is tested separately.
 | Read NDJSON and gzip without holding the whole output in memory | `vista_ejecutar_lotes()` |
 | Run a SQL-translatable view on NDJSON or Parquet | `vista_ejecutar_duckdb()` — experimental |
 | Query several tables with SQL | `vista_duckdb()` — views evaluated with V8 and stored in one transaction |
-| Build Patient and Observation from SQL queries or tables | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
+| Build Patient, Observation, Encounter and Condition from SQL queries or tables | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
 | Save resources preserving original JSON decimals | `fhir_escribir()` — JSON or NDJSON |
 | Start from public health views | `vista_catalogo()`, `vista_plantilla()` |
 | Define cohorts with the codes of a ValueSet | `tx_expandir()`, `vista_con_valueset()` |
@@ -647,13 +647,13 @@ create when you are done; lazy results depend on their connection staying open.
 
 `fhir_desde_sql()` runs a query through an open **DBI** connection and builds
 resources according to a `fhir_mapa()`. `fhir_desde_tabla()` applies the same
-mapping to a `data.frame`. This first version supports **Patient and
-Observation from FHIR R4 4.0.1**.
+mapping to a `data.frame`. Supports **Patient, Observation, Encounter and
+Condition from FHIR R4 4.0.1**.
 
 ```mermaid
 flowchart LR
     DB["SQL query / data.frame"] --> M["Explicit fields and R4 types"]
-    M --> R["Patient / Observation"]
+    M --> R["Patient / Observation / Encounter / Condition"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → table"]
     R --> C["Profile validation with fhir_validar"]
@@ -790,8 +790,24 @@ an ordinary list for compatibility. `72.00` cannot be recovered from a list
 that has already converted it to `72`.
 
 Local checks cover paths, types, cardinalities, required base elements,
-incompatible choice fields, `Patient.gender` and `Observation.status` codes.
-**They are not full FHIR validation**: use `fhir_validar(con, recurso,
+incompatible choice fields, reference targets and **required** bindings that
+can be fully enumerated from the R4 package. These include `Patient.gender`,
+`Observation.status`, `Encounter.status`, Condition clinical and verification
+statuses, and nested fields such as `HumanName.use`. `Coding` and
+`CodeableConcept` need a `system`/`code` pair from the ValueSet. Additional
+translations are allowed when at least one pair matches. Required
+CodeableConcepts need coding; `text` does not replace it. Extensible,
+preferred and example bindings retain their flexibility; `Encounter.class`
+is extensible.
+
+The generator records the source version and SHA256 and retains bindings
+and `Reference` targets. Sets containing filters, imports or external sources
+are left to the terminology server; a partial list is never treated as
+complete. References check declared targets, identifiable types in `Type/id`
+or absolute URLs, and consistency with `Reference.type`. External identifiers
+and URN references need server-side existence and resolution checks.
+
+**These are not full FHIR validation**: use `fhir_validar(con, recurso,
 perfil = "canonical-URL")` to check profiles, invariants and terminologies
 with your selected server.
 
@@ -801,53 +817,69 @@ and `StructureMap` translation are outside this first version. An executable
 example is installed at `system.file("examples", "sql-a-fhir.R", package =
 "fhirviews")`.
 
-### Planned support for other resources
+### Encounters and diagnoses from SQL
+
+`Encounter` requires `status` and `class`. The base `Condition` snapshot
+requires `subject`; its invariants and profiles may require additional
+elements. Clinical and verification statuses are CodeableConcepts and need
+their system and code. Status values come from the source or from explicit
+mapping constants. The `estado` source column represents different vocabularies
+in the two resources: for example, `finished` for Encounter and `active` for
+Condition.
+
+The complete executable example creates fictional SQLite tables, runs bound
+queries, declares clinical and verification codes and Reference.type, writes
+NDJSON and reconstructs a linked diagnosis table:
+
+```r
+source(system.file("examples", "encuentros-diagnosticos.R", package = "fhirviews"))
+#   id paciente encuentro estado
+# 1 c1       p1        e1 active
+```
+
+Use one query row per encounter and one per diagnosis. Patients can be
+referenced by several resources; rows of the same resource still require
+unique IDs. Persist referenced resources first or use an appropriate
+transaction. Check base or project profiles with `fhir_validar()` before
+using the output with your server.
+
+### Supported resources and next groups
 
 The reader and view engine already work with other FHIR resource types.
-The **Patient and Observation** restriction currently applies to construction
-from SQL or tables. The following resources are planned and **are not yet
-enabled** in `fhir_mapa()`.
+Construction from SQL or tables supports **Patient, Observation, Encounter
+and Condition**. Further resources are added in verified groups.
 
-| Proposed order | Resources | Intended workflow |
+| Status | Resources | Workflow |
 |---|---|---|
-| 1. Encounters and diagnoses | `Encounter`, `Condition` | Patient → encounter → diagnosis, with references between them. |
-| 2. Vaccination | `Immunization` | Patient → vaccination event, with an explicit vaccine, status and date. |
-| 3. Laboratory | `Specimen`, `DiagnosticReport` | Specimen → observations → report, with several result references. |
-| 4. Medications | `MedicationRequest`, `MedicationDispense` | Prescribing and dispensing, with explicit medication and dosage data. |
-| As needed by the source | `Organization`, `Practitioner` | Institutions and professionals referenced by these resources. |
+| Supported | `Patient`, `Observation` | Patients and results with preserved decimal scale. |
+| Supported | `Encounter`, `Condition` | Patient → encounter → diagnosis, with references between them. |
+| Proposed next group | `Immunization` | Patient → vaccination event, with an explicit vaccine, status and date. |
+| Pending | `Specimen`, `DiagnosticReport` | Specimen → observations → report, with several result references. |
+| Pending | `MedicationRequest`, `MedicationDispense` | Prescribing and dispensing, with explicit medication and dosage data. |
+| Pending, as needed | `Organization`, `Practitioner` | Institutions and professionals referenced by these resources. |
 
 This order prioritizes surveillance and can be adapted to the data source.
 The path, type, cardinality and choice-field engine already uses canonical
-**FHIR R4 4.0.1** snapshot metadata, so each resource does not need a separate
-converter. Expanding the supported list requires:
+**FHIR R4 4.0.1** snapshots. Adding a resource requires:
 
-1. Extending `data-raw/mapeo_r4.py` with an explicit resource list and its
-   dependent types, preserving the schema version and provenance. Include
-   ValueSet bindings and allowed `Reference` target types.
-2. Generalizing code validation beyond `Patient.gender` and
-   `Observation.status`. Adding a schema alone does not validate its statuses,
-   terminology or invariants. Bindings requiring external terminology and
-   project profiles need validation against the selected server.
-3. Testing each resource's required fields and choices. For example,
-   `Encounter` requires `status` and `class`; `Condition` requires `subject`;
-   `Immunization` requires `status`, `vaccineCode`, `patient` and one
-   `occurrence[x]` variant. Project profiles may impose additional requirements.
-4. Designing collections of objects before offering variable-length groups
-   or references. Fixed paths such as `result[0].reference` can be built;
-   terminal `[]` currently constructs primitive collections, rather than
-   variable-length lists of `Reference` or `dosageInstruction` objects.
-5. Requiring valid and invalid cases per resource and a reproducible
-   SQL → FHIR → base-profile `$validate` → persist and read → V8/DuckDB table
-   round trip. Check references, missing values, invalid codes and conflicting
-   choice fields. Add project profiles by canonical URL when available, and
-   update documentation and examples for each group.
+1. Extending the explicit list in `data-raw/mapeo_r4.py`, retaining dependent
+   types, schema provenance, bindings and Reference targets.
+2. Reviewing which required bindings can be fully enumerated; external
+   terminology and project profiles need server validation.
+3. Testing required fields and choices. Immunization, for example, requires
+   status, vaccineCode, patient and one occurrence[x] variant.
+4. Designing collections of objects before offering variable-length groups.
+   Fixed paths such as `result[0].reference` can be built; terminal `[]`
+   currently constructs primitive collections, rather than variable-length
+   lists of Reference or dosageInstruction objects.
+5. Requiring valid and invalid cases and a reproducible SQL → FHIR →
+   base-profile $validate → persist and read → V8/DuckDB table round trip.
+   Add project profiles by canonical URL when available, and update examples
+   and documentation for each group.
 
-A local schema exploration constructed `Condition`, `Encounter`,
-`Immunization`, `DiagnosticReport` and `MedicationRequest` with the current
-engine. It also accepted an invalid `Encounter` status: this identifies a
-missing check and **does not establish support** for those resources.
-The proposed first increment completes these validations and tests
-`Encounter` and `Condition` together.
+Pending resources remain unavailable to `fhir_mapa()`. References can point
+to valid R4 types already present on the server, such as Practitioner, even
+when this module does not yet construct them.
 
 ## Public health views and terminologies
 
@@ -1036,12 +1068,23 @@ profiles**; clinical or national profiles need explicit checks against their
 canonical URLs.
 
 **Local result on 14 November 2026:** integration passed with digest-pinned
-HAPI 8.12.0-2, 62 passing assertions and no failures, errors or warnings.
-All 16 SQL → FHIR assertions ran. The two expected skips (public-server
+HAPI 8.12.0-2, 82 passing assertions and no failures, errors or warnings.
+All 16 original SQL → FHIR assertions and the 20 Encounter/Condition checks
+ran. The two expected skips (public-server
 reads and inline ValueSet validation) were recorded, and the container was
-removed. The [integration evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json)
+removed. The [integration evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/encounter-condition-hapi/resumen.json)
 records each group; logs and the R environment are kept alongside it.
 This is a technical check with fictional data.
+
+The required `Encounter y Condition desde SQL, perfiles R4 y referencias`
+group builds Patient → Encounter → Condition from bound DuckDB queries.
+It validates explicit base profiles, persists and reads the three resources,
+and checks references and V8/DuckDB tables. Negative controls require HAPI
+to reject invalid Encounter status and Condition clinical codes, and an
+incorrect reference target with explicit `Reference.type`. This server did
+not reject the wrong literal reference when `Reference.type` was absent:
+examples therefore declare it, and the mapper also checks identifiable
+types in literal references.
 
 ### SQL → FHIR with PostgreSQL and SQL Server
 
@@ -1339,10 +1382,12 @@ on the website being available. All guides are in Spanish.
 | [Function reference](https://f-slg.github.io/fhirviews/reference/) | Signatures, arguments and API examples |
 
 Related projects:
-[pobecu](https://f-slg.github.io/pobecu/) for Ecuador's population,
-[geoecu](https://f-slg.github.io/geoecu/) for territorial boundaries and
-[aprende-fhir](https://github.com/f-slg/aprende-fhir) for teaching with a
-fictitious clinical case.
+[pobecu](https://f-slg.github.io/pobecu/) provides INEC population projections
+and rate calculations; [geoecu](https://f-slg.github.io/geoecu/) provides
+CONALI territorial boundaries for mapping them. The [rates by canton
+article](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html) shows
+the full path from FHIR data to rates and a map. [aprende-fhir](https://github.com/f-slg/aprende-fhir)
+provides teaching material with a fictitious clinical case.
 
 ## Contributing, citation and license
 
