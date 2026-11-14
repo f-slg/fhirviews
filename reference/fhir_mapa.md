@@ -1,8 +1,9 @@
 # Construir recursos FHIR R4 desde tablas o consultas SQL
 
 Define un mapeo explicito de columnas a destinos FHIR y construye un
-recurso por fila. La primera version admite `Patient` y `Observation`.
-No intenta invertir un `ViewDefinition`, que puede haber perdido datos.
+recurso por fila. Admite `Patient`, `Observation`, `Encounter` y
+`Condition`. No intenta invertir un `ViewDefinition`, que puede haber
+perdido datos.
 
 ## Usage
 
@@ -23,7 +24,8 @@ fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
 
 - recurso:
 
-  Tipo FHIR: `"Patient"` u `"Observation"`.
+  Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"` o
+  `"Condition"`.
 
 - campos:
 
@@ -90,9 +92,10 @@ usando columnas de listas para las colecciones.
 
 Los tipos y cardinalidades se comprueban con metadatos base de FHIR R4
 4.0.1. Se revisan campos obligatorios, elementos de eleccion, fechas,
-identificadores, tipos primitivos y los codigos de `gender` y `status`.
-Esto no sustituye la validacion de invariantes, terminologias y perfiles
-con
+identificadores, tipos primitivos, destinos de referencias y bindings
+requeridos que pueden enumerarse con la terminologia R4 incluida. Para
+`Coding` y `CodeableConcept` se comprueba el par `system`/`code`. Esto
+no sustituye la validacion de invariantes, terminologias y perfiles con
 [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
 No se inventan codigos, unidades o estados.
 

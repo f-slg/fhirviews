@@ -86,8 +86,8 @@ con un servidor HL7 FHIR R4 desde R, como harías con Postman;</li>
 convierte recursos FHIR en tablas con el estándar <a href="https://sql-on-fhir.org/" class="external-link">SQL on FHIR</a>
 (<code>ViewDefinition</code>);</li>
 <li>un <strong>constructor de recursos</strong> que convierte tablas de
-R o consultas SQL en Patient y Observation mediante
-<code><a href="../reference/fhir_mapa.html">fhir_mapa()</a></code>, <code><a href="../reference/fhir_mapa.html">fhir_desde_tabla()</a></code> y
+R o consultas SQL en Patient, Observation, Encounter y Condition
+mediante <code><a href="../reference/fhir_mapa.html">fhir_mapa()</a></code>, <code><a href="../reference/fhir_mapa.html">fhir_desde_tabla()</a></code> y
 <code><a href="../reference/fhir_mapa.html">fhir_desde_sql()</a></code>, con salida JSON o NDJSON por
 <code><a href="../reference/fhir_escribir.html">fhir_escribir()</a></code>.</li>
 </ol>
@@ -101,7 +101,10 @@ tratado por un cáncer de mama.</p>
 y en las ayudas de <code><a href="../reference/fhir_mapa.html">fhir_mapa()</a></code> y
 <code><a href="../reference/fhir_escribir.html">fhir_escribir()</a></code>. No es una inversión automática de un
 <code>ViewDefinition</code>: requiere declarar los campos que se van a
-construir.</p>
+construir. El ejemplo
+<code>system.file("examples", "encuentros-diagnosticos.R", package = "fhirviews")</code>
+añade el recorrido paciente → encuentro → diagnóstico con códigos,
+estados y referencias explícitos.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://f-slg.github.io/fhirviews/">fhirviews</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
