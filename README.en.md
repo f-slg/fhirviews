@@ -801,6 +801,53 @@ and `StructureMap` translation are outside this first version. An executable
 example is installed at `system.file("examples", "sql-a-fhir.R", package =
 "fhirviews")`.
 
+### Planned support for other resources
+
+The reader and view engine already work with other FHIR resource types.
+The **Patient and Observation** restriction currently applies to construction
+from SQL or tables. The following resources are planned and **are not yet
+enabled** in `fhir_mapa()`.
+
+| Proposed order | Resources | Intended workflow |
+|---|---|---|
+| 1. Encounters and diagnoses | `Encounter`, `Condition` | Patient → encounter → diagnosis, with references between them. |
+| 2. Vaccination | `Immunization` | Patient → vaccination event, with an explicit vaccine, status and date. |
+| 3. Laboratory | `Specimen`, `DiagnosticReport` | Specimen → observations → report, with several result references. |
+| 4. Medications | `MedicationRequest`, `MedicationDispense` | Prescribing and dispensing, with explicit medication and dosage data. |
+| As needed by the source | `Organization`, `Practitioner` | Institutions and professionals referenced by these resources. |
+
+This order prioritizes surveillance and can be adapted to the data source.
+The path, type, cardinality and choice-field engine already uses canonical
+**FHIR R4 4.0.1** snapshot metadata, so each resource does not need a separate
+converter. Expanding the supported list requires:
+
+1. Extending `data-raw/mapeo_r4.py` with an explicit resource list and its
+   dependent types, preserving the schema version and provenance. Include
+   ValueSet bindings and allowed `Reference` target types.
+2. Generalizing code validation beyond `Patient.gender` and
+   `Observation.status`. Adding a schema alone does not validate its statuses,
+   terminology or invariants. Bindings requiring external terminology and
+   project profiles need validation against the selected server.
+3. Testing each resource's required fields and choices. For example,
+   `Encounter` requires `status` and `class`; `Condition` requires `subject`;
+   `Immunization` requires `status`, `vaccineCode`, `patient` and one
+   `occurrence[x]` variant. Project profiles may impose additional requirements.
+4. Designing collections of objects before offering variable-length groups
+   or references. Fixed paths such as `result[0].reference` can be built;
+   terminal `[]` currently constructs primitive collections, rather than
+   variable-length lists of `Reference` or `dosageInstruction` objects.
+5. Requiring valid and invalid cases per resource and a reproducible
+   SQL → FHIR → base-profile `$validate` → persist and read → V8/DuckDB table
+   round trip. Check references, missing values, invalid codes and conflicting
+   choice fields. Add project profiles by canonical URL when available, and
+   update documentation and examples for each group.
+
+A local schema exploration constructed `Condition`, `Encounter`,
+`Immunization`, `DiagnosticReport` and `MedicationRequest` with the current
+engine. It also accepted an invalid `Encounter` status: this identifies a
+missing check and **does not establish support** for those resources.
+The proposed first increment completes these validations and tests
+`Encounter` and `Condition` together.
 
 ## Public health views and terminologies
 
@@ -992,14 +1039,74 @@ canonical URLs.
 HAPI 8.12.0-2, 62 passing assertions and no failures, errors or warnings.
 All 16 SQL → FHIR assertions ran. The two expected skips (public-server
 reads and inline ValueSet validation) were recorded, and the container was
-removed. The [integration evidence](data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json)
+removed. The [integration evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json)
 records each group; logs and the R environment are kept alongside it.
 This is a technical check with fictional data.
 
-Local database query tests cover DuckDB and SQLite. PostgreSQL and SQL Server
-still need checks with their actual drivers and databases. The Windows/macOS/
-Linux matrix is configured, but an earlier CI run does not validate these
-local changes: check the CI results for the commit being published.
+### SQL → FHIR with PostgreSQL and SQL Server
+
+In addition to local DuckDB and SQLite tests,
+`data-raw/probar-sql-dbi.sh` runs queries against **two real, isolated
+databases**. It creates its own PostgreSQL and SQL Server Developer containers,
+pinned by digest in `data-raw/postgres-image.txt` and
+`data-raw/sqlserver-image.txt`, and removes them on exit. Random ports are
+bound to localhost and random, single-use credentials are excluded from
+reports. All data is fictional.
+
+Requirements: Docker or Podman, `openssl`, the R packages below and a
+**Microsoft ODBC Driver 18 for SQL Server** available to `odbc`.
+`RPostgres` needs PostgreSQL libraries; `odbc` needs unixODBC. Running the
+script starts SQL Server with `ACCEPT_EULA=Y` and the Developer edition for
+development and testing under Microsoft's image terms.
+
+```r
+install.packages(c("DBI", "RPostgres", "odbc", "duckdb", "pkgload", "testthat"))
+```
+
+```sh
+# Run from the repository root; the output directory must be new.
+FHIRVIEWS_CONTENEDOR=podman bash data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi
+# FHIRVIEWS_CONTENEDOR=docker is also supported.
+```
+
+`FHIRVIEWS_ODBC_DRIVER` can specify another registered driver name or an
+absolute library path; the default is `ODBC Driver 18 for SQL Server`.
+`FHIRVIEWS_SQL_ESPERA` sets the connection wait in seconds, defaulting to 120.
+The test ODBC connection uses encryption and trusts the local container's
+certificate; this setting belongs to the isolated test environment.
+
+Each database must pass five required groups:
+
+1. Native `Date` values, booleans, accented text and BIGINT keys above `2^53`,
+   read as text without rounding.
+2. Patient construction with names, birth date, active status and omitted
+   SQL `NULL` values.
+3. Bound parameters (`$1` for RPostgres; `?` for ODBC), zero rows, text
+   containing SQL characters, and rejected duplicate IDs or invalid codes.
+4. Observation construction with patient references, UTC timestamps and a
+   `DECIMAL(12,2)` read as text to preserve `72.00`. SQL Server explicitly
+   converts `DATETIMEOFFSET` to UTC and `DATETIME2` before reading it as
+   `POSIXct`.
+5. NDJSON writing and reading and comparison of values and decimal boundaries
+   when projecting the resources to tables with V8 and DuckDB.
+
+Queries and casts are specific to each database; `fhir_desde_sql()` runs
+them through DBI. Base R4 profile validation is covered separately by the
+HAPI integration described above.
+
+**Local result on 14 November 2026:** 72 passing assertions with no failures,
+errors, warnings or skips. Tested PostgreSQL 17.12 with RPostgres 1.4.10 and
+SQL Server 2022 CU27 (16.0.4295.3) with `odbc` 1.7.2 and Microsoft ODBC
+18.6.1.1. Both containers were removed. The
+[DBI evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-dbi/resumen.json)
+records versions and each group's results; fictional output resources,
+logs and the R environment are kept alongside it. Executable queries are
+in the repository script.
+
+The **Integracion SQL DBI** workflow runs the same procedure and retains its
+results for 14 days. All ten groups are required; any failure, warning or
+skip fails acceptance. Check the CI results for the commit being published
+to confirm its R coverage on Windows, macOS and Linux as well.
 
 ### Candidate check sequence
 

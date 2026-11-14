@@ -1,0 +1,71 @@
+name: Integracion SQL DBI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'R/**'
+      - 'inst/**'
+      - 'DESCRIPTION'
+      - 'data-raw/probar-sql-dbi.*'
+      - 'data-raw/postgres-image.txt'
+      - 'data-raw/sqlserver-image.txt'
+      - '.github/workflows/integracion-sql-dbi.yaml'
+  pull_request:
+    paths:
+      - 'R/**'
+      - 'inst/**'
+      - 'DESCRIPTION'
+      - 'data-raw/probar-sql-dbi.*'
+      - 'data-raw/postgres-image.txt'
+      - 'data-raw/sqlserver-image.txt'
+      - '.github/workflows/integracion-sql-dbi.yaml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integracion-sql-dbi-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sql-dbi:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      FHIRVIEWS_CONTENEDOR: docker
+    steps:
+      - uses: actions/checkout@v6
+      - name: Instalar el controlador ODBC de Microsoft
+        shell: bash
+        run: |
+          curl -fsSL https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -o "$RUNNER_TEMP/packages-microsoft-prod.deb"
+          sudo dpkg -i "$RUNNER_TEMP/packages-microsoft-prod.deb"
+          sudo apt-get update
+          sudo env ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev libpq-dev
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::testthat
+            any::pkgload
+            any::DBI
+            any::duckdb
+            any::RPostgres
+            any::odbc
+      - name: Probar consultas y retorno a tablas en ambas bases
+        run: bash data-raw/probar-sql-dbi.sh "$RUNNER_TEMP/integracion-sql-dbi"
+      - name: Conservar resultados y diagnosticos
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: integracion-sql-dbi-${{ github.run_id }}
+          path: ${{ runner.temp }}/integracion-sql-dbi/
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,23 @@
+                                                test passed failed error
+                     postgres tipos nativos y BIGINT      5      0 FALSE
+                          postgres Patient desde SQL     10      0 FALSE
+  postgres parametros, cero filas y errores de mapeo      7      0 FALSE
+   postgres Observation, decimales y fechas con hora      9      0 FALSE
+           postgres retorno a tablas con V8 y DuckDB      5      0 FALSE
+                    sqlserver tipos nativos y BIGINT      5      0 FALSE
+                         sqlserver Patient desde SQL     10      0 FALSE
+ sqlserver parametros, cero filas y errores de mapeo      7      0 FALSE
+  sqlserver Observation, decimales y fechas con hora      9      0 FALSE
+          sqlserver retorno a tablas con V8 y DuckDB      5      0 FALSE
+ warning skipped
+       0   FALSE
+       0   FALSE
+       0   FALSE
+       0   FALSE
+       0   FALSE
+       0   FALSE
+       0   FALSE
+       0   FALSE
+       0   FALSE
+       0   FALSE
+Integracion DBI aprobada: PostgreSQL y SQL Server, sin omisiones.
