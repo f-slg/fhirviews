@@ -44,7 +44,16 @@ navegación por campos (los elementos de elección como \code{value} o
 \code{toInteger()}, \code{toDecimal()}, \code{toBoolean()} y sus \code{convertsTo...()}),
 aritmética, \code{abs()}, \code{ceiling()}, \code{floor()}, \code{round()}, \code{truncate()},
 \code{sqrt()}, \code{power()} exacta, comparaciones de fechas y horas con su
-precisión y \code{lowBoundary()}/\code{highBoundary()} de fechas y horas.
+precisión y \code{lowBoundary()}/\code{highBoundary()} de fechas, horas y decimales.
+Los limites decimales conservan el literal JSON mediante sus tokens y
+las rutas de \code{json_tree()}. Admiten literales numericos sin signo o rutas desde el
+recurso con indices explicitos (por ejemplo
+\verb{component[0].value.ofType(Quantity).value.lowBoundary()}), escalas de
+-18 a 8 y valores representables en \code{DECIMAL(38,18)}. No se infiere la
+escala despues de operaciones, filtros o iteraciones; esas expresiones
+se rechazan. No se admite el argumento opcional de precision en SQL.
+Con Parquet o tablas previamente normalizadas, la precision disponible
+es la de su JSON actual; no se recupera la representacion FHIR original.
 
 La traducción reproduce el resultado de \code{fhirpath.js}
 (\code{\link[=vista_ejecutar]{vista_ejecutar()}}). Si una expresión usa algo que no se puede traducir

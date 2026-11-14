@@ -13,6 +13,9 @@
 #' * **Vistas** (funciones `vista_*`): ejecutar un `ViewDefinition` sobre una
 #'   lista de recursos, un Bundle o un archivo NDJSON y obtener un
 #'   `data.frame`, con fhirpath.js o con DuckDB.
+#' * **SQL a FHIR**: `fhir_mapa()`, `fhir_desde_tabla()` y
+#'   `fhir_desde_sql()` construyen Patient y Observation con mapeos
+#'   explicitos. `fhir_escribir()` guarda JSON o NDJSON.
 #'
 #' Las expresiones FHIRPath se evalúan con la biblioteca `fhirpath.js` a
 #' través del paquete V8.
@@ -36,10 +39,14 @@
 #'
 #' ## Limitaciones conocidas
 #'
-#' * Los decimales de FHIR se leen como números de JavaScript (y de R), así
-#'   que pierden los ceros finales que indican la precisión: `1.10` se lee
-#'   como `1.1`. Esto afecta a `toString()` y a las comparaciones de
-#'   precisión de FHIRPath, no al valor numérico.
+#' * La evaluacion y escritura JSON conservan los literales decimales de la
+#'   fuente. Los numeros ordinarios de R no conservan escala; modificar las
+#'   listas descarta el JSON original. Los limites decimales SQL admiten
+#'   rutas estaticas con indices explicitos y escalas de -18 a 8, sin
+#'   inferir precision despues de operaciones o iteraciones.
+#' * SQL a FHIR admite Patient y Observation, una fila por recurso, sin
+#'   agrupacion automatica ni recursos contained. Las comprobaciones locales
+#'   no sustituyen la validacion de perfiles con `fhir_validar()`.
 #'
 #' @keywords internal
 "_PACKAGE"

@@ -99,6 +99,11 @@ reference:
   - vista_validar
   - vista_json
   - vista_duckdb
+- title: De SQL a FHIR
+  desc: Construir Patient y Observation con mapeos explicitos desde R o DBI.
+  contents:
+  - fhir_mapa
+  - fhir_escribir
 - title: Catálogo de vistas
   desc: ViewDefinition listos para vigilancia y salud pública.
   contents:

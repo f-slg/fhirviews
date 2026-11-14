@@ -1,13 +1,13 @@
 # fhirviews <img src="man/figures/logo.png" align="right" height="120" alt="fhirviews logo" />
 
-**From FHIR resources to reproducible tables in R.**
+**From FHIR resources to reproducible tables in R, and from SQL to FHIR through explicit mappings.**
 
 [Español](README.md) · **English**
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml)
 [![Documentation](https://github.com/f-slg/fhirviews/actions/workflows/pkgdown.yaml/badge.svg)](https://f-slg.github.io/fhirviews/)
-[![SQL on FHIR: 133/133 shareable](https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-2a78d6.svg)](#conformance-and-tests)
+[![SQL on FHIR: 144/144](https://img.shields.io/badge/SQL%20on%20FHIR-144%2F144-2a78d6.svg)](#conformance-and-tests)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-0F2233.svg)](https://hl7.org/fhir/R4/)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 <!-- badges: end -->
@@ -21,6 +21,10 @@
 `data.frame`s using **SQL on FHIR** and **FHIRPath**. Define a view once, save it
 as a `ViewDefinition` and reuse it on local files, server responses or
 population-level exports.
+
+It also builds **Patient** and **Observation** resources from a `data.frame`
+or a SQL query through DBI, with explicit column, constant and reference
+mappings. JSON and NDJSON output preserve decimal scale.
 
 It is designed for clinical analysis, research, epidemiological surveillance and
 teaching in R. It includes SMART on FHIR authentication, views for public health
@@ -44,6 +48,10 @@ files. Compatibility of the SQL engine is tested separately.
 > improvements. The DuckDB SQL engine is still **experimental**. Until CRAN
 > publishes it, install it from GitHub.
 
+> **Development version 0.5.0.9000:** adds SQL → FHIR and 144/144 conformance
+> tests in both engines. These changes belong to the development code, not
+> the 0.5.0 candidate previously submitted to CRAN.
+
 ## Contents
 
 - [Glossary of function names](#glossary-of-function-names)
@@ -57,6 +65,7 @@ files. Compatibility of the SQL engine is tested separately.
 - [Authentication and bulk export](#authentication-and-bulk-export)
 - [Processing files in blocks](#processing-files-in-blocks)
 - [Working with DuckDB](#working-with-duckdb)
+- [From SQL to FHIR](#from-sql-to-fhir)
 - [Public health views and terminologies](#public-health-views-and-terminologies)
 - [Validation and privacy](#validation-and-privacy)
 - [Conformance and tests](#conformance-and-tests)
@@ -80,6 +89,7 @@ files. Compatibility of the SQL engine is tested separately.
 | `autenticacion` | authentication | `fhir_auth_backend()`, `fhir_auth_cliente()`, `fhir_auth_interactiva()` |
 | `expandir`, `validar_codigo` | expand, validate code | `tx_expandir()`, `tx_validar_codigo()` |
 | `recursos`, `tabla` | resources, table | `fhir_recursos()`, `fhir_tabla()` |
+| `mapa`, `desde_sql`, `desde_tabla`, `escribir` | mapping, from SQL, from table, write | `fhir_mapa()`, `fhir_desde_sql()`, `fhir_desde_tabla()`, `fhir_escribir()` |
 | `procesar`, `bloque`, `tamano_lote` | process, block, block size | arguments of `vista_ejecutar_lotes()` |
 | `diferido`, `estricto` | lazy, strict | arguments of `vista_ejecutar_duckdb()` and `vista_ejecutar_lotes()` |
 
@@ -94,6 +104,8 @@ files. Compatibility of the SQL engine is tested separately.
 | Read NDJSON and gzip without holding the whole output in memory | `vista_ejecutar_lotes()` |
 | Run a SQL-translatable view on NDJSON or Parquet | `vista_ejecutar_duckdb()` — experimental |
 | Query several tables with SQL | `vista_duckdb()` — views evaluated with V8 and stored in one transaction |
+| Build Patient and Observation from SQL queries or tables | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
+| Save resources preserving original JSON decimals | `fhir_escribir()` — JSON or NDJSON |
 | Start from public health views | `vista_catalogo()`, `vista_plantilla()` |
 | Define cohorts with the codes of a ValueSet | `tx_expandir()`, `vista_con_valueset()` |
 | Write and validate resources on the server | `fhir_crear()`, `fhir_actualizar()`, `fhir_borrar()`, `fhir_validar()` |
@@ -631,6 +643,165 @@ fallback to V8 when translation fails. A lazy query may read the files again
 when it runs, so its inputs must remain available. Close the connections you
 create when you are done; lazy results depend on their connection staying open.
 
+## From SQL to FHIR
+
+`fhir_desde_sql()` runs a query through an open **DBI** connection and builds
+resources according to a `fhir_mapa()`. `fhir_desde_tabla()` applies the same
+mapping to a `data.frame`. This first version supports **Patient and
+Observation from FHIR R4 4.0.1**.
+
+```mermaid
+flowchart LR
+    DB["SQL query / data.frame"] --> M["Explicit fields and R4 types"]
+    M --> R["Patient / Observation"]
+    R --> J["JSON / NDJSON"]
+    R --> V["ViewDefinition → table"]
+    R --> C["Profile validation with fhir_validar"]
+```
+
+SQL on FHIR defines a tabular **projection**. Rebuilding resources needs a
+separate mapping: filters, `first()`, `join()`, aggregation or omitted columns
+may discard information. An arbitrary `ViewDefinition` cannot be automatically
+reversed, and reconstruction of the original resource is not guaranteed.
+
+### Complete SQL example
+
+This uses an in-memory SQLite database and fictional data. Install `DBI` and
+`RSQLite` if needed. For DuckDB, PostgreSQL or SQL Server, use the corresponding
+DBI connection and adapt the query syntax. Function and argument names remain
+in Spanish.
+
+```r
+library(fhirviews)
+con_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+
+DBI::dbWriteTable(con_db, "pacientes", data.frame(
+  paciente_id = c("p1", "p2"), sexo = c("female", "male"),
+  nacimiento = c("1985-03-12", "2001-11-30"),
+  apellido = c("Paredes", "Salazar"), nombre = c("Ana", "Jorge")
+))
+DBI::dbWriteTable(con_db, "resultados", data.frame(
+  resultado_id = c("o1", "o2"), paciente_id = c("p1", "p2"),
+  valor = c("98.00", "131.0"), unidad = c("mg/dL", "mg/dL")
+))
+
+mapa_pacientes <- fhir_mapa("Patient", c(
+  id = "paciente_id", gender = "sexo", birthDate = "nacimiento",
+  "name[0].family" = "apellido", "name[0].given[0]" = "nombre"
+))
+pacientes <- fhir_desde_sql(con_db,
+  "SELECT * FROM pacientes ORDER BY paciente_id", mapa_pacientes)
+
+mapa_resultados <- fhir_mapa("Observation", c(
+  id = "resultado_id", "subject.reference" = "paciente_id",
+  "valueQuantity.value" = "valor", "valueQuantity.unit" = "unidad"
+), constantes = list(
+  status = "final", "code.text" = "Glucosa"
+), referencias = c("subject.reference" = "Patient"))
+observaciones <- fhir_desde_sql(con_db,
+  "SELECT * FROM resultados ORDER BY resultado_id", mapa_resultados)
+
+observaciones[[1]]$subject$reference  # "Patient/p1"
+vista_fhirpath(observaciones, "value.ofType(Quantity).value")  # 98, 131
+
+salida <- tempfile(fileext = ".ndjson")
+fhir_escribir(c(pacientes, observaciones), salida)
+fhir_escribir(observaciones, tempfile(fileext = ".json"), formato = "json")
+
+# Extract fields from the generated resources again
+vista <- vista_crear("Observation", c(
+  paciente = "subject.getReferenceKey(Patient)",
+  valor = "value.ofType(Quantity).value"
+))
+vista_ejecutar(salida, vista)
+#   id paciente valor
+# 1 o1       p1    98
+# 2 o2       p2   131
+
+# Bind values through the driver instead of interpolating SQL strings
+uno <- fhir_desde_sql(con_db,
+  "SELECT * FROM pacientes WHERE paciente_id = ?", mapa_pacientes,
+  parametros = list("p1"))
+DBI::dbDisconnect(con_db)
+```
+
+Parameter placeholders depend on the driver: SQLite/DuckDB use `?`, whereas
+RPostgres uses `$1`. Joins, filters and code translations belong in the query
+or preprocessing. `status = "final"` and the measurement name are explicit
+choices for this example, not defaults. Supply the appropriate code systems,
+codes and units for your actual data and profiles.
+
+### Mapping rules
+
+| Element | Behaviour |
+|---|---|
+| `campos` | Named character vector: names are FHIR JSON destinations, values are source column names. |
+| `constantes` | Named list of fixed values. Destinations cannot overlap with `campos`. |
+| `referencias` | `.reference` destination → target resource type; the key `p1` becomes `Patient/p1`. Supply keys, not URLs or prefixed references. |
+| `name[0].family` | Zero-based indices. Repeating elements require an index. |
+| `name[0].given[]` | Primitive collection from a list-column. `[]` is allowed only at the end. |
+| Choice elements | Use concrete JSON names such as `valueQuantity.value` and `deceasedBoolean`; mappings do not evaluate FHIRPath. |
+| `NA`, `NULL`, `""`, empty collections | Omitted. Empty objects and positions are compacted; indices identify construction positions, not persistent `null` gaps. |
+| `id` | Must be mapped, valid and unique in the result. Safe integers are converted to text. |
+| Booleans and integers | Require logical or in-range integral values. Strings such as `"false"` are not coerced and `1.7` is not truncated. |
+| Dates | Accept valid partial FHIR dates and `Date`. Date-times require a timezone; `POSIXct`/`POSIXlt` become UTC. |
+| Errors | Class `fhirviews_error_mapeo`, with `fila` and `campo` when known. |
+
+For multiple given names, prepare one row per patient and a list-column:
+
+```r
+datos <- data.frame(id = "p1")
+datos$nombres <- list(c("Ana", "Lucía"))
+mapa <- fhir_mapa("Patient", c(id = "id", "name[0].given[]" = "nombres"))
+fhir_desde_tabla(datos, mapa)
+```
+
+Duplicate resource IDs are rejected rather than grouped or overwritten.
+Group multi-row query results before mapping them. A query with no rows
+produces zero resources.
+
+### Decimals, validation and output
+
+Decimal destinations accept numbers or **numeric JSON literals supplied as
+text**. `"1.00"` is written as the JSON number `1.00`, without quotes. If a DBI
+driver converts `DECIMAL(p,s)` to a double, trailing zeros have already been
+lost: select it as text using your database's `CAST`. Also use text for BIGINT
+identifiers outside the safe integer range. `NaN`, numeric infinities and
+incompatible conversions are rejected.
+
+`fhir_escribir()` preserves the available original JSON literals and replaces
+the output file. NDJSON contains one resource per line; `formato = "json"`
+contains an array, not a transaction Bundle. Editing the R resource lists
+discards their original source; lost decimal scale cannot be recovered from
+ordinary R numbers. Conversion does not send resources to a FHIR server.
+
+When reading resources back from a server, use the source-preserving mode.
+The default read returns an ordinary R list and does not retain decimal scale:
+
+```r
+# con_fhir is a connection created with fhir_conectar()
+originales <- fhir_leer(con_fhir, "Observation", "o1", como_recursos = TRUE)
+vista_fhirpath(originales, "value.ofType(Quantity).value.lowBoundary()")
+fhir_escribir(originales, tempfile(fileext = ".ndjson"))
+```
+
+`como_recursos = TRUE` returns a `fhir_recursos` collection. The default stays
+an ordinary list for compatibility. `72.00` cannot be recovered from a list
+that has already converted it to `72`.
+
+Local checks cover paths, types, cardinalities, required base elements,
+incompatible choice fields, `Patient.gender` and `Observation.status` codes.
+**They are not full FHIR validation**: use `fhir_validar(con, recurso,
+perfil = "canonical-URL")` to check profiles, invariants and terminologies
+with your selected server.
+
+`fhir_desde_sql()` collects the full query result in memory and leaves the
+connection open for its caller to close. Automatic row grouping, `contained` resources, bulk upload
+and `StructureMap` translation are outside this first version. An executable
+example is installed at `system.file("examples", "sql-a-fhir.R", package =
+"fhirviews")`.
+
+
 ## Public health views and terminologies
 
 The catalogue includes seven views: patients, diagnoses, encounters,
@@ -727,17 +898,36 @@ is explicitly requested with `cache_disco = TRUE`.
 
 The package includes the
 [official SQL on FHIR test suite](https://github.com/FHIR/sql-on-fhir.js/tree/main/tests).
-Both engines pass **133/133 tests of the shareable profile** and **7/11
-experimental tests** of the bundled suite. The four pending ones concern
-`lowBoundary()` and `highBoundary()` and differences in precision or time zone.
+Both engines pass **144/144 tests of the included suite**:
+
+| Engine | Shareable | Experimental | Total |
+|---|---:|---:|---:|
+| V8 / fhirpath.js | 133/133 | 11/11 | 144/144 |
+| DuckDB / native SQL | 133/133 | 11/11 | 144/144 |
+
+The four experimental boundary cases now retain the precision of `1.0` and
+complete missing DateTime offsets (`+14:00` for the low boundary, `-12:00`
+for the high boundary), preserving explicit offsets. The runner preserves
+the original numeric literals without changing expected outputs. V8 uses a
+portable JSON reader; DuckDB matches raw numeric tokens to `json_tree()` paths.
 Conformance refers to that suite and does not certify a clinical system.
 
 ```r
 vista_conformidad()                   # V8 engine
 vista_conformidad(motor = "duckdb")   # requires DuckDB and its json extension
+vista_conformidad(descargar = TRUE)  # compare with the current GitHub suite
+vista_conformidad(informe = "sof-test-results.json") # public matrix report format
 ```
 
-<img src="man/figures/README-conformidad.png" width="80%" alt="Results per file of the SQL on FHIR suite: all shareable tests pass and four experimental tests are pending" />
+144/144 does not imply support for every FHIRPath expression in SQL. Decimal
+boundaries in DuckDB support unsigned literals or static resource paths with
+explicit indices, scales from -18 to 8, and numbers representable in
+`DECIMAL(38,18)`. Negative scales represent positive exponents. The optional
+precision argument and scale inference after operations, filters or iterations
+are unsupported and produce explicit errors. For Parquet or previously
+normalized tables, only their current JSON representation is available; an
+earlier lost scale cannot be reconstructed. Views without decimal boundaries
+do not incur the token and path extraction cost.
 
 CI checks the package on Windows, macOS Intel and Linux, plus R-devel and R 4.1.
 macOS uses `macos-26-intel` by default; this matrix does not validate Apple
@@ -750,7 +940,8 @@ separately against **your own test server**:
 
 ```sh
 FHIRVIEWS_SERVIDOR_ESCRITURA=http://localhost:8080/fhir \
-  Rscript -e 'devtools::test(filter = "servidor")'
+FHIRVIEWS_SOLO_SERVIDOR_PROPIO=true NOT_CRAN=true \
+  Rscript -e 'testthat::test_local(filter = "^servidor$")'
 ```
 
 That server must allow writes; some tests require terminology and Bulk Data. The
@@ -770,10 +961,45 @@ The script uses an image pinned by digest, opens a random port on localhost only
 and removes its own container when it finishes, even if the tests fail. It
 prints the folder that keeps the logs, the JSON and CSV summary, the skips and
 the R environment. The run requires writes, transactions, basic terminology and
-Bulk Data; an unexpected skip makes the test fail. The inline ValueSet variant
+Bulk Data and the SQL → FHIR → server → table round trip; an unexpected skip
+makes the test fail. The inline ValueSet variant
 that HAPI does not support is recorded separately. The **Integracion HAPI**
 workflow runs this same script and keeps the results for 14 days. On its first
 run it may download the image and DuckDB's JSON extension.
+
+### SQL → FHIR validation against R4 profiles
+
+The required `SQL a FHIR, perfiles R4, referencias y retorno a tablas` group
+uses a fictional Patient and two Observations from parameterized DuckDB queries:
+
+1. Builds and writes the resources, preserving the decimal `72.00`.
+2. Calls `$validate` with the explicit base profiles
+   `http://hl7.org/fhir/StructureDefinition/Patient` and
+   `http://hl7.org/fhir/StructureDefinition/Observation`.
+3. Persists the test resources and checks that `Observation.subject.reference`
+   points to the created Patient.
+4. Supplies an invalid `gender` and requires the validator to report an error.
+5. Reads with `fhir_leer(..., como_recursos = TRUE)` and compares values,
+   references and decimal boundaries in V8 and native SQL.
+6. Deletes the test resources; the script also removes its own container.
+
+The summary records failures, errors, warnings, assertions and skip reasons.
+Acceptance fails if this required group is missing. This covers **base R4
+profiles**; clinical or national profiles need explicit checks against their
+canonical URLs.
+
+**Local result on 14 November 2026:** integration passed with digest-pinned
+HAPI 8.12.0-2, 62 passing assertions and no failures, errors or warnings.
+All 16 SQL → FHIR assertions ran. The two expected skips (public-server
+reads and inline ValueSet validation) were recorded, and the container was
+removed. The [integration evidence](data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json)
+records each group; logs and the R environment are kept alongside it.
+This is a technical check with fictional data.
+
+Local database query tests cover DuckDB and SQLite. PostgreSQL and SQL Server
+still need checks with their actual drivers and databases. The Windows/macOS/
+Linux matrix is configured, but an earlier CI run does not validate these
+local changes: check the CI results for the commit being published.
 
 ### Candidate check sequence
 
@@ -804,6 +1030,9 @@ as `no_evaluado` (not evaluated). The workflows verify the declared scope, and
 their result should be checked for the specific commit being delivered.
 
 ## Performance
+
+The measurements below predate the precision changes in 0.5.0.9000 and have
+not been repeated with this development version.
 
 The following measurement compares both engines with synthetic patients and a
 view that includes `where`, four columns and `forEach` over `name`.
@@ -897,9 +1126,10 @@ Script: [`data-raw/benchmark-fhircrackr-observation.R`](data-raw/benchmark-fhirc
 - **FHIRPath.** Evaluation happens in V8. Remote resolution with `resolve()` is
   disabled; terminology lookups are done with the `tx_*` functions before the
   view runs.
-- **Precision and dates.** JSON numbers lose trailing decimal zeros when read.
-  Dates are kept as ISO 8601 text to allow partial values such as `2025` or
-  `2025-03`.
+- **Precision and dates.** Evaluation and JSON/NDJSON output preserve decimal
+  literals from the original source. Ordinary R numeric columns do not retain
+  their scale; editing resources discards their original JSON source. Dates
+  stay as ISO 8601 text to allow partial values such as `2025` or `2025-03`.
 - **Memory and schema.** `vista_ejecutar()` collects the result in memory;
   block-wise processing requires your function to handle the output. Type
   conversion warnings should be reviewed before persisting data.

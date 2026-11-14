@@ -80,6 +80,7 @@ motor_v8 <- function() {
   ct$eval("var window = globalThis;")
   cargar_js(ct, ruta_js("fhirpath", "fhirpath.min.js"))
   cargar_js(ct, ruta_js("fhirpath", "fhirpath.r4.min.js"))
+  cargar_js(ct, ruta_js("lossless-json", "lossless-json.js"))
   cargar_js(ct, ruta_js("fhirviews.js"))
 
   llamar <- function(codigo, expresion = NULL) {
@@ -93,6 +94,20 @@ motor_v8 <- function() {
   list(
     nombre = "v8",
     version = function() ct$eval("fhirviews.version()"),
+    recursos_json = function(textos, campo = NULL) {
+      ct$assign("fhirviews_entrada", I(textos))
+      on.exit(ct$eval("fhirviews_entrada = null;"))
+      res <- llamar(sprintf(
+        "JSON.stringify(fhirviews.recursosJSON(fhirviews_entrada, %s))",
+        if (is.null(campo)) "null" else a_json(campo, unbox = TRUE)))
+      as.character(unlist(res))
+    },
+    serializar_recursos = function(recursos) {
+      ct$assign("fhirviews_entrada", as.character(a_json(recursos)))
+      on.exit(ct$eval("fhirviews_entrada = null;"))
+      as.character(unlist(llamar(paste0(
+        "JSON.stringify(fhirviews.serializarRecursos(fhirviews_entrada))"))))
+    },
     cargar = function(recursos) {
       fuente <- attr(recursos, "fuente")
       if (!is.null(fuente)) {

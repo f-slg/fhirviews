@@ -78,7 +78,9 @@ vista_conformidad <- function(archivos = NULL, descargar = FALSE,
   filas <- lapply(archivos, function(f) {
     banco <- jsonlite::fromJSON(file.path(directorio, f),
                                 simplifyVector = FALSE)
-    recursos <- fhir_recursos(banco$resources)
+    texto <- paste(readLines(file.path(directorio, f), encoding = "UTF-8",
+                              warn = FALSE), collapse = "\n")
+    recursos <- fhir_recursos(motor_actual()$recursos_json(texto, "resources"))
     ejecutar <- NULL
     if (motor == "duckdb") {
       archivo <- escribir_ndjson_temporal(recursos)

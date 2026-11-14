@@ -1,3 +1,26 @@
+# fhirviews 0.5.0.9000
+
+* `fhir_leer(..., como_recursos = TRUE)` conserva el JSON recibido para
+  mantener la escala decimal al volver del servidor a las vistas. El valor
+  por defecto mantiene la lista de R habitual.
+* La integracion aislada exige el recorrido SQL a Patient/Observation,
+  validacion contra perfiles base R4, referencias persistidas y retorno a
+  tablas con ambos motores, con control negativo del validador.
+* Los motores V8 y DuckDB superan las 144 pruebas incluidas de SQL on FHIR
+  (133 shareable y 11 experimentales). Se preserva la escala decimal del
+  JSON original y se completan las zonas desconocidas de los limites
+  DateTime, sin cambiar zonas explicitas ni la biblioteca fhirpath.js.
+* `fhir_mapa()`, `fhir_desde_tabla()` y `fhir_desde_sql()` construyen Patient
+  y Observation desde columnas mediante destinos JSON explicitos, con
+  constantes, referencias, colecciones y comprobaciones estructurales de R4.
+  `fhir_escribir()` guarda JSON o NDJSON conservando los decimales originales.
+* DuckDB calcula limites decimales sobre literales y rutas estaticas desde
+  el recurso con indices explicitos. Las operaciones que pierden identidad,
+  escalas fuera de -18 a 8 o numeros no representables producen un error.
+* Se incluye lossless-json 4.3.3 para conservar precision en V8 antiguos.
+  El banco oficial y la conversion de Bundles a NDJSON conservan los
+  literales numericos originales, incluidos sus ceros finales.
+
 # fhirviews 0.5.0
 
 Primera versión preparada para enviarse a CRAN.

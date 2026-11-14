@@ -44,6 +44,80 @@ marca_prueba <- function() {
 
 sis_prueba <- "https://f-slg.github.io/fhirviews/prueba"
 
+test_that("SQL a FHIR, perfiles R4, referencias y retorno a tablas", {
+  con <- fhir_conectar(servidor_escritura(), panel = FALSE)
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("duckdb", "1.3.0")
+  marca <- marca_prueba()
+  id_paciente <- paste0(marca, "-p")
+  ids_observaciones <- paste0(marca, "-o", 1:2)
+  db <- conectar_duckdb()
+  on.exit(DBI::dbDisconnect(db), add = TRUE)
+  creados <- list()
+  on.exit(for (r in rev(creados)) try(fhir_borrar(con, r), silent = TRUE), add = TRUE)
+
+  DBI::dbWriteTable(db, "pacientes_sql", data.frame(
+    id = id_paciente, sexo = "female", apellido = paste("Prueba", marca),
+    nombre = "Ficticio", nacimiento = "1985-03-12"))
+  DBI::dbWriteTable(db, "observaciones_sql", data.frame(
+    id = ids_observaciones, paciente = id_paciente,
+    valor = c("72.00", "88.5"), fecha = "2025-06-01T10:00:00-05:00"))
+  perfil_p <- "http://hl7.org/fhir/StructureDefinition/Patient"
+  perfil_o <- "http://hl7.org/fhir/StructureDefinition/Observation"
+  mp <- fhir_mapa("Patient", c(id = "id", gender = "sexo",
+    "name[0].family" = "apellido", "name[0].given[0]" = "nombre",
+    birthDate = "nacimiento"), constantes = list("meta.profile[0]" = perfil_p))
+  mo <- fhir_mapa("Observation", c(id = "id", "subject.reference" = "paciente",
+    "valueQuantity.value" = "valor", effectiveDateTime = "fecha"),
+    constantes = list(status = "final", "meta.profile[0]" = perfil_o,
+      "category[0].coding[0].system" = "http://terminology.hl7.org/CodeSystem/observation-category",
+      "category[0].coding[0].code" = "vital-signs",
+      "code.coding[0].system" = "http://loinc.org", "code.coding[0].code" = "8867-4",
+      "valueQuantity.unit" = "/min", "valueQuantity.system" = "http://unitsofmeasure.org",
+      "valueQuantity.code" = "/min"), referencias = c("subject.reference" = "Patient"))
+  p <- fhir_desde_sql(db, "SELECT * FROM pacientes_sql WHERE id = ?", mp, list(id_paciente))
+  o <- fhir_desde_sql(db, "SELECT * FROM observaciones_sql ORDER BY id", mo)
+  archivo <- withr_tempfile(".ndjson")
+  fhir_escribir(c(p, o), archivo)
+  textos <- readLines(archivo, encoding = "UTF-8")
+  expect_length(textos, 3L)
+  expect_match(textos[2], '"value":72.00', fixed = TRUE)
+
+  # Validar el JSON exacto que se enviara, con perfiles base explicitos.
+  expect_true(attr(fhir_validar(con, textos[1], perfil = perfil_p), "valido"))
+  creado <- fhir_actualizar(con, textos[1])
+  creados <- c(creados, list(creado))
+  expect_identical(creado$id, id_paciente)
+  for (i in 2:3) {
+    expect_true(attr(fhir_validar(con, textos[i], perfil = perfil_o), "valido"))
+    creado <- fhir_actualizar(con, textos[i])
+    creados <- c(creados, list(creado))
+    expect_identical(creado$subject$reference, paste0("Patient/", id_paciente))
+  }
+  # Un control negativo demuestra que el validador realmente aplica reglas.
+  invalido <- p[[1]]
+  invalido$gender <- "mujer"
+  validacion <- fhir_validar(con, invalido, perfil = perfil_p)
+  expect_false(isTRUE(attr(validacion, "valido")))
+  expect_true(any(validacion$severidad %in% c("error", "fatal")))
+
+  recuperados <- fhir_leer(con, "Patient", id_paciente, como_recursos = TRUE)
+  for (id in ids_observaciones) {
+    recuperados <- c(recuperados, fhir_leer(con, "Observation", id, como_recursos = TRUE))
+  }
+  expect_identical(recuperados[[1]]$id, id_paciente)
+  vista <- vista_crear("Observation", c(
+    paciente = "subject.getReferenceKey(Patient)", valor = "value.ofType(Quantity).value",
+    limite = "value.ofType(Quantity).value.lowBoundary()"))
+  v8 <- vista_ejecutar(recuperados, vista)
+  sql <- vista_ejecutar_duckdb(recuperados, vista, con_db = db)
+  expect_identical(v8$id, ids_observaciones)
+  expect_equal(v8$valor, c(72, 88.5))
+  expect_equal(v8$limite, c(71.995, 88.45))
+  expect_identical(v8$paciente, rep(id_paciente, 2L))
+  expect_equal(sql, v8)
+})
+
 test_that("ciclo completo de escritura en un servidor de pruebas", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   marca <- marca_prueba()

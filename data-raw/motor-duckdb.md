@@ -14,9 +14,9 @@ en `data-raw/motor-duckdb.csv`).
 * **Conformidad: 133 de 133 pruebas shareable** del banco oficial
   (`vista_conformidad(motor = "duckdb")`), las mismas que el motor V8,
   incluidos `repeat`, `%rowIndex`, `unionAll` anidado y los errores
-  esperados, y **7 de las 11 experimentales**, también las mismas que V8
-  (fallan las de `lowBoundary()`/`highBoundary()` de decimales y de fechas y
-  horas con precisión de día; ver más abajo).
+  esperados, y **11 de las 11 experimentales**, también las mismas que V8.
+  En 0.5.0.9000 pasan las 144: se conservan los tokens decimales originales
+  y se completan los límites DateTime cuando falta zona horaria.
 * **FHIRPath:** traduce todo lo que exige el perfil shareable y la mayor
   parte de FHIRPath N1 (inventario abajo), con la semántica de fhirpath.js.
   Una prueba diferencial compara los dos motores con unas 110 expresiones con
@@ -61,9 +61,9 @@ producto dentro de cada foco; `forEach` recorre la colección con
 `list_transform(..., lambda x, i: ...)` (el índice da `%rowIndex`);
 `forEachOrNull` cambia la colección vacía por `[NULL]`; `unionAll` es
 `list_concat`; `where` va en el `WHERE`; la consulta final hace
-`unnest` de las filas de cada recurso. Todo es una expresión por recurso, sin
-`LATERAL` ni subconsultas correlacionadas, lo que deja a DuckDB paralelizar
-la lectura y el cálculo por bloques de filas.
+`unnest` de las filas de cada recurso. Las vistas con límites decimales
+añaden una extracción correlacionada con `json_tree()` para relacionar rutas
+y tokens numéricos sin perder escala. Las demás no pagan ese coste.
 
 **`repeat`** se calcula por niveles hasta una profundidad fija (12 por
 defecto, opción `fhirviews.sql_profundidad`). Cada nodo lleva una clave con
@@ -151,7 +151,7 @@ casos indicados y en los demás da error (nunca otro resultado). No: error
 | | `hasValue()` | | Sí |
 | | `resolve()`, `memberOf()`, `conformsTo()`, `htmlChecks()` | | No |
 | SQL on FHIR | `getResourceKey()`, `getReferenceKey([tipo])` | sí | Sí |
-| FHIRPath 3.0 | `lowBoundary()`, `highBoundary()` | sí | Parcial: fechas, horas y fechas y horas con hora y zona; decimales y fechas y horas con precisión de día, no |
+| FHIRPath 3.0 | `lowBoundary()`, `highBoundary()` | sí | Fechas, horas y DateTime con o sin zona; decimales sobre literales sin signo o rutas estáticas con índices. Escalas de -18 a 8 y DECIMAL(38,18); sin argumento de precisión ni inferencia después de operaciones |
 | | `precision()` | | No |
 | Variables | `%resource`, `%rootResource`, `%rowIndex`, constantes | sí | Sí |
 
@@ -238,11 +238,11 @@ como listas de DuckDB.
 ```
 vista_conformidad(motor = "duckdb")
 Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09)
-fhirviews 0.2.0.9000 · motor DuckDB 1.5.6
+fhirviews 0.5.0.9000 · motor DuckDB 2.0.0
 
-  experimental     7 de  11 aprobadas
+  experimental    11 de  11 aprobadas
   shareable      133 de 133 aprobadas
-  total          140 de 144 aprobadas
+  total          144 de 144 aprobadas
 ```
 
 Pasan todos los archivos shareable: basic (11), collection (4), combinations
@@ -250,14 +250,16 @@ Pasan todos los archivos shareable: basic (11), collection (4), combinations
 fn_empty (1), fn_extension (2), fn_first (2), fn_oftype (2),
 fn_reference_keys (3), foreach (13), logic (3), repeat (19), row_index (9),
 union (10), validate (5), view_resource (3) y where (8). De las
-experimentales pasan las 3 de `join()` y 4 de `fn_boundary.json` (fecha y
-hora), las mismas que el motor V8. Las otras 4 esperan lo que fhirpath.js no
-da: `1.0.lowBoundary()` = 0.95 (la precisión del decimal se pierde al leer el
-JSON en los dos motores) y la zona +14:00/−12:00 en los límites de una fecha
-y hora con precisión de día (fhirpath.js no la agrega); el motor DuckDB da
-error en esos casos en lugar de copiar el resultado de fhirpath.js.
+experimentales pasan las 3 de `join()` y las 8 de `fn_boundary.json`, igual
+que V8. Los límites de `1.0` son 0.95 y 1.05; los de `1.00`, 0.995 y 1.005.
+Cuando falta la zona de DateTime se añade +14:00 al límite inferior y -12:00
+al superior, manteniendo las zonas explícitas. No se modifica el banco ni
+la biblioteca fhirpath.js; V8 aplica la corrección en su adaptador.
 
 ## Rendimiento
+
+Mediciones históricas anteriores al lector decimal de 0.5.0.9000; no se han
+repetido para la versión de desarrollo ni para las vistas con límites decimales.
 
 `data-raw/motor-duckdb.R`: pacientes sintéticos (dos nombres, una dirección)
 en NDJSON, la vista de `data-raw/rendimiento.R` (`where` sobre la fecha,
