@@ -53,10 +53,16 @@ atributo `respuesta`.
 ## Examples
 
 ``` r
-if (FALSE) { # (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) && fhir_disponible("https://tx.fhir.org/r4")
 tx <- fhir_conectar("https://tx.fhir.org/r4", panel = FALSE)
 glucosa <- tx_buscar_codigo(tx, "http://loinc.org", "2345-7")
 glucosa$display
+#> [1] "Glucose [Mass/volume] in Serum or Plasma"
 head(glucosa$propiedades)
-}
+#>            propiedad valor      descripcion
+#> 1           inactive FALSE             <NA>
+#> 2          CLASSTYPE     1 Laboratory class
+#> 3          ORDER_OBS  Both             <NA>
+#> 4      EXAMPLE_UNITS mg/dL             <NA>
+#> 5 EXAMPLE_UCUM_UNITS mg/dL             <NA>
+#> 6      UNITSREQUIRED     Y             <NA>
 ```

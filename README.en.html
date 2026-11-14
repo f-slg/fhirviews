@@ -647,7 +647,7 @@
 <p>This uses an in-memory SQLite database and fictional data. Install <code>DBI</code> and <code>RSQLite</code> if needed. For DuckDB, PostgreSQL or SQL Server, use the corresponding DBI connection and adapt the query syntax. Function and argument names remain in Spanish.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://f-slg.github.io/fhirviews/">fhirviews</a></span><span class="op">)</span></span>
-<span><span class="va">con_db</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">RSQLite</span><span class="fu">::</span><span class="fu">SQLite</span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span>
+<span><span class="va">con_db</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">RSQLite</span><span class="fu">::</span><span class="fu"><a href="https://rsqlite.r-dbi.org/reference/SQLite.html" class="external-link">SQLite</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbWriteTable.html" class="external-link">dbWriteTable</a></span><span class="op">(</span><span class="va">con_db</span>, <span class="st">"pacientes"</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  paciente_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"p1"</span>, <span class="st">"p2"</span><span class="op">)</span>, sexo <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"female"</span>, <span class="st">"male"</span><span class="op">)</span>,</span>
@@ -749,6 +749,43 @@
 <p>Local checks cover paths, types, cardinalities, required base elements, incompatible choice fields, <code>Patient.gender</code> and <code>Observation.status</code> codes. <strong>They are not full FHIR validation</strong>: use <code>fhir_validar(con, recurso, perfil = "canonical-URL")</code> to check profiles, invariants and terminologies with your selected server.</p>
 <p><code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code> collects the full query result in memory and leaves the connection open for its caller to close. Automatic row grouping, <code>contained</code> resources, bulk upload and <code>StructureMap</code> translation are outside this first version. An executable example is installed at <code>system.file("examples", "sql-a-fhir.R", package = "fhirviews")</code>.</p>
 </div>
+<div class="section level3">
+<h3 id="planned-support-for-other-resources">Planned support for other resources<a class="anchor" aria-label="anchor" href="#planned-support-for-other-resources"></a></h3>
+<p>The reader and view engine already work with other FHIR resource types. The <strong>Patient and Observation</strong> restriction currently applies to construction from SQL or tables. The following resources are planned and <strong>are not yet enabled</strong> in <code><a href="reference/fhir_mapa.html">fhir_mapa()</a></code>.</p>
+<table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Proposed order</th>
+<th>Resources</th>
+<th>Intended workflow</th>
+</tr></thead><tbody><tr><td>1. Encounters and diagnoses</td>
+<td>
+<code>Encounter</code>, <code>Condition</code>
+</td>
+<td>Patient → encounter → diagnosis, with references between them.</td>
+</tr><tr><td>2. Vaccination</td>
+<td><code>Immunization</code></td>
+<td>Patient → vaccination event, with an explicit vaccine, status and date.</td>
+</tr><tr><td>3. Laboratory</td>
+<td>
+<code>Specimen</code>, <code>DiagnosticReport</code>
+</td>
+<td>Specimen → observations → report, with several result references.</td>
+</tr><tr><td>4. Medications</td>
+<td>
+<code>MedicationRequest</code>, <code>MedicationDispense</code>
+</td>
+<td>Prescribing and dispensing, with explicit medication and dosage data.</td>
+</tr><tr><td>As needed by the source</td>
+<td>
+<code>Organization</code>, <code>Practitioner</code>
+</td>
+<td>Institutions and professionals referenced by these resources.</td>
+</tr></tbody></table><p>This order prioritizes surveillance and can be adapted to the data source. The path, type, cardinality and choice-field engine already uses canonical <strong>FHIR R4 4.0.1</strong> snapshot metadata, so each resource does not need a separate converter. Expanding the supported list requires:</p>
+<ol style="list-style-type: decimal"><li>Extending <code>data-raw/mapeo_r4.py</code> with an explicit resource list and its dependent types, preserving the schema version and provenance. Include ValueSet bindings and allowed <code>Reference</code> target types.</li>
+<li>Generalizing code validation beyond <code>Patient.gender</code> and <code>Observation.status</code>. Adding a schema alone does not validate its statuses, terminology or invariants. Bindings requiring external terminology and project profiles need validation against the selected server.</li>
+<li>Testing each resource’s required fields and choices. For example, <code>Encounter</code> requires <code>status</code> and <code>class</code>; <code>Condition</code> requires <code>subject</code>; <code>Immunization</code> requires <code>status</code>, <code>vaccineCode</code>, <code>patient</code> and one <code>occurrence[x]</code> variant. Project profiles may impose additional requirements.</li>
+<li>Designing collections of objects before offering variable-length groups or references. Fixed paths such as <code>result[0].reference</code> can be built; terminal <code>[]</code> currently constructs primitive collections, rather than variable-length lists of <code>Reference</code> or <code>dosageInstruction</code> objects.</li>
+<li>Requiring valid and invalid cases per resource and a reproducible SQL → FHIR → base-profile <code>$validate</code> → persist and read → V8/DuckDB table round trip. Check references, missing values, invalid codes and conflicting choice fields. Add project profiles by canonical URL when available, and update documentation and examples for each group.</li>
+</ol><p>A local schema exploration constructed <code>Condition</code>, <code>Encounter</code>, <code>Immunization</code>, <code>DiagnosticReport</code> and <code>MedicationRequest</code> with the current engine. It also accepted an invalid <code>Encounter</code> status: this identifies a missing check and <strong>does not establish support</strong> for those resources. The proposed first increment completes these validations and tests <code>Encounter</code> and <code>Condition</code> together.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="public-health-views-and-terminologies">Public health views and terminologies<a class="anchor" aria-label="anchor" href="#public-health-views-and-terminologies"></a></h2>
@@ -844,8 +881,27 @@
 <li>Reads with <code>fhir_leer(..., como_recursos = TRUE)</code> and compares values, references and decimal boundaries in V8 and native SQL.</li>
 <li>Deletes the test resources; the script also removes its own container.</li>
 </ol><p>The summary records failures, errors, warnings, assertions and skip reasons. Acceptance fails if this required group is missing. This covers <strong>base R4 profiles</strong>; clinical or national profiles need explicit checks against their canonical URLs.</p>
-<p><strong>Local result on 14 November 2026:</strong> integration passed with digest-pinned HAPI 8.12.0-2, 62 passing assertions and no failures, errors or warnings. All 16 SQL → FHIR assertions ran. The two expected skips (public-server reads and inline ValueSet validation) were recorded, and the container was removed. The <a href="data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json">integration evidence</a> records each group; logs and the R environment are kept alongside it. This is a technical check with fictional data.</p>
-<p>Local database query tests cover DuckDB and SQLite. PostgreSQL and SQL Server still need checks with their actual drivers and databases. The Windows/macOS/ Linux matrix is configured, but an earlier CI run does not validate these local changes: check the CI results for the commit being published.</p>
+<p><strong>Local result on 14 November 2026:</strong> integration passed with digest-pinned HAPI 8.12.0-2, 62 passing assertions and no failures, errors or warnings. All 16 SQL → FHIR assertions ran. The two expected skips (public-server reads and inline ValueSet validation) were recorded, and the container was removed. The <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-fhir-hapi/resumen.json" class="external-link">integration evidence</a> records each group; logs and the R environment are kept alongside it. This is a technical check with fictional data.</p>
+</div>
+<div class="section level3">
+<h3 id="sql--fhir-with-postgresql-and-sql-server">SQL → FHIR with PostgreSQL and SQL Server<a class="anchor" aria-label="anchor" href="#sql--fhir-with-postgresql-and-sql-server"></a></h3>
+<p>In addition to local DuckDB and SQLite tests, <code>data-raw/probar-sql-dbi.sh</code> runs queries against <strong>two real, isolated databases</strong>. It creates its own PostgreSQL and SQL Server Developer containers, pinned by digest in <code>data-raw/postgres-image.txt</code> and <code>data-raw/sqlserver-image.txt</code>, and removes them on exit. Random ports are bound to localhost and random, single-use credentials are excluded from reports. All data is fictional.</p>
+<p>Requirements: Docker or Podman, <code>openssl</code>, the R packages below and a <strong>Microsoft ODBC Driver 18 for SQL Server</strong> available to <code>odbc</code>. <code>RPostgres</code> needs PostgreSQL libraries; <code>odbc</code> needs unixODBC. Running the script starts SQL Server with <code>ACCEPT_EULA=Y</code> and the Developer edition for development and testing under Microsoft’s image terms.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DBI"</span>, <span class="st">"RPostgres"</span>, <span class="st">"odbc"</span>, <span class="st">"duckdb"</span>, <span class="st">"pkgload"</span>, <span class="st">"testthat"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="co"># Run from the repository root; the output directory must be new.</span></span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a><span class="va">FHIRVIEWS_CONTENEDOR</span><span class="op">=</span>podman <span class="fu">bash</span> data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi</span>
+<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a><span class="co"># FHIRVIEWS_CONTENEDOR=docker is also supported.</span></span></code></pre></div>
+<p><code>FHIRVIEWS_ODBC_DRIVER</code> can specify another registered driver name or an absolute library path; the default is <code>ODBC Driver 18 for SQL Server</code>. <code>FHIRVIEWS_SQL_ESPERA</code> sets the connection wait in seconds, defaulting to 120. The test ODBC connection uses encryption and trusts the local container’s certificate; this setting belongs to the isolated test environment.</p>
+<p>Each database must pass five required groups:</p>
+<ol style="list-style-type: decimal"><li>Native <code>Date</code> values, booleans, accented text and BIGINT keys above <code>2^53</code>, read as text without rounding.</li>
+<li>Patient construction with names, birth date, active status and omitted SQL <code>NULL</code> values.</li>
+<li>Bound parameters (<code>$1</code> for RPostgres; <code>?</code> for ODBC), zero rows, text containing SQL characters, and rejected duplicate IDs or invalid codes.</li>
+<li>Observation construction with patient references, UTC timestamps and a <code>DECIMAL(12,2)</code> read as text to preserve <code>72.00</code>. SQL Server explicitly converts <code>DATETIMEOFFSET</code> to UTC and <code>DATETIME2</code> before reading it as <code>POSIXct</code>.</li>
+<li>NDJSON writing and reading and comparison of values and decimal boundaries when projecting the resources to tables with V8 and DuckDB.</li>
+</ol><p>Queries and casts are specific to each database; <code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code> runs them through DBI. Base R4 profile validation is covered separately by the HAPI integration described above.</p>
+<p><strong>Local result on 14 November 2026:</strong> 72 passing assertions with no failures, errors, warnings or skips. Tested PostgreSQL 17.12 with RPostgres 1.4.10 and SQL Server 2022 CU27 (16.0.4295.3) with <code>odbc</code> 1.7.2 and Microsoft ODBC 18.6.1.1. Both containers were removed. The <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-dbi/resumen.json" class="external-link">DBI evidence</a> records versions and each group’s results; fictional output resources, logs and the R environment are kept alongside it. Executable queries are in the repository script.</p>
+<p>The <strong>Integracion SQL DBI</strong> workflow runs the same procedure and retains its results for 14 days. All ten groups are required; any failure, warning or skip fails acceptance. Check the CI results for the commit being published to confirm its R coverage on Windows, macOS and Linux as well.</p>
 </div>
 <div class="section level3">
 <h3 id="candidate-check-sequence">Candidate check sequence<a class="anchor" aria-label="anchor" href="#candidate-check-sequence"></a></h3>
@@ -1018,11 +1074,11 @@
 <div class="section level3">
 <h3 id="install-the-candidate-and-run-the-trial">Install the candidate and run the trial<a class="anchor" aria-label="anchor" href="#install-the-candidate-and-run-the-trial"></a></h3>
 <p>The pilot uses the bundled fictitious data. Install the dependencies and the source archive provided by the maintainer:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <p>Restart R, choose a new folder and run:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
 <span>  FHIRVIEWS_PILOTO_SALIDA <span class="op">=</span> <span class="st">"piloto-basico-01"</span>,</span>
 <span>  FHIRVIEWS_PILOTO_PERFIL <span class="op">=</span> <span class="st">"basico"</span></span>
@@ -1031,7 +1087,7 @@
 <p>Open <code>piloto-basico-01/aceptacion.csv</code> to see the checks and <code>aceptacion.json</code> for their diagnostics. The statuses are <code>aprobado</code>, <code>fallo</code>, <code>requiere_revision</code>, <code>pendiente</code> and <code>no_evaluado</code> (approved, failed, needs review, pending and not evaluated). Any warning requires review and prevents automatic approval; the report records safe codes without copying the original messages.</p>
 <p>The <code>basico</code> profile checks the API, the surveillance results and the strict rejection of an incompatible block. To also check rollback and retries, install <code>DBI</code> and <code>duckdb</code>, change the profile to <code>completo</code> and use another new folder. The files stay local; fill in <code>experiencia-usuario.txt</code> with the obstacles, the help you needed and your assessment. Technical approval leaves that human evaluation pending and does not validate a server or your own data.</p>
 <p>Help and vignettes are available in the installation:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
@@ -1061,7 +1117,7 @@
 <h2 id="contributing-citation-and-license">Contributing, citation and license<a class="anchor" aria-label="anchor" href="#contributing-citation-and-license"></a></h2>
 <p>For usage questions, join the <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. For bugs or proposals, open an <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> with a minimal reproducible example and fictitious data. Issues and discussions in English are welcome. See the <a href="CONTRIBUTING.html">contributing guide</a> and the <a href="CODE_OF_CONDUCT.html">code of conduct</a>.</p>
 <p>To cite the package:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Author and maintainer:</strong> Ronald Fabricio Salas Guerrero. <a href="LICENSE.html">MIT</a> license. The licenses and attributions of the bundled code and data are detailed in <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
 <p>fhirviews is an independent project. FHIR® and HL7® are registered trademarks of Health Level Seven International; their use does not imply institutional endorsement. All bundled example data are fictitious.</p>

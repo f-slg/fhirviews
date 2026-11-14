@@ -197,7 +197,7 @@ cliente:</p>
 <code class="sourceCode R"><span><span class="va">clave</span> <span class="op">&lt;-</span> <span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/keygen.html" class="external-link">rsa_keygen</a></span><span class="op">(</span><span class="fl">2048</span><span class="op">)</span></span>
 <span><span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/write_pem.html" class="external-link">write_pem</a></span><span class="op">(</span><span class="va">clave</span>, <span class="st">"~/.claves/fhir-privada.pem"</span><span class="op">)</span></span>
 <span><span class="co"># JWKS con la clave pública, para registrar el cliente</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">jose</span><span class="fu">::</span><span class="fu">write_jwk</span><span class="op">(</span><span class="va">clave</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu">jose</span><span class="fu">::</span><span class="fu"><a href="https://r-lib.r-universe.dev/jose/reference/jwk.html" class="external-link">write_jwk</a></span><span class="op">(</span><span class="va">clave</span><span class="op">$</span><span class="va">pubkey</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </li>
 <li>
 <p><strong>Conectarse.</strong> Las URL del servidor de autorización
@@ -675,8 +675,8 @@ calculan en DuckDB y solo el resultado llega a R.</p>
 <code class="sourceCode R"><span><span class="va">casos</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/vista_ejecutar_duckdb.html">vista_ejecutar_duckdb</a></span><span class="op">(</span><span class="st">"exportacion/Condition.ndjson"</span>, <span class="va">confirmados</span>,</span>
 <span>                               diferido <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">casos</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">count</span><span class="op">(</span><span class="va">grave</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">grave</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Con una base DuckDB propia, el resultado se puede guardar como tabla
 en lugar de traerlo a R:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">

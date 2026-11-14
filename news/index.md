@@ -2,6 +2,15 @@
 
 ## fhirviews 0.5.0.9000
 
+- La integracion SQL DBI prueba PostgreSQL y SQL Server Developer reales
+  en contenedores fijados por digest: parametros, tipos nativos, BIGINT,
+  escala decimal, valores ausentes y retorno a tablas con V8 y DuckDB.
+  Incluye ejecucion automatica, evidencia local y limpieza de
+  contenedores.
+- Los README documentan la ampliacion prevista de SQL a FHIR por grupos,
+  comenzando por Encounter y Condition; estos recursos aun no se
+  habilitan para construccion y necesitan validacion de codigos y
+  referencias.
 - `fhir_leer(..., como_recursos = TRUE)` conserva el JSON recibido para
   mantener la escala decimal al volver del servidor a las vistas. El
   valor por defecto mantiene la lista de R habitual.
