@@ -1,8 +1,30 @@
 # Archivo de fhirviews en Zenodo
 
 El DOI se puede emitir antes de que CRAN publique el paquete. Son procesos
-independientes. Este archivo prepara el candidato R4 de desarrollo 0.5.0.9000;
+independientes. El candidato R4 de desarrollo 0.5.0.9000 ya esta publicado;
 el 0.5.0 enviado a CRAN corresponde a otro artefacto. No se modifica ese envio.
+
+## Publicacion comprobada
+
+- Version: [10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726).
+- Concepto: [10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725).
+- Fuente archivada: commit `565243ec06f4dad88e898761a98a4f23c9fe8f95`.
+- GitHub: prerelease `v0.5.0.9000`, sin cambiar la release estable Latest.
+- Registro de comprobaciones: [publicacion-0.5.0.9000.json](publicacion-0.5.0.9000.json).
+
+Se descargaron los bytes del archivo que realmente preserva Zenodo, se
+comprobo su MD5 publicado y se calculo SHA256. Los 345 archivos del ZIP
+coinciden con git archive del commit fijado; el DOI resuelve al registro.
+Ese ZIP automatico tiene un prefijo y hash distintos del ZIP preparado como
+asset GitHub. El tar.gz R probado solo consta como asset GitHub, no como
+archivo de este registro Zenodo. No se modifica un archivo ya publicado para
+agregar retroactivamente un DOI que no existia al generar el lanzamiento.
+
+Los comandos de preparacion siguientes deben seguir usando `--ref 565243e`
+para reproducir este archivo. Un HEAD posterior con cambios en inst/CITATION
+ya no coincide byte a byte con el tar.gz anterior y debe rechazarse como
+fuente de ese candidato. Una futura version necesita nuevos metadatos,
+artefactos y DOI de version dentro de la misma familia del proyecto.
 
 ## Identidad y archivos
 
@@ -41,7 +63,7 @@ ni se incluyen en un manifiesto o en las notas de la release.
 
 ## Publicacion y comprobacion
 
-Se prepara un borrador GitHub separado con etiqueta v0.5.0.9000, marcado como
+Para este archivo se preparo un borrador GitHub separado con etiqueta v0.5.0.9000, marcado como
 prerelease/candidato R4 de desarrollo. Una vez verificada la conexion se puede
 publicar esa version identificada, sin convertirla en una version estable.
 Los borradores no emiten DOI. La integracion debe confirmarse con el registro

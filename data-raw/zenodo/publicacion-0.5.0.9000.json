@@ -1,0 +1,47 @@
+{
+  "estado": "publicado_y_verificado",
+  "verificado_utc": "2026-11-15T04:41:02.950893+00:00",
+  "version": "0.5.0.9000",
+  "commit_fuente": "565243ec06f4dad88e898761a98a4f23c9fe8f95",
+  "release_github": "https://github.com/f-slg/fhirviews/releases/tag/v0.5.0.9000",
+  "prerelease": true,
+  "registro": "https://zenodo.org/records/24238726",
+  "api_registro": "https://zenodo.org/api/records/24238726",
+  "doi_version": "10.5281/zenodo.24238726",
+  "doi_concepto": "10.5281/zenodo.24238725",
+  "creadores": [
+    {
+      "name": "Salas Guerrero, Ronald Fabricio",
+      "affiliation": null,
+      "orcid": "0000-0001-5077-1522"
+    }
+  ],
+  "licencia": {
+    "id": "mit-license"
+  },
+  "archivo_zenodo": {
+    "nombre": "f-slg/fhirviews-v0.5.0.9000.zip",
+    "bytes": 1721465,
+    "checksum_publicado_verificado": "md5:0fa89aeaf08faec97ca03dbd073a0c03",
+    "sha256_calculado": "e1308d8a1ac68f935a0c4bea2afbc048f30ab303e88bad3d8437392e00f09eaf",
+    "archivos_comparados_con_commit": [
+      "DESCRIPTION",
+      "CITATION.cff",
+      ".zenodo.json",
+      "R/fhir-desde-sql.R"
+    ],
+    "total_archivos_comparados_con_git_archive": 345,
+    "todos_los_archivos_coinciden": true
+  },
+  "resolucion_doi": {
+    "http": 200,
+    "destino": "https://zenodo.org/records/24238726"
+  },
+  "paquete_r_complementario_github": {
+    "nombre": "fhirviews_0.5.0.9000.tar.gz",
+    "sha256": "e6f1db79a80926d77305395da93ec3568717866b464c6e53e94e90a637a3fbbe",
+    "bytes": 1188652,
+    "incluido_en_registro_zenodo": false
+  },
+  "alcance": "Codigo R4 de desarrollo anterior al experimento Rust; independiente del envio CRAN 0.5.0. Los metadatos de cita con DOI se incorporan despues de esta publicacion."
+}
