@@ -1,0 +1,88 @@
+── Initialising site ───────────────────────────────────────────────────────────
+Copying <pkgdown>/BS5/assets/katex-auto.js to katex-auto.js
+Copying <pkgdown>/BS5/assets/lightswitch.js to lightswitch.js
+Copying <pkgdown>/BS5/assets/link.svg to link.svg
+Copying <pkgdown>/BS5/assets/pkgdown.js to pkgdown.js
+Copying pkgdown/extra.css to extra.css
+Copying pkgdown/extra.js to extra.js
+Updating deps/JetBrains_Mono-0.4.10/font.css
+Updating
+deps/JetBrains_Mono-0.4.10/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTN1OVgaY.woff2
+Updating
+deps/JetBrains_Mono-0.4.10/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTNFOVgaY.woff2
+Updating
+deps/JetBrains_Mono-0.4.10/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTNVOVgaY.woff2
+Updating
+deps/JetBrains_Mono-0.4.10/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTOVOVgaY.woff2
+Updating
+deps/JetBrains_Mono-0.4.10/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTOlOV.woff2
+Updating
+deps/JetBrains_Mono-0.4.10/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTPlOVgaY.woff2
+Updating deps/Source_Sans_3-0.4.10/font.css
+Updating
+deps/Source_Sans_3-0.4.10/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EE9CsKng.woff2
+Updating
+deps/Source_Sans_3-0.4.10/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EF9CsKng.woff2
+Updating
+deps/Source_Sans_3-0.4.10/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EG9CsKng.woff2
+Updating
+deps/Source_Sans_3-0.4.10/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EH9CsKng.woff2
+Updating
+deps/Source_Sans_3-0.4.10/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EJ9CsKng.woff2
+Updating
+deps/Source_Sans_3-0.4.10/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EK9Cs.woff2
+Updating
+deps/Source_Sans_3-0.4.10/nwpBtKy2OAdR1K-IwhWudF-R9QMylBJAV3Bo8Ky462EO9CsKng.woff2
+Updating deps/bootstrap-5.3.8/bootstrap.bundle.min.js
+Updating deps/bootstrap-5.3.8/bootstrap.bundle.min.js.map
+Updating deps/bootstrap-5.3.8/bootstrap.min.css
+Updating deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js
+Updating deps/clipboard.js-2.0.11/clipboard.min.js
+Updating deps/font-awesome-6.5.2/css/all.css
+Updating deps/font-awesome-6.5.2/css/all.min.css
+Updating deps/font-awesome-6.5.2/css/v4-shims.css
+Updating deps/font-awesome-6.5.2/css/v4-shims.min.css
+Updating deps/font-awesome-6.5.2/webfonts/fa-brands-400.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-brands-400.woff2
+Updating deps/font-awesome-6.5.2/webfonts/fa-regular-400.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-regular-400.woff2
+Updating deps/font-awesome-6.5.2/webfonts/fa-solid-900.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-solid-900.woff2
+Updating deps/font-awesome-6.5.2/webfonts/fa-v4compatibility.ttf
+Updating deps/font-awesome-6.5.2/webfonts/fa-v4compatibility.woff2
+Updating deps/headroom-0.11.0/headroom.min.js
+Updating deps/headroom-0.11.0/jQuery.headroom.min.js
+Updating deps/jquery-3.6.0/jquery-3.6.0.js
+Updating deps/jquery-3.6.0/jquery-3.6.0.min.js
+Updating deps/jquery-3.6.0/jquery-3.6.0.min.map
+Updating deps/search-1.0.0/autocomplete.jquery.min.js
+Updating deps/search-1.0.0/fuse.min.js
+Updating deps/search-1.0.0/mark.min.js
+Copying pkgdown/favicon/apple-touch-icon.png to apple-touch-icon.png
+Copying pkgdown/favicon/favicon-96x96.png to favicon-96x96.png
+Copying pkgdown/favicon/favicon.ico to favicon.ico
+Copying pkgdown/favicon/favicon.svg to favicon.svg
+Copying pkgdown/favicon/site.webmanifest to site.webmanifest
+Copying pkgdown/favicon/web-app-manifest-192x192.png to
+web-app-manifest-192x192.png
+Copying pkgdown/favicon/web-app-manifest-512x512.png to
+web-app-manifest-512x512.png
+Copying logo.png
+── Building home ───────────────────────────────────────────────────────────────
+Writing `authors.html`
+Reading README.en.md
+Writing `README.en.html`
+Missing images in 'README.en.md': 'reference/figures/README-json-tabla.png',
+'reference/figures/README-tasas.png', and
+'reference/figures/README-rendimiento.png'
+ℹ pkgdown can only use images in 'man/figures' and 'vignettes'
+Reading .github/CODE_OF_CONDUCT.md
+Writing `CODE_OF_CONDUCT.html`
+Reading .github/CONTRIBUTING.md
+Writing `CONTRIBUTING.html`
+Reading LICENSE.md
+Writing `LICENSE.html`
+Writing `LICENSE-text.html`
+Reading README.md
+Writing `index.html`
+Writing `404.html`

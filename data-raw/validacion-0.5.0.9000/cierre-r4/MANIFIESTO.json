@@ -1,14 +1,14 @@
 {
-  "candidato": "r4-0.5.0.9000-fdd2d37",
+  "candidato": "r4-0.5.0.9000-8175b06",
   "estado": "candidato_tecnico_de_desarrollo",
   "version_paquete": "0.5.0.9000",
-  "codigo_commit": "fdd2d3734decb9b8cbc92fc0d2c4e1a39be36564",
-  "generado_utc": "2026-11-15T01:24:01.213181+00:00",
+  "codigo_commit": "8175b062f621bc65f2f4166f71dc91aee68615ff",
+  "generado_utc": "2026-11-15T01:30:11.239045+00:00",
   "archivo": {
     "nombre": "fhirviews_0.5.0.9000.tar.gz",
-    "bytes": 1187904,
-    "sha256": "47c759700a46f9f6dc4d63b06f5609b3f95dc11f63773e9c764ea78abc39ec15",
-    "md5": "b3837d124238396bf6e550a89676ab3f"
+    "bytes": 1187896,
+    "sha256": "756a96a527d1233027cc579a412c9ee036d7369720ec4bf3fa2f3d966df73cf6",
+    "md5": "e6d733267d2ed0e31c2df454156e3d52"
   },
   "fhir": {
     "version": "4.0.1",
@@ -66,5 +66,7 @@
   "federacion_R4": "pendiente",
   "conversion_R4_R6": "sin_integrar",
   "publicacion_release": "no_realizada",
-  "nuevo_envio_CRAN": "no_realizado"
+  "nuevo_envio_CRAN": "no_realizado",
+  "codigo_integracion_hapi_y_dbi": "fdd2d3734decb9b8cbc92fc0d2c4e1a39be36564",
+  "cambios_desde_integracion": "Solo enlaces README y evidencia excluida del paquete; codigo R y ejemplos identicos"
 }

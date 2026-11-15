@@ -8,7 +8,7 @@
   "alcance": "Datos ficticios incluidos; no evalua un servidor ni datos propios",
   "validacion_usuario_externo": "pendiente",
   "version_fhirviews": "0.5.0.9000",
-  "candidato_md5": "b3837d124238396bf6e550a89676ab3f",
+  "candidato_md5": "e6d733267d2ed0e31c2df454156e3d52",
   "hallazgos": {
     "vigilancia": {
       "eventos_confirmados": 661,
@@ -48,7 +48,7 @@
     {
       "prueba": "vigilancia",
       "estado": "aprobado",
-      "segundos": 0.938,
+      "segundos": 0.883,
       "clase_error": "",
       "codigo": "",
       "advertencias": 0
@@ -56,7 +56,7 @@
     {
       "prueba": "contrato_estricto",
       "estado": "aprobado",
-      "segundos": 0.067,
+      "segundos": 0.066,
       "clase_error": "",
       "codigo": "",
       "advertencias": 0
@@ -64,7 +64,7 @@
     {
       "prueba": "recuperacion",
       "estado": "aprobado",
-      "segundos": 0.533,
+      "segundos": 0.552,
       "clase_error": "",
       "codigo": "",
       "advertencias": 0
@@ -72,7 +72,7 @@
     {
       "prueba": "r4_cinco_recursos",
       "estado": "aprobado",
-      "segundos": 2.886,
+      "segundos": 2.856,
       "clase_error": "",
       "codigo": "",
       "advertencias": 0
