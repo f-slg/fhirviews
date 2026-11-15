@@ -16,7 +16,7 @@
         "Se cargo la biblioteca de esta sesion.",
         "Ayuda y vinetas disponibles; asistencia registrada."
       ],
-      "expected": "fhirviews 0.5.0.9001; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.",
+      "expected": "fhirviews 0.5.0.9002; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.",
       "evidence": "SESION.json, candidato.txt, ruta de la biblioteca y ayuda consultada.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"basico\", \"sesion-P01-intento01\")\nabrir_sesion(\"sesion-P01-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
     },
@@ -27,7 +27,7 @@
       "goal": "Interpretar el resultado tecnico, las omisiones y la evaluacion humana pendiente.",
       "steps": [
         "Abrir piloto/aceptacion.json y aceptacion.csv dentro de la sesion.",
-        "Contrastar version 0.5.0.9001, MD5 y esquema_informe = 2.",
+        "Contrastar version 0.5.0.9002, MD5 y esquema_informe = 2.",
         "Explicar api_instalada, vigilancia, contrato_estricto, recuperacion y r4_cinco_recursos.",
         "Registrar advertencias o fallos sin convertirlos en aprobaciones."
       ],
@@ -116,7 +116,7 @@
         "Se distinguen categoria, criticidad y gravedad; no se infieren ausentes.",
         "La vista no se confundio con un sexto constructor SQL a FHIR."
       ],
-      "expected": "a1 aporta tres filas; a2 y a3 una cada uno. Los constructores siguen limitados a cinco tipos.",
+      "expected": "a1 aporta tres filas; a2 y a3 una cada uno. AllergyIntolerance se extrae mediante una vista; no es un constructor SQL → FHIR.",
       "evidence": "Conteo de ids, filas y campos contrastados con los recursos ficticios.",
       "code": "archivo <- system.file(\"extdata\", \"alergias_r4.ndjson\", package = \"fhirviews\")\nalergias <- vista_ejecutar(archivo, vista_plantilla(\"alergias\"))\nalergias[, c(\"id\", \"estado_clinico\", \"gravedad_reaccion\", \"reaccion_codigo\")]\nlength(unique(alergias$id))"
     },
@@ -162,21 +162,23 @@
     },
     {
       "id": "R09",
-      "title": "Contrastar SQL y recuperacion cuando se acuerde",
+      "title": "Probar Specimen y DiagnosticReport desde SQL (opcional)",
       "required": false,
-      "goal": "Ampliar el alcance con DuckDB sin presentar una omision como aprobacion.",
+      "goal": "Explorar el ejemplo de laboratorio del candidato actual y sus referencias variables.",
       "steps": [
-        "Si se acordo completo, revisar consultas parametrizadas, recuperacion y comparacion V8/DuckDB.",
-        "Explicar rollback, la repeticion completa y los cinco tipos del recorrido R4.",
-        "Si no se evalua, marcar no_evaluada y justificar el alcance excluido."
+        "Si se acordo el perfil completo, revisar examples/laboratorio-r4.R en la instalacion aislada.",
+        "Ejecutar laboratorio_r4() con datos ficticios; identificar Patient, Specimen, dos Observation y DiagnosticReport.",
+        "Seguir las referencias result[].reference y specimen[].reference; comparar las tablas V8/DuckDB.",
+        "Si no se evalua, registrar no_evaluada y el motivo. Esta tarea requiere DBI/DuckDB; Rust es opcional."
       ],
       "checks": [
-        "Se registro el perfil y el entorno con DBI/DuckDB.",
-        "Se reviso recuperacion aprobada cuando se ejecuto completo.",
-        "La interpretacion de SQL se documento o su no evaluacion quedo justificada."
+        "Se registraron perfil y entorno con DBI/DuckDB.",
+        "El informe contiene referencias a los resultados y la muestra.",
+        "Las vistas V8 y DuckDB coinciden o se documento el hallazgo.",
+        "La no evaluacion no se presento como aprobacion."
       ],
-      "expected": "En completo los cinco controles se aprueban; basico no acredita recuperacion ni paridad SQL del participante.",
-      "evidence": "Informe completo y explicacion, o razon documentada de exclusion.",
+      "expected": "En el perfil completo, una muestra, dos observaciones y un informe; basico no evalua esta tarea.",
+      "evidence": "Salida ficticia local, tablas comparadas y registro de ayuda; no compartir rutas sin revisarlas.",
       "code": ""
     }
   ],
@@ -197,7 +199,7 @@
         "Se cargo la biblioteca de esta sesion.",
         "Ayuda y vinetas disponibles; asistencia registrada."
       ],
-      "expected": "fhirviews 0.5.0.9001; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.",
+      "expected": "fhirviews 0.5.0.9002; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.",
       "evidence": "SESION.json, candidato.txt, ruta de la biblioteca y ayuda consultada.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"completo\", \"sesion-P02-intento01\")\nabrir_sesion(\"sesion-P02-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
     },
@@ -208,7 +210,7 @@
       "goal": "Interpretar el resultado tecnico, las omisiones y la evaluacion humana pendiente.",
       "steps": [
         "Abrir piloto/aceptacion.json y aceptacion.csv dentro de la sesion.",
-        "Contrastar version 0.5.0.9001, MD5 y esquema_informe = 2.",
+        "Contrastar version 0.5.0.9002, MD5 y esquema_informe = 2.",
         "Explicar api_instalada, vigilancia, contrato_estricto, recuperacion y r4_cinco_recursos.",
         "Registrar advertencias o fallos sin convertirlos en aprobaciones."
       ],
@@ -297,7 +299,7 @@
         "Se distinguen categoria, criticidad y gravedad; no se infieren ausentes.",
         "La vista no se confundio con un sexto constructor SQL a FHIR."
       ],
-      "expected": "a1 aporta tres filas; a2 y a3 una cada uno. Los constructores siguen limitados a cinco tipos.",
+      "expected": "a1 aporta tres filas; a2 y a3 una cada uno. AllergyIntolerance se extrae mediante una vista; no es un constructor SQL → FHIR.",
       "evidence": "Conteo de ids, filas y campos contrastados con los recursos ficticios.",
       "code": "archivo <- system.file(\"extdata\", \"alergias_r4.ndjson\", package = \"fhirviews\")\nalergias <- vista_ejecutar(archivo, vista_plantilla(\"alergias\"))\nalergias[, c(\"id\", \"estado_clinico\", \"gravedad_reaccion\", \"reaccion_codigo\")]\nlength(unique(alergias$id))"
     },
@@ -343,21 +345,23 @@
     },
     {
       "id": "F09",
-      "title": "Contrastar SQL y recuperacion cuando se acuerde",
+      "title": "Probar Specimen y DiagnosticReport desde SQL (opcional)",
       "required": false,
-      "goal": "Ampliar el alcance con DuckDB sin presentar una omision como aprobacion.",
+      "goal": "Explorar el ejemplo de laboratorio del candidato actual y sus referencias variables.",
       "steps": [
-        "Si se acordo completo, revisar consultas parametrizadas, recuperacion y comparacion V8/DuckDB.",
-        "Explicar rollback, la repeticion completa y los cinco tipos del recorrido R4.",
-        "Si no se evalua, marcar no_evaluada y justificar el alcance excluido."
+        "Si se acordo el perfil completo, revisar examples/laboratorio-r4.R en la instalacion aislada.",
+        "Ejecutar laboratorio_r4() con datos ficticios; identificar Patient, Specimen, dos Observation y DiagnosticReport.",
+        "Seguir las referencias result[].reference y specimen[].reference; comparar las tablas V8/DuckDB.",
+        "Si no se evalua, registrar no_evaluada y el motivo. Esta tarea requiere DBI/DuckDB; Rust es opcional."
       ],
       "checks": [
-        "Se registro el perfil y el entorno con DBI/DuckDB.",
-        "Se reviso recuperacion aprobada cuando se ejecuto completo.",
-        "La interpretacion de SQL se documento o su no evaluacion quedo justificada."
+        "Se registraron perfil y entorno con DBI/DuckDB.",
+        "El informe contiene referencias a los resultados y la muestra.",
+        "Las vistas V8 y DuckDB coinciden o se documento el hallazgo.",
+        "La no evaluacion no se presento como aprobacion."
       ],
-      "expected": "En completo los cinco controles se aprueban; basico no acredita recuperacion ni paridad SQL del participante.",
-      "evidence": "Informe completo y explicacion, o razon documentada de exclusion.",
+      "expected": "En el perfil completo, una muestra, dos observaciones y un informe; basico no evalua esta tarea.",
+      "evidence": "Salida ficticia local, tablas comparadas y registro de ayuda; no compartir rutas sin revisarlas.",
       "code": ""
     }
   ]

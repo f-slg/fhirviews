@@ -15,7 +15,7 @@ const dom=new JSDOM(html,{runScripts:'dangerously',url:'https://kit.example.inva
 const w=dom.window;
 const evaluar=c=>JSON.parse(w.eval('JSON.stringify('+c+')'));
 assert.equal(evaluar('state.schema'),'fhirviews-piloto-r4-v2');
-assert.equal(evaluar('current().fields.version'),'0.5.0.9001');
+assert.equal(evaluar('current().fields.version'),'0.5.0.9002');
 assert.equal(evaluar('current().fields.participant'),'');
 assert.equal(evaluar('current().fields.technical'),'pendiente');
 assert.equal(evaluar('report().decision_efectiva'),'pendiente');

@@ -11,9 +11,10 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 KIT = 'data-raw/piloto-r4-v2'
-EVIDENCIA = 'data-raw/validacion-0.5.0.9001/alergias/MANIFIESTO.json'
+EVIDENCIA = 'data-raw/validacion-0.5.0.9002/MANIFIESTO.json'
 ARCHIVOS = ('INICIAR.R', 'LEEME.md', 'ANEXO-OBSERVADOR.md',
-            'PROTOCOLO-PERFIL-R.md', 'PROTOCOLO-PERFIL-FHIR.md', 'tareas.json')
+            'PROTOCOLO-PERFIL-R.md', 'PROTOCOLO-PERFIL-FHIR.md',
+            'PILOTO-R4.md', 'tareas.json')
 
 
 def git(ref, archivo):
@@ -37,7 +38,6 @@ def construir(paquete, salida, ref='HEAD'):
         descripcion = t.extractfile('fhirviews/DESCRIPTION').read().decode()
         if '\nVersion: ' + evidencia['version'] + '\n' not in '\n' + descripcion:
             raise ValueError('La version del archivo no coincide.')
-        protocolo = t.extractfile('fhirviews/inst/examples/PILOTO-R4.md').read()
     candidato = dict(version=evidencia['version'], fuente_commit=evidencia['fuente_commit'],
         paquete=esperado, evaluacion_externa='pendiente', participantes='sin_asignar',
         resultado_previo='comprobacion_tecnica_del_mantenedor',
@@ -45,7 +45,6 @@ def construir(paquete, salida, ref='HEAD'):
         citacion=evidencia['citacion'])
     archivos = {nombre: git(commit, KIT + '/' + nombre) for nombre in ARCHIVOS}
     archivos['PROBAR-CANDIDATO.R'] = git(commit, 'data-raw/probar-candidato.R')
-    archivos['PILOTO-R4.md'] = protocolo
     archivos['LICENSE.md'] = git(commit, 'LICENSE.md')
     archivos['CANDIDATO.json'] = (json.dumps(candidato, ensure_ascii=False, indent=2) + '\n').encode()
     archivos['paquete/' + esperado['archivo']] = contenido

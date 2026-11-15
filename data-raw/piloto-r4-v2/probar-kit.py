@@ -28,7 +28,7 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
     kit=next((temp/'Kit con espacios').iterdir())
     m=json.loads((kit/'MANIFIESTO-KIT.json').read_text())
     c=json.loads((kit/'CANDIDATO.json').read_text())
-    assert c['version']=='0.5.0.9001'
+    assert c['version']=='0.5.0.9002'
     assert m['evaluacion_externa']==c['evaluacion_externa']=='pendiente'
     assert m['participantes']==c['participantes']=='sin_asignar'
     assert len(m['archivos_sha256'])==12
@@ -73,16 +73,29 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
         script.write_text('''args <- commandArgs(trailingOnly=TRUE)
 source(args[1], encoding="UTF-8")
 abrir_sesion(args[2])
-stopifnot(as.character(packageVersion("fhirviews")) == "0.5.0.9001")
+stopifnot(as.character(packageVersion("fhirviews")) == "0.5.0.9002")
 f <- system.file("extdata", "alergias_r4.ndjson", package="fhirviews")
 x <- vista_ejecutar(f, vista_plantilla("alergias"))
 stopifnot(nrow(x)==5L, length(unique(x$id))==3L)
 stopifnot(is.null(citation("fhirviews")[[1]]$doi))
 ''')
         subprocess.run(['Rscript','--vanilla',str(script),str(kit/'INICIAR.R'),str(temp/'Sesion basico')],check=True)
+        laboratorio=temp/'laboratorio.R'
+        laboratorio.write_text('''source(system.file("examples", "laboratorio-r4.R", package="fhirviews"))
+x <- laboratorio_r4(prefijo="piloto-kit")
+tipos <- vapply(x$recursos, function(r) r$resourceType, character(1))
+stopifnot(sum(tipos == "Specimen") == 1L, sum(tipos == "DiagnosticReport") == 1L,
+  sum(tipos == "Observation") == 2L, nrow(x$tablas$resultados) == 2L,
+  nrow(x$tablas$muestras) == 1L,
+  isTRUE(all.equal(x$tablas$resultados, vista_ejecutar_duckdb(x$recursos, x$vistas$resultados))),
+  isTRUE(all.equal(x$tablas$muestras, vista_ejecutar_duckdb(x$recursos, x$vistas$muestras))))
+''')
+        subprocess.run(['Rscript','--vanilla','-e',
+          ".libPaths(c(normalizePath(commandArgs(TRUE)[1]), .libPaths())); library(fhirviews); source(commandArgs(TRUE)[2])",
+          str(temp/'Sesion completo'/'biblioteca'),str(laboratorio)],check=True)
         corrupto=temp/'Kit alterado'; shutil.copytree(kit,corrupto)
         (corrupto/'paquete'/c['paquete']['archivo']).write_bytes(mal.read_bytes())
         sesion=temp/'Sesion rechazada'
         r=subprocess.run(['Rscript','--vanilla',str(corrupto/'INICIAR.R'),'basico',str(sesion)],capture_output=True)
         assert r.returncode!=0 and not sesion.exists()
-        print('R: perfiles instalados, sesion aislada, alergias y rechazo de archivo alterado aprobados.',flush=True)
+        print('R: perfiles instalados, alergias, laboratorio R4 y rechazo de archivo alterado aprobados.',flush=True)

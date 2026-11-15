@@ -1,6 +1,6 @@
 # Piloto externo R4 de fhirviews
 
-Este kit entrega el candidato **0.5.0.9001** que ya pasó las comprobaciones
+Este kit entrega el candidato **0.5.0.9002** que ya pasó las comprobaciones
 técnicas. Las fichas comienzan pendientes: el kit no contiene resultados de
 personas reales ni acredita una evaluación clínica. Usa datos ficticios.
 
@@ -41,7 +41,7 @@ Esto carga la copia aislada del candidato, sin depender de otra instalación.
 ## Qué comprobar
 
 `CANDIDATO.json` identifica versión, commit y archivo. El paquete incluido es
-`paquete/fhirviews_0.5.0.9001.tar.gz`. El lanzador comprueba SHA-256, MD5 y tamaño
+`paquete/fhirviews_0.5.0.9002.tar.gz`. El lanzador comprueba SHA-256, MD5 y tamaño
 antes de instalarlo y usa un proceso R nuevo con una biblioteca aislada.
 `SHA256SUMS` permite contrastar los archivos del kit; `MANIFIESTO-KIT.json`
 identifica el commit con el que se prepararon las instrucciones. Los checksums
@@ -53,7 +53,13 @@ El formato técnico es `esquema_informe = 2`. Hay cinco controles: en básico
 recuperación queda `no_evaluado`; los otros cuatro deben aprobarse. En completo
 los cinco deben aprobarse. Toda advertencia requiere revisión.
 
-El recorrido R4 construye seis recursos de cinco tipos. La vista de alergias
+El ensayo instalado comprueba seis recursos de cinco tipos. En el perfil
+completo, la tarea opcional de laboratorio ejecuta el ejemplo instalado y
+construye Patient, Specimen, dos Observation y DiagnosticReport; verifica que
+el informe mantenga las referencias a resultados y muestras y compara vistas
+V8/DuckDB. Esta tarea necesita DBI y DuckDB y no forma parte del perfil básico.
+La API del componente Rust es opcional; el kit no descarga ni requiere un
+binario Rust. La vista de alergias
 lee otros tres registros y da cinco filas; es una lectura adicional, no un
 sexto constructor. El participante debe explicar estas diferencias.
 
