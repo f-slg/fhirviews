@@ -1911,8 +1911,14 @@ assistance and issues, with JSON/CSV/text export. It does not run R or
 send results. Technical checks leave human tasks and closure decisions
 pending. The [kit
 instructions](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md)
-describe session planning and repeated attempts without overwriting
-earlier ones.
+are the detailed participant guide: they explain download verification,
+profile and technical-level selection, task execution and repetition,
+the five acceptance checks, form export and privacy-aware evidence
+sharing. The [R and FHIR profile
+protocols](https://github.com/f-slg/fhirviews/tree/main/data-raw/piloto-r4-v2)
+describe the individual tasks. The form and launcher serve different
+purposes: the form records the session; the launcher installs the
+candidate and runs technical checks.
 
 The [R4 participant
 guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md)
@@ -1966,9 +1972,24 @@ manifest, so that exactly the same version is evaluated. The v1 kit
 retains its historical reference to candidate 0.5.0. Use the current R4
 protocol above for the SQL → FHIR R4 milestone.
 
-### Install the candidate and run the trial
+### Advanced alternative: run the package’s technical check
 
-The pilot uses the bundled fictitious data. Install the dependencies and
+This manual procedure installs a source archive and runs the technical
+example bundled with the R package. **It does not replace the external
+pilot kit**: it does not verify the complete ZIP, install into the kit’s
+isolated library, or include participant observation, session forms or
+human closure. To take part, follow the section above and its [detailed
+participant
+guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md).
+
+Use this procedure only when the maintainer explicitly asks you to
+repeat that technical check. The source archive must be the exact
+candidate identified in `CANDIDATO.json`; do not present another
+version’s archive as a kit result.
+
+#### Manual technical check (not a complete pilot session)
+
+This check uses bundled fictitious data. Install the dependencies and
 the source archive provided by the maintainer:
 
 ``` r
