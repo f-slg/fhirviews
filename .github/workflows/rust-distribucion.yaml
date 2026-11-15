@@ -85,6 +85,17 @@ jobs:
               '--salida', str(temporal/'paquete'), '--commit', os.environ['GITHUB_SHA'],
               '--runner', '${{ matrix.os }}', '--flags='+os.environ.get('RUSTFLAGS','')], check=True)
           PY
+      - name: Preparar bloqueador ejecutable para el consumidor Windows
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          rustc +1.75.0 --edition 2021 --target x86_64-pc-windows-msvc -C target-feature=+crt-static --crate-name bloqueo_compiladores data-raw/distribucion-rust/bloqueo-compiladores.rs -o "$RUNNER_TEMP/paquete/bloqueo-compiladores.exe"
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          exe=Path(os.environ['RUNNER_TEMP'])/'paquete/bloqueo-compiladores.exe'
+          Path(str(exe)+'.sha256').write_bytes((hashlib.sha256(exe.read_bytes()).hexdigest()+'  '+exe.name+'\n').encode())
+          PY
       - uses: actions/upload-artifact@v7
         with:
           name: binario-${{ matrix.target }}
@@ -144,7 +155,7 @@ jobs:
               f.write('FHIRVIEWS_RUST_BIN='+str(exe.resolve())+'\n')
               f.write('FHIRVIEWS_COMPILER_MARKER='+str(t/'compilador-invocado.txt')+'\n')
           PY
-          python3 data-raw/distribucion-rust/sin-compilador.py "$RUNNER_TEMP/sin-compilador" >> "$GITHUB_PATH"
+          python3 data-raw/distribucion-rust/sin-compilador.py "$RUNNER_TEMP/sin-compilador" --windows-stub "$RUNNER_TEMP/descarga/bloqueo-compiladores.exe" >> "$GITHUB_PATH"
       - name: Instalar R con pruebas incluidas y sin invocar Rust
         shell: Rscript {0}
         run: |

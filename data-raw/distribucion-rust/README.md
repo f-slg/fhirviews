@@ -105,6 +105,12 @@ descarga ese artefacto, verifica y extrae en una ruta con espacios. Instala
 fhirviews con `R CMD INSTALL --install-tests`, antepone comandos Cargo,
 rustc y rustup que fallan/registran cualquier invocacion y ejecuta
 `probar-instalado.R` con `testthat::test_package()`.
+En Windows se usan bloqueadores `.exe`, compilados en el trabajo productor
+desde `bloqueo-compiladores.rs` y verificados por SHA-256. Evitan que Windows
+prefiera un compilador `.exe` real frente a un script `.cmd`. Son instrumentos
+de CI, no compiladores ni parte de los ZIP publicos. La preparacion comprueba
+que cada bloqueador devuelve 97 y registra una invocacion de autoprueba;
+despues la instalacion y las pruebas R deben completar sin generar ese registro.
 Comprueba JSON y NDJSON exactos, vistas, referencias, decimales, diagnosticos,
 respaldo R y SQL parametrizado para los siete constructores. No acepta
 pruebas omitidas, warnings ni fallos. El informe `consumidor.json` identifica
