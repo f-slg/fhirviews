@@ -2,6 +2,11 @@
 
 ## fhirviews 0.5.0.9001
 
+- El repositorio incluye un kit externo R4 con el candidato comprobado,
+  verificacion SHA-256, instalacion aislada, protocolos R/FHIR y
+  formulario local. Las tareas y decisiones humanas empiezan pendientes.
+  El kit no se distribuye dentro del paquete R ni envia resultados
+  automaticamente.
 - El catalogo incorpora `vista_plantilla("alergias")` para
   AllergyIntolerance R4. Conserva categorias, estados por su sistema
   canonico y la relacion entre cada reaccion y sus manifestaciones.

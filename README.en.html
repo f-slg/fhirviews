@@ -1228,8 +1228,15 @@ Historical engine benchmarks and fhircrackr comparison
 <h2 id="pilot-and-local-documentation">Pilot and local documentation<a class="anchor" aria-label="anchor" href="#pilot-and-local-documentation"></a></h2>
 <div class="section level3">
 <h3 id="current-r4-protocol">Current R4 protocol<a class="anchor" aria-label="anchor" href="#current-r4-protocol"></a></h3>
-<p>The <a href="https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md" class="external-link">R4 participant guide</a> is installed as <code>examples/PILOTO-R4.md</code>. To run only the six-resource R4 round trip:</p>
+<p><strong><a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip" class="external-link">Download the external R4 pilot kit ZIP</a></strong> · <a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256" class="external-link">ZIP SHA-256</a></p>
+<p>The kit includes the <strong>checked 0.5.0.9001 package</strong>, its identity, a launcher, R/FHIR protocols and a local form. Pilot materials are in Spanish. Extract the entire ZIP and open R in that folder. Install the dependencies listed in <code>LEEME.md</code>, then run:</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"INICIAR.R"</span><span class="op">)</span></span>
+<span><span class="fu">iniciar_piloto</span><span class="op">(</span><span class="st">"basico"</span>, <span class="st">"sesion-P01-intento01"</span><span class="op">)</span></span>
+<span><span class="fu">abrir_sesion</span><span class="op">(</span><span class="st">"sesion-P01-intento01"</span><span class="op">)</span></span></code></pre></div>
+<p>The launcher verifies the archive before installing into an isolated library. The complete profile adds DBI/DuckDB and requires R &gt;= 4.2 in this kit; basic uses R &gt;= 4.1. The form keeps separate profiles, tasks, assistance and issues, with JSON/CSV/text export. It does not run R or send results. Technical checks leave human tasks and closure decisions pending. The <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md" class="external-link">kit instructions</a> describe session planning and repeated attempts without overwriting earlier ones.</p>
+<p>The <a href="https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md" class="external-link">R4 participant guide</a> is installed as <code>examples/PILOTO-R4.md</code>. To run only the six-resource R4 round trip:</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>FHIRVIEWS_R4_SALIDA <span class="op">=</span> <span class="st">"r4-basico-01"</span>, FHIRVIEWS_R4_SQL <span class="op">=</span> <span class="st">"false"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"r4-estabilidad.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Use <code>FHIRVIEWS_R4_SQL = "true"</code> for parameterised DBI/DuckDB queries and both view engines. Each output folder must be new. The trial uses fictitious data and retains the JSON resources and summary locally.</p>
@@ -1256,11 +1263,11 @@ Historical participant kit for 0.5.0
 <div class="section level3">
 <h3 id="install-the-candidate-and-run-the-trial">Install the candidate and run the trial<a class="anchor" aria-label="anchor" href="#install-the-candidate-and-run-the-trial"></a></h3>
 <p>The pilot uses the bundled fictitious data. Install the dependencies and the source archive provided by the maintainer:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.9001.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <p>Restart R, choose a new folder and run:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
 <span>  FHIRVIEWS_PILOTO_SALIDA <span class="op">=</span> <span class="st">"piloto-basico-01"</span>,</span>
 <span>  FHIRVIEWS_PILOTO_PERFIL <span class="op">=</span> <span class="st">"basico"</span></span>
@@ -1269,7 +1276,7 @@ Historical participant kit for 0.5.0
 <p>Open <code>piloto-basico-01/aceptacion.csv</code> to see the checks and <code>aceptacion.json</code> for their diagnostics. The statuses are <code>aprobado</code>, <code>fallo</code>, <code>requiere_revision</code>, <code>pendiente</code> and <code>no_evaluado</code> (approved, failed, needs review, pending and not evaluated). Any warning requires review and prevents automatic approval; the report records safe codes without copying the original messages.</p>
 <p>Reports now use <code>esquema_informe = 2</code>. The <code>basico</code> profile checks the API, surveillance results, strict rejection of an incompatible block and the five R4 types constructed from tables. To also check rollback, parameterised SQL and both implementations of the five views, install <code>DBI</code> and <code>duckdb</code>, change the profile to <code>completo</code> and use another new folder. The files stay local; fill in <code>experiencia-usuario.txt</code> with the obstacles, the help you needed and your assessment. Technical approval leaves that human evaluation pending and does not validate a server or your own data.</p>
 <p>Help and vignettes are available in the installation:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
@@ -1298,7 +1305,7 @@ Historical participant kit for 0.5.0
 <div class="section level2">
 <h2 id="citing-the-package">Citing the package<a class="anchor" aria-label="anchor" href="#citing-the-package"></a></h2>
 <p><strong>Author and maintainer:</strong> Ronald Fabricio Salas Guerrero, <a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID 0000-0001-5077-1522</a>.</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/toLatex.html" class="external-link">toBibtex</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>What you used</th>
