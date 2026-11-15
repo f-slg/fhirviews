@@ -1429,6 +1429,58 @@ y su resultado debe consultarse para el commit específico que se vaya a entrega
 
 ## Rendimiento
 
+### Medición de la API Rust en 0.5.0.9002
+
+El [informe verificable](https://github.com/f-slg/fhirviews/tree/main/data-raw/validacion-0.5.0.9002)
+corresponde al paquete instalado desde el commit `8d6a122`, con bytecode R,
+Ubuntu 26.04.1, Intel i7-10750H, R 4.5.2 y Rust 1.75.0. Compara los siete
+mapas ficticios de `tests/testthat/helper-constructor-r4.R`: **126 muestras**,
+300 y 3.000 filas, tres repeticiones y orden aleatorio. Cada llamada produjo
+el mismo JSON exacto que la ruta R.
+
+Medianas para **3.000 filas**, en segundos:
+
+| Recurso | R (s) | R con plan (s) | Componente Rust (s) | R / Rust |
+|---|---:|---:|---:|---:|
+| Condition | 6,983 | 6,703 | 2,307 | 3,03× |
+| DiagnosticReport | 19,695 | 15,755 | 6,352 | 3,10× |
+| Encounter | 8,666 | 5,500 | 2,642 | 3,28× |
+| Immunization | 9,317 | 5,837 | 3,116 | 2,99× |
+| Observation | 10,098 | 6,043 | 2,986 | 3,38× |
+| Patient | 3,362 | 1,855 | 1,538 | 2,19× |
+| Specimen | 9,564 | 6,382 | 3,447 | 2,77× |
+
+En estos mapas y equipo, el componente fue entre **2,19 y 3,38 veces** más
+rápido que R público, y entre **1,21 y 2,91 veces** más rápido que el plan R
+experimental. Los mapas tienen estructuras distintas; las cifras no comparan
+la complejidad de los recursos ni prueban que se hayan agotado las mejoras R.
+
+**Los lotes pequeños pueden favorecer R.** Para 300 Patient se midieron
+0,341 s con R, 0,166 s con el plan R y 0,437 s con el componente. El plan R
+experimental también fue más rápido que Rust en algunos otros lotes de 300.
+Por eso la selección es explícita y R sigue siendo la opción predeterminada;
+no hay un umbral automático de activación validado para otras cargas.
+
+La preparación del plan R experimental tardó 0,692 s y la primera llamada
+al componente, con tres Patient, 0,437 s; se registran aparte. Los tiempos por
+lote incluyen comprobación del binario, arranque, transporte temporal y lectura
+del plan. Se excluyen compilación, instalación, generación de filas/mapas,
+comparación del resultado y GC previo. Se guardan las muestras individuales,
+que muestran variación; tres repeticiones no constituyen un estudio general
+de rendimiento. No se midieron memoria de esta API, rendimiento en otros
+sistemas, perfiles clínicos, consultas SQL on FHIR ni Helios.
+
+El archivo fuente comprobado pasó `R CMD check --as-cran --no-manual` con
+**0 errores, 0 advertencias y 1 nota por la numeración de desarrollo**.
+Las diez comprobaciones CI del código pasaron: cinco configuraciones R,
+componente Rust en tres plataformas, HAPI y SQL DBI. Cada plataforma ejecutó
+286 comprobaciones dirigidas y los 587 controles del laboratorio; el núcleo
+incluye 12 pruebas nativas. Los resultados y los SHA-256 quedan conservados
+junto al script [medir-componente-rust.R](https://github.com/f-slg/fhirviews/blob/main/data-raw/medir-componente-rust.R).
+
+<details>
+<summary>Laboratorio histórico Rust de 0.5.0.9000</summary>
+
 ### Evaluación experimental de Rust
 
 El constructor público utiliza R por defecto; desde 0.5.0.9002 puede seleccionar
@@ -1457,6 +1509,8 @@ La CI contrasta también la paridad con desarrollos posteriores. La API CLI de
 0.5.0.9002 conserva diagnósticos R completos y respaldo explícito; un enlace
 nativo, su ABI/toolchain y distribución dentro del paquete serían trabajo adicional.
 Consulta [resultados, hashes y reproducción](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md).
+
+</details>
 
 <details>
 <summary>Mediciones históricas de motores y comparación con fhircrackr</summary>
@@ -1641,7 +1695,7 @@ evidencia. Las siguientes tareas requieren trabajo adicional:
 |---|---|---|
 | 1 | **Piloto externo R4** | Una persona ajena al desarrollo instala el candidato identificado, repite las tareas y registra comprensión, ayuda y hallazgos con el [protocolo R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). La CI no sustituye esa evaluación. |
 | 2 | **Entrega estable del alcance R4** | Resolver los hallazgos, elegir versión y artefacto, comprobar ese mismo archivo y verificar su cita. El envío `0.5.0` a CRAN conserva su seguimiento independiente. |
-| 3 | **Distribución del componente Rust** | La API CLI y el respaldo R ya existen en 0.5.0.9002. Falta decidir distribución de ejecutables por plataforma y medir la interfaz final; un enlace nativo y su incorporación al paquete exigirían revisar ABI, toolchains, vendoring y licencias para CRAN. |
+| 3 | **Distribución del componente Rust** | La API CLI y el respaldo R ya existen en 0.5.0.9002. La API actual ya está medida; falta decidir distribución de ejecutables por plataforma y evaluar otras cargas; un enlace nativo y su incorporación al paquete exigirían revisar ABI, toolchains, vendoring y licencias para CRAN. |
 | 4 | **Más constructores R4** | `Specimen` y `DiagnosticReport` ya están incorporados. Siguen medicamentos y actores según las fuentes; cada grupo necesita metadatos, colecciones, referencias y retorno SQL → FHIR → perfiles → tablas. |
 | 5 | **Federación entre servidores R4** | Conservar origen y procedencia, distinguir ids repetidos entre servidores, revisar referencias y contrastar las consultas conjuntas. |
 | 6 | **Adaptadores R4/R6** | Elegir recursos y reglas por versión, conservar el original y documentar pérdidas o campos sin equivalencia antes de exportar. |

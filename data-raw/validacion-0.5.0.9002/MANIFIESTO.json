@@ -1,0 +1,78 @@
+{
+  "version": "0.5.0.9002",
+  "commit_codigo": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+  "paquete": {
+    "version": "0.5.0.9002",
+    "commit_fuente": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+    "archivo": "fhirviews_0.5.0.9002.tar.gz",
+    "bytes": 1209166,
+    "sha256": "305e5db0d637aecfbea612201abd4efc1995e6769a7026d29be1fc52308e8833",
+    "md5": "162d71f74a9d05bbefbad535c1dcf0a2",
+    "alcance": "Candidato tecnico para pruebas y medicion; no sustituye el kit de piloto 0.5.0.9001 ni tiene DOI propio."
+  },
+  "comprobacion_instalada": {
+    "comando": "R CMD check --as-cran --no-manual",
+    "errores": 0,
+    "advertencias": 0,
+    "notas": 1,
+    "motivo_nota": "Version contains large components (0.5.0.9002)",
+    "aprobadas": 1626,
+    "omitidas": 19,
+    "variable_rust": "Ejecutable externo seleccionado explicitamente durante el check; no se compila ni instala desde el paquete."
+  },
+  "conformidad": {
+    "v8": {
+      "aprobadas": 144,
+      "total": 144
+    },
+    "duckdb": {
+      "aprobadas": 144,
+      "total": 144
+    },
+    "alcance": "Banco incluido fijado; no equivale a todo FHIR o FHIRPath."
+  },
+  "ci": {
+    "checks_aprobados": 10,
+    "api_rust_cada_plataforma": 286,
+    "laboratorio_cada_plataforma": 587,
+    "unitarias_y_protocolo_rust": 12,
+    "hapi": 164,
+    "grupo_laboratorio_hapi": 34,
+    "hapi_local_con_componente": 165,
+    "grupo_laboratorio_hapi_local": 35
+  },
+  "esquema": {
+    "version": "4.0.1",
+    "tipos": 42,
+    "campos": 618,
+    "tipos_referencia": 148,
+    "sha256_archivo": "7ab6fb3d87dfc17aaf549d5978edf9a4d436fd8daf0748a16e477463f16bffa3"
+  },
+  "rust": {
+    "version_componente": "0.1.0",
+    "contrato": "fhirviews-r4-validator/1",
+    "rustc": "1.75.0 (82e1608df 2023-12-21)",
+    "cargo": "1.75.0 (1d8b05cdd 2023-11-20)",
+    "sha256_lock": "19146d588a81f437620ce53f08b9e095356697f852537224b84157bd1580fb05",
+    "sha256_lib": "aaa82ec4878d08ec353d4372a99e4fc48480d3d080d26ad44560c62569951c98",
+    "sha256_adaptador_r": "940d7494a20418b33915fca9fefa3fdfbaf5214ae3c8e1b8f9ffeb049965d974"
+  },
+  "rendimiento": {
+    "muestras": 126,
+    "json_exacto_en_todas": true,
+    "filas": [
+      300,
+      3000
+    ],
+    "repeticiones": 3,
+    "comparadores": [
+      "R publico",
+      "R preparado experimental",
+      "API publica con componente Rust"
+    ],
+    "memoria_medida": false,
+    "otros_proyectos_medidos": false
+  },
+  "piloto_externo": "pendiente; el kit publicado sigue siendo 0.5.0.9001",
+  "doi_version": null
+}

@@ -93,9 +93,13 @@ controles diferenciales del laboratorio anterior. Los resultados reales de
 cada ejecucion deben consultarse en sus artefactos; configurar la matriz no
 equivale a haberla aprobado.
 
-Los tiempos antiguos del laboratorio corresponden a 0.5.0.9000. La interfaz
-actual introduce sus propias comprobaciones y transporte; sus tiempos deben
-medirse por separado sobre un paquete instalado con bytecode.
+Los tiempos antiguos del laboratorio corresponden a 0.5.0.9000. La API actual
+se midio por separado sobre el paquete instalado con bytecode: [informe y
+126 muestras](../../data-raw/validacion-0.5.0.9002/README.md). En los siete
+mapas de 3.000 filas el componente fue 2,19-3,38 veces mas rapido que R
+publico; con 300 Patient, R fue mas rapido. El plan R experimental supera
+a Rust en algunos lotes pequenos. Estos resultados no miden memoria,
+FHIRPath ni otros proyectos y no establecen un umbral automatico de uso.
 
 Licencia del codigo del proyecto: [MIT](LICENSE). Las dependencias conservan
 sus respectivas licencias; no se distribuyen sus fuentes ni binarios dentro

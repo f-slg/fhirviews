@@ -105,6 +105,8 @@ Para repetir las mediciones publicadas usa el codigo del
 [commit 678e317](https://github.com/f-slg/fhirviews/tree/678e31775d23ec5015a5e4e1e7a5e965020a8778)
 y el paquete 0.5.0.9000; los hashes del manifiesto describen ese codigo
 inmutable. Los cambios posteriores en HEAD no reescriben esa evidencia.
+La API publica opcional de 0.5.0.9002 tiene su [informe independiente](../validacion-0.5.0.9002/README.md),
+con siete tipos de recurso y comparacion explicita frente al plan R.
 La CI de paridad instala y contrasta el desarrollo actual del paquete,
 admitiendo versiones desde 0.5.0.9000. No vuelve a medir el rendimiento.
 

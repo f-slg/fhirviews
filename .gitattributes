@@ -1,1 +1,5 @@
 inst/js/fhirpath/*.js -text -diff
+# Informes originales: conservar CRLF y espacios para verificar sus SHA-256.
+data-raw/validacion-0.5.0.9002/ci/** -text -whitespace
+data-raw/validacion-0.5.0.9002/rendimiento/sessionInfo.txt -text -whitespace
+data-raw/validacion-0.5.0.9002/testthat-instalado.Rout -text -whitespace

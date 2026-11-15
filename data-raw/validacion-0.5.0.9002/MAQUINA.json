@@ -1,0 +1,8 @@
+{
+  "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz",
+  "procesadores_logicos": 12,
+  "sistema": "Ubuntu 26.04.1 LTS",
+  "R": "4.5.2",
+  "rustc": "1.75.0",
+  "cargo": "1.75.0"
+}

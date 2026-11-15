@@ -1,0 +1,6 @@
+{
+  "estado": "aprobado",
+  "escenarios": 168,
+  "comparaciones": 336,
+  "alcance": "Referencias: paridad con R actual; no prueba conformidad de perfiles ni existencia del destino"
+}

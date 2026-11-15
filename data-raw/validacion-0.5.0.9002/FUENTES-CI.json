@@ -1,0 +1,102 @@
+[
+  {
+    "plataforma": "macos",
+    "artefacto_id": 14164384706,
+    "sha256_zip": "abeffb3c705babf9adb27c91fb3c6b0602d5248280b8a151814eb3efb351151c",
+    "commit_fuente": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+    "ficheros": [
+      {
+        "archivo": "ci/macos/rust-componente.json",
+        "sha256": "f06687b385186c6495d648d1619922359010f3e210c2c246ae2539f2ad7a5d1c"
+      },
+      {
+        "archivo": "ci/macos/aristas.json",
+        "sha256": "36ae8119b188863f4bf535095c64108508eeb4dc4c689a2a5d483de25cb10092"
+      },
+      {
+        "archivo": "ci/macos/paridad.json",
+        "sha256": "1e110354aa75e2c4edbe029eb5578659eadcb1208ccab07d151a16aa865ca2fa"
+      }
+    ]
+  },
+  {
+    "plataforma": "windows",
+    "artefacto_id": 14164533535,
+    "sha256_zip": "e2878ccb307d4a007180fa708f08f3bf32b1e21cb1edc469f572fc62f353361c",
+    "commit_fuente": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+    "ficheros": [
+      {
+        "archivo": "ci/windows/rust-componente.json",
+        "sha256": "0271007e7fd4b6adf117d8ce04a9bb6d4b22b79b14588783189950095ce660dc"
+      },
+      {
+        "archivo": "ci/windows/paridad.json",
+        "sha256": "d55e6b0951420899690ed6e0a7f2ac9c85f9b3274677e69b9ed8b8a79b63c99a"
+      },
+      {
+        "archivo": "ci/windows/aristas.json",
+        "sha256": "d202e2a3c497db8cb514c982e3eae0c58655d05bbd533da852b2682fb137cfff"
+      }
+    ]
+  },
+  {
+    "plataforma": "linux",
+    "artefacto_id": 14164458608,
+    "sha256_zip": "607f629a4a8618cc2322efaa5e93938197871d0e3fa3c73f0ece1b4653b4dd6d",
+    "commit_fuente": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+    "ficheros": [
+      {
+        "archivo": "ci/linux/paridad.json",
+        "sha256": "1e110354aa75e2c4edbe029eb5578659eadcb1208ccab07d151a16aa865ca2fa"
+      },
+      {
+        "archivo": "ci/linux/rust-componente.json",
+        "sha256": "60c5c4921c3ccd39c1473a29df3c21189a1055b3fd896cccd0137a61aff71ff7"
+      },
+      {
+        "archivo": "ci/linux/aristas.json",
+        "sha256": "36ae8119b188863f4bf535095c64108508eeb4dc4c689a2a5d483de25cb10092"
+      }
+    ]
+  },
+  {
+    "plataforma": "hapi",
+    "artefacto_id": 14164413886,
+    "sha256_zip": "1c01310ded87800610e4cc5ace2ffc9d62dc39eb95f7d34592db3b290845532b",
+    "commit_fuente": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+    "ficheros": [
+      {
+        "archivo": "ci/hapi/codigo-salida.txt",
+        "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+      },
+      {
+        "archivo": "ci/hapi/contexto.txt",
+        "sha256": "372a2e68031814e16aa8b387b52c83deb06a0950d2c94cac9a9672100a6a6836"
+      },
+      {
+        "archivo": "ci/hapi/limpieza.log",
+        "sha256": "6d746c2b408162941c59b88fdde2cae708e6705a3c5c941ff7cc76be5c11d0db"
+      },
+      {
+        "archivo": "ci/hapi/politica.log",
+        "sha256": "492288635dce26e819f369c73c3bbf58db4e567e461d7d30268baf1c32f6bfd8"
+      },
+      {
+        "archivo": "ci/hapi/pruebas.log",
+        "sha256": "8615c3ca93fc6450cb46e16d8796208fec8152a58edb69ab0c3c0187fac8dce8"
+      },
+      {
+        "archivo": "ci/hapi/resumen.csv",
+        "sha256": "ea87f49a0c4dc827953b925a234a57b211114832007e105bfa13df2630edfb8b"
+      },
+      {
+        "archivo": "ci/hapi/resumen.json",
+        "sha256": "59a4d66fa4435e02c237fd915d17fea8e37b464a54aae12ed5ff128512cf72d7"
+      },
+      {
+        "archivo": "ci/hapi/sessionInfo.txt",
+        "sha256": "e462543c8db3c84b2bd3e05c953793a389da619a2f572230dae1ccc4448fbc71"
+      }
+    ]
+  }
+]
