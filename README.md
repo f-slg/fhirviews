@@ -1490,6 +1490,10 @@ mapas ficticios de `tests/testthat/helper-constructor-r4.R`: **126 muestras**,
 300 y 3.000 filas, tres repeticiones y orden aleatorio. Cada llamada produjo
 el mismo JSON exacto que la ruta R.
 
+La medición usó el binario GNU Linux compilado localmente. Los ZIP de
+distribución tienen pruebas funcionales separadas; estos tiempos no miden
+el binario musl ni los ejecutables Windows/macOS.
+
 Medianas para **3.000 filas**, en segundos:
 
 | Recurso | R (s) | R con plan (s) | Componente Rust (s) | R / Rust |

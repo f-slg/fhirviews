@@ -148,7 +148,12 @@ jobs:
       - name: Instalar R con pruebas incluidas y sin invocar Rust
         shell: Rscript {0}
         run: |
-          stopifnot(grepl("sin-compilador", Sys.which("cargo"), fixed = TRUE))
+          bloqueados <- normalizePath(unname(Sys.which(c("cargo", "rustc", "rustup"))),
+            winslash = "/", mustWork = TRUE)
+          esperado <- normalizePath(file.path(Sys.getenv("RUNNER_TEMP"), "sin-compilador"),
+            winslash = "/", mustWork = TRUE)
+          print(bloqueados)
+          stopifnot(all(dirname(bloqueados) == esperado))
           exe <- file.path(R.home("bin"), if (.Platform$OS.type == "windows") "R.exe" else "R")
           stopifnot(system2(exe, c("CMD", "INSTALL", "--install-tests", "--no-multiarch", ".")) == 0L)
           stopifnot(!file.exists(Sys.getenv("FHIRVIEWS_COMPILER_MARKER")))

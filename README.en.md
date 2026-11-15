@@ -1450,6 +1450,10 @@ fictitious mappings in `tests/testthat/helper-constructor-r4.R`: **126 samples**
 300 and 3,000 rows, three repetitions and randomized order. Every call
 produced exactly the same JSON as the R path.
 
+The measurement used the locally compiled GNU Linux executable. Distribution
+ZIPs have separate functional tests; these timings do not measure the musl,
+Windows or macOS executables.
+
 Medians for **3,000 rows**, in seconds:
 
 | Resource | R (s) | R with plan (s) | Rust component (s) | R / Rust |
