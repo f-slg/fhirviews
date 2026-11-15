@@ -1,0 +1,73 @@
+name: Kit piloto R4
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/piloto-kit-r4.yaml'
+      - 'data-raw/piloto-r4-v2/**'
+      - 'data-raw/preparar-kit-r4.py'
+      - 'data-raw/fhirviews-kit-piloto-r4-v2.zip*'
+      - 'data-raw/probar-candidato.R'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/piloto-kit-r4.yaml'
+      - 'data-raw/piloto-r4-v2/**'
+      - 'data-raw/preparar-kit-r4.py'
+      - 'data-raw/fhirviews-kit-piloto-r4-v2.zip*'
+      - 'data-raw/probar-candidato.R'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: piloto-kit-r4-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  comprobar:
+    name: kit-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-26-intel]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          extra-packages: |
+            any::DBI
+            any::duckdb
+            any::openssl
+      - name: Preparar el comprobador del formulario
+        shell: bash
+        run: npm install --prefix "$RUNNER_TEMP/fhirviews-kit-node" --ignore-scripts --no-audit --no-fund jsdom@26.1.0
+      - name: Verificar archivo, instalacion y ambos perfiles tecnicos
+        shell: bash
+        run: python data-raw/piloto-r4-v2/probar-kit.py data-raw/fhirviews-kit-piloto-r4-v2.zip --ejecutar-r > "$RUNNER_TEMP/piloto-kit-r4.log" 2>&1
+      - name: Extraer el formulario para contrastar su integridad
+        shell: bash
+        run: python -c "import os,zipfile; zipfile.ZipFile('data-raw/fhirviews-kit-piloto-r4-v2.zip').extractall(os.path.join(os.environ['RUNNER_TEMP'],'piloto-formulario'))"
+      - name: Comprobar las reglas del formulario con datos simulados
+        shell: bash
+        run: node data-raw/piloto-r4-v2/probar-formulario.mjs "$RUNNER_TEMP/piloto-formulario/fhirviews-piloto-r4-0.5.0.9001/FORMULARIO-PILOTO.html" "$RUNNER_TEMP/fhirviews-kit-node/node_modules/jsdom" > "$RUNNER_TEMP/piloto-formulario.log" 2>&1
+      - name: Conservar registros tecnicos
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: piloto-kit-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/piloto-kit-r4.log
+            ${{ runner.temp }}/piloto-formulario.log
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1540,6 +1540,27 @@ no acredita un nuevo conversor ni sustituye la validación de perfiles.
 
 ### Protocolo actual para el cierre R4
 
+**[Descargar el kit externo R4 ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip)**
+· [SHA-256 del ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256)
+
+El kit incluye el **paquete comprobado 0.5.0.9001**, su identidad, un lanzador,
+protocolos R/FHIR y un formulario local. Extrae todo el ZIP y abre R desde esa
+carpeta. Instala las dependencias indicadas en `LEEME.md` y ejecuta:
+
+```r
+source("INICIAR.R")
+iniciar_piloto("basico", "sesion-P01-intento01")
+abrir_sesion("sesion-P01-intento01")
+```
+
+El lanzador verifica el archivo antes de instalarlo en una biblioteca aislada.
+Completo añade DBI/DuckDB y requiere R >= 4.2 en este kit; básico usa R >= 4.1.
+El formulario conserva fichas separadas, tareas, ayudas e incidencias, y exporta
+JSON/CSV/texto. No ejecuta R ni envía resultados. La comprobación técnica deja
+pendientes las tareas humanas y la decisión de cierre. Las
+[instrucciones del kit](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md)
+explican cómo acordar las sesiones y repetir sin sobrescribir los intentos.
+
 La [guía del participante R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md) se distribuye con el
 paquete en `examples/PILOTO-R4.md`. Usa el candidato que indique su manifiesto
 y el ensayo instalado de esta sección. Para ejecutar solamente el recorrido
