@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
         assert z.testzip() is None
         assert all(i.compress_type==zipfile.ZIP_STORED for i in z.infolist())
         nombres=z.namelist()
-        assert len(nombres)==len(set(nombres))==14
+        assert len(nombres)==len(set(nombres))==15
         assert all(not PurePosixPath(n).is_absolute() and '..' not in PurePosixPath(n).parts for n in nombres)
         z.extractall(temp/'Kit con espacios')
     kit=next((temp/'Kit con espacios').iterdir())
@@ -31,11 +31,11 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
     assert c['version']=='0.5.0.9002'
     assert m['evaluacion_externa']==c['evaluacion_externa']=='pendiente'
     assert m['participantes']==c['participantes']=='sin_asignar'
-    assert len(m['archivos_sha256'])==12
+    assert len(m['archivos_sha256'])==13
     for n,h in m['archivos_sha256'].items():
         assert hashlib.sha256((kit/n).read_bytes()).hexdigest()==h,n
     sumas=(kit/'SHA256SUMS').read_text().splitlines()
-    assert len(sumas)==13
+    assert len(sumas)==14
     for linea in sumas:
         h,n=linea.split('  ',1)
         assert hashlib.sha256((kit/n).read_bytes()).hexdigest()==h,n
@@ -43,7 +43,8 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
     assert hashlib.sha256(paquete.read_bytes()).hexdigest()==m['paquete_sha256']
     assert paquete.stat().st_size==c['paquete']['bytes']
     builder=ROOT/'data-raw/preparar-kit-r4.py'
-    comun=[sys.executable,str(builder),'--paquete',str(paquete),'--ref',m['fuente_kit_commit']]
+    comun=[sys.executable,str(builder),'--paquete',str(paquete),'--ref','HEAD',
+           '--kit-dir',str(kit)]
     copia=temp/'reconstruido.zip'
     subprocess.run(comun+['--salida',str(copia)],check=True,stdout=subprocess.DEVNULL)
     assert copia.read_bytes()==archivo.read_bytes(),'ZIP no reproducible'

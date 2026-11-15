@@ -14,20 +14,34 @@ KIT = 'data-raw/piloto-r4-v2'
 EVIDENCIA = 'data-raw/validacion-0.5.0.9002/MANIFIESTO.json'
 ARCHIVOS = ('INICIAR.R', 'LEEME.md', 'ANEXO-OBSERVADOR.md',
             'PROTOCOLO-PERFIL-R.md', 'PROTOCOLO-PERFIL-FHIR.md',
-            'PILOTO-R4.md', 'tareas.json')
+            'PILOTO-R4.md', 'tareas.json', 'formulario.template.html')
 
 
 def git(ref, archivo):
     return subprocess.check_output(['git', 'show', ref + ':' + archivo], cwd=ROOT)
 
 
-def construir(paquete, salida, ref='HEAD'):
+def construir(paquete, salida, ref='HEAD', kit_dir=None):
     paquete, salida = Path(paquete), Path(salida)
     if salida.exists():
         raise ValueError('La salida ya existe; elige un ZIP nuevo.')
     commit = subprocess.check_output(['git', 'rev-parse', '--verify', '--end-of-options', ref + '^{commit}'],
                                    cwd=ROOT, text=True).strip()
     evidencia = json.loads(git(commit, EVIDENCIA))
+    kit_root = Path(kit_dir).resolve() if kit_dir else None
+    if kit_root:
+        procedencia = json.loads((kit_root / 'MANIFIESTO-KIT.json').read_text(encoding='utf-8'))
+        if procedencia.get('esquema') != 'fhirviews-kit-r4-v2':
+            raise ValueError('El directorio fuente no contiene un manifiesto de kit reconocido.')
+        fuente_kit_commit = procedencia['fuente_kit_commit']
+        def archivo_fuente(nombre):
+            ruta = kit_root / nombre
+            if ruta.is_symlink() or not ruta.is_file():
+                raise ValueError('Falta un archivo regular del kit: ' + nombre)
+            return ruta.read_bytes()
+    else:
+        fuente_kit_commit = commit
+        archivo_fuente = lambda nombre: git(commit, KIT + '/' + nombre)
     contenido = paquete.read_bytes()
     sha = hashlib.sha256(contenido).hexdigest()
     esperado = evidencia['paquete']
@@ -49,9 +63,9 @@ def construir(paquete, salida, ref='HEAD'):
         paquete=esperado, evaluacion_externa='pendiente', participantes='sin_asignar',
         resultado_previo='comprobacion_tecnica_del_mantenedor',
         aceptacion=aceptacion, citacion=citacion)
-    archivos = {nombre: git(commit, KIT + '/' + nombre) for nombre in ARCHIVOS}
-    archivos['PROBAR-CANDIDATO.R'] = git(commit, 'data-raw/probar-candidato.R')
-    archivos['LICENSE.md'] = git(commit, 'LICENSE.md')
+    archivos = {nombre: archivo_fuente(nombre) for nombre in ARCHIVOS}
+    archivos['PROBAR-CANDIDATO.R'] = archivo_fuente('PROBAR-CANDIDATO.R')
+    archivos['LICENSE.md'] = archivo_fuente('LICENSE.md')
     archivos['CANDIDATO.json'] = (json.dumps(candidato, ensure_ascii=False, indent=2) + '\n').encode()
     archivos['paquete/' + esperado['archivo']] = contenido
     tareas = json.loads(archivos['tareas.json'])
@@ -63,7 +77,7 @@ def construir(paquete, salida, ref='HEAD'):
         sort_keys=True,separators=(',',':')).encode()).hexdigest()
     referencia = dict(version=candidato['version'], commit=candidato['fuente_commit'],
                      sha256=sha, tareas_sha256=protocolo_sha)
-    html = git(commit, KIT + '/formulario.template.html').decode()
+    html = archivo_fuente('formulario.template.html').decode()
     for marcador, valor in (('__TAREAS__', tareas), ('__CANDIDATO__', referencia)):
         if html.count(marcador) != 1:
             raise ValueError('Plantilla HTML incompatible.')
@@ -110,9 +124,10 @@ if __name__ == '__main__':
     parser.add_argument('--paquete', required=True)
     parser.add_argument('--salida', required=True)
     parser.add_argument('--ref', default='HEAD')
+    parser.add_argument('--kit-dir', help='Usa los materiales del kit desempaquetado para una reconstruccion reproducible.')
     args = parser.parse_args()
     try:
-        construir(args.paquete, args.salida, args.ref)
+        construir(args.paquete, args.salida, args.ref, args.kit_dir)
     except (ValueError, FileNotFoundError) as exc:
         parser.exit(1, str(exc) + '\n')
     print('Kit preparado:', args.salida)
