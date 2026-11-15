@@ -8,7 +8,8 @@ fhirviews tiene tres partes que se pueden combinar:
     tablas con el estándar [SQL on FHIR](https://sql-on-fhir.org/)
     (`ViewDefinition`);
 3.  un **constructor de recursos** que convierte tablas de R o consultas
-    SQL en Patient, Observation, Encounter y Condition mediante
+    SQL en Patient, Observation, Encounter, Condition e Immunization
+    mediante
     [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md),
     [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
     y
@@ -33,6 +34,8 @@ los campos que se van a construir. El ejemplo
 `system.file("examples", "encuentros-diagnosticos.R", package = "fhirviews")`
 añade el recorrido paciente → encuentro → diagnóstico con códigos,
 estados y referencias explícitos.
+`system.file("examples", "inmunizaciones-sql.R", package = "fhirviews")`
+añade vacunaciones, fechas conocidas o textuales y número de dosis.
 
 ``` r
 

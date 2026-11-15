@@ -66,7 +66,8 @@ las operaciones <code>$everything</code>, <code>$validate</code> y <code>$export
 lista de recursos, un Bundle o un archivo NDJSON y obtener un
 <code>data.frame</code>, con fhirpath.js o con DuckDB.</p></li>
 <li><p><strong>SQL a FHIR</strong>: <code><a href="fhir_mapa.html">fhir_mapa()</a></code>, <code><a href="fhir_mapa.html">fhir_desde_tabla()</a></code> y
-<code><a href="fhir_mapa.html">fhir_desde_sql()</a></code> construyen Patient, Observation, Encounter y Condition con mapeos
+<code><a href="fhir_mapa.html">fhir_desde_sql()</a></code> construyen Patient, Observation, Encounter, Condition
+e Immunization con mapeos
 explicitos. <code><a href="fhir_escribir.html">fhir_escribir()</a></code> guarda JSON o NDJSON.</p></li>
 </ul><p>Las expresiones FHIRPath se evalúan con la biblioteca <code>fhirpath.js</code> a
 través del paquete V8.</p>
@@ -99,7 +100,8 @@ fuente. Los numeros ordinarios de R no conservan escala; modificar las
 listas descarta el JSON original. Los limites decimales SQL admiten
 rutas estaticas con indices explicitos y escalas de -18 a 8, sin
 inferir precision despues de operaciones o iteraciones.</p></li>
-<li><p>SQL a FHIR admite Patient, Observation, Encounter y Condition, una fila por recurso, sin
+<li><p>SQL a FHIR admite Patient, Observation, Encounter, Condition e Immunization,
+una fila por recurso, sin
 agrupacion automatica ni recursos contained. Las comprobaciones locales
 no sustituyen la validacion de perfiles con <code><a href="fhir_validar.html">fhir_validar()</a></code>.</p></li>
 </ul></div>
@@ -114,8 +116,8 @@ no sustituyen la validacion de perfiles con <code><a href="fhir_validar.html">fh
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
-    <p><strong>Maintainer</strong>: Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> [copyright holder]</p>
-<p>Authors:</p><ul><li><p>Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> [copyright holder]</p></li>
+    <p><strong>Maintainer</strong>: Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> (<a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID</a>) [copyright holder]</p>
+<p>Authors:</p><ul><li><p>Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> (<a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID</a>) [copyright holder]</p></li>
 </ul><p>Other contributors:</p><ul><li><p>National Library of Medicine (fhirpath.js and ucum-lhc libraries in inst/js) [copyright holder]</p></li>
 <li><p>Health Samurai (fhirpath.js library in inst/js) [copyright holder]</p></li>
 <li><p>The ANTLR Project (antlr4 runtime bundled in fhirpath.js) [copyright holder]</p></li>

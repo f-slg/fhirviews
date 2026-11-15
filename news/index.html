@@ -44,10 +44,13 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0.9000" id="fhirviews-0509000">fhirviews 0.5.0.9000<a class="anchor" aria-label="anchor" href="#fhirviews-0509000"></a></h2>
-<ul><li>SQL a FHIR admite tambien Encounter y Condition. Los metadatos R4 incluyen bindings, codigos requeridos enumerables y destinos de Reference; se comprueban pares system/code, traducciones y tipos de referencia. Los bindings extensibles no se convierten en enumeraciones cerradas.</li>
+<ul><li>SQL a FHIR admite Immunization, con elecciones de fecha y numero de dosis, estado R4, paciente, vacuna y referencias. Incluye ejemplo SQLite y un grupo obligatorio de integracion con perfiles, cantidades y catalogo de vistas.</li>
+<li>Los contextos SimpleQuantity conservan su restriccion sobre comparator sin modificar Quantity general. Date se admite tambien para dateTime con precision de fecha, conservando la ausencia de una hora conocida.</li>
+<li>Se incorpora el ORCID del autor en DESCRIPTION, citation() y CITATION.cff, con metadatos .zenodo.json preparados para el deposito. El DOI se agregara cuando el registro de Zenodo este publicado y verificado.</li>
+<li>SQL a FHIR admite tambien Encounter y Condition. Los metadatos R4 incluyen bindings, codigos requeridos enumerables y destinos de Reference; se comprueban pares system/code, traducciones y tipos de referencia. Los bindings extensibles no se convierten en enumeraciones cerradas.</li>
 <li>Se anade un ejemplo instalado de paciente, encuentro y diagnostico, y un grupo obligatorio de integracion con perfiles base Encounter y Condition.</li>
 <li>La integracion SQL DBI prueba PostgreSQL y SQL Server Developer reales en contenedores fijados por digest: parametros, tipos nativos, BIGINT, escala decimal, valores ausentes y retorno a tablas con V8 y DuckDB. Incluye ejecucion automatica, evidencia local y limpieza de contenedores.</li>
-<li>Los README documentan la ampliacion de SQL a FHIR por grupos y los recursos pendientes: Immunization, laboratorio y medicamentos.</li>
+<li>Los README documentan la ampliacion de SQL a FHIR por grupos y los recursos pendientes: laboratorio, medicamentos, organizaciones y profesionales.</li>
 <li>
 <code>fhir_leer(..., como_recursos = TRUE)</code> conserva el JSON recibido para mantener la escala decimal al volver del servidor a las vistas. El valor por defecto mantiene la lista de R habitual.</li>
 <li>La integracion aislada exige el recorrido SQL a Patient/Observation, validacion contra perfiles base R4, referencias persistidas y retorno a tablas con ambos motores, con control negativo del validador.</li>

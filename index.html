@@ -79,7 +79,7 @@
 <!-- badges: start -->
 
 <p><strong>fhirviews</strong> consulta servidores <strong>HL7 FHIR R4</strong> y transforma sus recursos en <code>data.frame</code> mediante <strong>SQL on FHIR</strong> y <strong>FHIRPath</strong>. Define una vista una vez, guárdala como <code>ViewDefinition</code> y reutilízala sobre archivos locales, respuestas del servidor o exportaciones poblacionales.</p>
-<p>También construye <strong>Patient, Observation, Encounter y Condition</strong> desde un <code>data.frame</code> o una consulta SQL por DBI, con un mapeo explícito de columnas, constantes y referencias. La salida se guarda como JSON o NDJSON conservando la escala decimal.</p>
+<p>También construye <strong>Patient, Observation, Encounter, Condition e Immunization</strong> desde un <code>data.frame</code> o una consulta SQL por DBI, con un mapeo explícito de columnas, constantes y referencias. La salida se guarda como JSON o NDJSON conservando la escala decimal.</p>
 <p>Está pensado para análisis clínico, investigación, vigilancia epidemiológica y docencia desde R. Incluye autenticación SMART on FHIR, vistas para salud pública y procesamiento NDJSON por bloques, sin instalar Java ni Spark.</p>
 <p>El flujo técnico combina un cliente HTTP basado en <code>httr2</code>, un evaluador FHIRPath con <code>fhirpath.js</code> en V8 y un traductor SQL opcional para DuckDB. La definición de extracción es independiente del origen: un mismo <code>ViewDefinition</code> puede aplicarse a recursos obtenidos por REST o a archivos locales. La compatibilidad del motor SQL se comprueba por separado.</p>
 <p><a href="https://f-slg.github.io/fhirviews/">Documentación</a> · <a href="https://f-slg.github.io/fhirviews/reference/">Referencia</a> · <a href="NEWS.html">Novedades de 0.5.0</a> · <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">Reportar un problema</a></p>
@@ -167,7 +167,7 @@
 <code><a href="reference/vista_duckdb.html">vista_duckdb()</a></code> — vistas evaluadas con V8 y guardadas en una transacción</td>
 </tr>
 <tr>
-<td>Construir Patient, Observation, Encounter y Condition desde tablas o consultas SQL</td>
+<td>Construir Patient, Observation, Encounter, Condition e Immunization desde tablas o consultas SQL</td>
 <td>
 <code><a href="reference/fhir_mapa.html">fhir_mapa()</a></code>, <code><a href="reference/fhir_mapa.html">fhir_desde_tabla()</a></code>, <code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code>
 </td>
@@ -715,10 +715,10 @@
 <div class="section level2">
 <h2 id="de-sql-a-fhir">De SQL a FHIR<a class="anchor" aria-label="anchor" href="#de-sql-a-fhir"></a>
 </h2>
-<p><code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code> ejecuta una consulta mediante una conexión <strong>DBI</strong>, lee sus filas y construye recursos con un <code><a href="reference/fhir_mapa.html">fhir_mapa()</a></code>. <code><a href="reference/fhir_mapa.html">fhir_desde_tabla()</a></code> aplica el mismo mapeo a un <code>data.frame</code>. Admite <strong>Patient, Observation, Encounter y Condition de FHIR R4 4.0.1</strong>.</p>
+<p><code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code> ejecuta una consulta mediante una conexión <strong>DBI</strong>, lee sus filas y construye recursos con un <code><a href="reference/fhir_mapa.html">fhir_mapa()</a></code>. <code><a href="reference/fhir_mapa.html">fhir_desde_tabla()</a></code> aplica el mismo mapeo a un <code>data.frame</code>. Admite <strong>Patient, Observation, Encounter, Condition e Immunization de FHIR R4 4.0.1</strong>.</p>
 <pre class="mermaid"><code>flowchart LR
     DB["Consulta SQL / data.frame"] --&gt; M["Mapeo explícito de campos y tipos R4"]
-    M --&gt; R["Patient / Observation / Encounter / Condition"]
+    M --&gt; R["Patient / Observation / Encounter / Condition / Immunization"]
     R --&gt; J["JSON / NDJSON"]
     R --&gt; V["ViewDefinition → tabla"]
     R --&gt; C["Validación de perfiles con fhir_validar"]</code></pre>
@@ -833,7 +833,7 @@
 </tr>
 <tr>
 <td>Fechas</td>
-<td>Se aceptan fechas FHIR parciales válidas y <code>Date</code>. Las fechas con hora requieren zona; <code>POSIXct</code>/<code>POSIXlt</code> se convierten a UTC.</td>
+<td>Se aceptan fechas FHIR parciales válidas y <code>Date</code>. <code>Date</code> conserva precisión de fecha en destinos <code>date</code> y <code>dateTime</code>; los instantes requieren hora. Las fechas con hora requieren zona; <code>POSIXct</code>/<code>POSIXlt</code> se convierten a UTC.</td>
 </tr>
 <tr>
 <td>Errores</td>
@@ -861,7 +861,7 @@
 <span><span class="fu"><a href="reference/vista_fhirpath.html">vista_fhirpath</a></span><span class="op">(</span><span class="va">originales</span>, <span class="st">"value.ofType(Quantity).value.lowBoundary()"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/fhir_escribir.html">fhir_escribir</a></span><span class="op">(</span><span class="va">originales</span>, <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".ndjson"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><code>como_recursos = TRUE</code> devuelve una colección <code>fhir_recursos</code>; por defecto, <code><a href="reference/fhir_leer.html">fhir_leer()</a></code> mantiene la lista habitual para conservar compatibilidad. No se puede recuperar <code>72.00</code> desde una lista que ya lo convirtió en <code>72</code>.</p>
-<p>Las comprobaciones locales cubren rutas, tipos, cardinalidades, obligatorios del modelo base, elecciones incompatibles, destinos de referencias y los bindings <strong>required</strong> que pueden enumerarse completamente con el paquete R4. Incluyen <code>Patient.gender</code>, <code>Observation.status</code>, <code>Encounter.status</code> y los estados clínico y de verificación de <code>Condition</code>, además de códigos anidados como <code>HumanName.use</code>. Para <code>Coding</code> y <code>CodeableConcept</code> se exige un par <code>system</code>/<code>code</code> del ValueSet; se permiten traducciones adicionales si hay al menos uno válido. Un <code>CodeableConcept</code> requerido necesita codificación: <code>text</code> no la sustituye. Los bindings extensibles, preferidos y de ejemplo conservan su flexibilidad; por ejemplo, <code>Encounter.class</code> es extensible.</p>
+<p>Las comprobaciones locales cubren rutas, tipos, cardinalidades, obligatorios del modelo base, elecciones incompatibles, destinos de referencias y los bindings <strong>required</strong> que pueden enumerarse completamente con el paquete R4. Incluyen <code>Patient.gender</code>, <code>Observation.status</code>, <code>Encounter.status</code>, <code>Immunization.status</code> y los estados clínico y de verificación de <code>Condition</code>, además de códigos anidados como <code>HumanName.use</code>. Para <code>Coding</code> y <code>CodeableConcept</code> se exige un par <code>system</code>/<code>code</code> del ValueSet; se permiten traducciones adicionales si hay al menos uno válido. Un <code>CodeableConcept</code> requerido necesita codificación: <code>text</code> no la sustituye. Los bindings extensibles, preferidos y de ejemplo conservan su flexibilidad; por ejemplo, <code>Encounter.class</code> es extensible.</p>
 <p>El generador registra versión y SHA256 de la fuente y conserva los bindings y los destinos de <code>Reference</code>. Los conjuntos con filtros, imports o fuentes externas se remiten al servidor de terminología; no se usa una lista parcial como si fuera completa. Las referencias comprueban el destino declarado en <code>referencias</code>, el tipo identificable en literales <code>Tipo/id</code> o URLs y la coherencia con <code>Reference.type</code>. Los identificadores externos y las referencias URN requieren comprobaciones de existencia y resolución en el servidor.</p>
 <p><strong>Estas comprobaciones no son validación completa de FHIR</strong>: los perfiles, invariantes y terminologías se comprueban con <code>fhir_validar(con, recurso, perfil = "URL-canónica")</code> sobre los recursos y el servidor elegidos.</p>
 <p><code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code> recoge toda la consulta en memoria y conserva la conexión abierta; ciérrala cuando termines. Este módulo no ofrece todavía agrupación automática de filas, recursos <code>contained</code>, envío masivo ni traducción de <code>StructureMap</code>. El ejemplo ejecutable se instala en <code>system.file("examples", "sql-a-fhir.R", package = "fhirviews")</code>.</p>
@@ -896,9 +896,94 @@
 <p>Usa una consulta con una fila por encuentro y otra con una fila por diagnóstico. Un paciente puede aparecer en varios recursos mediante referencias; las filas del mismo recurso siguen exigiendo un <code>id</code> único. En un servidor, guarda primero los recursos referenciados o utiliza una transacción apropiada. Verifica con <code><a href="reference/fhir_validar.html">fhir_validar()</a></code> los perfiles base o los perfiles canónicos del proyecto antes de utilizar su salida.</p>
 </div>
 <div class="section level3">
+<h3 id="inmunizaciones-desde-sql">Inmunizaciones desde SQL<a class="anchor" aria-label="anchor" href="#inmunizaciones-desde-sql"></a>
+</h3>
+<p><code>Immunization</code> representa un evento de vacunación registrado. El mapeo exige <code>id</code>, único por fila, además de los obligatorios de R4:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Elemento</th>
+<th>Regla de construcción</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>Código exacto: <code>completed</code>, <code>not-done</code> o <code>entered-in-error</code>.</td>
+</tr>
+<tr>
+<td><code>vaccineCode</code></td>
+<td>
+<code>CodeableConcept</code> con la vacuna. El binding base es de ejemplo; el perfil del proyecto puede exigir un sistema y catálogo concretos.</td>
+</tr>
+<tr>
+<td><code>patient.reference</code></td>
+<td>Referencia a <code>Patient</code>; <code>Group</code> y otros tipos se rechazan.</td>
+</tr>
+<tr>
+<td>
+<code>occurrenceDateTime</code> o <code>occurrenceString</code>
+</td>
+<td>Debe existir exactamente una variante. La primera admite una fecha FHIR válida; la segunda conserva texto cuando la fecha no está expresada como fecha.</td>
+</tr>
+<tr>
+<td><code>encounter.reference</code></td>
+<td>Opcional; su destino es <code>Encounter</code>.</td>
+</tr>
+<tr>
+<td>
+<code>protocolApplied[0].doseNumberPositiveInt</code> o <code>doseNumberString</code>
+</td>
+<td>Si existe una entrada de <code>protocolApplied</code>, exige exactamente una variante de número de dosis. El entero debe ser positivo; el texto no se convierte automáticamente a entero.</td>
+</tr>
+<tr>
+<td><code>doseQuantity</code></td>
+<td>Cantidad de tipo <code>SimpleQuantity</code>; se prohíbe <code>comparator</code>. El valor decimal puede venir como texto, por ejemplo <code>"0.50"</code>, para conservar la escala.</td>
+</tr>
+<tr>
+<td><code>primarySource</code></td>
+<td>Valor lógico explícito. El mapeador no deduce si una fuente es primaria ni convierte <code>0</code>, <code>1</code>, <code>"true"</code> o <code>"false"</code> automáticamente.</td>
+</tr>
+</tbody>
+</table>
+<p>Las <code>Quantity</code> generales conservan los comparadores admitidos por su modelo. La restricción de <code>SimpleQuantity</code> se aplica en su contexto, por ejemplo a <code>doseQuantity</code> y a los extremos de un <code>Range</code>.</p>
+<p>El siguiente mapeo recibe las claves del paciente y del encuentro, las dos variantes de fecha y las dos de número de dosis en columnas independientes:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mi</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_mapa.html">fhir_mapa</a></span><span class="op">(</span><span class="st">"Immunization"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  id <span class="op">=</span> <span class="st">"id"</span>, status <span class="op">=</span> <span class="st">"estado"</span>, <span class="st">"patient.reference"</span> <span class="op">=</span> <span class="st">"paciente"</span>,</span>
+<span>  <span class="st">"encounter.reference"</span> <span class="op">=</span> <span class="st">"encuentro"</span>, <span class="st">"encounter.type"</span> <span class="op">=</span> <span class="st">"tipo_encuentro"</span>,</span>
+<span>  <span class="st">"vaccineCode.coding[0].system"</span> <span class="op">=</span> <span class="st">"sistema_vacuna"</span>,</span>
+<span>  <span class="st">"vaccineCode.coding[0].code"</span> <span class="op">=</span> <span class="st">"vacuna"</span>, <span class="st">"vaccineCode.text"</span> <span class="op">=</span> <span class="st">"descripcion"</span>,</span>
+<span>  occurrenceDateTime <span class="op">=</span> <span class="st">"fecha"</span>, occurrenceString <span class="op">=</span> <span class="st">"fecha_texto"</span>,</span>
+<span>  <span class="st">"doseQuantity.value"</span> <span class="op">=</span> <span class="st">"dosis"</span>, <span class="st">"doseQuantity.unit"</span> <span class="op">=</span> <span class="st">"unidad"</span>,</span>
+<span>  <span class="st">"doseQuantity.code"</span> <span class="op">=</span> <span class="st">"unidad"</span>, <span class="st">"doseQuantity.system"</span> <span class="op">=</span> <span class="st">"sistema_unidad"</span>,</span>
+<span>  <span class="st">"protocolApplied[0].doseNumberPositiveInt"</span> <span class="op">=</span> <span class="st">"numero"</span>,</span>
+<span>  <span class="st">"protocolApplied[0].doseNumberString"</span> <span class="op">=</span> <span class="st">"numero_texto"</span>,</span>
+<span>  <span class="st">"statusReason.text"</span> <span class="op">=</span> <span class="st">"motivo"</span></span>
+<span><span class="op">)</span>, constantes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"patient.type"</span> <span class="op">=</span> <span class="st">"Patient"</span>, primarySource <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>referencias <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"patient.reference"</span> <span class="op">=</span> <span class="st">"Patient"</span>, <span class="st">"encounter.reference"</span> <span class="op">=</span> <span class="st">"Encounter"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># con_db es la conexión DBI abierta y vacunaciones contiene una fila por evento.</span></span>
+<span><span class="va">sql</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
+<span>  <span class="st">"SELECT *, CASE WHEN NULLIF(encuentro, '') IS NOT NULL THEN 'Encounter' END AS tipo_encuentro"</span>,</span>
+<span>  <span class="st">"FROM vacunaciones ORDER BY id"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">vacunas</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_mapa.html">fhir_desde_sql</a></span><span class="op">(</span><span class="va">con_db</span>, <span class="va">sql</span>, <span class="va">mi</span><span class="op">)</span></span></code></pre></div>
+<p>Aquí <code>primarySource = TRUE</code> es una decisión explícita del ejemplo: todas sus filas representan registros de la fuente primaria. Los estados, motivos, unidades, fechas y dosis deben proceder de los datos o de constantes que correspondan a ese origen. El estado <code>not-done</code> no rellena ni elimina campos por su cuenta. Los códigos de vacuna del ejemplo instalado son ficticios y usan <code>https://example.org/fhir/CodeSystem/vacunas</code>.</p>
+<p>Para una fecha conocida, llena <code>fecha</code> y deja <code>fecha_texto = NA</code>. Para una fecha textual, haz lo contrario. <code>Date</code> se conserva como <code>YYYY-MM-DD</code> en <code>occurrenceDateTime</code>, sin inventar una hora; <code>POSIXct</code> se convierte a UTC. El mismo criterio de exclusión se aplica a <code>numero</code> y <code>numero_texto</code>.</p>
+<p>Si no hay encuentro, el <code>CASE</code> deja también su tipo vacío. Si no hay cantidad de dosis, deja vacíos su valor, unidad y sistema. Una constante en una ruta anidada crea ese contenido en todas las filas: los campos de objetos opcionales deben conservar sus ausencias conjuntamente. El constructor rechaza una referencia que solo contenga <code>type</code>; necesita <code>reference</code>, <code>identifier</code> o <code>display</code>. Para booleanos que SQLite entregue como enteros, verifica primero que solo haya <code>0</code>, <code>1</code> o <code>NA</code>, conviértelos a lógicos en R y usa <code><a href="reference/fhir_mapa.html">fhir_desde_tabla()</a></code>; las conexiones que entregan booleanos nativos pueden usarlos directamente en <code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code>.</p>
+<p>El ejemplo completo crea Patient y Encounter, consulta SQLite, construye las dos variantes de Immunization, escribe NDJSON y obtiene una tabla con fecha, fecha textual, cantidad y número de dosis:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"inmunizaciones-sql.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>La vista de catálogo <code>vista_plantilla("inmunizaciones")</code> sigue disponible. Su columna <code>fecha</code> proyecta la variante <code>dateTime</code>; para conservar también <code>occurrenceString</code>, el ejemplo define una columna <code>fecha_texto</code> con <code>occurrence.ofType(string)</code>.</p>
+<p>Valida el JSON contra <code>http://hl7.org/fhir/StructureDefinition/Immunization</code> o la URL canónica del perfil del proyecto mediante <code><a href="reference/fhir_validar.html">fhir_validar()</a></code>. Las invariantes y la terminología clínica se comprueban en esa etapa; por ejemplo, cada entrada de <code>education</code> debe contener <code>documentType</code> o <code>reference</code> según la invariante R4 <code>imm-1</code>.</p>
+</div>
+<div class="section level3">
 <h3 id="recursos-admitidos-y-próximos-grupos">Recursos admitidos y próximos grupos<a class="anchor" aria-label="anchor" href="#recursos-admitidos-y-pr%C3%B3ximos-grupos"></a>
 </h3>
-<p>El lector y las vistas ya pueden trabajar con otros tipos de recursos FHIR. La construcción desde SQL o tablas admite <strong>Patient, Observation, Encounter y Condition</strong>. La ampliación se hace por grupos comprobados:</p>
+<p>El lector y las vistas ya pueden trabajar con otros tipos de recursos FHIR. La construcción desde SQL o tablas admite <strong>Patient, Observation, Encounter, Condition e Immunization</strong>. La ampliación se hace por grupos comprobados:</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -926,7 +1011,7 @@
 <td>Paciente → encuentro → diagnóstico, con referencias entre los tres.</td>
 </tr>
 <tr>
-<td>Siguiente grupo propuesto</td>
+<td>Admitido</td>
 <td><code>Immunization</code></td>
 <td>Paciente → evento de vacunación, con vacuna, estado y fecha explícitos.</td>
 </tr>
@@ -968,7 +1053,7 @@
 <h2 id="vistas-de-salud-pública-y-terminologías">Vistas de salud pública y terminologías<a class="anchor" aria-label="anchor" href="#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas"></a>
 </h2>
 <p>El catálogo incluye siete vistas: pacientes, diagnósticos, encuentros, inmunizaciones, medicamentos, signos vitales y notificación obligatoria. Puedes inspeccionarlas y adaptar sus constantes:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_catalogo.html">vista_catalogo</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nombre"</span>, <span class="st">"recurso"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="va">archivo_dengue</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
@@ -980,7 +1065,7 @@
 <h3 id="demostración-reproducible-de-vigilancia">Demostración reproducible de vigilancia<a class="anchor" aria-label="anchor" href="#demostraci%C3%B3n-reproducible-de-vigilancia"></a>
 </h3>
 <p>Para ejecutar un flujo completo con los datos ficticios incluidos:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"vigilancia.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>El script imprime la carpeta de salida y comprueba que los resúmenes coincidan con los eventos seleccionados. Con el conjunto incluido parte de 755 eventos, selecciona 661 confirmados con CIE-10 A90/A91 y excluye 94 refutados. Genera:</p>
 <ul>
@@ -1023,7 +1108,7 @@
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requiere una conexión y un servidor que admita $validate</span></span>
 <span><span class="va">resultado</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_validar.html">fhir_validar</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>resourceType <span class="op">=</span> <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"female"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">resultado</span>, <span class="st">"valido"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -1031,7 +1116,7 @@
 <span><span class="op">}</span></span></code></pre></div>
 <p>El estado HTTP queda disponible en <code>attr(resultado, "estado")</code>. Una validación positiva no certifica la calidad clínica de los datos.</p>
 <p>Los errores HTTP omiten por defecto el contenido del servidor, que puede contener información de pacientes. También se ocultan los valores sensibles de la consulta, incluido <code>_id</code>. Para depuración controlada:</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_detalles <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># contenido del servidor en errores</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_consulta <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># valores completos de la consulta</span></span>
 <span></span>
@@ -1066,19 +1151,19 @@
 </tbody>
 </table>
 <p>Las cuatro pruebas experimentales de límites ahora conservan la precisión de <code>1.0</code> y completan las zonas desconocidas de DateTime (<code>+14:00</code> en el límite inferior, <code>-12:00</code> en el superior), conservando zonas explícitas. El banco se lee sin alterar sus literales ni resultados esperados. V8 usa un lector JSON portable; DuckDB relaciona los tokens numéricos originales con <code>json_tree()</code>. La conformidad se refiere a ese banco y no certifica un sistema clínico.</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="op">)</span>                   <span class="co"># motor V8</span></span>
 <span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span>   <span class="co"># requiere DuckDB y su extensión json</span></span>
 <span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>descargar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># contrastar con el banco actual de GitHub</span></span>
 <span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>informe <span class="op">=</span> <span class="st">"sof-test-results.json"</span><span class="op">)</span> <span class="co"># formato de la matriz pública</span></span></code></pre></div>
 <p>El 144/144 no significa que toda expresión FHIRPath sea traducible a SQL. Los límites decimales en DuckDB admiten literales sin signo o rutas estáticas desde el recurso con índices explícitos, escalas entre -18 y 8 y números representables en <code>DECIMAL(38,18)</code>. Las escalas negativas corresponden a exponentes positivos. No se admite el argumento opcional de precisión ni se infiere escala tras operaciones, filtros o iteraciones. Esos casos fallan con un mensaje explícito. Con Parquet o tablas ya normalizadas se usa la representación JSON disponible; no se recupera una escala que se haya perdido antes. Las vistas que no usan límites decimales no pagan el coste de extraer los tokens y rutas.</p>
 <p>CI comprueba el paquete en Windows, macOS Intel y Linux, además de R-devel y R 4.1. macOS usa por defecto <code>macos-26-intel</code>; esta matriz no valida Apple Silicon. El workflow admite ejecución manual con elección entre macOS 26 Intel y macOS 15 Intel para reintentar problemas de disponibilidad. El selector no garantiza capacidad del proveedor: macOS continúa siendo una comprobación obligatoria. En R 4.1 y R-devel se comprueban el cliente y V8. Los tres sistemas con R release incluyen DuckDB y sus pruebas SQL. Las pruebas HTTP usan respuestas simuladas. La integración de escritura se habilita por separado contra un <strong>servidor de pruebas propio</strong>:</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
-<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="va">FHIRVIEWS_SOLO_SERVIDOR_PROPIO</span><span class="op">=</span>true <span class="va">NOT_CRAN</span><span class="op">=</span>true <span class="dt">\</span></span>
-<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local(filter = "^servidor$")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a><span class="va">FHIRVIEWS_SOLO_SERVIDOR_PROPIO</span><span class="op">=</span>true <span class="va">NOT_CRAN</span><span class="op">=</span>true <span class="dt">\</span></span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local(filter = "^servidor$")'</span></span></code></pre></div>
 <p>Ese servidor debe permitir escritura; algunas pruebas requieren terminología y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta <a href="tests/testthat/test-servidor.R"><code>tests/testthat/test-servidor.R</code></a> para preparar un HAPI aislado.</p>
 <p>Para ejecutar la integración completa de forma reproducible desde el repositorio, con Docker o Podman y las dependencias de prueba instaladas (además de las dependencias obligatorias del paquete: <code>pkgload</code>, <code>testthat</code>, <code>DBI</code> y <code>duckdb</code>):</p>
-<div class="sourceCode" id="cb32"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="fu">bash</span> data-raw/probar-hapi.sh</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="fu">bash</span> data-raw/probar-hapi.sh</span></code></pre></div>
 <p>El script usa una imagen fijada por digest, abre un puerto aleatorio solo en localhost y elimina su propio contenedor al terminar, incluso si las pruebas fallan. Imprime la carpeta que conserva los registros, el resumen JSON y CSV, las omisiones y el entorno de R. La ejecución exige escritura, transacciones, terminología básica, Bulk Data y el nuevo recorrido SQL → FHIR → servidor → tabla; una omisión inesperada hace fallar la prueba. La variante de ValueSet en línea no admitida por HAPI queda registrada aparte. El workflow <strong>Integracion HAPI</strong> ejecuta este mismo script y conserva los resultados durante 14 días. En la primera ejecución puede descargar la imagen y la extensión JSON de DuckDB.</p>
 <div class="section level3">
 <h3 id="validación-de-sql--fhir-contra-perfiles-r4">Validación de SQL → FHIR contra perfiles R4<a class="anchor" aria-label="anchor" href="#validaci%C3%B3n-de-sql--fhir-contra-perfiles-r4"></a>
@@ -1093,19 +1178,20 @@
 <li>Elimina los recursos de prueba; el script elimina además su contenedor.</li>
 </ol>
 <p>El resumen incluye fallos, errores, advertencias, comprobaciones y razones de omisión. La política de aceptación impide aprobar si falta este grupo. Esta validación cubre perfiles <strong>base R4</strong>; los perfiles clínicos o nacionales del proyecto deben comprobarse expresamente con su URL canónica.</p>
-<p><strong>Resultado local del 14 de noviembre de 2026:</strong> integración aprobada con HAPI 8.12.0-2 fijado por digest, 82 comprobaciones aprobadas y sin fallos, errores ni advertencias. Se ejecutaron las 16 comprobaciones originales de SQL → FHIR y las 20 del grupo Encounter/Condition; se registraron las dos omisiones previstas (lectura pública y ValueSet en línea). El contenedor se eliminó al finalizar. La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/encounter-condition-hapi/resumen.json" class="external-link">evidencia de integración</a> incluye el resultado de cada grupo; los registros y el entorno de R se conservan en la misma carpeta. Es una comprobación técnica con datos ficticios.</p>
+<p><strong>Resultado local del 14 de noviembre de 2026:</strong> integración aprobada con HAPI 8.12.0-2 fijado por digest, 120 comprobaciones aprobadas y sin fallos, errores ni advertencias. Se ejecutaron las 16 comprobaciones originales de SQL → FHIR, las 20 del grupo Encounter/Condition y las 38 de Immunization; se registraron las dos omisiones previstas (lectura pública y ValueSet en línea). El contenedor se eliminó al finalizar. La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json" class="external-link">evidencia de integración</a> incluye el resultado de cada grupo; los registros y el entorno de R se conservan en la misma carpeta. Es una comprobación técnica con datos ficticios.</p>
 <p>El nuevo grupo obligatorio <code>Encounter y Condition desde SQL, perfiles R4 y referencias</code> construye Patient → Encounter → Condition con consultas DuckDB parametrizadas. Valida los perfiles base explícitos, guarda y lee los tres recursos y comprueba las referencias y las tablas en V8 y DuckDB. Sus controles negativos exigen que HAPI rechace un estado de Encounter y un código clínico de Condition inexistentes, además de un destino incorrecto con <code>Reference.type</code> explícito. En este servidor, la referencia literal incorrecta sin <code>Reference.type</code> no fue rechazada por <code>$validate</code>: por eso los ejemplos lo declaran y el mapeador comprueba además el tipo de la referencia literal.</p>
+<p>El grupo obligatorio <code>Immunization desde SQL, perfil R4, dosis y referencias</code> añade dos eventos ficticios, con <code>occurrenceDateTime</code> y <code>occurrenceString</code>, número de dosis entero o textual y una cantidad <code>0.50</code>. Comprueba los perfiles base, Patient y Encounter referenciados, persistencia, lectura que conserva escala, comparación de tablas y la vista de catálogo en V8 y DuckDB. Exige que el validador rechace estado inválido, destino de paciente incorrecto con tipo explícito, comparador en SimpleQuantity y una entrada de educación que incumpla <code>imm-1</code>. La política de aceptación impide omitir este grupo.</p>
 </div>
 <div class="section level3">
 <h3 id="sql--fhir-con-postgresql-y-sql-server">SQL → FHIR con PostgreSQL y SQL Server<a class="anchor" aria-label="anchor" href="#sql--fhir-con-postgresql-y-sql-server"></a>
 </h3>
 <p>Además de las pruebas locales con DuckDB y SQLite, el script <code>data-raw/probar-sql-dbi.sh</code> ejecuta consultas contra <strong>dos bases reales y aisladas</strong>. Crea contenedores propios de PostgreSQL y SQL Server Developer, fijados por digest en <code>data-raw/postgres-image.txt</code> y <code>data-raw/sqlserver-image.txt</code>, y los elimina al finalizar. Publica puertos aleatorios solamente en localhost y usa credenciales aleatorias de un solo uso, que no escribe en los informes. Los datos son ficticios.</p>
 <p>Requisitos: Docker o Podman, <code>openssl</code>, los paquetes R siguientes y un controlador <strong>Microsoft ODBC Driver 18 for SQL Server</strong> disponible para <code>odbc</code>. <code>RPostgres</code> requiere las bibliotecas de PostgreSQL y <code>odbc</code>, unixODBC. El script inicia SQL Server con <code>ACCEPT_EULA=Y</code> y edición Developer, para desarrollo y pruebas, conforme a las condiciones de la imagen de Microsoft.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DBI"</span>, <span class="st">"RPostgres"</span>, <span class="st">"odbc"</span>, <span class="st">"duckdb"</span>, <span class="st">"pkgload"</span>, <span class="st">"testthat"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb34"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="co"># Ejecutar desde la raíz del repositorio; la carpeta indicada debe ser nueva.</span></span>
-<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a><span class="va">FHIRVIEWS_CONTENEDOR</span><span class="op">=</span>podman <span class="fu">bash</span> data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi</span>
-<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a><span class="co"># También se admite FHIRVIEWS_CONTENEDOR=docker.</span></span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># Ejecutar desde la raíz del repositorio; la carpeta indicada debe ser nueva.</span></span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="va">FHIRVIEWS_CONTENEDOR</span><span class="op">=</span>podman <span class="fu">bash</span> data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi</span>
+<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a><span class="co"># También se admite FHIRVIEWS_CONTENEDOR=docker.</span></span></code></pre></div>
 <p><code>FHIRVIEWS_ODBC_DRIVER</code> permite indicar otro nombre registrado o la ruta absoluta de la biblioteca del controlador; por defecto usa <code>ODBC Driver 18 for SQL Server</code>. <code>FHIRVIEWS_SQL_ESPERA</code> ajusta la espera de conexión, en segundos, cuyo valor predeterminado es 120. La conexión de prueba ODBC cifra el tráfico y acepta el certificado del contenedor local; esa configuración corresponde a este ensayo aislado.</p>
 <p>Cada base debe superar cinco grupos obligatorios:</p>
 <ol style="list-style-type: decimal">
@@ -1366,11 +1452,11 @@
 <h3 id="instalar-el-candidato-y-ejecutar-el-ensayo">Instalar el candidato y ejecutar el ensayo<a class="anchor" aria-label="anchor" href="#instalar-el-candidato-y-ejecutar-el-ensayo"></a>
 </h3>
 <p>El piloto usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <p>Reinicia R, elige una carpeta nueva y ejecuta:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
 <span>  FHIRVIEWS_PILOTO_SALIDA <span class="op">=</span> <span class="st">"piloto-basico-01"</span>,</span>
 <span>  FHIRVIEWS_PILOTO_PERFIL <span class="op">=</span> <span class="st">"basico"</span></span>
@@ -1379,7 +1465,7 @@
 <p>Abre <code>piloto-basico-01/aceptacion.csv</code> para ver los controles y <code>aceptacion.json</code> para sus diagnósticos. Los estados son <code>aprobado</code>, <code>fallo</code>, <code>requiere_revision</code>, <code>pendiente</code> y <code>no_evaluado</code>. Cualquier advertencia requiere revisión y evita la aprobación automática; el informe registra códigos seguros sin copiar los mensajes originales.</p>
 <p>El perfil <code>basico</code> comprueba la API, los resultados de vigilancia y el rechazo estricto de un bloque incompatible. Para comprobar también rollback y reintentos, instala <code>DBI</code> y <code>duckdb</code>, cambia el perfil a <code>completo</code> y usa otra carpeta nueva. Los archivos permanecen locales; completa <code>experiencia-usuario.txt</code> con los obstáculos, la ayuda necesaria y tu evaluación. La aprobación técnica deja pendiente esa evaluación humana y no valida un servidor ni datos propios.</p>
 <p>La ayuda y las viñetas están disponibles en la instalación:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
@@ -1433,9 +1519,19 @@
 </h2>
 <p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md" class="external-link">guía de contribución</a> y el <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md" class="external-link">código de conducta</a>.</p>
 <p>Para citar el paquete:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
-<p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero. Licencia <a href="https://github.com/f-slg/fhirviews/blob/main/LICENSE.md" class="external-link">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/toLatex.html" class="external-link">toBibtex</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero, <a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID 0000-0001-5077-1522</a>. El identificador figura en <code>Authors@R</code>, <code>inst/CITATION</code>, <a href="https://github.com/f-slg/fhirviews/blob/main/CITATION.cff" class="external-link"><code>CITATION.cff</code></a> y <a href="https://github.com/f-slg/fhirviews/blob/main/.zenodo.json" class="external-link"><code>.zenodo.json</code></a>. El archivo CFF habilita la cita del repositorio en GitHub; la cita de R incluye la versión instalada.</p>
+<p><strong>Estado de Zenodo:</strong> metadatos preparados; depósito y DOI pendientes de publicación y verificación. La versión <code>0.5.0.9000</code> sigue siendo de desarrollo. ORCID identifica al autor; un DOI de versión identifica el archivo concreto publicado en Zenodo, y el DOI de concepto agrupa sus versiones. Para reproducir un análisis, cita la versión utilizada y su DOI de versión cuando exista.</p>
+<p>Para completar el archivo en Zenodo:</p>
+<ol style="list-style-type: decimal">
+<li>Vincula la cuenta de GitHub y activa <code>f-slg/fhirviews</code> en <a href="https://zenodo.org/account/settings/github/" class="external-link">Zenodo/GitHub</a>.</li>
+<li>Revisa autor, ORCID, licencia, descripción y versión que se archivará. Zenodo utiliza <code>.zenodo.json</code> cuando están presentes ambos formatos; al publicar una versión deben mantenerse coherentes CFF, DESCRIPTION y etiqueta.</li>
+<li>Archiva la versión seleccionada y verifica su registro, archivos y DOI. Después incorpora el DOI real en estos metadatos, en <code>inst/CITATION</code> y en los README. Los metadatos preparados no equivalen a un depósito publicado.</li>
+</ol>
+<p>Consulta la <a href="https://help.zenodo.org/docs/github/" class="external-link">guía oficial de Zenodo</a> para la conexión y el archivo de versiones. La publicación de una versión estable y el envío a CRAN se gestionan de forma expresa.</p>
+<p>Licencia <a href="https://github.com/f-slg/fhirviews/blob/main/LICENSE.md" class="external-link">MIT</a>. Las licencias y atribuciones del código y los datos incluidos se detallan en <a href="inst/COPYRIGHTS"><code>inst/COPYRIGHTS</code></a>.</p>
 <p>fhirviews es un proyecto independiente. FHIR® y HL7® son marcas registradas de Health Level Seven International; su uso no implica respaldo institucional. Todos los datos de ejemplo incluidos son ficticios.</p>
 </div>
 </div>
@@ -1468,7 +1564,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Ronald Fabricio Salas Guerrero <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
+<li>Ronald Fabricio Salas Guerrero <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0000-0001-5077-1522" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>

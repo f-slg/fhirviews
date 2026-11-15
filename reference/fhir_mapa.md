@@ -1,9 +1,9 @@
 # Construir recursos FHIR R4 desde tablas o consultas SQL
 
 Define un mapeo explicito de columnas a destinos FHIR y construye un
-recurso por fila. Admite `Patient`, `Observation`, `Encounter` y
-`Condition`. No intenta invertir un `ViewDefinition`, que puede haber
-perdido datos.
+recurso por fila. Admite `Patient`, `Observation`, `Encounter`,
+`Condition` e `Immunization`. No intenta invertir un `ViewDefinition`,
+que puede haber perdido datos.
 
 ## Usage
 
@@ -24,8 +24,8 @@ fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
 
 - recurso:
 
-  Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"` o
-  `"Condition"`.
+  Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"`, `"Condition"`
+  o `"Immunization"`.
 
 - campos:
 
@@ -41,7 +41,9 @@ fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
 
   Vector con nombre: destino terminado en `.reference` y tipo de recurso
   al que apunta. Convierte la clave de origen en una referencia
-  relativa, por ejemplo `Patient/p1`.
+  relativa, por ejemplo `Patient/p1`. Una referencia construida requiere
+  `reference`, `identifier` o `display`; `type` solo no identifica un
+  destino.
 
 - datos:
 
@@ -94,8 +96,14 @@ Los tipos y cardinalidades se comprueban con metadatos base de FHIR R4
 4.0.1. Se revisan campos obligatorios, elementos de eleccion, fechas,
 identificadores, tipos primitivos, destinos de referencias y bindings
 requeridos que pueden enumerarse con la terminologia R4 incluida. Para
-`Coding` y `CodeableConcept` se comprueba el par `system`/`code`. Esto
-no sustituye la validacion de invariantes, terminologias y perfiles con
+`Coding` y `CodeableConcept` se comprueba el par `system`/`code`. Se
+conserva la restriccion de `SimpleQuantity`: no admite `comparator`, por
+ejemplo en `Immunization.doseQuantity`. Una `Quantity` general puede
+admitirlo. El estado, la vacuna, el paciente y una variante de
+`occurrence[x]` son obligatorios en `Immunization`; si se construye
+`protocolApplied`, cada entrada exige una variante de `doseNumber[x]`.
+Esto no sustituye la validacion de invariantes, terminologias y perfiles
+con
 [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
 No se inventan codigos, unidades o estados.
 
@@ -103,10 +111,10 @@ Los destinos decimales aceptan numeros o texto numerico JSON. El texto
 conserva la escala (`"1.00"` se escribe como el numero JSON `1.00`).
 Para conservar un `DECIMAL(p,s)` de SQL, extraelo como texto en la
 consulta; una vez convertido a un numero de R no se recuperan sus ceros.
-`Date` se convierte a fecha y `POSIXct`/`POSIXlt` a UTC. Los
-identificadores tambien aceptan enteros seguros, convertidos a texto;
-para BIGINT usa un CAST a texto en SQL. El resto de textos no admite
-conversion implicita.
+`Date` se admite como `date` o `dateTime`, conservando precision de
+fecha; `POSIXct`/`POSIXlt` se convierten a UTC. Los identificadores
+tambien aceptan enteros seguros, convertidos a texto; para BIGINT usa un
+CAST a texto en SQL. El resto de textos no admite conversion implicita.
 
 ## Examples
 

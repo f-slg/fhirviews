@@ -3,7 +3,7 @@
 ## Authors
 
 - **Ronald Fabricio Salas Guerrero**. Author, maintainer, copyright
-  holder.
+  holder. [](https://orcid.org/0000-0001-5077-1522)
 
 - **National Library of Medicine**. Copyright holder.  
   fhirpath.js and ucum-lhc libraries in inst/js
@@ -41,7 +41,7 @@ Salas Guerrero, R. F. (2026). fhirviews: FHIR desde R y vistas tabulares
 con SQL on FHIR. Paquete de R versión 0.5.0.9000.
 https://github.com/f-slg/fhirviews
 
-    @Manual{,
+    @Manual{fhirviews,
       title = {fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR},
       author = {Ronald Fabricio {Salas Guerrero}},
       year = {2026},

@@ -2,6 +2,17 @@
 
 ## fhirviews 0.5.0.9000
 
+- SQL a FHIR admite Immunization, con elecciones de fecha y numero de
+  dosis, estado R4, paciente, vacuna y referencias. Incluye ejemplo
+  SQLite y un grupo obligatorio de integracion con perfiles, cantidades
+  y catalogo de vistas.
+- Los contextos SimpleQuantity conservan su restriccion sobre comparator
+  sin modificar Quantity general. Date se admite tambien para dateTime
+  con precision de fecha, conservando la ausencia de una hora conocida.
+- Se incorpora el ORCID del autor en DESCRIPTION, citation() y
+  CITATION.cff, con metadatos .zenodo.json preparados para el deposito.
+  El DOI se agregara cuando el registro de Zenodo este publicado y
+  verificado.
 - SQL a FHIR admite tambien Encounter y Condition. Los metadatos R4
   incluyen bindings, codigos requeridos enumerables y destinos de
   Reference; se comprueban pares system/code, traducciones y tipos de
@@ -16,7 +27,8 @@
   Incluye ejecucion automatica, evidencia local y limpieza de
   contenedores.
 - Los README documentan la ampliacion de SQL a FHIR por grupos y los
-  recursos pendientes: Immunization, laboratorio y medicamentos.
+  recursos pendientes: laboratorio, medicamentos, organizaciones y
+  profesionales.
 - `fhir_leer(..., como_recursos = TRUE)` conserva el JSON recibido para
   mantener la escala decimal al volver del servidor a las vistas. El
   valor por defecto mantiene la lista de R habitual.
