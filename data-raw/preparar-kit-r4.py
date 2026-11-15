@@ -38,11 +38,17 @@ def construir(paquete, salida, ref='HEAD'):
         descripcion = t.extractfile('fhirviews/DESCRIPTION').read().decode()
         if '\nVersion: ' + evidencia['version'] + '\n' not in '\n' + descripcion:
             raise ValueError('La version del archivo no coincide.')
-    candidato = dict(version=evidencia['version'], fuente_commit=evidencia['fuente_commit'],
+    fuente_commit = evidencia.get('fuente_commit') or evidencia['paquete'].get('commit_fuente') or evidencia['commit_codigo']
+    aceptacion = evidencia.get('aceptacion_instalada') or dict(
+        comprobacion=evidencia.get('comprobacion_instalada'),
+        conformidad=evidencia.get('conformidad'), ci=evidencia.get('ci'))
+    citacion = evidencia.get('citacion') or dict(
+        version=evidencia['version'], commit=fuente_commit,
+        doi_version=evidencia.get('doi_version'))
+    candidato = dict(version=evidencia['version'], fuente_commit=fuente_commit,
         paquete=esperado, evaluacion_externa='pendiente', participantes='sin_asignar',
         resultado_previo='comprobacion_tecnica_del_mantenedor',
-        aceptacion=evidencia['aceptacion_instalada'],
-        citacion=evidencia['citacion'])
+        aceptacion=aceptacion, citacion=citacion)
     archivos = {nombre: git(commit, KIT + '/' + nombre) for nombre in ARCHIVOS}
     archivos['PROBAR-CANDIDATO.R'] = git(commit, 'data-raw/probar-candidato.R')
     archivos['LICENSE.md'] = git(commit, 'LICENSE.md')
