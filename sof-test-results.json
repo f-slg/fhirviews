@@ -350,25 +350,29 @@
       {
         "name": "decimal lowBoundary",
         "result": {
-          "passed": true
+          "passed": false,
+          "error": "fila decimal=0.5|id=\"o1\"; se esperaba decimal=0.95|id=\"o1\""
         }
       },
       {
         "name": "decimal highBoundary",
         "result": {
-          "passed": true
+          "passed": false,
+          "error": "fila decimal=1.5|id=\"o1\"; se esperaba decimal=1.05|id=\"o1\""
         }
       },
       {
         "name": "datetime lowBoundary",
         "result": {
-          "passed": true
+          "passed": false,
+          "error": "fila datetime=\"2010-10-10T00:00:00.000\"|id=\"o2\"; se esperaba datetime=\"2010-10-10T00:00:00.000+14:00\"|id=\"o2\""
         }
       },
       {
         "name": "datetime highBoundary",
         "result": {
-          "passed": true
+          "passed": false,
+          "error": "fila datetime=\"2010-10-10T23:59:59.999\"|id=\"o2\"; se esperaba datetime=\"2010-10-10T23:59:59.999-12:00\"|id=\"o2\""
         }
       },
       {

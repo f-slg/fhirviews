@@ -1,19 +1,17 @@
 # fhirviews
 
-**From FHIR resources to reproducible tables in R, and from SQL to FHIR
-through explicit mappings.**
+**From FHIR resources to reproducible tables in R.**
 
 [Español](https://f-slg.github.io/fhirviews/README.md) · **English**
 
 [![R-CMD-check](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/f-slg/fhirviews/actions/workflows/R-CMD-check.yaml)
 [![Documentation](https://github.com/f-slg/fhirviews/actions/workflows/pkgdown.yaml/badge.svg)](https://f-slg.github.io/fhirviews/)
-[![SQL on FHIR:
-144/144](https://img.shields.io/badge/SQL%20on%20FHIR-144%2F144-2a78d6.svg)](#conformance-and-tests)
+[![SQL on FHIR: 133/133
+shareable](https://img.shields.io/badge/SQL%20on%20FHIR-133%2F133%20shareable-2a78d6.svg)](#conformance-and-tests)
 [![FHIR
 R4](https://img.shields.io/badge/FHIR-R4-0F2233.svg)](https://hl7.org/fhir/R4/)
 [![MIT
 license](https://img.shields.io/badge/license-MIT-blue.svg)](https://f-slg.github.io/fhirviews/LICENSE.md)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24238726.svg)](https://doi.org/10.5281/zenodo.24238726)
 
 > **About the language.** This is a translation of the Spanish README.
 > The package is aimed at users in Ecuador and Latin America: function
@@ -25,11 +23,6 @@ license](https://img.shields.io/badge/license-MIT-blue.svg)](https://f-slg.githu
 into `data.frame`s using **SQL on FHIR** and **FHIRPath**. Define a view
 once, save it as a `ViewDefinition` and reuse it on local files, server
 responses or population-level exports.
-
-It also builds **Patient, Observation, Encounter, Condition and
-Immunization** from a `data.frame` or a SQL query through DBI, with
-explicit column, constant and reference mappings. JSON and NDJSON output
-preserve decimal scale.
 
 It is designed for clinical analysis, research, epidemiological
 surveillance and teaching in R. It includes SMART on FHIR
@@ -48,39 +41,14 @@ separately.
 in 0.5.0](https://f-slg.github.io/fhirviews/NEWS.md) · [Report a
 problem](https://github.com/f-slg/fhirviews/issues/new/choose)
 
-``` mermaid
-flowchart TB
-    accTitle: fhirviews workflows with FHIR R4
-    accDescr: A view projects FHIR resources into tables. A separate explicit mapping builds R4 resources from rows, preserves decimal scale and supports server profile validation.
-    subgraph READ["FHIR → tables"]
-        direction LR
-        FHIR["FHIR R4<br/>server or files"] --> VIEW["ViewDefinition<br/>FHIRPath"]
-        VIEW --> TABLE["Tables<br/>R and SQL"]
-    end
-    subgraph BUILD["Tables → FHIR R4"]
-        direction LR
-        ROWS["Rows<br/>R or DBI SQL"] --> MAP["Explicit<br/>mapping"]
-        MAP --> R4["Resources<br/>FHIR R4"]
-        R4 --> OUT["JSON / NDJSON"]
-        R4 --> PROFILE["Server profile<br/>validation"]
-    end
-```
+![Transformation pipeline: a Patient resource in JSON, columns defined
+in a ViewDefinition and the resulting table in
+R](reference/figures/README-json-tabla.png)
 
-Reading uses V8 or the experimental DuckDB translator. Construction
-supports **Patient, Observation, Encounter, Condition and
-Immunization**, preserving the decimal scale available at the source. To
-construct resources from a projected table, prepare the rows and choose
-a mapping, with explicit decisions about omitted or aggregated columns.
-
-> **Version 0.5.0 · submitted to CRAN on 7 November 2026, under
+> **Version 0.5.0 · submitted to CRAN on 6 November 2026, under
 > review.** Block-wise processing, export recovery with content
 > validation and privacy improvements. The DuckDB SQL engine is still
 > **experimental**. Until CRAN publishes it, install it from GitHub.
-
-> **Development version 0.5.0.9000:** adds SQL → FHIR and 144/144
-> conformance tests in both engines. These changes belong to the
-> development code, not the 0.5.0 candidate previously submitted to
-> CRAN.
 
 ## Contents
 
@@ -96,14 +64,12 @@ a mapping, with explicit decisions about omitted or aggregated columns.
 - [Authentication and bulk export](#authentication-and-bulk-export)
 - [Processing files in blocks](#processing-files-in-blocks)
 - [Working with DuckDB](#working-with-duckdb)
-- [From SQL to FHIR](#from-sql-to-fhir)
 - [Public health views and
   terminologies](#public-health-views-and-terminologies)
 - [Validation and privacy](#validation-and-privacy)
 - [Conformance and tests](#conformance-and-tests)
 - [Performance](#performance)
 - [Scope and limitations](#scope-and-limitations)
-- [Stabilising R4](#stabilising-r4)
 - [Pilot and local documentation](#pilot-and-local-documentation)
 - [Guides and reference](#guides-and-reference)
 - [Contributing, citation and
@@ -123,7 +89,6 @@ a mapping, with explicit decisions about omitted or aggregated columns.
 | `autenticacion` | authentication | [`fhir_auth_backend()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md), [`fhir_auth_cliente()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md), [`fhir_auth_interactiva()`](https://f-slg.github.io/fhirviews/reference/fhir_auth.md) |
 | `expandir`, `validar_codigo` | expand, validate code | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md), [`tx_validar_codigo()`](https://f-slg.github.io/fhirviews/reference/tx_validar_codigo.md) |
 | `recursos`, `tabla` | resources, table | [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md), [`fhir_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_tabla.md) |
-| `mapa`, `desde_sql`, `desde_tabla`, `escribir` | mapping, from SQL, from table, write | [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md) |
 | `procesar`, `bloque`, `tamano_lote` | process, block, block size | arguments of [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md) |
 | `diferido`, `estricto` | lazy, strict | arguments of [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md) and [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md) |
 
@@ -138,8 +103,6 @@ a mapping, with explicit decisions about omitted or aggregated columns.
 | Read NDJSON and gzip without holding the whole output in memory | [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md) |
 | Run a SQL-translatable view on NDJSON or Parquet | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md) — experimental |
 | Query several tables with SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) — views evaluated with V8 and stored in one transaction |
-| Build Patient, Observation, Encounter, Condition and Immunization from SQL queries or tables | [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md) |
-| Save resources preserving original JSON decimals | [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md) — JSON or NDJSON |
 | Start from public health views | [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md), [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md) |
 | Define cohorts with the codes of a ValueSet | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md), [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) |
 | Write and validate resources on the server | [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_borrar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md) |
@@ -148,6 +111,19 @@ A `ViewDefinition` describes the columns, filters and collections to
 extract, using FHIRPath expressions. Keeping that definition next to the
 analysis makes the transformation decisions explicit and easier to
 review.
+
+``` mermaid
+flowchart LR
+    A["JSON / NDJSON / gzip files"] --> V["ViewDefinition + FHIRPath"]
+    B["FHIR R4 server"] --> C["Client and Bulk Data export"]
+    C --> V
+    V --> D["data.frame in R"]
+    V --> E["One table per block"]
+    V --> F["DuckDB SQL · experimental"]
+    D --> G["Analysis, indicators and dashboards"]
+    E --> G
+    F --> G
+```
 
 ## Installation
 
@@ -246,11 +222,9 @@ vista_reutilizable <- vista_leer("signos-vitales.json")
 
 ## Architecture and processing sequence
 
-Extraction is split into four layers. The client fetches resources; the
-definition declares the extraction; the engines produce rows; the
-consumer decides how to store, summarise or query the result.
-[Construction from SQL](#from-sql-to-fhir) has its own mapping and
-checks.
+Responsibilities are split into four layers. The client fetches
+resources; the definition declares the extraction; the engines produce
+rows; the consumer decides how to store, summarise or query the result.
 
 ``` mermaid
 flowchart TB
@@ -274,7 +248,6 @@ flowchart TB
         DF["Complete data.frame"]
         CB["procesar(tabla, bloque)"]
         DB["DuckDB table or lazy query"]
-        DBI["DBI tables in one transaction"]
     end
     REST --> HTTP --> RES
     FILE --> RES --> V8 --> DF
@@ -289,7 +262,6 @@ flowchart TB
     VALID --> SQL
     SQL --> DF
     SQL --> DB
-    V8 -->|"vista_duckdb"| DBI
 ```
 
 To build a reproducible analysis, follow this sequence:
@@ -709,324 +681,6 @@ the files again when it runs, so its inputs must remain available. Close
 the connections you create when you are done; lazy results depend on
 their connection staying open.
 
-## From SQL to FHIR
-
-[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
-runs a query through an open **DBI** connection and builds resources
-according to a
-[`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
-[`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
-applies the same mapping to a `data.frame`. Supports **Patient,
-Observation, Encounter, Condition and Immunization from FHIR R4 4.0.1**.
-
-``` mermaid
-flowchart LR
-    DB["DBI SQL query / data.frame"] --> M["fhir_mapa: columns, constants and references"]
-    M --> CHECK["Construct and check R4 structure"]
-    CHECK --> R["Patient, Observation, Encounter,<br/>Condition and Immunization"]
-    R --> J["JSON / NDJSON"]
-    R --> V["ViewDefinition → table"]
-    R --> C["Profile validation with fhir_validar"]
-```
-
-SQL on FHIR defines a tabular **projection**. Rebuilding resources needs
-a separate mapping: filters, `first()`, `join()`, aggregation or omitted
-columns may discard information. An arbitrary `ViewDefinition` cannot be
-automatically reversed, and reconstruction of the original resource is
-not guaranteed.
-
-### Complete SQL example
-
-This uses an in-memory SQLite database and fictional data. Install `DBI`
-and `RSQLite` if needed. For DuckDB, PostgreSQL or SQL Server, use the
-corresponding DBI connection and adapt the query syntax. Function and
-argument names remain in Spanish.
-
-``` r
-
-library(fhirviews)
-con_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
-
-DBI::dbWriteTable(con_db, "pacientes", data.frame(
-  paciente_id = c("p1", "p2"), sexo = c("female", "male"),
-  nacimiento = c("1985-03-12", "2001-11-30"),
-  apellido = c("Paredes", "Salazar"), nombre = c("Ana", "Jorge")
-))
-DBI::dbWriteTable(con_db, "resultados", data.frame(
-  resultado_id = c("o1", "o2"), paciente_id = c("p1", "p2"),
-  valor = c("98.00", "131.0"), unidad = c("mg/dL", "mg/dL")
-))
-
-mapa_pacientes <- fhir_mapa("Patient", c(
-  id = "paciente_id", gender = "sexo", birthDate = "nacimiento",
-  "name[0].family" = "apellido", "name[0].given[0]" = "nombre"
-))
-pacientes <- fhir_desde_sql(con_db,
-  "SELECT * FROM pacientes ORDER BY paciente_id", mapa_pacientes)
-
-mapa_resultados <- fhir_mapa("Observation", c(
-  id = "resultado_id", "subject.reference" = "paciente_id",
-  "valueQuantity.value" = "valor", "valueQuantity.unit" = "unidad"
-), constantes = list(
-  status = "final", "code.text" = "Glucosa"
-), referencias = c("subject.reference" = "Patient"))
-observaciones <- fhir_desde_sql(con_db,
-  "SELECT * FROM resultados ORDER BY resultado_id", mapa_resultados)
-
-observaciones[[1]]$subject$reference  # "Patient/p1"
-vista_fhirpath(observaciones, "value.ofType(Quantity).value")  # 98, 131
-
-salida <- tempfile(fileext = ".ndjson")
-fhir_escribir(c(pacientes, observaciones), salida)
-fhir_escribir(observaciones, tempfile(fileext = ".json"), formato = "json")
-
-# Extract fields from the generated resources again
-vista <- vista_crear("Observation", c(
-  paciente = "subject.getReferenceKey(Patient)",
-  valor = "value.ofType(Quantity).value"
-))
-vista_ejecutar(salida, vista)
-#   id paciente valor
-# 1 o1       p1    98
-# 2 o2       p2   131
-
-# Bind values through the driver instead of interpolating SQL strings
-uno <- fhir_desde_sql(con_db,
-  "SELECT * FROM pacientes WHERE paciente_id = ?", mapa_pacientes,
-  parametros = list("p1"))
-DBI::dbDisconnect(con_db)
-```
-
-Parameter placeholders depend on the driver: SQLite/DuckDB use `?`,
-whereas RPostgres uses `$1`. Joins, filters and code translations belong
-in the query or preprocessing. `status = "final"` and the measurement
-name are explicit choices for this example, not defaults. Supply the
-appropriate code systems, codes and units for your actual data and
-profiles.
-
-### Mapping rules
-
-| Element | Behaviour |
-|----|----|
-| `campos` | Named character vector: names are FHIR JSON destinations, values are source column names. |
-| `constantes` | Named list of fixed values. Destinations cannot overlap with `campos`. |
-| `referencias` | `.reference` destination → target resource type; the key `p1` becomes `Patient/p1`. Supply keys, not URLs or prefixed references. |
-| `name[0].family` | Zero-based indices. Repeating elements require an index. |
-| `name[0].given[]` | Primitive collection from a list-column. `[]` is allowed only at the end. |
-| Choice elements | Use concrete JSON names such as `valueQuantity.value` and `deceasedBoolean`; mappings do not evaluate FHIRPath. |
-| `NA`, `NULL`, `""`, empty collections | Omitted. Empty objects and positions are compacted; indices identify construction positions, not persistent `null` gaps. |
-| `id` | Must be mapped, valid and unique in the result. Safe integers are converted to text. |
-| Booleans and integers | Require logical or in-range integral values. Strings such as `"false"` are not coerced and `1.7` is not truncated. |
-| Dates | Accept valid partial FHIR dates and `Date`. `Date` retains date precision for `date` and `dateTime`; instants require a time. Date-times with a time require a timezone; `POSIXct`/`POSIXlt` become UTC. |
-| Errors | Class `fhirviews_error_mapeo`, with `fila` and `campo` when known. |
-
-For multiple given names, prepare one row per patient and a list-column:
-
-``` r
-
-datos <- data.frame(id = "p1")
-datos$nombres <- list(c("Ana", "Lucía"))
-mapa <- fhir_mapa("Patient", c(id = "id", "name[0].given[]" = "nombres"))
-fhir_desde_tabla(datos, mapa)
-```
-
-Duplicate resource IDs are rejected rather than grouped or overwritten.
-Group multi-row query results before mapping them. A query with no rows
-produces zero resources.
-
-### Decimals, validation and output
-
-Decimal destinations accept numbers or **numeric JSON literals supplied
-as text**. `"1.00"` is written as the JSON number `1.00`, without
-quotes. If a DBI driver converts `DECIMAL(p,s)` to a double, trailing
-zeros have already been lost: select it as text using your database’s
-`CAST`. Also use text for BIGINT identifiers outside the safe integer
-range. `NaN`, numeric infinities and incompatible conversions are
-rejected.
-
-[`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
-preserves the available original JSON literals and replaces the output
-file. NDJSON contains one resource per line; `formato = "json"` contains
-an array, not a transaction Bundle. Editing the R resource lists
-discards their original source; lost decimal scale cannot be recovered
-from ordinary R numbers. Conversion does not send resources to a FHIR
-server.
-
-When reading resources back from a server, use the source-preserving
-mode. The default read returns an ordinary R list and does not retain
-decimal scale:
-
-``` r
-
-# con_fhir is a connection created with fhir_conectar()
-originales <- fhir_leer(con_fhir, "Observation", "o1", como_recursos = TRUE)
-vista_fhirpath(originales, "value.ofType(Quantity).value.lowBoundary()")
-fhir_escribir(originales, tempfile(fileext = ".ndjson"))
-```
-
-`como_recursos = TRUE` returns a `fhir_recursos` collection. The default
-stays an ordinary list for compatibility. `72.00` cannot be recovered
-from a list that has already converted it to `72`.
-
-Local checks cover paths, types, cardinalities, required base elements,
-incompatible choice fields, reference targets and **required** bindings
-that can be fully enumerated from the R4 package. These include
-`Patient.gender`, `Observation.status`, `Encounter.status`,
-`Immunization.status`, Condition clinical and verification statuses, and
-nested fields such as `HumanName.use`. `Coding` and `CodeableConcept`
-need a `system`/`code` pair from the ValueSet. Additional translations
-are allowed when at least one pair matches. Required CodeableConcepts
-need coding; `text` does not replace it. Extensible, preferred and
-example bindings retain their flexibility; `Encounter.class` is
-extensible.
-
-The generator records the source version and SHA256 and retains bindings
-and `Reference` targets. Sets containing filters, imports or external
-sources are left to the terminology server; a partial list is never
-treated as complete. References check declared targets, identifiable
-types in `Type/id` or absolute URLs, and consistency with
-`Reference.type`. External identifiers and URN references need
-server-side existence and resolution checks.
-
-**These are not full FHIR validation**: use
-`fhir_validar(con, recurso, perfil = "canonical-URL")` to check
-profiles, invariants and terminologies with your selected server.
-
-[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
-collects the full query result in memory and leaves the connection open
-for its caller to close. Automatic row grouping, `contained` resources,
-bulk upload and `StructureMap` translation are outside this first
-version. An executable example is installed at
-`system.file("examples", "sql-a-fhir.R", package = "fhirviews")`.
-
-### Encounters and diagnoses from SQL
-
-`Encounter` requires `status` and `class`. The base `Condition` snapshot
-requires `subject`; its invariants and profiles may require additional
-elements. Clinical and verification statuses are CodeableConcepts and
-need their system and code. Status values come from the source or from
-explicit mapping constants. The `estado` source column represents
-different vocabularies in the two resources: for example, `finished` for
-Encounter and `active` for Condition.
-
-The complete executable example creates fictional SQLite tables, runs
-bound queries, declares clinical and verification codes and
-Reference.type, writes NDJSON and reconstructs a linked diagnosis table:
-
-``` r
-
-source(system.file("examples", "encuentros-diagnosticos.R", package = "fhirviews"))
-#   id paciente encuentro estado
-# 1 c1       p1        e1 active
-```
-
-Use one query row per encounter and one per diagnosis. Patients can be
-referenced by several resources; rows of the same resource still require
-unique IDs. Persist referenced resources first or use an appropriate
-transaction. Check base or project profiles with
-[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
-before using the output with your server.
-
-### Immunizations from SQL
-
-`Immunization` represents a recorded vaccination event. The mapper
-requires an ID unique per row, plus the R4 mandatory elements:
-
-| Element | Construction rule |
-|----|----|
-| `status` | Exact code: `completed`, `not-done` or `entered-in-error`. |
-| `vaccineCode` | CodeableConcept describing the vaccine. The base binding is an example; project profiles can require a particular system and catalogue. |
-| `patient.reference` | Must target Patient; Group and other types are rejected. |
-| `occurrenceDateTime` or `occurrenceString` | Exactly one variant is required. The first carries a valid FHIR date/time; the second preserves a textual description of the date. |
-| `encounter.reference` | Optional; targets Encounter. |
-| `protocolApplied[0].doseNumberPositiveInt` or `doseNumberString` | Each protocolApplied entry needs exactly one dose-number variant. Integers must be positive; text is not implicitly converted to integers. |
-| `doseQuantity` | SimpleQuantity; comparator is prohibited. Numeric text such as `"0.50"` retains decimal scale. |
-| `primarySource` | Explicit logical value. The mapper does not infer source provenance or implicitly turn 0/1 or strings into booleans. |
-
-SimpleQuantity restrictions apply in their type context, including
-doseQuantity and Range endpoints. General Quantity fields retain their
-allowed comparators. Date values retain `YYYY-MM-DD` precision in
-occurrenceDateTime; POSIXct values are converted to UTC. Fill only one
-of the two occurrence variants and one of the two dose-number variants.
-
-The complete SQLite example creates Patient and Encounter, runs SQL
-queries, constructs two Immunizations, writes NDJSON and returns date,
-textual date, quantity and dose number as separate table columns:
-
-``` r
-
-source(system.file("examples", "inmunizaciones-sql.R", package = "fhirviews"))
-```
-
-The example declares `primarySource = TRUE` because both fictional
-records come from the primary source. Status does not automatically fill
-or remove dates, dose quantities or reasons. Vaccine codes are fictional
-and use `https://example.org/fhir/CodeSystem/vacunas`. Actual systems,
-codes and units must match the data source and project profiles.
-
-Optional objects need consistent missing values. The example computes
-`encounter.type` with SQL CASE so it is absent when the encounter is
-absent; quantity value, unit and system are all absent when no quantity
-is supplied. A nested constant creates that content in every row.
-References containing only type are rejected; reference, identifier or
-display is required. If SQLite returns boolean indicators as integers,
-validate that they contain only 0, 1 or NA, explicitly convert them to
-logical values in R and use fhir_desde_tabla(). Drivers returning native
-booleans can use them directly in fhir_desde_sql().
-
-The existing `vista_plantilla("inmunizaciones")` catalogue view is also
-tested. Its date column selects the dateTime variant; the example adds
-fecha_texto using `occurrence.ofType(string)` to retain the textual
-variant as well.
-
-Use fhir_validar() with
-`http://hl7.org/fhir/StructureDefinition/Immunization` or the project’s
-canonical profile. Invariants and clinical terminology need this
-validation; for example, education entries must include documentType or
-reference under R4 invariant imm-1.
-
-### Supported resources and next groups
-
-The reader and view engine already work with other FHIR resource types.
-Construction from SQL or tables supports **Patient, Observation,
-Encounter, Condition and Immunization**. Further resources are added in
-verified groups.
-
-| Status | Resources | Workflow |
-|----|----|----|
-| Supported | `Patient`, `Observation` | Patients and results with preserved decimal scale. |
-| Supported | `Encounter`, `Condition` | Patient → encounter → diagnosis, with references between them. |
-| Supported | `Immunization` | Patient → vaccination event, with an explicit vaccine, status and date. |
-| Pending | `Specimen`, `DiagnosticReport` | Specimen → observations → report, with several result references. |
-| Pending | `MedicationRequest`, `MedicationDispense` | Prescribing and dispensing, with explicit medication and dosage data. |
-| Pending, as needed | `Organization`, `Practitioner` | Institutions and professionals referenced by these resources. |
-
-This order prioritizes surveillance and can be adapted to the data
-source. The path, type, cardinality and choice-field engine already uses
-canonical **FHIR R4 4.0.1** snapshots. Adding a resource requires:
-
-1.  Extending the explicit list in `data-raw/mapeo_r4.py`, retaining
-    dependent types, schema provenance, bindings and Reference targets.
-2.  Reviewing which required bindings can be fully enumerated; external
-    terminology and project profiles need server validation.
-3.  Testing required fields and choices. Immunization, for example,
-    requires status, vaccineCode, patient and one occurrence\[x\]
-    variant.
-4.  Designing collections of objects before offering variable-length
-    groups. Fixed paths such as `result[0].reference` can be built;
-    terminal `[]` currently constructs primitive collections, rather
-    than variable-length lists of Reference or dosageInstruction
-    objects.
-5.  Requiring valid and invalid cases and a reproducible SQL → FHIR →
-    base-profile \$validate → persist and read → V8/DuckDB table round
-    trip. Add project profiles by canonical URL when available, and
-    update examples and documentation for each group.
-
-Pending resources remain unavailable to
-[`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
-References can point to valid R4 types already present on the server,
-such as Practitioner, even when this module does not yet construct them.
-
 ## Public health views and terminologies
 
 The catalogue includes seven views: patients, diagnoses, encounters,
@@ -1140,39 +794,21 @@ in memory unless disk caching is explicitly requested with
 
 The package includes the [official SQL on FHIR test
 suite](https://github.com/FHIR/sql-on-fhir.js/tree/main/tests). Both
-engines pass **144/144 tests of the included suite**:
-
-| Engine              | Shareable | Experimental |   Total |
-|---------------------|----------:|-------------:|--------:|
-| V8 / fhirpath.js    |   133/133 |        11/11 | 144/144 |
-| DuckDB / native SQL |   133/133 |        11/11 | 144/144 |
-
-The four experimental boundary cases now retain the precision of `1.0`
-and complete missing DateTime offsets (`+14:00` for the low boundary,
-`-12:00` for the high boundary), preserving explicit offsets. The runner
-preserves the original numeric literals without changing expected
-outputs. V8 uses a portable JSON reader; DuckDB matches raw numeric
-tokens to `json_tree()` paths. Conformance refers to that suite and does
-not certify a clinical system.
+engines pass **133/133 tests of the shareable profile** and **7/11
+experimental tests** of the bundled suite. The four pending ones concern
+`lowBoundary()` and `highBoundary()` and differences in precision or
+time zone. Conformance refers to that suite and does not certify a
+clinical system.
 
 ``` r
 
 vista_conformidad()                   # V8 engine
 vista_conformidad(motor = "duckdb")   # requires DuckDB and its json extension
-vista_conformidad(descargar = TRUE)  # compare with the current GitHub suite
-vista_conformidad(informe = "sof-test-results.json") # public matrix report format
 ```
 
-144/144 does not imply support for every FHIRPath expression in SQL.
-Decimal boundaries in DuckDB support unsigned literals or static
-resource paths with explicit indices, scales from -18 to 8, and numbers
-representable in `DECIMAL(38,18)`. Negative scales represent positive
-exponents. The optional precision argument and scale inference after
-operations, filters or iterations are unsupported and produce explicit
-errors. For Parquet or previously normalized tables, only their current
-JSON representation is available; an earlier lost scale cannot be
-reconstructed. Views without decimal boundaries do not incur the token
-and path extraction cost.
+![Results per file of the SQL on FHIR suite: all shareable tests pass
+and four experimental tests are
+pending](reference/figures/README-conformidad.png)
 
 CI checks the package on Windows, macOS Intel and Linux, plus R-devel
 and R 4.1. macOS uses `macos-26-intel` by default; this matrix does not
@@ -1186,8 +822,7 @@ separately against **your own test server**:
 
 ``` sh
 FHIRVIEWS_SERVIDOR_ESCRITURA=http://localhost:8080/fhir \
-FHIRVIEWS_SOLO_SERVIDOR_PROPIO=true NOT_CRAN=true \
-  Rscript -e 'testthat::test_local(filter = "^servidor$")'
+  Rscript -e 'devtools::test(filter = "servidor")'
 ```
 
 That server must allow writes; some tests require terminology and Bulk
@@ -1208,149 +843,19 @@ The script uses an image pinned by digest, opens a random port on
 localhost only and removes its own container when it finishes, even if
 the tests fail. It prints the folder that keeps the logs, the JSON and
 CSV summary, the skips and the R environment. The run requires writes,
-transactions, basic terminology and Bulk Data and the SQL → FHIR →
-server → table round trip; an unexpected skip makes the test fail. The
-inline ValueSet variant that HAPI does not support is recorded
-separately. The **Integracion HAPI** workflow runs this same script and
-keeps the results for 14 days. On its first run it may download the
-image and DuckDB’s JSON extension.
-
-### SQL → FHIR validation against R4 profiles
-
-The required `SQL a FHIR, perfiles R4, referencias y retorno a tablas`
-group uses a fictional Patient and two Observations from parameterized
-DuckDB queries:
-
-1.  Builds and writes the resources, preserving the decimal `72.00`.
-2.  Calls `$validate` with the explicit base profiles
-    `http://hl7.org/fhir/StructureDefinition/Patient` and
-    `http://hl7.org/fhir/StructureDefinition/Observation`.
-3.  Persists the test resources and checks that
-    `Observation.subject.reference` points to the created Patient.
-4.  Supplies an invalid `gender` and requires the validator to report an
-    error.
-5.  Reads with `fhir_leer(..., como_recursos = TRUE)` and compares
-    values, references and decimal boundaries in V8 and native SQL.
-6.  Deletes the test resources; the script also removes its own
-    container.
-
-The summary records failures, errors, warnings, assertions and skip
-reasons. Acceptance fails if this required group is missing. This covers
-**base R4 profiles**; clinical or national profiles need explicit checks
-against their canonical URLs.
-
-**Local R4 milestone run:** integration passed with digest-pinned HAPI
-8.12.0-2, **130 assertions** and no failures, errors or warnings: the 16
-original SQL → FHIR checks, 20 Encounter/Condition checks, 38
-Immunization checks and 10 new candidate checks. The two expected skips
-(public-server reads and inline ValueSet validation) were recorded, and
-the container was removed. The [current integration
-evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json)
-records each group, with logs and the R environment alongside it. The
-[previous 120-assertion
-run](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
-is retained as historical evidence. Both use fictional data.
-
-The required
-`Encounter y Condition desde SQL, perfiles R4 y referencias` group
-builds Patient → Encounter → Condition from bound DuckDB queries. It
-validates explicit base profiles, persists and reads the three
-resources, and checks references and V8/DuckDB tables. Negative controls
-require HAPI to reject invalid Encounter status and Condition clinical
-codes, and an incorrect reference target with explicit `Reference.type`.
-This server did not reject the wrong literal reference when
-`Reference.type` was absent: examples therefore declare it, and the
-mapper also checks identifiable types in literal references.
-
-The required `Immunization desde SQL, perfil R4, dosis y referencias`
-group adds two fictional events with dateTime/string occurrence,
-integer/text dose number and a `0.50` quantity. It checks profiles,
-persisted Patient/Encounter references, scale-preserving reads,
-V8/DuckDB tables and the catalogue view. Negative controls require the
-server to reject invalid status, an incorrect explicit patient type, a
-SimpleQuantity comparator and an education entry violating imm-1.
-Acceptance fails if this group is skipped.
-
-### SQL → FHIR with PostgreSQL and SQL Server
-
-In addition to local DuckDB and SQLite tests,
-`data-raw/probar-sql-dbi.sh` runs queries against **two real, isolated
-databases**. It creates its own PostgreSQL and SQL Server Developer
-containers, pinned by digest in `data-raw/postgres-image.txt` and
-`data-raw/sqlserver-image.txt`, and removes them on exit. Random ports
-are bound to localhost and random, single-use credentials are excluded
-from reports. All data is fictional.
-
-Requirements: Docker or Podman, `openssl`, the R packages below and a
-**Microsoft ODBC Driver 18 for SQL Server** available to `odbc`.
-`RPostgres` needs PostgreSQL libraries; `odbc` needs unixODBC. Running
-the script starts SQL Server with `ACCEPT_EULA=Y` and the Developer
-edition for development and testing under Microsoft’s image terms.
-
-``` r
-
-install.packages(c("DBI", "RPostgres", "odbc", "duckdb", "pkgload", "testthat"))
-```
-
-``` sh
-# Run from the repository root; the output directory must be new.
-FHIRVIEWS_CONTENEDOR=podman bash data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi
-# FHIRVIEWS_CONTENEDOR=docker is also supported.
-```
-
-`FHIRVIEWS_ODBC_DRIVER` can specify another registered driver name or an
-absolute library path; the default is `ODBC Driver 18 for SQL Server`.
-`FHIRVIEWS_SQL_ESPERA` sets the connection wait in seconds, defaulting
-to 120. The test ODBC connection uses encryption and trusts the local
-container’s certificate; this setting belongs to the isolated test
-environment.
-
-Each database must pass five required groups:
-
-1.  Native `Date` values, booleans, accented text and BIGINT keys above
-    `2^53`, read as text without rounding.
-2.  Patient construction with names, birth date, active status and
-    omitted SQL `NULL` values.
-3.  Bound parameters (`$1` for RPostgres; `?` for ODBC), zero rows, text
-    containing SQL characters, and rejected duplicate IDs or invalid
-    codes.
-4.  Observation construction with patient references, UTC timestamps and
-    a `DECIMAL(12,2)` read as text to preserve `72.00`. SQL Server
-    explicitly converts `DATETIMEOFFSET` to UTC and `DATETIME2` before
-    reading it as `POSIXct`.
-5.  NDJSON writing and reading and comparison of values and decimal
-    boundaries when projecting the resources to tables with V8 and
-    DuckDB.
-
-Queries and casts are specific to each database;
-[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
-runs them through DBI. Base R4 profile validation is covered separately
-by the HAPI integration described above.
-
-**Local result on 14 November 2026:** 72 passing assertions with no
-failures, errors, warnings or skips. Tested PostgreSQL 17.12 with
-RPostgres 1.4.10 and SQL Server 2022 CU27 (16.0.4295.3) with `odbc`
-1.7.2 and Microsoft ODBC 18.6.1.1. Both containers were removed. The
-[DBI
-evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-dbi/resumen.json)
-records versions and each group’s results; fictional output resources,
-logs and the R environment are kept alongside it. Executable queries are
-in the repository script.
-
-The **Integracion SQL DBI** workflow runs the same procedure and retains
-its results for 14 days. All ten groups are required; any failure,
-warning or skip fails acceptance. Check the CI results for the commit
-being published to confirm its R coverage on Windows, macOS and Linux as
-well.
+transactions, basic terminology and Bulk Data; an unexpected skip makes
+the test fail. The inline ValueSet variant that HAPI does not support is
+recorded separately. The **Integracion HAPI** workflow runs this same
+script and keeps the results for 14 days. On its first run it may
+download the image and DuckDB’s JSON extension.
 
 ### Candidate check sequence
 
 The R-CMD-check matrix first tests the package and then installs the
 built source archive in a new library. Acceptance runs in a separate R
 process and checks the load path, the help, the vignettes and the report
-for the requested profile. Both profiles require the five R4 types; the
-complete profile adds parameterised SQL, V8/DuckDB comparison and
-transactional recovery.
+for the requested profile. The full profile adds rollback and
+transactional retry.
 
 ``` mermaid
 flowchart TD
@@ -1358,20 +863,14 @@ flowchart TD
     B --> C["R CMD check and package tests"]
     C --> D["Install the same tar.gz in a new library"]
     D --> E["Separate R process: check package and documentation"]
-    E --> F["Five R4 types and basic or complete profile"]
+    E --> F["Basic or full pilot depending on the matrix"]
     F --> G{"Technical result"}
     G -->|"No errors or warnings"| H["Approved for that profile"]
     G -->|"Warnings"| I["Needs review, non-zero exit"]
     G -->|"Error"| J["Not approved, non-zero exit"]
     A --> K["HAPI workflow: isolated integration"]
-    A --> L["PostgreSQL and SQL Server integration"]
-    A --> P["Local pkgdown; Pages on main"]
-    H --> T["Review all checks for the same commit"]
-    K --> T
-    L --> T
-    P --> T
-    T --> M["External pilot with the R4 protocol"]
-    M --> N["Address findings and select a stable version"]
+    A --> L["pkgdown workflow: build documentation"]
+    H --> M["User evaluation still pending"]
 ```
 
 Acceptance reports are stored as `piloto-*` artifacts for 14 days.
@@ -1381,27 +880,6 @@ the declared scope, and their result should be checked for the specific
 commit being delivered.
 
 ## Performance
-
-### Rust evaluation status
-
-The current package uses R, JavaScript/V8 and DuckDB’s native engine.
-**Rust is not implemented and has not been benchmarked against R.**
-Exploratory SQL → FHIR profiling identified validation and references as
-candidates for measurement; this does not establish a speed improvement
-attributable to Rust.
-
-After the R4 milestone, compare current R, a validation plan prepared
-once per mapping and a batch Rust prototype on identical inputs. Require
-repeated timing and memory measurements, all five R4 types, identical
-row/field errors and JSON results that retain the distinction between
-`0.50`, `0.5` and `72.00`. Assess Windows/macOS/Linux installation and
-maintenance as part of the decision. This evaluation remains pending;
-the opening diagram shows available features.
-
-### Earlier V8 and DuckDB measurements
-
-The measurements below predate the precision changes in 0.5.0.9000 and
-have not been repeated with this development version.
 
 The following measurement compares both engines with synthetic patients
 and a view that includes `where`, four columns and `forEach` over
@@ -1502,11 +980,9 @@ Script:
 - **FHIRPath.** Evaluation happens in V8. Remote resolution with
   `resolve()` is disabled; terminology lookups are done with the `tx_*`
   functions before the view runs.
-- **Precision and dates.** Evaluation and JSON/NDJSON output preserve
-  decimal literals from the original source. Ordinary R numeric columns
-  do not retain their scale; editing resources discards their original
-  JSON source. Dates stay as ISO 8601 text to allow partial values such
-  as `2025` or `2025-03`.
+- **Precision and dates.** JSON numbers lose trailing decimal zeros when
+  read. Dates are kept as ISO 8601 text to allow partial values such as
+  `2025` or `2025-03`.
 - **Memory and schema.**
   [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
   collects the result in memory; block-wise processing requires your
@@ -1517,76 +993,14 @@ Script:
 - **Server capabilities.** SMART, `$validate`, terminology and `$export`
   depend on the configuration and permissions of the connected server.
 
+Development priorities include stabilising the DuckDB engine, improving
+decimal precision and extending the search and terminology operations.
 Proposals and their tracking are in [GitHub
 Issues](https://github.com/f-slg/fhirviews/issues).
 
-## Stabilising R4
-
-The current priority is to consolidate **FHIR R4 4.0.1** before
-federation or R4/R6 conversion. Development remains at `0.5.0.9000`;
-verifying a candidate does not publish a release, change its version or
-issue a DOI.
-
-| Component | Scope of the R4 milestone |
-|----|----|
-| Client and V8 views | R4 resources and operations supported by the connected server. |
-| Construction from tables or DBI | Patient, Observation, Encounter, Condition and Immunization; one row per resource, explicit mappings. |
-| Local validation | Types, cardinalities, choices, dates, Reference targets and enumerable required bindings. Code permits only single internal spaces; URI, URL and canonical reject whitespace, including Unicode separators, following the [R4 primitive rules](https://hl7.org/fhir/R4/datatypes.html#primitive). Values are rejected rather than altered. |
-| Profiles and terminology | HAPI checks base profiles; project profiles, invariants and external terminology require the agreed environment. |
-| DuckDB engine | Remains experimental, with the documented FHIRPath subset and comparison against V8. |
-| Additional resources and versions | Further SQL construction resources, server federation and R4/R6 conversion remain pending. No multiversion API is enabled. |
-
-Both acceptance profiles require `r4_cinco_recursos`: six fictitious
-resources of five types, including two Immunization records. It checks
-references, false booleans, missing optional objects, date and dose
-choices, JSON/NDJSON round trips and the five V8 views. Decimal literals
-`72.00` and `0.50` retain their lower boundaries `71.995` and `0.495`.
-Five invalid cases must be rejected: missing required subject, duplicate
-ids, invalid status, missing patient and a prohibited SimpleQuantity
-comparator.
-
-The complete profile builds through parameterised DBI/DuckDB queries and
-checks all five views with the SQL engine. A mandatory HAPI group
-validates the exact six JSON resources against their base profiles and
-rejects an altered Patient. PostgreSQL and SQL Server integration
-continues to check native database types.
-
-An external participant must install the exact tested candidate,
-interpret the results, change a view, compare it with NDJSON and repeat
-the agreed tasks.
-[PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md),
-distributed with the package, provides the protocol in Spanish.
-Automated reports retain `validacion_usuario_externo = pendiente`; the
-local trial marks profile validation as unevaluated, with HAPI evidence
-recorded separately.
-
-After addressing the pilot findings, select the stable version and
-artifact. The development candidate now has a verified Zenodo DOI and
-author ORCID; its archive is described in the citation section. Later
-work will address federation between R4 servers, followed by
-resource-specific R4/R6 adapters and export. Rust will be evaluated
-against a measured, reproducible bottleneck.
-
 ## Pilot and local documentation
 
-### Current R4 protocol
-
-The [R4 participant
-guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md)
-is installed as `examples/PILOTO-R4.md`. To run only the six-resource R4
-round trip:
-
-``` r
-
-Sys.setenv(FHIRVIEWS_R4_SALIDA = "r4-basico-01", FHIRVIEWS_R4_SQL = "false")
-source(system.file("examples", "r4-estabilidad.R", package = "fhirviews"))
-```
-
-Use `FHIRVIEWS_R4_SQL = "true"` for parameterised DBI/DuckDB queries and
-both view engines. Each output folder must be new. The trial uses
-fictitious data and retains the JSON resources and summary locally.
-
-### Previous participant kit: candidate 0.5.0
+### Download the participant kit
 
 **[Download the pilot kit
 (ZIP)](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip)**
@@ -1616,9 +1030,7 @@ You can also read the protocols in the repository:
 The ZIP contains the evaluation materials, not the R package. While the
 release is still a draft, the maintainer provides the candidate archive
 identified in the manifest, so that exactly the same version is
-evaluated. The v1 kit retains its historical reference to candidate
-0.5.0. Use the current R4 protocol above for the SQL → FHIR R4
-milestone.
+evaluated.
 
 ### Install the candidate and run the trial
 
@@ -1628,7 +1040,7 @@ the source archive provided by the maintainer:
 ``` r
 
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9000.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.tar.gz", repos = NULL, type = "source")
 ```
 
 Restart R, choose a new folder and run:
@@ -1649,15 +1061,13 @@ failed, needs review, pending and not evaluated). Any warning requires
 review and prevents automatic approval; the report records safe codes
 without copying the original messages.
 
-Reports now use `esquema_informe = 2`. The `basico` profile checks the
-API, surveillance results, strict rejection of an incompatible block and
-the five R4 types constructed from tables. To also check rollback,
-parameterised SQL and both implementations of the five views, install
-`DBI` and `duckdb`, change the profile to `completo` and use another new
-folder. The files stay local; fill in `experiencia-usuario.txt` with the
-obstacles, the help you needed and your assessment. Technical approval
-leaves that human evaluation pending and does not validate a server or
-your own data.
+The `basico` profile checks the API, the surveillance results and the
+strict rejection of an incompatible block. To also check rollback and
+retries, install `DBI` and `duckdb`, change the profile to `completo`
+and use another new folder. The files stay local; fill in
+`experiencia-usuario.txt` with the obstacles, the help you needed and
+your assessment. Technical approval leaves that human evaluation pending
+and does not validate a server or your own data.
 
 Help and vignettes are available in the installation:
 
@@ -1669,7 +1079,7 @@ browseVignettes("fhirviews")
 ```
 
 The [maintainer’s
-guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-MANTENEDOR.md)
+guide](https://f-slg.github.io/fhirviews/inst/examples/PILOTO-MANTENEDOR.md)
 (in Spanish) describes how to build and verify the candidate, interpret
 the codes and close the pilot. It is also distributed with the package,
 in `examples/PILOTO-MANTENEDOR.md`.
@@ -1690,14 +1100,11 @@ are in Spanish.
 | [Architecture](https://f-slg.github.io/fhirviews/articles/arquitectura.html) | Engines, batch evaluation and security |
 | [Function reference](https://f-slg.github.io/fhirviews/reference/) | Signatures, arguments and API examples |
 
-Related projects: [pobecu](https://f-slg.github.io/pobecu/) provides
-INEC population projections and rate calculations;
-[geoecu](https://f-slg.github.io/geoecu/) provides CONALI territorial
-boundaries for mapping them. The [rates by canton
-article](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html)
-shows the full path from FHIR data to rates and a map.
-[aprende-fhir](https://github.com/f-slg/aprende-fhir) provides teaching
-material with a fictitious clinical case.
+Related projects: [pobecu](https://f-slg.github.io/pobecu/) for
+Ecuador’s population, [geoecu](https://f-slg.github.io/geoecu/) for
+territorial boundaries and
+[aprende-fhir](https://github.com/f-slg/aprende-fhir) for teaching with
+a fictitious clinical case.
 
 ## Contributing, citation and license
 
@@ -1715,60 +1122,9 @@ To cite the package:
 ``` r
 
 citation("fhirviews")
-toBibtex(citation("fhirviews"))
 ```
 
-**Author and maintainer:** Ronald Fabricio Salas Guerrero, [ORCID
-0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522). The
-identifier is recorded in <Authors@R>, inst/CITATION,
-[CITATION.cff](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)
-and
-[.zenodo.json](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
-CFF enables GitHub repository citation; R’s citation includes the
-installed package version.
-
-**Zenodo: published and verified.** Development source **0.5.0.9000** is
-archived from commit `565243ec06f4dad88e898761a98a4f23c9fe8f95`,
-published on 15 November 2026 (UTC).
-
-| Identifier | Purpose |
-|----|----|
-| [10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726) | DOI for archived version `0.5.0.9000`; cite it to reproduce that source. |
-| [10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725) | Concept DOI grouping the project’s versions. |
-| [0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522) | Author ORCID; identifies the person. |
-
-Zenodo preserves the GitHub-generated source ZIP and its own checksum.
-The tested R package is a separate asset in the [`v0.5.0.9000`
-prerelease](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0.9000),
-with separate hashes and validation evidence. The Zenodo record does not
-automatically include this `tar.gz` or the other GitHub release assets.
-The [verification
-receipt](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
-records the commit, DOI identifiers, author identity and actual archive
-hashes.
-
-**CRAN publication was not required.** This development archive is
-independent of the **`0.5.0`** submission to CRAN. Verification covered
-the published record, version and ORCID, ZIP integrity, its contents
-against the fixed commit and DOI resolution.
-
-To cite the archive: Salas Guerrero, R. F. (2026). *fhirviews: FHIR
-desde R y vistas tabulares con SQL on FHIR* (0.5.0.9000, development).
-Zenodo. <https://doi.org/10.5281/zenodo.24238726>. R’s citation includes
-this DOI only for `0.5.0.9000`; other versions retain their version
-number and repository URL. Current CFF and R citation metadata were
-completed after DOI issuance; the archived ZIP retains the preceding
-metadata. The version DOI continues to identify that immutable archive.
-
-For later releases, update versions and metadata, publish a new tag and
-verify the new record in the same version family. Zenodo uses
-`.zenodo.json` when both metadata formats exist. See the [archive
-guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
-and [official documentation](https://help.zenodo.org/docs/github/).
-Including an ORCID in metadata does not link the maintainer’s personal
-ORCID account in Zenodo. A stable release will follow the external
-pilot.
-
+**Author and maintainer:** Ronald Fabricio Salas Guerrero.
 [MIT](https://f-slg.github.io/fhirviews/LICENSE.md) license. The
 licenses and attributions of the bundled code and data are detailed in
 [`inst/COPYRIGHTS`](https://f-slg.github.io/fhirviews/inst/COPYRIGHTS).

@@ -24,7 +24,6 @@ flowchart LR
         VA["Validador<br/>R/validar.R"]
         MV["Motor de vistas<br/>R/vista.R"]
         MO["Interfaz de motores<br/>R/motor.R"]
-        MP["Mapeo SQL a FHIR R4<br/>R/fhir-desde-sql.R"]
     end
     subgraph V8["V8 (JavaScript)"]
         GL["Capa propia<br/>inst/js/fhirviews.js"]
@@ -37,23 +36,9 @@ flowchart LR
     MV --> MO
     MO <-->|"JSON"| GL
     GL --> FP
-    DB["Consulta SQL DBI / data.frame"] --> MP
-    MP --> RE
-    MP --> OUT["JSON / NDJSON con escala conservada"]
-    MP -->|"fhir_validar"| CL
-    RE --> DUCK["Traductor SQL DuckDB<br/>experimental, R/sql.R"]
-    DUCK --> TABLE["Tablas o consulta diferida"]
 ```
 
-El mapeo SQL a FHIR admite Patient, Observation, Encounter, Condition e
-Immunization de R4 4.0.1. Los controles locales revisan la estructura;
-la validación de perfiles usa el servidor mediante
-[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
-El traductor DuckDB es una alternativa al motor V8 para las vistas
-admitidas. La federación, la conversión R4/R6 y un prototipo Rust
-permanecen pendientes.
-
-El paquete separa las siguientes responsabilidades:
+El paquete tiene cuatro piezas con responsabilidades separadas:
 
 | Pieza | Archivo | Responsabilidad |
 |----|----|----|
@@ -64,8 +49,6 @@ El paquete separa las siguientes responsabilidades:
 | Recursos | `R/recursos.R` | Reunir recursos de cualquier fuente y conservar su JSON original |
 | Motor de vistas | `R/vista.R`, `R/validar.R` | Validar y ejecutar `ViewDefinition`, armar la tabla |
 | Motor de FHIRPath | `R/motor.R`, `inst/js/fhirviews.js` | Evaluar expresiones FHIRPath por lotes |
-| SQL a FHIR | `R/fhir-desde-sql.R`, `inst/schema/mapeo-r4.json` | Mapear columnas a Patient, Observation, Encounter, Condition e Immunization, comprobar estructura y escribir JSON/NDJSON |
-| Decimales | `R/sql-limites.R`, `inst/js/lossless-json/` | Conservar los literales numericos y calcular limites con su escala |
 
 ## Cliente FHIR
 
@@ -174,13 +157,13 @@ length(attr(caso, "fuente"))   # una línea de NDJSON por recurso
 #> [1] 60
 ```
 
-Al ejecutar una vista, el motor pasa ese texto a V8 y conserva sus
-literales decimales mediante el reviver de `JSON.parse()` o
-lossless-json. Esto evita serializar de nuevo las listas de R y perder
-los ceros que expresan precisión. Si la lista se modifica
-(`r[[1]] <- ...`), la fuente original se descarta y se usa la versión
-modificada. Los resultados de rendimiento anteriores al cambio de lector
-no se han vuelto a medir con la versión de desarrollo.
+Al ejecutar una vista, el motor pasa ese texto a V8, que lo lee con
+`JSON.parse()`. Convertir listas de R a JSON con
+[`jsonlite::toJSON()`](https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html)
+es la parte más lenta del proceso, así que este atajo hace las vistas
+unas cuatro veces más rápidas. Si la lista se modifica
+(`r[[1]] <- ...`), el atributo se descarta y se usa la versión
+modificada.
 
 ## Motor de FHIRPath
 
@@ -308,7 +291,7 @@ vista <- vista_crear("Patient", c(sistema = "system", valor = "value"),
                      por_cada = "telecom")
 system.time(vista_ejecutar(caso, vista))
 #>    user  system elapsed 
-#>    0.01    0.00    0.01
+#>   0.008   0.000   0.008
 ```
 
 ### Orden de columnas y de filas
@@ -380,17 +363,13 @@ es un segundo motor, experimental, que no usa V8: traduce el
   filas de un recurso; `forEach` usa `list_transform()` con el índice
   (para `%rowIndex`), `unionAll` concatena listas, `repeat` se resuelve
   por niveles (hasta `fhirviews.sql_profundidad`, 12 por defecto) y la
-  consulta final aplica `unnest()`. DuckDB procesa los archivos por
-  bloques. Las vistas con límites decimales añaden una extracción
-  correlacionada de las rutas de `json_tree()` para asociarlas a los
-  tokens numéricos originales; el resto de vistas no hace ese trabajo
-  adicional.
+  consulta final aplica `unnest()`. Sin subconsultas correlacionadas,
+  DuckDB procesa los archivos en paralelo, por bloques.
 - **Errores.** Lo que no se puede traducir con certeza da un error de
   clase `fhirviews_error_sql` al traducir; una columna con varios
   valores sin `collection` o un `where` que no da un lógico son errores
   al ejecutar.
-- **Garantía.** Ambos motores aprueban el banco incluido: 133/133
-  *shareable* y 11/11 experimentales, 144/144 en total. Además, una
+- **Garantía.** Además del banco oficial (133/133 *shareable*), una
   prueba diferencial ejecuta las vistas de todas las viñetas con los dos
   motores y exige tablas idénticas, valores y tipos.
 
@@ -408,81 +387,26 @@ cat(substr(vista_sql(vista_crear("Patient", c(sexo = "gender"))), 1, 300), "..."
   archivos. Las funciones que harían peticiones (`resolve()`,
   `memberOf()` con un servidor de terminología) están desactivadas
   porque el modo asíncrono no se habilita.
-- **Entrada JSON.** La lectura usa `JSON.parse()` con acceso al literal
-  numérico cuando V8 lo admite, y la copia local de lossless-json en los
-  demás motores. Las expresiones viajan a V8 como texto JSON escapado.
-  Los addins de RStudio convierten el texto seleccionado en una cadena
-  de R con [`deparse1()`](https://rdrr.io/r/base/deparse.html).
+- **Sin evaluación de código.** Los recursos se leen con `JSON.parse()`
+  y las expresiones viajan a V8 como texto JSON escapado. Los addins de
+  RStudio convierten el texto seleccionado en una cadena de R con
+  [`deparse1()`](https://rdrr.io/r/base/deparse.html).
 - **Token.** No se imprime (tampoco el secreto ni la clave privada),
   solo se envía al servidor de la conexión, el código que genera el
   panel *Connections* lo toma de
   [`Sys.getenv()`](https://rdrr.io/r/base/Sys.getenv.html) y se avisa si
   se usaría sin cifrar por http.
-- **Datos personales.** Los valores de búsqueda se ocultan en los
-  mensajes por defecto y el contenido del servidor también se omite. Las
-  opciones `fhirviews.mostrar_consulta` y `fhirviews.mostrar_detalles`
-  permiten depurar incluyendo esos datos; los campos estructurados de
-  las respuestas y los archivos de salida siguen bajo control de la
-  aplicación.
-
-## Construcción de recursos desde SQL
-
-[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
-recoge una consulta mediante DBI y pasa la tabla a
-[`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
-Un
-[`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
-asocia columnas, constantes y claves de referencia a destinos JSON
-concretos. No evalúa código R ni intenta invertir expresiones de un
-`ViewDefinition`.
-
-Los metadatos de `inst/schema/mapeo-r4.json` se derivan de los snapshots
-base de Patient, Observation, Encounter, Condition, Immunization y sus
-tipos en FHIR R4 4.0.1. El generador conserva el SHA256 del archivo
-fuente, los destinos de Reference y los bindings. Enumera solo ValueSets
-completos y simples del paquete; las fuentes externas, filtros e imports
-se remiten a validación terminológica externa. Se comprueban rutas,
-tipos, cardinalidades, campos obligatorios, elecciones incompatibles y
-códigos de bindings requeridos enumerados. Para Coding/CodeableConcept
-se exige al menos un par system/code del ValueSet; las traducciones
-adicionales están permitidas. Los bindings extensibles, preferidos y de
-ejemplo conservan su flexibilidad. Las referencias comprueban los
-destinos declarados y los tipos identificables en referencias literales,
-además de la coherencia con Reference.type. Los contextos de
-`SimpleQuantity` se conservan por separado y prohíben `comparator`,
-incluido `Immunization.doseQuantity` y los extremos de un Range. Las
-Quantity generales mantienen su esquema base. `Date` conserva precisión
-de fecha al mapearse a `dateTime`; no se asigna una hora a un dato sin
-hora.
-[`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
-conserva los decimales aportados como texto numérico, incluidos ceros
-finales, mediante lossless-json. Las comprobaciones locales no ejecutan
-todas las invariantes, perfiles ni servicios de terminología: esa etapa
-corresponde a
-[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
-sobre un servidor configurado.
-
-El ejemplo instalado `examples/sql-a-fhir.R` recorre SQL → recursos →
-NDJSON → vista tabular con datos ficticios. La integración aislada añade
-validación contra los cinco perfiles base, persistencia de los recursos
-de prueba y lectura de sus referencias antes de comparar los dos
-motores. El ejemplo `examples/encuentros-diagnosticos.R` muestra el
-recorrido enlazado y `examples/inmunizaciones-sql.R`, la vacunación con
-ambos tipos de fecha y dosis.
+- **Datos personales.** Los mensajes de error incluyen la URL de la
+  petición, con sus parámetros de búsqueda: si buscas por cédula u otro
+  identificador, aparecerá en el error. Tenlo en cuenta al compartir
+  registros o capturas.
 
 ## Limitaciones conocidas
 
-- **Precisión decimal.** La evaluación y escritura conservan el literal
-  de la fuente JSON. Los números ordinarios de R no conservan los ceros
-  finales; modificar recursos descarta su fuente. Los límites SQL
-  admiten literales sin signo o rutas estáticas con índices, escalas de
-  -18 a 8 y valores representables en `DECIMAL(38,18)`. El argumento de
-  precisión y las operaciones que pierden identidad se rechazan en SQL.
-  No se recupera la escala original desde datos ya normalizados en
-  Parquet u otra tabla.
-- **SQL a FHIR.** Patient, Observation, Encounter, Condition e
-  Immunization, una fila por recurso, sin agrupación automática,
-  `contained`, envío masivo ni interpretación de StructureMap.
+- **Precisión decimal.** JSON no conserva los ceros finales (`1.10` se
+  lee como `1.1`) y los enteros mayores que 2^53 pierden precisión. Por
+  eso fallan las pruebas experimentales de `lowBoundary()` y
+  `highBoundary()`.
 - **Referencias.** `getReferenceKey()` no resuelve referencias
   `urn:uuid:` (las de los Bundle de transacción) ni a recursos
   contenidos (`#id`): devuelve vacío.
@@ -494,13 +418,11 @@ ambos tipos de fecha y dosis.
 
 | Conjunto | Qué cubre | Dónde corre |
 |----|----|----|
-| Banco oficial de SQL on FHIR | 144/144, incluyendo las 11 experimentales | V8 siempre; DuckDB cuando está instalado |
-| SQL a FHIR | Mapeos, tipos, obligatorios, referencias, decimales y archivos | Siempre; consultas con DBI cuando hay controlador |
+| Banco oficial de SQL on FHIR | 144 pruebas, una expectativa por prueba *shareable* | Siempre |
 | Motor y vistas | FHIRPath, tipos, validación, casos límite | Siempre |
 | Cliente simulado | Peticiones, paginación, errores, transacciones (httr2 simulado) | Siempre |
 | RStudio | Panel *Connections* con un observador simulado | Siempre |
 | Servidor público | Lectura y paginación en hapi.fhir.org | Fuera de CRAN, con conexión |
-| Servidor propio | Escritura, SQL → FHIR, perfiles R4, referencias y retorno a tablas | Si `FHIRVIEWS_SERVIDOR_ESCRITURA` apunta a un servidor de pruebas |
+| Servidor propio | Ciclo de escritura completo | Si `FHIRVIEWS_SERVIDOR_ESCRITURA` apunta a un servidor de pruebas |
 
-La cobertura histórica fue de alrededor del 91 %; no se ha recalculado
-para la versión de desarrollo 0.5.0.9000.
+La cobertura de las pruebas es de alrededor del 91 %.

@@ -68,16 +68,7 @@ funciones de texto (`join()`,
 [`sqrt()`](https://rdrr.io/r/base/MathFun.html),
 [`power()`](https://rdrr.io/r/stats/power.html) exacta, comparaciones de
 fechas y horas con su precisión y `lowBoundary()`/`highBoundary()` de
-fechas, horas y decimales. Los limites decimales conservan el literal
-JSON mediante sus tokens y las rutas de `json_tree()`. Admiten literales
-numericos sin signo o rutas desde el recurso con indices explicitos (por
-ejemplo `component[0].value.ofType(Quantity).value.lowBoundary()`),
-escalas de -18 a 8 y valores representables en `DECIMAL(38,18)`. No se
-infiere la escala despues de operaciones, filtros o iteraciones; esas
-expresiones se rechazan. No se admite el argumento opcional de precision
-en SQL. Con Parquet o tablas previamente normalizadas, la precision
-disponible es la de su JSON actual; no se recupera la representacion
-FHIR original.
+fechas y horas.
 
 La traducción reproduce el resultado de `fhirpath.js`
 ([`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)).

@@ -355,12 +355,8 @@ Es un motor **experimental**:
   conversiones ([`toString()`](https://rdrr.io/r/base/toString.html),
   `toInteger()`, `toDecimal()`, `toBoolean()`), funciones de texto,
   aritmética, redondeo, fechas con su precisión y
-  `lowBoundary()`/`highBoundary()` de fechas, horas y decimales. Los
-  límites decimales conservan tokens de la fuente y admiten literales
-  sin signo o rutas estáticas con índices, escalas de -18 a 8 y valores
-  representables en `DECIMAL(38,18)`, sin argumento opcional de
-  precisión. Ambos motores aprueban 144/144 pruebas incluidas (133
-  shareable y 11 experimentales). El inventario completo está en
+  `lowBoundary()`/`highBoundary()` de fechas y horas. El inventario
+  completo está en
   [`data-raw/motor-duckdb.md`](https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.md)
   del repositorio.
 - Lo que no sabe traducir no lo adivina: da un error de clase

@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Servidores reales y grandes volúmenes</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/vignettes/servidores-y-volumen.Rmd" class="external-link"><code>vignettes/servidores-y-volumen.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.5.0/vignettes/servidores-y-volumen.Rmd" class="external-link"><code>vignettes/servidores-y-volumen.Rmd</code></a></small>
       <div class="d-none name"><code>servidores-y-volumen.Rmd</code></div>
     </div>
 
@@ -644,13 +644,8 @@ conjuntos (<code>|</code>, <code><a href="https://rdrr.io/r/base/sets.html" clas
 conversiones (<code><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString()</a></code>, <code>toInteger()</code>,
 <code>toDecimal()</code>, <code>toBoolean()</code>), funciones de texto,
 aritmética, redondeo, fechas con su precisión y
-<code>lowBoundary()</code>/<code>highBoundary()</code> de fechas, horas
-y decimales. Los límites decimales conservan tokens de la fuente y
-admiten literales sin signo o rutas estáticas con índices, escalas de
--18 a 8 y valores representables en <code>DECIMAL(38,18)</code>, sin
-argumento opcional de precisión. Ambos motores aprueban 144/144 pruebas
-incluidas (133 shareable y 11 experimentales). El inventario completo
-está en <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.md" class="external-link"><code>data-raw/motor-duckdb.md</code></a>
+<code>lowBoundary()</code>/<code>highBoundary()</code> de fechas y
+horas. El inventario completo está en <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.md" class="external-link"><code>data-raw/motor-duckdb.md</code></a>
 del repositorio.</li>
 <li>Lo que no sabe traducir no lo adivina: da un error de clase
 <code>fhirviews_error_sql</code> que sugiere usar

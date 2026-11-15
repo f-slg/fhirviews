@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Cómo funciona por dentro</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/vignettes/articles/arquitectura.Rmd" class="external-link"><code>vignettes/articles/arquitectura.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.5.0/vignettes/articles/arquitectura.Rmd" class="external-link"><code>vignettes/articles/arquitectura.Rmd</code></a></small>
       <div class="d-none name"><code>arquitectura.Rmd</code></div>
     </div>
 
@@ -100,7 +100,6 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
         VA["Validador&lt;br/&gt;R/validar.R"]
         MV["Motor de vistas&lt;br/&gt;R/vista.R"]
         MO["Interfaz de motores&lt;br/&gt;R/motor.R"]
-        MP["Mapeo SQL a FHIR R4&lt;br/&gt;R/fhir-desde-sql.R"]
     end
     subgraph V8["V8 (JavaScript)"]
         GL["Capa propia&lt;br/&gt;inst/js/fhirviews.js"]
@@ -112,20 +111,8 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
     VA --&gt; MV
     MV --&gt; MO
     MO &lt;--&gt;|"JSON"| GL
-    GL --&gt; FP
-    DB["Consulta SQL DBI / data.frame"] --&gt; MP
-    MP --&gt; RE
-    MP --&gt; OUT["JSON / NDJSON con escala conservada"]
-    MP --&gt;|"fhir_validar"| CL
-    RE --&gt; DUCK["Traductor SQL DuckDB&lt;br/&gt;experimental, R/sql.R"]
-    DUCK --&gt; TABLE["Tablas o consulta diferida"]</code></pre>
-<p>El mapeo SQL a FHIR admite Patient, Observation, Encounter, Condition
-e Immunization de R4 4.0.1. Los controles locales revisan la estructura;
-la validación de perfiles usa el servidor mediante
-<code><a href="../reference/fhir_validar.html">fhir_validar()</a></code>. El traductor DuckDB es una alternativa al
-motor V8 para las vistas admitidas. La federación, la conversión R4/R6 y
-un prototipo Rust permanecen pendientes.</p>
-<p>El paquete separa las siguientes responsabilidades:</p>
+    GL --&gt; FP</code></pre>
+<p>El paquete tiene cuatro piezas con responsabilidades separadas:</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -179,24 +166,6 @@ original</td>
 <code>R/motor.R</code>, <code>inst/js/fhirviews.js</code>
 </td>
 <td>Evaluar expresiones FHIRPath por lotes</td>
-</tr>
-<tr class="even">
-<td>SQL a FHIR</td>
-<td>
-<code>R/fhir-desde-sql.R</code>,
-<code>inst/schema/mapeo-r4.json</code>
-</td>
-<td>Mapear columnas a Patient, Observation, Encounter, Condition e
-Immunization, comprobar estructura y escribir JSON/NDJSON</td>
-</tr>
-<tr class="odd">
-<td>Decimales</td>
-<td>
-<code>R/sql-limites.R</code>,
-<code>inst/js/lossless-json/</code>
-</td>
-<td>Conservar los literales numericos y calcular limites con su
-escala</td>
 </tr>
 </tbody>
 </table>
@@ -345,14 +314,12 @@ texto (un archivo o un servidor), además guarda ese texto en el atributo
 <span>                                  package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">caso</span>, <span class="st">"fuente"</span><span class="op">)</span><span class="op">)</span>   <span class="co"># una línea de NDJSON por recurso</span></span>
 <span><span class="co">#&gt; [1] 60</span></span></code></pre></div>
-<p>Al ejecutar una vista, el motor pasa ese texto a V8 y conserva sus
-literales decimales mediante el reviver de <code>JSON.parse()</code> o
-lossless-json. Esto evita serializar de nuevo las listas de R y perder
-los ceros que expresan precisión. Si la lista se modifica
-(<code>r[[1]] &lt;- ...</code>), la fuente original se descarta y se usa
-la versión modificada. Los resultados de rendimiento anteriores al
-cambio de lector no se han vuelto a medir con la versión de
-desarrollo.</p>
+<p>Al ejecutar una vista, el motor pasa ese texto a V8, que lo lee con
+<code>JSON.parse()</code>. Convertir listas de R a JSON con
+<code><a href="https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html" class="external-link">jsonlite::toJSON()</a></code> es la parte más lenta del proceso, así
+que este atajo hace las vistas unas cuatro veces más rápidas. Si la
+lista se modifica (<code>r[[1]] &lt;- ...</code>), el atributo se
+descarta y se usa la versión modificada.</p>
 </div>
 <div class="section level2">
 <h2 id="motor-de-fhirpath">Motor de FHIRPath<a class="anchor" aria-label="anchor" href="#motor-de-fhirpath"></a>
@@ -495,7 +462,7 @@ del número de recursos:</p>
 <span>                     por_cada <span class="op">=</span> <span class="st">"telecom"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="va">vista</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;    0.01    0.00    0.01</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.008   0.000   0.008</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="orden-de-columnas-y-de-filas">Orden de columnas y de filas<a class="anchor" aria-label="anchor" href="#orden-de-columnas-y-de-filas"></a>
@@ -574,21 +541,18 @@ todas sus variantes según el modelo R4.</li>
 (para <code>%rowIndex</code>), <code>unionAll</code> concatena listas,
 <code>repeat</code> se resuelve por niveles (hasta
 <code>fhirviews.sql_profundidad</code>, 12 por defecto) y la consulta
-final aplica <code>unnest()</code>. DuckDB procesa los archivos por
-bloques. Las vistas con límites decimales añaden una extracción
-correlacionada de las rutas de <code>json_tree()</code> para asociarlas
-a los tokens numéricos originales; el resto de vistas no hace ese
-trabajo adicional.</li>
+final aplica <code>unnest()</code>. Sin subconsultas correlacionadas,
+DuckDB procesa los archivos en paralelo, por bloques.</li>
 <li>
 <strong>Errores.</strong> Lo que no se puede traducir con certeza da
 un error de clase <code>fhirviews_error_sql</code> al traducir; una
 columna con varios valores sin <code>collection</code> o un
 <code>where</code> que no da un lógico son errores al ejecutar.</li>
 <li>
-<strong>Garantía.</strong> Ambos motores aprueban el banco incluido:
-133/133 <em>shareable</em> y 11/11 experimentales, 144/144 en total.
-Además, una prueba diferencial ejecuta las vistas de todas las viñetas
-con los dos motores y exige tablas idénticas, valores y tipos.</li>
+<strong>Garantía.</strong> Además del banco oficial (133/133
+<em>shareable</em>), una prueba diferencial ejecuta las vistas de todas
+las viñetas con los dos motores y exige tablas idénticas, valores y
+tipos.</li>
 </ul>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_sql.html">vista_sql</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_crear.html">vista_crear</a></span><span class="op">(</span><span class="st">"Patient"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sexo <span class="op">=</span> <span class="st">"gender"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="fl">1</span>, <span class="fl">300</span><span class="op">)</span>, <span class="st">"..."</span><span class="op">)</span></span>
@@ -607,12 +571,10 @@ acceso a red ni a archivos. Las funciones que harían peticiones
 terminología) están desactivadas porque el modo asíncrono no se
 habilita.</li>
 <li>
-<strong>Entrada JSON.</strong> La lectura usa
-<code>JSON.parse()</code> con acceso al literal numérico cuando V8 lo
-admite, y la copia local de lossless-json en los demás motores. Las
-expresiones viajan a V8 como texto JSON escapado. Los addins de RStudio
-convierten el texto seleccionado en una cadena de R con
-<code><a href="https://rdrr.io/r/base/deparse.html" class="external-link">deparse1()</a></code>.</li>
+<strong>Sin evaluación de código.</strong> Los recursos se leen con
+<code>JSON.parse()</code> y las expresiones viajan a V8 como texto JSON
+escapado. Los addins de RStudio convierten el texto seleccionado en una
+cadena de R con <code><a href="https://rdrr.io/r/base/deparse.html" class="external-link">deparse1()</a></code>.</li>
 <li>
 <strong>Token.</strong> No se imprime (tampoco el secreto ni la
 clave privada), solo se envía al servidor de la conexión, el código que
@@ -620,73 +582,22 @@ genera el panel <em>Connections</em> lo toma de
 <code><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv()</a></code> y se avisa si se usaría sin cifrar por
 http.</li>
 <li>
-<strong>Datos personales.</strong> Los valores de búsqueda se
-ocultan en los mensajes por defecto y el contenido del servidor también
-se omite. Las opciones <code>fhirviews.mostrar_consulta</code> y
-<code>fhirviews.mostrar_detalles</code> permiten depurar incluyendo esos
-datos; los campos estructurados de las respuestas y los archivos de
-salida siguen bajo control de la aplicación.</li>
+<strong>Datos personales.</strong> Los mensajes de error incluyen la
+URL de la petición, con sus parámetros de búsqueda: si buscas por cédula
+u otro identificador, aparecerá en el error. Tenlo en cuenta al
+compartir registros o capturas.</li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="construcción-de-recursos-desde-sql">Construcción de recursos desde SQL<a class="anchor" aria-label="anchor" href="#construcci%C3%B3n-de-recursos-desde-sql"></a>
-</h2>
-<p><code><a href="../reference/fhir_mapa.html">fhir_desde_sql()</a></code> recoge una consulta mediante DBI y pasa
-la tabla a <code><a href="../reference/fhir_mapa.html">fhir_desde_tabla()</a></code>. Un <code><a href="../reference/fhir_mapa.html">fhir_mapa()</a></code>
-asocia columnas, constantes y claves de referencia a destinos JSON
-concretos. No evalúa código R ni intenta invertir expresiones de un
-<code>ViewDefinition</code>.</p>
-<p>Los metadatos de <code>inst/schema/mapeo-r4.json</code> se derivan de
-los snapshots base de Patient, Observation, Encounter, Condition,
-Immunization y sus tipos en FHIR R4 4.0.1. El generador conserva el
-SHA256 del archivo fuente, los destinos de Reference y los bindings.
-Enumera solo ValueSets completos y simples del paquete; las fuentes
-externas, filtros e imports se remiten a validación terminológica
-externa. Se comprueban rutas, tipos, cardinalidades, campos
-obligatorios, elecciones incompatibles y códigos de bindings requeridos
-enumerados. Para Coding/CodeableConcept se exige al menos un par
-system/code del ValueSet; las traducciones adicionales están permitidas.
-Los bindings extensibles, preferidos y de ejemplo conservan su
-flexibilidad. Las referencias comprueban los destinos declarados y los
-tipos identificables en referencias literales, además de la coherencia
-con Reference.type. Los contextos de <code>SimpleQuantity</code> se
-conservan por separado y prohíben <code>comparator</code>, incluido
-<code>Immunization.doseQuantity</code> y los extremos de un Range. Las
-Quantity generales mantienen su esquema base. <code>Date</code> conserva
-precisión de fecha al mapearse a <code>dateTime</code>; no se asigna una
-hora a un dato sin hora. <code><a href="../reference/fhir_escribir.html">fhir_escribir()</a></code> conserva los
-decimales aportados como texto numérico, incluidos ceros finales,
-mediante lossless-json. Las comprobaciones locales no ejecutan todas las
-invariantes, perfiles ni servicios de terminología: esa etapa
-corresponde a <code><a href="../reference/fhir_validar.html">fhir_validar()</a></code> sobre un servidor
-configurado.</p>
-<p>El ejemplo instalado <code>examples/sql-a-fhir.R</code> recorre SQL →
-recursos → NDJSON → vista tabular con datos ficticios. La integración
-aislada añade validación contra los cinco perfiles base, persistencia de
-los recursos de prueba y lectura de sus referencias antes de comparar
-los dos motores. El ejemplo
-<code>examples/encuentros-diagnosticos.R</code> muestra el recorrido
-enlazado y <code>examples/inmunizaciones-sql.R</code>, la vacunación con
-ambos tipos de fecha y dosis.</p>
 </div>
 <div class="section level2">
 <h2 id="limitaciones-conocidas">Limitaciones conocidas<a class="anchor" aria-label="anchor" href="#limitaciones-conocidas"></a>
 </h2>
 <ul>
 <li>
-<strong>Precisión decimal.</strong> La evaluación y escritura
-conservan el literal de la fuente JSON. Los números ordinarios de R no
-conservan los ceros finales; modificar recursos descarta su fuente. Los
-límites SQL admiten literales sin signo o rutas estáticas con índices,
-escalas de -18 a 8 y valores representables en
-<code>DECIMAL(38,18)</code>. El argumento de precisión y las operaciones
-que pierden identidad se rechazan en SQL. No se recupera la escala
-original desde datos ya normalizados en Parquet u otra tabla.</li>
-<li>
-<strong>SQL a FHIR.</strong> Patient, Observation, Encounter,
-Condition e Immunization, una fila por recurso, sin agrupación
-automática, <code>contained</code>, envío masivo ni interpretación de
-StructureMap.</li>
+<strong>Precisión decimal.</strong> JSON no conserva los ceros
+finales (<code>1.10</code> se lee como <code>1.1</code>) y los enteros
+mayores que 2^53 pierden precisión. Por eso fallan las pruebas
+experimentales de <code>lowBoundary()</code> y
+<code>highBoundary()</code>.</li>
 <li>
 <strong>Referencias.</strong> <code>getReferenceKey()</code> no
 resuelve referencias <code>urn:uuid:</code> (las de los Bundle de
@@ -716,45 +627,39 @@ no se puede detener con Ctrl+C hasta que termina la llamada.</li>
 <tbody>
 <tr class="odd">
 <td>Banco oficial de SQL on FHIR</td>
-<td>144/144, incluyendo las 11 experimentales</td>
-<td>V8 siempre; DuckDB cuando está instalado</td>
+<td>144 pruebas, una expectativa por prueba <em>shareable</em>
+</td>
+<td>Siempre</td>
 </tr>
 <tr class="even">
-<td>SQL a FHIR</td>
-<td>Mapeos, tipos, obligatorios, referencias, decimales y archivos</td>
-<td>Siempre; consultas con DBI cuando hay controlador</td>
-</tr>
-<tr class="odd">
 <td>Motor y vistas</td>
 <td>FHIRPath, tipos, validación, casos límite</td>
 <td>Siempre</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Cliente simulado</td>
 <td>Peticiones, paginación, errores, transacciones (httr2 simulado)</td>
 <td>Siempre</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>RStudio</td>
 <td>Panel <em>Connections</em> con un observador simulado</td>
 <td>Siempre</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Servidor público</td>
 <td>Lectura y paginación en hapi.fhir.org</td>
 <td>Fuera de CRAN, con conexión</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Servidor propio</td>
-<td>Escritura, SQL → FHIR, perfiles R4, referencias y retorno a
-tablas</td>
+<td>Ciclo de escritura completo</td>
 <td>Si <code>FHIRVIEWS_SERVIDOR_ESCRITURA</code> apunta a un servidor de
 pruebas</td>
 </tr>
 </tbody>
 </table>
-<p>La cobertura histórica fue de alrededor del 91 %; no se ha
-recalculado para la versión de desarrollo 0.5.0.9000.</p>
+<p>La cobertura de las pruebas es de alrededor del 91 %.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

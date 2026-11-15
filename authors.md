@@ -3,7 +3,7 @@
 ## Authors
 
 - **Ronald Fabricio Salas Guerrero**. Author, maintainer, copyright
-  holder. [](https://orcid.org/0000-0001-5077-1522)
+  holder.
 
 - **National Library of Medicine**. Copyright holder.  
   fhirpath.js and ucum-lhc libraries in inst/js
@@ -20,12 +20,6 @@
 - **Michael Mclaughlin**. Copyright holder.  
   decimal.js library bundled in fhirpath.js
 
-- **Jos de Jong**. Copyright holder.  
-  lossless-json library in inst/js
-
-- **Health Level Seven International**. Copyright holder.  
-  FHIR R4 mapping metadata in inst/schema
-
 - **Regenstrief Institute, Inc.**. Copyright holder.  
   UCUM table bundled in fhirpath.js
 
@@ -35,17 +29,16 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/f-slg/fhirviews/blob/main/inst/CITATION)
+[`inst/CITATION`](https://github.com/f-slg/fhirviews/blob/v0.5.0/inst/CITATION)
 
 Salas Guerrero, R. F. (2026). fhirviews: FHIR desde R y vistas tabulares
-con SQL on FHIR. Paquete de R versión 0.5.0.9000.
-https://doi.org/10.5281/zenodo.24238726
+con SQL on FHIR. Paquete de R versión 0.5.0.
+https://github.com/f-slg/fhirviews
 
-    @Manual{fhirviews,
+    @Manual{,
       title = {fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR},
       author = {Ronald Fabricio {Salas Guerrero}},
       year = {2026},
-      note = {Paquete de R versión 0.5.0.9000},
-      doi = {10.5281/zenodo.24238726},
-      url = {https://doi.org/10.5281/zenodo.24238726},
+      note = {Paquete de R versión 0.5.0},
+      url = {https://github.com/f-slg/fhirviews},
     }
