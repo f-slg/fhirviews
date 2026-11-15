@@ -14,8 +14,8 @@ construcción instaladas:
 
 ```sh
 R CMD build . --no-manual
-Rscript data-raw/probar-candidato.R fhirviews_0.5.0.9000.tar.gz /ruta/piloto-basico-01 basico
-Rscript data-raw/probar-candidato.R fhirviews_0.5.0.9000.tar.gz /ruta/piloto-completo-01 completo
+Rscript data-raw/probar-candidato.R fhirviews_0.5.0.9001.tar.gz /ruta/piloto-basico-01 basico
+Rscript data-raw/probar-candidato.R fhirviews_0.5.0.9001.tar.gz /ruta/piloto-completo-01 completo
 ```
 
 Cada salida debe ser nueva. `basico` necesita las dependencias obligatorias del

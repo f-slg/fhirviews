@@ -1,0 +1,65 @@
+{
+  "version": "0.5.0.9001",
+  "fuente_commit": "1ca5f0d2780e7d32eb6764f0ed4e58785337dd22",
+  "verificado_utc": "2026-11-15T10:35:20.662201+00:00",
+  "paquete": {
+    "archivo": "fhirviews_0.5.0.9001.tar.gz",
+    "sha256": "1611547017136408fe112988ae038319dee398d4d2e2bc846d1bc2e4a6a2d251",
+    "bytes": 1193014,
+    "md5": "93225d8ae467ac8796574d49fa70e478"
+  },
+  "R_CMD_check": {
+    "estado": "OK",
+    "errores": 0,
+    "advertencias": 0,
+    "notas": 0,
+    "unitarias_aprobadas": 1336,
+    "unitarias_omitidas": 18,
+    "alcance_omisiones": "El check aplica skip_on_cran y omite grupos de servidores. Las pruebas dirigidas de catalogo V8/DuckDB se ejecutaron con NOT_CRAN=true; HAPI/DBI y el resto de SQL se verifican ademas en CI."
+  },
+  "catalogo": {
+    "vistas": 8,
+    "recurso_nuevo": "AllergyIntolerance",
+    "registros_ficticios": 3,
+    "filas": 5,
+    "V8_DuckDB": "iguales",
+    "lotes_estrictos": "aprobado",
+    "pruebas_dirigidas": "sin fallos ni omisiones"
+  },
+  "documentacion": {
+    "idiomas": [
+      "es",
+      "en"
+    ],
+    "diagramas_mermaid_validos": 24,
+    "fragmentos_internos_faltantes": 0,
+    "imagenes_locales_faltantes": 0,
+    "ayuda_y_ejemplos_instalados": "aprobado"
+  },
+  "aceptacion_instalada": {
+    "basico": "aprobado",
+    "completo": "aprobado",
+    "construccion_R4_tipos": [
+      "Patient",
+      "Observation",
+      "Encounter",
+      "Condition",
+      "Immunization"
+    ],
+    "recursos_construidos": 6,
+    "evaluacion_externa": "pendiente"
+  },
+  "citacion": {
+    "ORCID": "0000-0001-5077-1522",
+    "doi_version_actual": null,
+    "doi_archivo_anterior": "10.5281/zenodo.24238726",
+    "version_archivo_anterior": "0.5.0.9000"
+  },
+  "limites": "La nueva vista lee alergias; no amplia fhir_mapa. No se publica una release ni se modifica el archivo Zenodo anterior.",
+  "archivos_sha256": {
+    "R-CMD-check.log": "e094409ca330fa42a165b6cbcf0c10ef631f7ce96a0ebff75612b7de1650cdb9",
+    "aceptacion-basica.json": "cb5723b722f3195dfd594d113815912dba9227aaeaf969d6fc4d73da69b51934",
+    "aceptacion-completa.json": "424f9568a33627c1e1318df88214b63bc5e41bf820a92c83643e487dbc2fa4c2",
+    "catalogo-pruebas.log": "e3e2252698bcf1a85d40f1230baba4c019494a8194b1e883cfe23720d84aa95d"
+  }
+}

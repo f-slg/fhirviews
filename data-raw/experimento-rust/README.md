@@ -97,7 +97,14 @@ tres sistemas; una CLI MSVC no demuestra compatibilidad de una biblioteca con Rt
 
 ## Reproducir desde la raiz del repositorio
 
-Se requiere el paquete fhirviews 0.5.0.9000 instalado, con sus dependencias R,
+Para repetir las mediciones publicadas usa el codigo del
+[commit 678e317](https://github.com/f-slg/fhirviews/tree/678e31775d23ec5015a5e4e1e7a5e965020a8778)
+y el paquete 0.5.0.9000; los hashes del manifiesto describen ese codigo
+inmutable. Los cambios posteriores en HEAD no reescriben esa evidencia.
+La CI de paridad instala y contrasta el desarrollo actual del paquete,
+admitiendo versiones desde 0.5.0.9000. No vuelve a medir el rendimiento.
+
+Se requiere el paquete fhirviews instalado, con sus dependencias R,
 rustc/cargo 1.75.0 y Python con psutil solo para memoria. La instalacion del
 compilador es una accion del mantenedor; el paquete no lo descarga ni instala.
 En este ensayo el compilador se alojo en /tmp, sin modificar el perfil de shell.

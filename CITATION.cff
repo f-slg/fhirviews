@@ -1,13 +1,11 @@
 cff-version: 1.2.0
 message: >-
-  Si utiliza fhirviews, cite la version exacta del software. El DOI identifica
-  el codigo 0.5.0.9000 archivado desde el commit 565243e; es una version
-  de desarrollo, separada del envio 0.5.0 a CRAN.
+  Si utiliza este desarrollo 0.5.0.9001, cite su version y commit exactos.
+  Todavia no tiene DOI de version. El DOI 10.5281/zenodo.24238726 identifica
+  exclusivamente el archivo anterior 0.5.0.9000, separado del envio 0.5.0 a CRAN.
 type: software
 title: "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR"
-version: 0.5.0.9000
-doi: 10.5281/zenodo.24238726
-date-released: "2026-11-15"
+version: 0.5.0.9001
 authors:
   - family-names: "Salas Guerrero"
     given-names: "Ronald Fabricio"

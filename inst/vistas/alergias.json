@@ -1,0 +1,50 @@
+{
+  "resourceType": "ViewDefinition",
+  "name": "alergias",
+  "title": "Alergias e intolerancias por manifestación",
+  "description": "AllergyIntolerance R4: una fila por manifestación de cada reacción, conservando una fila cuando no hay reacciones. Incluye paciente, sustancia, estados, criticidad y categoría. Los códigos de estado se eligen por su sistema canónico; código, sistema y descripción de sustancia o manifestación proceden del mismo primer Coding. categoria conserva todos los valores como colección. Para contar alergias, cuenta claves id distintas.",
+  "status": "active",
+  "resource": "AllergyIntolerance",
+  "constant": [
+    {"name": "sistema_estado_clinico", "valueString": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical"},
+    {"name": "sistema_verificacion", "valueString": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification"}
+  ],
+  "select": [
+    {
+      "column": [
+        {"name": "id", "path": "getResourceKey()", "type": "string", "description": "Clave de la alergia; puede repetirse por manifestación"},
+        {"name": "paciente", "path": "patient.getReferenceKey(Patient)", "type": "string", "description": "Clave del paciente"},
+        {"name": "encuentro", "path": "encounter.getReferenceKey(Encounter)", "type": "string", "description": "Clave del encuentro"},
+        {"name": "sustancia_codigo", "path": "code.coding.first().code", "type": "code", "description": "Código del primer Coding de la sustancia"},
+        {"name": "sustancia_sistema", "path": "code.coding.first().system", "type": "uri", "description": "Sistema del mismo Coding"},
+        {"name": "sustancia_descripcion", "path": "code.coding.first().display", "type": "string", "description": "Descripción del mismo Coding"},
+        {"name": "sustancia", "path": "code.text", "type": "string", "description": "Texto de la sustancia, cuando se proporciona"},
+        {"name": "estado_clinico", "path": "clinicalStatus.coding.where(system = %sistema_estado_clinico).code.first()", "type": "code"},
+        {"name": "verificacion", "path": "verificationStatus.coding.where(system = %sistema_verificacion).code.first()", "type": "code"},
+        {"name": "tipo", "path": "type", "type": "code", "description": "allergy o intolerance, si se conoce"},
+        {"name": "criticidad", "path": "criticality", "type": "code", "description": "Riesgo registrado; no se infiere de la gravedad"},
+        {"name": "categoria", "path": "category", "type": "code", "collection": true, "description": "Todas las categorías registradas"},
+        {"name": "fecha_registro", "path": "recordedDate", "type": "dateTime"}
+      ]
+    },
+    {
+      "forEachOrNull": "reaction",
+      "column": [
+        {"name": "gravedad_reaccion", "path": "severity", "type": "code", "description": "Gravedad del evento, distinta de criticality"},
+        {"name": "fecha_reaccion", "path": "onset", "type": "dateTime"},
+        {"name": "descripcion_reaccion", "path": "description", "type": "string"}
+      ],
+      "select": [
+        {
+          "forEachOrNull": "manifestation",
+          "column": [
+            {"name": "reaccion_codigo", "path": "coding.first().code", "type": "code"},
+            {"name": "reaccion_sistema", "path": "coding.first().system", "type": "uri"},
+            {"name": "reaccion_descripcion", "path": "coding.first().display", "type": "string"},
+            {"name": "reaccion", "path": "text", "type": "string"}
+          ]
+        }
+      ]
+    }
+  ]
+}

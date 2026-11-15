@@ -1,0 +1,81 @@
+{
+  "resultado_tecnico": "aprobado",
+  "esquema_informe": 2,
+  "politica_advertencias": "Toda advertencia requiere revision; no se aprueba automaticamente",
+  "advertencias": [],
+  "diagnosticos": [],
+  "perfil": "completo",
+  "alcance": "Datos ficticios incluidos; no evalua un servidor ni datos propios",
+  "validacion_usuario_externo": "pendiente",
+  "version_fhirviews": "0.5.0.9001",
+  "candidato_md5": "93225d8ae467ac8796574d49fa70e478",
+  "hallazgos": {
+    "vigilancia": {
+      "eventos_confirmados": 661,
+      "cantones": 65,
+      "evento_referencia": "den-c0001",
+      "referencias_territoriales": [55, 1, 1],
+      "referencias_mensuales": [5, 73, 173]
+    },
+    "contrato_estricto": {
+      "bloque_rechazado": 2,
+      "columna": "valor",
+      "fase": "esquema",
+      "bloques_entregados": 1
+    },
+    "r4": {
+      "version_fhir": "4.0.1",
+      "recursos": 6,
+      "tipos": ["Patient", "Encounter", "Condition", "Observation", "Immunization"],
+      "origen": "DuckDB con consultas parametrizadas",
+      "motores": ["V8", "DuckDB"],
+      "negativos_rechazados": 5,
+      "escala_conservada": ["72.00", "0.50"],
+      "validacion_perfiles": "no_evaluada_sin_servidor",
+      "validacion_usuario_externo": "pendiente"
+    }
+  },
+  "datos": "FICTICIOS: dengue_2025 y caso_clinico incluidos",
+  "controles": [
+    {
+      "prueba": "api_instalada",
+      "estado": "aprobado",
+      "segundos": 0.002,
+      "clase_error": "",
+      "codigo": "",
+      "advertencias": 0
+    },
+    {
+      "prueba": "vigilancia",
+      "estado": "aprobado",
+      "segundos": 0.789,
+      "clase_error": "",
+      "codigo": "",
+      "advertencias": 0
+    },
+    {
+      "prueba": "contrato_estricto",
+      "estado": "aprobado",
+      "segundos": 0.065,
+      "clase_error": "",
+      "codigo": "",
+      "advertencias": 0
+    },
+    {
+      "prueba": "recuperacion",
+      "estado": "aprobado",
+      "segundos": 0.478,
+      "clase_error": "",
+      "codigo": "",
+      "advertencias": 0
+    },
+    {
+      "prueba": "r4_cinco_recursos",
+      "estado": "aprobado",
+      "segundos": 2.806,
+      "clase_error": "",
+      "codigo": "",
+      "advertencias": 0
+    }
+  ]
+}

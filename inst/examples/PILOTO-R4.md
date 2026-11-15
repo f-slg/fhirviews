@@ -1,6 +1,6 @@
 # Piloto externo del alcance R4
 
-Este protocolo acompaña al desarrollo 0.5.0.9000. Registra el archivo candidato,
+Este protocolo acompaña al desarrollo 0.5.0.9001. Registra el archivo candidato,
 su versión y checksum antes de empezar. Los materiales del kit v1 corresponden
 al candidato anterior 0.5.0; su aprobación no se transfiere a este ensayo.
 
@@ -22,7 +22,7 @@ Instala las dependencias obligatorias y el candidato proporcionado:
 
 ```r
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9000.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9001.tar.gz", repos = NULL, type = "source")
 # Para el perfil completo:
 # install.packages(c("DBI", "duckdb"))
 ```
@@ -64,6 +64,12 @@ y el subdirectorio `r4/`. El formato actual del informe es `esquema_informe = 2`
 7. Repetir en otra carpeta, contrastar los resultados y registrar minutos,
    obstáculos, ayuda, tarea completada/con ayuda/incompleta y conclusión del
    participante. Completar `experiencia-usuario.txt` y revisarlo con el mantenedor.
+8. Abrir `system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")`
+   con `vista_plantilla("alergias")`. Explicar por qué tres registros dan cinco
+   filas: cada manifestación conserva su reacción y una alergia sin reacciones
+   conserva una fila. Comprobar categorías como listas y distinguir criticidad
+   de gravedad. Esta lectura adicional no amplía los cinco constructores ni
+   cambia los seis recursos producidos en `r4/recursos-r4.ndjson`.
 
 Referencia para comprobar el trabajo después de la tarea 6:
 

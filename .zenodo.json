@@ -1,8 +1,8 @@
 {
   "title": "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR",
-  "version": "0.5.0.9000",
+  "version": "0.5.0.9001",
   "upload_type": "software",
-  "description": "Development snapshot 0.5.0.9000, R4 candidate. This is a different artifact from version 0.5.0 submitted to CRAN. R client for FHIR R4 servers and SQL on FHIR view engine. Includes explicit SQL/table mappings to Patient, Observation, Encounter, Condition and Immunization, JSON/NDJSON output, decimal precision and R4 structural checks. Clinical and national profiles require validation against their canonical definitions. Rust and R4/R6 conversion are not implemented in this snapshot.",
+  "description": "Development 0.5.0.9001, not a CRAN release and not assigned a version DOI yet. R client for FHIR R4 servers and SQL on FHIR view engine. Includes eight catalogue views, including AllergyIntolerance, and explicit SQL/table mappings to Patient, Observation, Encounter, Condition and Immunization. JSON/NDJSON output preserves decimal precision. R4 structural checks require separate clinical profile validation. A Rust validation laboratory is included in the repository, outside the R package; no native Rust engine or R4/R6 conversion is enabled. The earlier 0.5.0.9000 source archive has its own DOI.",
   "creators": [
     {
       "name": "Salas Guerrero, Ronald Fabricio",
@@ -11,5 +11,11 @@
   ],
   "access_right": "open",
   "license": "mit",
-  "keywords": ["FHIR", "SQL on FHIR", "FHIRPath", "R", "interoperability"]
+  "keywords": [
+    "FHIR",
+    "SQL on FHIR",
+    "FHIRPath",
+    "R",
+    "interoperability"
+  ]
 }

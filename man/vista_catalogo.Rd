@@ -16,7 +16,7 @@ Lista los \code{ViewDefinition} que trae el paquete para las tablas más
 comunes en vigilancia y salud pública: pacientes con su dirección de
 residencia, signos vitales, diagnósticos, enfermedades de notificación
 obligatoria, inmunizaciones, encuentros y prescripciones de
-medicamentos. Todas usan \code{getResourceKey()} para la columna \code{id} y
+medicamentos, alergias e intolerancias. Todas usan \code{getResourceKey()} para la columna \code{id} y
 \code{getReferenceKey()} para las claves de otros recursos (por ejemplo
 \code{paciente}), de modo que las tablas se pueden unir entre sí.
 }
@@ -25,6 +25,9 @@ Las vistas son JSON estándar de SQL on FHIR, guardados en la carpeta
 \code{vistas} del paquete (\code{system.file("vistas", package = "fhirviews")}), y
 dan los mismos resultados con \code{\link[=vista_ejecutar]{vista_ejecutar()}} y con
 \code{\link[=vista_ejecutar_duckdb]{vista_ejecutar_duckdb()}}.
+La vista \code{alergias} produce una fila por manifestacion de cada reaccion,
+conservando una fila cuando no hay reacciones. Para contar alergias,
+cuenta los valores distintos de \code{id}; \code{categoria} es una columna de listas.
 }
 \examples{
 vista_catalogo()[, c("nombre", "recurso", "titulo")]
