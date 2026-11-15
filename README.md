@@ -36,7 +36,29 @@ locales. La compatibilidad del motor SQL se comprueba por separado.
 [Novedades de 0.5.0](NEWS.md) ·
 [Reportar un problema](https://github.com/f-slg/fhirviews/issues/new/choose)
 
-<img src="man/figures/README-json-tabla.png" width="100%" alt="Flujo de transformación: recurso Patient en JSON, columnas definidas en un ViewDefinition y tabla resultante en R" />
+```mermaid
+flowchart TB
+    accTitle: Recorridos de fhirviews con FHIR R4
+    accDescr: Una vista extrae tablas de recursos FHIR. Otro recorrido construye recursos R4 desde filas mediante un mapeo explicito, conserva decimales y permite validar perfiles.
+    subgraph LECTURA["FHIR → tablas"]
+        direction LR
+        FHIR["FHIR R4<br/>servidor o archivos"] --> VIEW["ViewDefinition<br/>FHIRPath"]
+        VIEW --> TABLE["Tablas<br/>R y SQL"]
+    end
+    subgraph CONSTRUCCION["Tablas → FHIR R4"]
+        direction LR
+        ROWS["Filas<br/>R o SQL DBI"] --> MAP["Mapeo<br/>explícito"]
+        MAP --> R4["Recursos<br/>FHIR R4"]
+        R4 --> OUT["JSON / NDJSON"]
+        R4 --> PROFILE["Validar perfiles<br/>con servidor"]
+    end
+```
+
+La lectura usa V8 o el traductor DuckDB experimental. La construcción admite
+**Patient, Observation, Encounter, Condition e Immunization** y conserva la
+escala decimal disponible en el origen. Para construir recursos desde una tabla
+extraída, prepara las filas y elige un mapa; las columnas omitidas o agregadas
+necesitan decisiones propias.
 
 > **Versión 0.5.0 · enviada a CRAN el 7 de noviembre de 2026, en revisión.**
 > Procesamiento por bloques, recuperación de exportaciones con validación de
@@ -95,19 +117,6 @@ locales. La compatibilidad del motor SQL se comprueba por separado.
 Un `ViewDefinition` describe las columnas, filtros y colecciones que se quieren
 extraer mediante expresiones FHIRPath. Guardar esa definición junto al análisis
 hace explícitas las decisiones de transformación y facilita su revisión.
-
-```mermaid
-flowchart LR
-    A["Archivos JSON / NDJSON / gzip"] --> V["ViewDefinition + FHIRPath"]
-    B["Servidor FHIR R4"] --> C["Cliente y exportación Bulk Data"]
-    C --> V
-    V --> D["data.frame en R"]
-    V --> E["Una tabla por bloque"]
-    V --> F["DuckDB SQL · experimental"]
-    D --> G["Análisis, indicadores y tableros"]
-    E --> G
-    F --> G
-```
 
 ## Instalación
 
@@ -195,9 +204,10 @@ vista_reutilizable <- vista_leer("signos-vitales.json")
 
 ## Arquitectura y secuencia de procesamiento
 
-Las responsabilidades se distribuyen en cuatro capas. El cliente obtiene
+La extracción se distribuye en cuatro capas. El cliente obtiene
 recursos; la definición declara la extracción; los motores generan filas; el
 consumidor decide cómo guardar, resumir o consultar el resultado.
+La [construcción desde SQL](#de-sql-a-fhir) tiene un mapeo y controles propios.
 
 ```mermaid
 flowchart TB
@@ -221,6 +231,7 @@ flowchart TB
         DF["data.frame completo"]
         CB["procesar(tabla, bloque)"]
         DB["Tabla DuckDB o consulta diferida"]
+        DBI["Tablas DBI en una transacción"]
     end
     REST --> HTTP --> RES
     FILE --> RES --> V8 --> DF
@@ -235,6 +246,7 @@ flowchart TB
     VALID --> SQL
     SQL --> DF
     SQL --> DB
+    V8 -->|"vista_duckdb"| DBI
 ```
 
 Para construir un análisis reproducible, sigue esta secuencia:
@@ -631,8 +643,9 @@ aplica el mismo mapeo a un `data.frame`. Admite
 
 ```mermaid
 flowchart LR
-    DB["Consulta SQL / data.frame"] --> M["Mapeo explícito de campos y tipos R4"]
-    M --> R["Patient / Observation / Encounter / Condition / Immunization"]
+    DB["Consulta SQL DBI / data.frame"] --> M["fhir_mapa: columnas, constantes y referencias"]
+    M --> CHECK["Construir y comprobar estructura R4"]
+    CHECK --> R["Patient, Observation, Encounter,<br/>Condition e Immunization"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → tabla"]
     R --> C["Validación de perfiles con fhir_validar"]
@@ -1267,7 +1280,8 @@ comprobar también la matriz de R en Windows, macOS y Linux.
 La matriz de R-CMD-check prueba primero el paquete y después instala el archivo
 fuente construido en una biblioteca nueva. La aceptación se ejecuta en otro
 proceso R y comprueba la ruta de carga, la ayuda, las viñetas y el informe del
-perfil solicitado. El perfil completo añade rollback y reintento transaccional.
+perfil solicitado. Ambos perfiles exigen el recorrido de cinco tipos R4; el
+completo añade SQL parametrizado, comparación V8/DuckDB y recuperación transaccional.
 
 ```mermaid
 flowchart TD
@@ -1275,14 +1289,20 @@ flowchart TD
     B --> C["R CMD check y pruebas del paquete"]
     C --> D["Instalar el mismo tar.gz en una biblioteca nueva"]
     D --> E["Proceso R independiente: verificar paquete y documentación"]
-    E --> F["Piloto básico o completo según la matriz"]
+    E --> F["Cinco tipos R4 y perfil básico o completo"]
     F --> G{"Resultado técnico"}
     G -->|"Sin errores ni advertencias"| H["Aprobado para ese perfil"]
     G -->|"Advertencias"| I["Requiere revisión y salida distinta de cero"]
     G -->|"Error"| J["No aprobado y salida distinta de cero"]
     A --> K["Workflow HAPI: integración aislada"]
-    A --> L["Workflow pkgdown: construir documentación"]
-    H --> M["Evaluación con usuarios todavía pendiente"]
+    A --> L["Integración PostgreSQL y SQL Server"]
+    A --> P["pkgdown local; Pages en main"]
+    H --> T["Revisar todos los controles del mismo commit"]
+    K --> T
+    L --> T
+    P --> T
+    T --> M["Piloto externo con protocolo R4"]
+    M --> N["Resolver hallazgos y elegir versión estable"]
 ```
 
 Los informes de aceptación se guardan como artefactos `piloto-*` durante 14 días.
@@ -1291,6 +1311,23 @@ control queda como `no_evaluado`. Los workflows verifican el alcance declarado,
 y su resultado debe consultarse para el commit específico que se vaya a entregar.
 
 ## Rendimiento
+
+### Estado de la evaluación de Rust
+
+El paquete actual utiliza R, JavaScript/V8 y el motor nativo de DuckDB.
+**Rust todavía no está implementado ni se ha comparado con R.** El perfilado
+exploratorio de SQL → FHIR señaló la validación y las referencias como zonas
+que conviene medir; no demuestra una ganancia que pueda atribuirse a Rust.
+
+La evaluación posterior al cierre R4 comparará tres opciones sobre los mismos
+datos: R actual, un plan de validación preparado una sola vez por mapa y un
+prototipo por lotes en Rust. Se exigirán tiempos repetidos y memoria, los cinco
+tipos R4, iguales errores con fila/campo y los mismos resultados JSON, incluida
+la distinción entre `0.50`, `0.5` y `72.00`. La decisión incluirá instalación,
+compatibilidad Windows/macOS/Linux y mantenimiento. Esta evaluación queda
+pendiente; el flujo inicial muestra las funciones disponibles actualmente.
+
+### Mediciones anteriores de V8 y DuckDB
 
 Las mediciones de esta sección son anteriores a los cambios de precisión de
 0.5.0.9000; no se han vuelto a medir con esta versión de desarrollo.

@@ -41,7 +41,29 @@ files. Compatibility of the SQL engine is tested separately.
 [What's new in 0.5.0](NEWS.md) ·
 [Report a problem](https://github.com/f-slg/fhirviews/issues/new/choose)
 
-<img src="man/figures/README-json-tabla.png" width="100%" alt="Transformation pipeline: a Patient resource in JSON, columns defined in a ViewDefinition and the resulting table in R" />
+```mermaid
+flowchart TB
+    accTitle: fhirviews workflows with FHIR R4
+    accDescr: A view projects FHIR resources into tables. A separate explicit mapping builds R4 resources from rows, preserves decimal scale and supports server profile validation.
+    subgraph READ["FHIR → tables"]
+        direction LR
+        FHIR["FHIR R4<br/>server or files"] --> VIEW["ViewDefinition<br/>FHIRPath"]
+        VIEW --> TABLE["Tables<br/>R and SQL"]
+    end
+    subgraph BUILD["Tables → FHIR R4"]
+        direction LR
+        ROWS["Rows<br/>R or DBI SQL"] --> MAP["Explicit<br/>mapping"]
+        MAP --> R4["Resources<br/>FHIR R4"]
+        R4 --> OUT["JSON / NDJSON"]
+        R4 --> PROFILE["Server profile<br/>validation"]
+    end
+```
+
+Reading uses V8 or the experimental DuckDB translator. Construction supports
+**Patient, Observation, Encounter, Condition and Immunization**, preserving
+the decimal scale available at the source. To construct resources from a
+projected table, prepare the rows and choose a mapping, with explicit decisions
+about omitted or aggregated columns.
 
 > **Version 0.5.0 · submitted to CRAN on 7 November 2026, under review.**
 > Block-wise processing, export recovery with content validation and privacy
@@ -71,6 +93,7 @@ files. Compatibility of the SQL engine is tested separately.
 - [Conformance and tests](#conformance-and-tests)
 - [Performance](#performance)
 - [Scope and limitations](#scope-and-limitations)
+- [Stabilising R4](#stabilising-r4)
 - [Pilot and local documentation](#pilot-and-local-documentation)
 - [Guides and reference](#guides-and-reference)
 - [Contributing, citation and license](#contributing-citation-and-license)
@@ -113,19 +136,6 @@ files. Compatibility of the SQL engine is tested separately.
 A `ViewDefinition` describes the columns, filters and collections to extract,
 using FHIRPath expressions. Keeping that definition next to the analysis makes
 the transformation decisions explicit and easier to review.
-
-```mermaid
-flowchart LR
-    A["JSON / NDJSON / gzip files"] --> V["ViewDefinition + FHIRPath"]
-    B["FHIR R4 server"] --> C["Client and Bulk Data export"]
-    C --> V
-    V --> D["data.frame in R"]
-    V --> E["One table per block"]
-    V --> F["DuckDB SQL · experimental"]
-    D --> G["Analysis, indicators and dashboards"]
-    E --> G
-    F --> G
-```
 
 ## Installation
 
@@ -214,9 +224,10 @@ vista_reutilizable <- vista_leer("signos-vitales.json")
 
 ## Architecture and processing sequence
 
-Responsibilities are split into four layers. The client fetches resources; the
+Extraction is split into four layers. The client fetches resources; the
 definition declares the extraction; the engines produce rows; the consumer
 decides how to store, summarise or query the result.
+[Construction from SQL](#from-sql-to-fhir) has its own mapping and checks.
 
 ```mermaid
 flowchart TB
@@ -240,6 +251,7 @@ flowchart TB
         DF["Complete data.frame"]
         CB["procesar(tabla, bloque)"]
         DB["DuckDB table or lazy query"]
+        DBI["DBI tables in one transaction"]
     end
     REST --> HTTP --> RES
     FILE --> RES --> V8 --> DF
@@ -254,6 +266,7 @@ flowchart TB
     VALID --> SQL
     SQL --> DF
     SQL --> DB
+    V8 -->|"vista_duckdb"| DBI
 ```
 
 To build a reproducible analysis, follow this sequence:
@@ -652,8 +665,9 @@ Immunization from FHIR R4 4.0.1**.
 
 ```mermaid
 flowchart LR
-    DB["SQL query / data.frame"] --> M["Explicit fields and R4 types"]
-    M --> R["Patient / Observation / Encounter / Condition / Immunization"]
+    DB["DBI SQL query / data.frame"] --> M["fhir_mapa: columns, constants and references"]
+    M --> CHECK["Construct and check R4 structure"]
+    CHECK --> R["Patient, Observation, Encounter,<br/>Condition and Immunization"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → table"]
     R --> C["Profile validation with fhir_validar"]
@@ -1220,7 +1234,8 @@ to confirm its R coverage on Windows, macOS and Linux as well.
 The R-CMD-check matrix first tests the package and then installs the built
 source archive in a new library. Acceptance runs in a separate R process and
 checks the load path, the help, the vignettes and the report for the requested
-profile. The full profile adds rollback and transactional retry.
+profile. Both profiles require the five R4 types; the complete profile adds
+parameterised SQL, V8/DuckDB comparison and transactional recovery.
 
 ```mermaid
 flowchart TD
@@ -1228,14 +1243,20 @@ flowchart TD
     B --> C["R CMD check and package tests"]
     C --> D["Install the same tar.gz in a new library"]
     D --> E["Separate R process: check package and documentation"]
-    E --> F["Basic or full pilot depending on the matrix"]
+    E --> F["Five R4 types and basic or complete profile"]
     F --> G{"Technical result"}
     G -->|"No errors or warnings"| H["Approved for that profile"]
     G -->|"Warnings"| I["Needs review, non-zero exit"]
     G -->|"Error"| J["Not approved, non-zero exit"]
     A --> K["HAPI workflow: isolated integration"]
-    A --> L["pkgdown workflow: build documentation"]
-    H --> M["User evaluation still pending"]
+    A --> L["PostgreSQL and SQL Server integration"]
+    A --> P["Local pkgdown; Pages on main"]
+    H --> T["Review all checks for the same commit"]
+    K --> T
+    L --> T
+    P --> T
+    T --> M["External pilot with the R4 protocol"]
+    M --> N["Address findings and select a stable version"]
 ```
 
 Acceptance reports are stored as `piloto-*` artifacts for 14 days. Approval of
@@ -1244,6 +1265,22 @@ as `no_evaluado` (not evaluated). The workflows verify the declared scope, and
 their result should be checked for the specific commit being delivered.
 
 ## Performance
+
+### Rust evaluation status
+
+The current package uses R, JavaScript/V8 and DuckDB's native engine.
+**Rust is not implemented and has not been benchmarked against R.** Exploratory
+SQL → FHIR profiling identified validation and references as candidates for
+measurement; this does not establish a speed improvement attributable to Rust.
+
+After the R4 milestone, compare current R, a validation plan prepared once per
+mapping and a batch Rust prototype on identical inputs. Require repeated timing
+and memory measurements, all five R4 types, identical row/field errors and JSON
+results that retain the distinction between `0.50`, `0.5` and `72.00`. Assess
+Windows/macOS/Linux installation and maintenance as part of the decision.
+This evaluation remains pending; the opening diagram shows available features.
+
+### Earlier V8 and DuckDB measurements
 
 The measurements below predate the precision changes in 0.5.0.9000 and have
 not been repeated with this development version.
