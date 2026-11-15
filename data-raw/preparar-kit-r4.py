@@ -41,7 +41,10 @@ def construir(paquete, salida, ref='HEAD', kit_dir=None):
             return ruta.read_bytes()
     else:
         fuente_kit_commit = commit
-        archivo_fuente = lambda nombre: git(commit, KIT + '/' + nombre)
+        rutas_fuente = {'PROBAR-CANDIDATO.R': 'data-raw/probar-candidato.R',
+                        'LICENSE.md': 'LICENSE.md'}
+        archivo_fuente = lambda nombre: git(commit,
+            rutas_fuente.get(nombre, KIT + '/' + nombre))
     contenido = paquete.read_bytes()
     sha = hashlib.sha256(contenido).hexdigest()
     esperado = evidencia['paquete']
