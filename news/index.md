@@ -2,6 +2,13 @@
 
 ## fhirviews 0.5.0.9002
 
+- Distribucion independiente del componente Rust en ZIP para Linux
+  x86_64 con musl estatico, Windows x64 con CRT estatico y macOS 15
+  Intel/Apple Silicon. Incluye SHA-256, fuente, manifiestos y licencias;
+  cada plataforma debe aprobar compilacion y consumo desde R instalado
+  sin invocar Rust. GitHub Pages conserva los paquetes por version y
+  commit. No se crea una release R ni se modifica la identidad de los
+  archivos Zenodo anteriores.
 - La prueba de privacidad de Bulk Data distingue el token de una ruta de
   archivos: usa una credencial ficticia inequivoca y una carpeta que
   contiene `abc`. Evita fallos intermitentes al coincidir esas letras

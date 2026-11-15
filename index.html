@@ -133,7 +133,7 @@
 </tr>
 <tr>
 <td><strong>Rust</strong></td>
-<td>Componente CLI opcional, compilado y seleccionado por el usuario; R sigue siendo la ruta predeterminada. El ejecutable se distribuye aparte. <a href="#validaci%C3%B3n-con-el-componente-rust-opcional">Uso</a> · <a href="#rendimiento">Resultados y límites</a>.</td>
+<td>Componente CLI opcional, seleccionado por el usuario; R sigue siendo la ruta predeterminada. ZIP independientes para Linux x86_64, Windows x64 y macOS Intel/Apple Silicon, con SHA-256 y procedencia. <a href="#validaci%C3%B3n-con-el-componente-rust-opcional">Uso</a> · <a href="#rendimiento">Resultados y límites</a>.</td>
 </tr>
 <tr>
 <td><strong>Federación y R4/R6</strong></td>
@@ -1066,10 +1066,66 @@
 <div class="section level3">
 <h3 id="validación-con-el-componente-rust-opcional">Validación con el componente Rust opcional<a class="anchor" aria-label="anchor" href="#validaci%C3%B3n-con-el-componente-rust-opcional"></a>
 </h3>
-<p><code><a href="reference/fhir_componente_rust.html">fhir_componente_rust()</a></code> está disponible desde <strong>0.5.0.9002</strong>. El ejecutable <a href="https://github.com/f-slg/fhirviews/tree/main/componentes/rust" class="external-link">componentes/rust</a> se compila aparte con Cargo y rustc &gt;= 1.75:</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--locked</span> <span class="at">--jobs</span> 2 <span class="at">--manifest-path</span> componentes/rust/Cargo.toml</span>
-<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--locked</span> <span class="at">--jobs</span> 2 <span class="at">--manifest-path</span> componentes/rust/Cargo.toml</span></code></pre></div>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<p><code><a href="reference/fhir_componente_rust.html">fhir_componente_rust()</a></code> está disponible desde <strong>0.5.0.9002</strong>. Puedes usar un ZIP precompilado del <a href="https://f-slg.github.io/fhirviews/componentes/rust/catalogo.json">catálogo HTTPS</a> sin instalar Cargo, rustc ni Rtools. Estos archivos contienen el componente; el paquete R se instala por separado. El catálogo identifica el commit fuente, protocolo, tamaño y SHA-256 de cada ZIP y enlaza un manifiesto inmutable.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr>
+<th>Clave del catálogo</th>
+<th>Binario</th>
+<th>Plataforma de la prueba de consumo</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>linux-x86_64</code></td>
+<td>Linux x86_64, musl estático; no depende de glibc</td>
+<td>Ubuntu 22.04</td>
+</tr>
+<tr>
+<td><code>windows-x86_64</code></td>
+<td>Windows x64, runtime C enlazado estáticamente</td>
+<td>Windows del runner de GitHub</td>
+</tr>
+<tr>
+<td><code>macos-intel</code></td>
+<td>macOS Intel, mínimo 15.0</td>
+<td>macOS 15 Intel</td>
+</tr>
+<tr>
+<td><code>macos-apple-silicon</code></td>
+<td>macOS ARM64, mínimo 15.0</td>
+<td>macOS 15 Apple Silicon</td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo de descarga explícita y comprobación <strong>antes de descomprimir o ejecutar</strong>. Elige la clave que corresponda a tu sistema y arquitectura:</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">catalogo</span> <span class="op">&lt;-</span> <span class="fu">jsonlite</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/jsonlite/reference/fromJSON.html" class="external-link">fromJSON</a></span><span class="op">(</span></span>
+<span>  <span class="st">"https://f-slg.github.io/fhirviews/componentes/rust/catalogo.json"</span>,</span>
+<span>  simplifyVector <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">plataforma</span> <span class="op">&lt;-</span> <span class="st">"linux-x86_64"</span> <span class="co"># o windows-x86_64, macos-intel, macos-apple-silicon</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">catalogo</span><span class="op">$</span><span class="va">plataformas</span><span class="op">[[</span><span class="va">plataforma</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>, <span class="va">catalogo</span><span class="op">$</span><span class="va">contrato</span> <span class="op">==</span> <span class="st">"fhirviews-r4-validator/1"</span><span class="op">)</span></span>
+<span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".zip"</span><span class="op">)</span></span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">url</span>, <span class="va">archivo</span>, mode <span class="op">=</span> <span class="st">"wb"</span><span class="op">)</span></span>
+<span><span class="va">conexion</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">file</a></span><span class="op">(</span><span class="va">archivo</span>, <span class="st">"rb"</span><span class="op">)</span></span>
+<span><span class="va">huella</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="fu">openssl</span><span class="fu">::</span><span class="fu"><a href="https://jeroen.r-universe.dev/openssl/reference/hash.html" class="external-link">sha256</a></span><span class="op">(</span><span class="va">conexion</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">close</a></span><span class="op">(</span><span class="va">conexion</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="va">huella</span>, <span class="va">p</span><span class="op">$</span><span class="va">sha256</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">destino</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="st">"fhirviews-componente-"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">destino</span><span class="op">)</span></span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/unzip.html" class="external-link">unzip</a></span><span class="op">(</span><span class="va">archivo</span>, exdir <span class="op">=</span> <span class="va">destino</span><span class="op">)</span></span>
+<span><span class="va">binario</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">destino</span>, <span class="va">p</span><span class="op">$</span><span class="va">directorio</span>, <span class="va">p</span><span class="op">$</span><span class="va">ejecutable</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">Sys.chmod</a></span><span class="op">(</span><span class="va">binario</span>, <span class="st">"0755"</span><span class="op">)</span></span>
+<span><span class="va">componente</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_componente_rust.html">fhir_componente_rust</a></span><span class="op">(</span><span class="va">binario</span>, fallback <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p>El ejemplo usa una carpeta temporal; elige una carpeta persistente nueva si quieres conservar el ejecutable entre sesiones. Los ZIP incluyen <code>MANIFIESTO.json</code>, <code>SHA256SUMS</code>, <code>Cargo.lock</code>, licencias y atribuciones. El SHA-256 comprueba integridad respecto del catálogo; los binarios no están firmados ni notarizados. En macOS se aplican las políticas de seguridad del equipo; no se desactiva Gatekeeper ni se elimina cuarentena automáticamente. Consulta la <a href="https://github.com/f-slg/fhirviews/tree/main/data-raw/distribucion-rust" class="external-link">guía de distribución y reproducción</a>.</p>
+<p>También puedes compilar <a href="https://github.com/f-slg/fhirviews/tree/main/componentes/rust" class="external-link">el código del componente</a> con Cargo y rustc &gt;= 1.75 y el enlazador de tu plataforma:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span> <span class="at">--locked</span> <span class="at">--jobs</span> 2 <span class="at">--manifest-path</span> componentes/rust/Cargo.toml</span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="ex">cargo</span> test <span class="at">--locked</span> <span class="at">--jobs</span> 2 <span class="at">--manifest-path</span> componentes/rust/Cargo.toml</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">componente</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_componente_rust.html">fhir_componente_rust</a></span><span class="op">(</span></span>
 <span>  <span class="st">"componentes/rust/target/release/fhirviews-rust-validator"</span>,</span>
 <span>  fallback <span class="op">=</span> <span class="cn">FALSE</span>, tiempo <span class="op">=</span> <span class="fl">60L</span><span class="op">)</span> <span class="co"># en Windows, termina en .exe</span></span>
@@ -1079,7 +1135,7 @@
 <span><span class="co">#          fhir_desde_sql(db, sql, mapa, parametros, componente = componente)</span></span></code></pre></div>
 <p>Sin <code>componente</code>, la validación estructural sigue en R. El componente revisa recursos ya construidos y tipificados por R: campos obligatorios, elecciones, cardinalidades, bindings enumerables y destinos de referencias. R conserva las conversiones, la serialización y los decimales. No evalúa SQL on FHIR ni FHIRPath, no convierte R4/R6 y no sustituye un validador de perfiles.</p>
 <p>El contrato CLI <code>fhirviews-r4-validator/1</code> comprueba capacidades, versión FHIR, identidad del esquema y conteo de recursos. El plan se prepara una vez por sesión R; el proceso Rust lo lee en cada llamada. Ante datos inválidos, R reproduce el primer error con su mensaje completo, clase, fila y campo. <code>fallback = TRUE</code> avisa y valida con R si el ejecutable falta, falla, excede el tiempo o devuelve una respuesta incompatible. <code>FALSE</code> exige el componente y produce <code>fhirviews_error_componente</code> ante esos fallos.</p>
-<p>La comunicación usa archivos temporales locales que se eliminan al terminar; el componente no usa la red. La consulta DBI y los recursos siguen completos en memoria R. La instalación del paquete no descarga Rust ni ejecutables. La CLI evita enlazar con la ABI de R; una integración nativa y su distribución serían trabajos adicionales. Usa un ejecutable de confianza.</p>
+<p>La comunicación usa archivos temporales locales que se eliminan al terminar; el componente no usa la red. La consulta DBI y los recursos siguen completos en memoria R. La instalación del paquete no descarga Rust ni ejecutables. La CLI evita enlazar con la ABI de R. Los ZIP se prueban en trabajos separados desde el paquete R instalado con sus pruebas, usando el ejecutable extraído y bloqueando Cargo/rustc/rustup. La publicación exige que pasen las cuatro plataformas; conserva rutas por versión y commit sin reemplazar sus bytes. La integración nativa dentro del paquete R sigue pendiente.</p>
 <p>La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/revision-helios-20261115.md" class="external-link">revisión de Helios</a> identifica mejoras aplicables: interfaces entre componentes, esquema fijo, procesamiento incremental y capacidades por versión. Esta entrega aplica la interfaz opcional y las colecciones de referencias. Los cursores DBI por bloques, Arrow directo y adaptadores multiversión siguen pendientes. La comparación es de diseño y código; no se realizó un benchmark contra Helios.</p>
 </div>
 <div class="section level3">
@@ -1155,7 +1211,7 @@
 <h2 id="vistas-de-salud-pública-y-terminologías">Vistas de salud pública y terminologías<a class="anchor" aria-label="anchor" href="#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas"></a>
 </h2>
 <p>El catálogo incluye ocho vistas: pacientes, diagnósticos, encuentros, inmunizaciones, medicamentos, signos vitales, alergias y notificación obligatoria. Puedes inspeccionarlas y adaptar sus constantes:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_catalogo.html">vista_catalogo</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nombre"</span>, <span class="st">"recurso"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="va">archivo_dengue</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
@@ -1167,7 +1223,7 @@
 <h3 id="alergias-e-intolerancias-r4">Alergias e intolerancias R4<a class="anchor" aria-label="anchor" href="#alergias-e-intolerancias-r4"></a>
 </h3>
 <p>La vista <code>alergias</code> conserva cada manifestación dentro de su reacción, con su gravedad y fecha. Las categorías se guardan como listas. Un registro sin reacciones conserva una fila; <code>criticidad</code> y <code>gravedad_reaccion</code> son campos distintos y no se completan ni se infieren entre sí.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">archivo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"alergias_r4.ndjson"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="va">alergias</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">archivo</span>, <span class="fu"><a href="reference/vista_plantilla.html">vista_plantilla</a></span><span class="op">(</span><span class="st">"alergias"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">alergias</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"paciente"</span>, <span class="st">"estado_clinico"</span>, <span class="st">"gravedad_reaccion"</span>, <span class="st">"reaccion_codigo"</span><span class="op">)</span><span class="op">]</span></span>
@@ -1178,7 +1234,7 @@
 <h3 id="demostración-reproducible-de-vigilancia">Demostración reproducible de vigilancia<a class="anchor" aria-label="anchor" href="#demostraci%C3%B3n-reproducible-de-vigilancia"></a>
 </h3>
 <p>Para ejecutar un flujo completo con los datos ficticios incluidos:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"vigilancia.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>El script imprime la carpeta de salida y comprueba que los resúmenes coincidan con los eventos seleccionados. Con el conjunto incluido parte de 755 eventos, selecciona 661 confirmados con CIE-10 A90/A91 y excluye 94 refutados. Genera:</p>
 <ul>
@@ -1221,7 +1277,7 @@
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Requiere una conexión y un servidor que admita $validate</span></span>
 <span><span class="va">resultado</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fhir_validar.html">fhir_validar</a></span><span class="op">(</span><span class="va">con</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>resourceType <span class="op">=</span> <span class="st">"Patient"</span>, gender <span class="op">=</span> <span class="st">"female"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/Logic.html" class="external-link">isTRUE</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">resultado</span>, <span class="st">"valido"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
@@ -1229,7 +1285,7 @@
 <span><span class="op">}</span></span></code></pre></div>
 <p>El estado HTTP queda disponible en <code>attr(resultado, "estado")</code>. Una validación positiva no certifica la calidad clínica de los datos.</p>
 <p>Los errores HTTP omiten por defecto el contenido del servidor, que puede contener información de pacientes. También se ocultan los valores sensibles de la consulta, incluido <code>_id</code>. Para depuración controlada:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_detalles <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># contenido del servidor en errores</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>fhirviews.mostrar_consulta <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="co"># valores completos de la consulta</span></span>
 <span></span>
@@ -1264,7 +1320,7 @@
 </tbody>
 </table>
 <p>Las cuatro pruebas experimentales de límites ahora conservan la precisión de <code>1.0</code> y completan las zonas desconocidas de DateTime (<code>+14:00</code> en el límite inferior, <code>-12:00</code> en el superior), conservando zonas explícitas. El banco se lee sin alterar sus literales ni resultados esperados. V8 usa un lector JSON portable; DuckDB relaciona los tokens numéricos originales con <code>json_tree()</code>. La conformidad se refiere a ese banco y no certifica un sistema clínico.</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span><span class="op">)</span>                   <span class="co"># motor V8</span></span>
 <span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>motor <span class="op">=</span> <span class="st">"duckdb"</span><span class="op">)</span>   <span class="co"># requiere DuckDB y su extensión json</span></span>
 <span><span class="fu"><a href="reference/vista_conformidad.html">vista_conformidad</a></span><span class="op">(</span>descargar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>  <span class="co"># contrastar con el banco actual de GitHub</span></span>
@@ -1272,12 +1328,12 @@
 <p>El 144/144 no significa que toda expresión FHIRPath sea traducible a SQL. Los límites decimales en DuckDB admiten literales sin signo o rutas estáticas desde el recurso con índices explícitos, escalas entre -18 y 8 y números representables en <code>DECIMAL(38,18)</code>. Las escalas negativas corresponden a exponentes positivos. No se admite el argumento opcional de precisión ni se infiere escala tras operaciones, filtros o iteraciones. Esos casos fallan con un mensaje explícito. Con Parquet o tablas ya normalizadas se usa la representación JSON disponible; no se recupera una escala que se haya perdido antes. Las vistas que no usan límites decimales no pagan el coste de extraer los tokens y rutas.</p>
 <p>CI comprueba el paquete en Windows, macOS Intel y Linux, además de R-devel y R 4.1. macOS usa por defecto <code>macos-26-intel</code>; esta matriz no valida Apple Silicon. El workflow admite ejecución manual con elección entre macOS 26 Intel y macOS 15 Intel para reintentar problemas de disponibilidad. El selector no garantiza capacidad del proveedor: macOS continúa siendo una comprobación obligatoria. En R 4.1 y R-devel se comprueban el cliente y V8. Los tres sistemas con R release incluyen DuckDB y sus pruebas SQL. La prueba de privacidad de Bulk Data usa una credencial ficticia completa y una carpeta que contiene <code>abc</code>: comprueba que se muestra la ruta y se oculta el token, sin confundir coincidencias de la ruta con una credencial expuesta. También exige el valor exacto de la cabecera de autorización de descarga.</p>
 <p>Las pruebas HTTP usan respuestas simuladas. La integración de escritura se habilita por separado contra un <strong>servidor de pruebas propio</strong>:</p>
-<div class="sourceCode" id="cb38"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
-<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a><span class="va">FHIRVIEWS_SOLO_SERVIDOR_PROPIO</span><span class="op">=</span>true <span class="va">NOT_CRAN</span><span class="op">=</span>true <span class="dt">\</span></span>
-<span id="cb38-3"><a href="#cb38-3" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local(filter = "^servidor$")'</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a><span class="va">FHIRVIEWS_SERVIDOR_ESCRITURA</span><span class="op">=</span>http://localhost:8080/fhir <span class="dt">\</span></span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a><span class="va">FHIRVIEWS_SOLO_SERVIDOR_PROPIO</span><span class="op">=</span>true <span class="va">NOT_CRAN</span><span class="op">=</span>true <span class="dt">\</span></span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a>  <span class="ex">Rscript</span> <span class="at">-e</span> <span class="st">'testthat::test_local(filter = "^servidor$")'</span></span></code></pre></div>
 <p>Ese servidor debe permitir escritura; algunas pruebas requieren terminología y Bulk Data. La suite omite operaciones que el servidor no admite. Consulta <a href="tests/testthat/test-servidor.R"><code>tests/testthat/test-servidor.R</code></a> para preparar un HAPI aislado.</p>
 <p>Para ejecutar la integración completa de forma reproducible desde el repositorio, con Docker o Podman y las dependencias de prueba instaladas (además de las dependencias obligatorias del paquete: <code>pkgload</code>, <code>testthat</code>, <code>DBI</code> y <code>duckdb</code>):</p>
-<div class="sourceCode" id="cb39"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a><span class="fu">bash</span> data-raw/probar-hapi.sh</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="fu">bash</span> data-raw/probar-hapi.sh</span></code></pre></div>
 <p>El script usa una imagen fijada por digest, abre un puerto aleatorio solo en localhost y elimina su propio contenedor al terminar, incluso si las pruebas fallan. Imprime la carpeta que conserva los registros, el resumen JSON y CSV, las omisiones y el entorno de R. La ejecución exige escritura, transacciones, terminología básica, Bulk Data y el nuevo recorrido SQL → FHIR → servidor → tabla; una omisión inesperada hace fallar la prueba. La variante de ValueSet en línea no admitida por HAPI queda registrada aparte. El workflow <strong>Integracion HAPI</strong> ejecuta este mismo script y conserva los resultados durante 14 días. En la primera ejecución puede descargar la imagen y la extensión JSON de DuckDB.</p>
 <div class="section level3">
 <h3 id="validación-de-sql--fhir-contra-perfiles-r4">Validación de SQL → FHIR contra perfiles R4<a class="anchor" aria-label="anchor" href="#validaci%C3%B3n-de-sql--fhir-contra-perfiles-r4"></a>
@@ -1301,11 +1357,11 @@
 </h3>
 <p>Además de las pruebas locales con DuckDB y SQLite, el script <code>data-raw/probar-sql-dbi.sh</code> ejecuta consultas contra <strong>dos bases reales y aisladas</strong>. Crea contenedores propios de PostgreSQL y SQL Server Developer, fijados por digest en <code>data-raw/postgres-image.txt</code> y <code>data-raw/sqlserver-image.txt</code>, y los elimina al finalizar. Publica puertos aleatorios solamente en localhost y usa credenciales aleatorias de un solo uso, que no escribe en los informes. Los datos son ficticios.</p>
 <p>Requisitos: Docker o Podman, <code>openssl</code>, los paquetes R siguientes y un controlador <strong>Microsoft ODBC Driver 18 for SQL Server</strong> disponible para <code>odbc</code>. <code>RPostgres</code> requiere las bibliotecas de PostgreSQL y <code>odbc</code>, unixODBC. El script inicia SQL Server con <code>ACCEPT_EULA=Y</code> y edición Developer, para desarrollo y pruebas, conforme a las condiciones de la imagen de Microsoft.</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"DBI"</span>, <span class="st">"RPostgres"</span>, <span class="st">"odbc"</span>, <span class="st">"duckdb"</span>, <span class="st">"pkgload"</span>, <span class="st">"testthat"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb41"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a><span class="co"># Ejecutar desde la raíz del repositorio; la carpeta indicada debe ser nueva.</span></span>
-<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a><span class="va">FHIRVIEWS_CONTENEDOR</span><span class="op">=</span>podman <span class="fu">bash</span> data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi</span>
-<span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a><span class="co"># También se admite FHIRVIEWS_CONTENEDOR=docker.</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a><span class="co"># Ejecutar desde la raíz del repositorio; la carpeta indicada debe ser nueva.</span></span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a><span class="va">FHIRVIEWS_CONTENEDOR</span><span class="op">=</span>podman <span class="fu">bash</span> data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi</span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a><span class="co"># También se admite FHIRVIEWS_CONTENEDOR=docker.</span></span></code></pre></div>
 <p><code>FHIRVIEWS_ODBC_DRIVER</code> permite indicar otro nombre registrado o la ruta absoluta de la biblioteca del controlador; por defecto usa <code>ODBC Driver 18 for SQL Server</code>. <code>FHIRVIEWS_SQL_ESPERA</code> ajusta la espera de conexión, en segundos, cuyo valor predeterminado es 120. La conexión de prueba ODBC cifra el tráfico y acepta el certificado del contenedor local; esa configuración corresponde a este ensayo aislado.</p>
 <p>Cada base debe superar cinco grupos obligatorios:</p>
 <ol style="list-style-type: decimal">
@@ -1352,6 +1408,7 @@
 <h3 id="medición-de-la-api-rust-en-0509002">Medición de la API Rust en 0.5.0.9002<a class="anchor" aria-label="anchor" href="#medici%C3%B3n-de-la-api-rust-en-0509002"></a>
 </h3>
 <p>El <a href="https://github.com/f-slg/fhirviews/tree/main/data-raw/validacion-0.5.0.9002" class="external-link">informe verificable</a> corresponde al paquete instalado desde el commit <code>8d6a122</code>, con bytecode R, Ubuntu 26.04.1, Intel i7-10750H, R 4.5.2 y Rust 1.75.0. Compara los siete mapas ficticios de <code>tests/testthat/helper-constructor-r4.R</code>: <strong>126 muestras</strong>, 300 y 3.000 filas, tres repeticiones y orden aleatorio. Cada llamada produjo el mismo JSON exacto que la ruta R.</p>
+<p>La medición usó el binario GNU Linux compilado localmente. Los ZIP de distribución tienen pruebas funcionales separadas; estos tiempos no miden el binario musl ni los ejecutables Windows/macOS.</p>
 <p>Medianas para <strong>3.000 filas</strong>, en segundos:</p>
 <table class="table">
 <thead><tr>
@@ -1742,7 +1799,7 @@ Mediciones históricas de motores y comparación con fhircrackr
 </ul>
 <p>El perfil <code>completo</code> construye los recursos mediante consultas parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL. El grupo obligatorio HAPI valida los seis textos JSON contra sus perfiles base y exige que un Patient alterado sea rechazado. Las integraciones PostgreSQL y SQL Server se mantienen como comprobaciones adicionales de sus controladores y tipos nativos.</p>
 <p>La <strong>evaluación externa</strong> requiere que otra persona instale el candidato, explique los resultados, modifique una vista, contraste el NDJSON y repita las tareas. El protocolo <a href="https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md" class="external-link">PILOTO-R4.md</a> incluye tareas, referencias y criterios de cierre. Los informes automáticos dejan <code>validacion_usuario_externo = pendiente</code> hasta documentar esa evaluación aparte. El ensayo local marca la validación de perfiles como no evaluada; HAPI aporta su evidencia independiente, y los perfiles propios requieren otra comprobación.</p>
-<p>Después del piloto y de corregir sus hallazgos se fijará la versión estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y el ORCID del autor; el desarrollo actual 0.5.0.9002 mantiene metadatos de cita separados. El orden posterior será federación entre servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust dispone de una interfaz CLI opcional; la integración nativa, los binarios distribuidos y las pruebas de instalación de esos artefactos siguen siendo trabajos separados.</p>
+<p>Después del piloto y de corregir sus hallazgos se fijará la versión estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y el ORCID del autor; el desarrollo actual 0.5.0.9002 mantiene metadatos de cita separados. El orden posterior será federación entre servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust dispone de una interfaz CLI opcional; los ZIP por plataforma tienen su propia compilación y prueba de consumo. La integración nativa dentro del paquete R sigue siendo un trabajo separado.</p>
 </div>
 <div class="section level2">
 <h2 id="pendientes-y-orden-de-trabajo">Pendientes y orden de trabajo<a class="anchor" aria-label="anchor" href="#pendientes-y-orden-de-trabajo"></a>
@@ -1772,8 +1829,8 @@ Mediciones históricas de motores y comparación con fhircrackr
 </tr>
 <tr>
 <td>3</td>
-<td><strong>Distribución del componente Rust</strong></td>
-<td>La API CLI y el respaldo R ya existen en 0.5.0.9002. La API actual ya está medida; falta decidir distribución de ejecutables por plataforma y evaluar otras cargas; un enlace nativo y su incorporación al paquete exigirían revisar ABI, toolchains, vendoring y licencias para CRAN.</td>
+<td><strong>Evaluación adicional de Rust</strong></td>
+<td>La API, el respaldo R y los ZIP para cuatro plataformas disponen de pruebas separadas. Falta evaluar otras cargas, equipos y memoria. Las mediciones existentes usaron el binario GNU Linux; no acreditan el rendimiento de los nuevos ZIP. Un enlace nativo dentro del paquete exigiría revisar ABI, toolchains, vendoring y licencias para CRAN.</td>
 </tr>
 <tr>
 <td>4</td>
@@ -1803,13 +1860,13 @@ Mediciones históricas de motores y comparación con fhircrackr
 </h3>
 <p><strong><a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip" class="external-link">Descargar el kit externo R4 ZIP</a></strong> · <a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256" class="external-link">SHA-256 del ZIP</a></p>
 <p>El kit incluye el <strong>paquete comprobado 0.5.0.9001</strong>, su identidad, un lanzador, protocolos R/FHIR y un formulario local. Extrae todo el ZIP y abre R desde esa carpeta. Instala las dependencias indicadas en <code>LEEME.md</code> y ejecuta:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"INICIAR.R"</span><span class="op">)</span></span>
 <span><span class="fu">iniciar_piloto</span><span class="op">(</span><span class="st">"basico"</span>, <span class="st">"sesion-P01-intento01"</span><span class="op">)</span></span>
 <span><span class="fu">abrir_sesion</span><span class="op">(</span><span class="st">"sesion-P01-intento01"</span><span class="op">)</span></span></code></pre></div>
 <p>El lanzador verifica el archivo antes de instalarlo en una biblioteca aislada. Completo añade DBI/DuckDB y requiere R &gt;= 4.2 en este kit; básico usa R &gt;= 4.1. El formulario conserva fichas separadas, tareas, ayudas e incidencias, y exporta JSON/CSV/texto. No ejecuta R ni envía resultados. La comprobación técnica deja pendientes las tareas humanas y la decisión de cierre. Las <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md" class="external-link">instrucciones del kit</a> explican cómo acordar las sesiones y repetir sin sobrescribir los intentos.</p>
 <p>La <a href="https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md" class="external-link">guía del participante R4</a> se distribuye con el paquete en <code>examples/PILOTO-R4.md</code>. Usa el candidato que indique su manifiesto y el ensayo instalado de esta sección. Para ejecutar solamente el recorrido de seis recursos, sin todo el kit de vigilancia:</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>FHIRVIEWS_R4_SALIDA <span class="op">=</span> <span class="st">"r4-basico-01"</span>, FHIRVIEWS_R4_SQL <span class="op">=</span> <span class="st">"false"</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"r4-estabilidad.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Con <code>FHIRVIEWS_R4_SQL = "true"</code> requiere DBI/DuckDB y compara ambos motores. Cada carpeta debe ser nueva. Este ejemplo local utiliza datos ficticios y conserva los JSON de salida y su resumen.</p>
@@ -1843,11 +1900,11 @@ Material histórico del piloto 0.5.0
 <h3 id="instalar-el-candidato-y-ejecutar-el-ensayo">Instalar el candidato y ejecutar el ensayo<a class="anchor" aria-label="anchor" href="#instalar-el-candidato-y-ejecutar-el-ensayo"></a>
 </h3>
 <p>El piloto usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.9001.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <p>Reinicia R, elige una carpeta nueva y ejecuta:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
 <span>  FHIRVIEWS_PILOTO_SALIDA <span class="op">=</span> <span class="st">"piloto-basico-01"</span>,</span>
 <span>  FHIRVIEWS_PILOTO_PERFIL <span class="op">=</span> <span class="st">"basico"</span></span>
@@ -1856,7 +1913,7 @@ Material histórico del piloto 0.5.0
 <p>Abre <code>piloto-basico-01/aceptacion.csv</code> para ver los controles y <code>aceptacion.json</code> para sus diagnósticos. Los estados son <code>aprobado</code>, <code>fallo</code>, <code>requiere_revision</code>, <code>pendiente</code> y <code>no_evaluado</code>. Cualquier advertencia requiere revisión y evita la aprobación automática; el informe registra códigos seguros sin copiar los mensajes originales.</p>
 <p>El informe actual usa <code>esquema_informe = 2</code>. El perfil <code>basico</code> comprueba la API, los resultados de vigilancia, el rechazo estricto de un bloque incompatible y el recorrido R4 de cinco tipos desde tablas. Para comprobar también rollback, consultas SQL parametrizadas y ambas implementaciones de las cinco vistas, instala <code>DBI</code> y <code>duckdb</code>, cambia el perfil a <code>completo</code> y usa otra carpeta nueva. Los archivos permanecen locales; completa <code>experiencia-usuario.txt</code> con los obstáculos, la ayuda necesaria y tu evaluación. La aprobación técnica deja pendiente esa evaluación humana y no valida un servidor ni datos propios.</p>
 <p>La ayuda y las viñetas están disponibles en la instalación:</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
@@ -1909,7 +1966,7 @@ Material histórico del piloto 0.5.0
 <h2 id="citar-el-paquete">Citar el paquete<a class="anchor" aria-label="anchor" href="#citar-el-paquete"></a>
 </h2>
 <p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero, <a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID 0000-0001-5077-1522</a>.</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/toLatex.html" class="external-link">toBibtex</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <table class="table">
