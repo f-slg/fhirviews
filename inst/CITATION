@@ -1,8 +1,10 @@
 bibentry(
   bibtype = "Manual",
+  key = "fhirviews",
   title = "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR",
   author = person("Ronald Fabricio", "Salas Guerrero",
-                  email = "fabriciosalasguerrero@gmail.com"),
+                  email = "fabriciosalasguerrero@gmail.com",
+                  comment = c(ORCID = "0000-0001-5077-1522")),
   year = "2026",
   note = paste("Paquete de R versión", meta$Version),
   url = "https://github.com/f-slg/fhirviews",

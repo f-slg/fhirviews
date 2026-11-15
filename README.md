@@ -17,7 +17,7 @@
 guárdala como `ViewDefinition` y reutilízala sobre archivos locales, respuestas
 del servidor o exportaciones poblacionales.
 
-También construye **Patient, Observation, Encounter y Condition** desde un `data.frame`
+También construye **Patient, Observation, Encounter, Condition e Immunization** desde un `data.frame`
 o una consulta SQL por DBI, con un mapeo explícito de columnas, constantes y
 referencias. La salida se guarda como JSON o NDJSON conservando la escala decimal.
 
@@ -80,7 +80,7 @@ locales. La compatibilidad del motor SQL se comprueba por separado.
 | Recorrer NDJSON y gzip sin reunir toda la salida en memoria | `vista_ejecutar_lotes()` |
 | Ejecutar una vista traducible a SQL sobre NDJSON o Parquet | `vista_ejecutar_duckdb()` — experimental |
 | Consultar varias tablas con SQL | `vista_duckdb()` — vistas evaluadas con V8 y guardadas en una transacción |
-| Construir Patient, Observation, Encounter y Condition desde tablas o consultas SQL | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
+| Construir Patient, Observation, Encounter, Condition e Immunization desde tablas o consultas SQL | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
 | Guardar recursos conservando decimales del JSON original | `fhir_escribir()` — JSON o NDJSON |
 | Partir de vistas para salud pública | `vista_catalogo()`, `vista_plantilla()` |
 | Definir cohortes con códigos de un ValueSet | `tx_expandir()`, `vista_con_valueset()` |
@@ -621,12 +621,12 @@ resultados diferidos dependen de que su conexión siga abierta.
 `fhir_desde_sql()` ejecuta una consulta mediante una conexión **DBI**, lee
 sus filas y construye recursos con un `fhir_mapa()`. `fhir_desde_tabla()`
 aplica el mismo mapeo a un `data.frame`. Admite
-**Patient, Observation, Encounter y Condition de FHIR R4 4.0.1**.
+**Patient, Observation, Encounter, Condition e Immunization de FHIR R4 4.0.1**.
 
 ```mermaid
 flowchart LR
     DB["Consulta SQL / data.frame"] --> M["Mapeo explícito de campos y tipos R4"]
-    M --> R["Patient / Observation / Encounter / Condition"]
+    M --> R["Patient / Observation / Encounter / Condition / Immunization"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → tabla"]
     R --> C["Validación de perfiles con fhir_validar"]
@@ -718,7 +718,7 @@ correspondan a tus datos y perfiles.
 | `NA`, `NULL`, `""`, colecciones vacías | Se omiten; los objetos y posiciones sin contenido se compactan. Los índices identifican posiciones de construcción, no huecos que se guardan como `null`. |
 | `id` | Debe estar mapeado, ser válido y único en el resultado. Los enteros seguros se convierten a texto. |
 | Booleanos y enteros | Se exigen valores lógicos o enteros dentro del rango FHIR; no se convierte `"false"` en booleano ni se trunca `1.7`. |
-| Fechas | Se aceptan fechas FHIR parciales válidas y `Date`. Las fechas con hora requieren zona; `POSIXct`/`POSIXlt` se convierten a UTC. |
+| Fechas | Se aceptan fechas FHIR parciales válidas y `Date`. `Date` conserva precisión de fecha en destinos `date` y `dateTime`; los instantes requieren hora. Las fechas con hora requieren zona; `POSIXct`/`POSIXlt` se convierten a UTC. |
 | Errores | Clase `fhirviews_error_mapeo`, con `fila` y `campo` cuando se conocen. |
 
 Para varios nombres por paciente, prepara una fila por paciente y columnas de
@@ -767,7 +767,7 @@ se puede recuperar `72.00` desde una lista que ya lo convirtió en `72`.
 Las comprobaciones locales cubren rutas, tipos, cardinalidades, obligatorios
 del modelo base, elecciones incompatibles, destinos de referencias y los
 bindings **required** que pueden enumerarse completamente con el paquete R4.
-Incluyen `Patient.gender`, `Observation.status`, `Encounter.status` y los
+Incluyen `Patient.gender`, `Observation.status`, `Encounter.status`, `Immunization.status` y los
 estados clínico y de verificación de `Condition`, además de códigos anidados
 como `HumanName.use`. Para `Coding` y `CodeableConcept` se exige un par
 `system`/`code` del ValueSet; se permiten traducciones adicionales si hay al
@@ -840,17 +840,104 @@ En un servidor, guarda primero los recursos referenciados o utiliza una
 transacción apropiada. Verifica con `fhir_validar()` los perfiles base o
 los perfiles canónicos del proyecto antes de utilizar su salida.
 
+### Inmunizaciones desde SQL
+
+`Immunization` representa un evento de vacunación registrado. El mapeo exige
+`id`, único por fila, además de los obligatorios de R4:
+
+| Elemento | Regla de construcción |
+|---|---|
+| `status` | Código exacto: `completed`, `not-done` o `entered-in-error`. |
+| `vaccineCode` | `CodeableConcept` con la vacuna. El binding base es de ejemplo; el perfil del proyecto puede exigir un sistema y catálogo concretos. |
+| `patient.reference` | Referencia a `Patient`; `Group` y otros tipos se rechazan. |
+| `occurrenceDateTime` o `occurrenceString` | Debe existir exactamente una variante. La primera admite una fecha FHIR válida; la segunda conserva texto cuando la fecha no está expresada como fecha. |
+| `encounter.reference` | Opcional; su destino es `Encounter`. |
+| `protocolApplied[0].doseNumberPositiveInt` o `doseNumberString` | Si existe una entrada de `protocolApplied`, exige exactamente una variante de número de dosis. El entero debe ser positivo; el texto no se convierte automáticamente a entero. |
+| `doseQuantity` | Cantidad de tipo `SimpleQuantity`; se prohíbe `comparator`. El valor decimal puede venir como texto, por ejemplo `"0.50"`, para conservar la escala. |
+| `primarySource` | Valor lógico explícito. El mapeador no deduce si una fuente es primaria ni convierte `0`, `1`, `"true"` o `"false"` automáticamente. |
+
+Las `Quantity` generales conservan los comparadores admitidos por su modelo.
+La restricción de `SimpleQuantity` se aplica en su contexto, por ejemplo a
+`doseQuantity` y a los extremos de un `Range`.
+
+El siguiente mapeo recibe las claves del paciente y del encuentro, las dos
+variantes de fecha y las dos de número de dosis en columnas independientes:
+
+```r
+mi <- fhir_mapa("Immunization", c(
+  id = "id", status = "estado", "patient.reference" = "paciente",
+  "encounter.reference" = "encuentro", "encounter.type" = "tipo_encuentro",
+  "vaccineCode.coding[0].system" = "sistema_vacuna",
+  "vaccineCode.coding[0].code" = "vacuna", "vaccineCode.text" = "descripcion",
+  occurrenceDateTime = "fecha", occurrenceString = "fecha_texto",
+  "doseQuantity.value" = "dosis", "doseQuantity.unit" = "unidad",
+  "doseQuantity.code" = "unidad", "doseQuantity.system" = "sistema_unidad",
+  "protocolApplied[0].doseNumberPositiveInt" = "numero",
+  "protocolApplied[0].doseNumberString" = "numero_texto",
+  "statusReason.text" = "motivo"
+), constantes = list("patient.type" = "Patient", primarySource = TRUE),
+referencias = c("patient.reference" = "Patient", "encounter.reference" = "Encounter"))
+
+# con_db es la conexión DBI abierta y vacunaciones contiene una fila por evento.
+sql <- paste(
+  "SELECT *, CASE WHEN NULLIF(encuentro, '') IS NOT NULL THEN 'Encounter' END AS tipo_encuentro",
+  "FROM vacunaciones ORDER BY id"
+)
+vacunas <- fhir_desde_sql(con_db, sql, mi)
+```
+
+Aquí `primarySource = TRUE` es una decisión explícita del ejemplo: todas sus
+filas representan registros de la fuente primaria. Los estados, motivos,
+unidades, fechas y dosis deben proceder de los datos o de constantes que
+correspondan a ese origen. El estado `not-done` no rellena ni elimina campos
+por su cuenta. Los códigos de vacuna del ejemplo instalado son ficticios y
+usan `https://example.org/fhir/CodeSystem/vacunas`.
+
+Para una fecha conocida, llena `fecha` y deja `fecha_texto = NA`. Para una
+fecha textual, haz lo contrario. `Date` se conserva como `YYYY-MM-DD` en
+`occurrenceDateTime`, sin inventar una hora; `POSIXct` se convierte a UTC.
+El mismo criterio de exclusión se aplica a `numero` y `numero_texto`.
+
+Si no hay encuentro, el `CASE` deja también su tipo vacío. Si no hay cantidad
+de dosis, deja vacíos su valor, unidad y sistema. Una constante en una ruta
+anidada crea ese contenido en todas las filas: los campos de objetos opcionales
+deben conservar sus ausencias conjuntamente. El constructor rechaza una
+referencia que solo contenga `type`; necesita `reference`, `identifier` o
+`display`. Para booleanos que SQLite entregue
+como enteros, verifica primero que solo haya `0`, `1` o `NA`, conviértelos a
+lógicos en R y usa `fhir_desde_tabla()`; las conexiones que entregan booleanos
+nativos pueden usarlos directamente en `fhir_desde_sql()`.
+
+El ejemplo completo crea Patient y Encounter, consulta SQLite, construye las
+dos variantes de Immunization, escribe NDJSON y obtiene una tabla con fecha,
+fecha textual, cantidad y número de dosis:
+
+```r
+source(system.file("examples", "inmunizaciones-sql.R", package = "fhirviews"))
+```
+
+La vista de catálogo `vista_plantilla("inmunizaciones")` sigue disponible.
+Su columna `fecha` proyecta la variante `dateTime`; para conservar también
+`occurrenceString`, el ejemplo define una columna `fecha_texto` con
+`occurrence.ofType(string)`.
+
+Valida el JSON contra
+`http://hl7.org/fhir/StructureDefinition/Immunization` o la URL canónica del
+perfil del proyecto mediante `fhir_validar()`. Las invariantes y la terminología
+clínica se comprueban en esa etapa; por ejemplo, cada entrada de `education`
+debe contener `documentType` o `reference` según la invariante R4 `imm-1`.
+
 ### Recursos admitidos y próximos grupos
 
 El lector y las vistas ya pueden trabajar con otros tipos de recursos FHIR.
-La construcción desde SQL o tablas admite **Patient, Observation, Encounter
-y Condition**. La ampliación se hace por grupos comprobados:
+La construcción desde SQL o tablas admite **Patient, Observation, Encounter,
+Condition e Immunization**. La ampliación se hace por grupos comprobados:
 
 | Estado | Recursos | Recorrido |
 |---|---|---|
 | Admitidos | `Patient`, `Observation` | Pacientes y resultados, con escala decimal conservada. |
 | Admitidos | `Encounter`, `Condition` | Paciente → encuentro → diagnóstico, con referencias entre los tres. |
-| Siguiente grupo propuesto | `Immunization` | Paciente → evento de vacunación, con vacuna, estado y fecha explícitos. |
+| Admitido | `Immunization` | Paciente → evento de vacunación, con vacuna, estado y fecha explícitos. |
 | Pendiente | `Specimen`, `DiagnosticReport` | Muestra → observaciones → informe, con varias referencias a resultados. |
 | Pendiente | `MedicationRequest`, `MedicationDispense` | Prescripción y dispensación, con medicamento y datos de dosificación declarados. |
 | Pendiente según el origen | `Organization`, `Practitioner` | Instituciones y profesionales referenciados por los recursos anteriores. |
@@ -1072,12 +1159,12 @@ validación cubre perfiles **base R4**; los perfiles clínicos o nacionales del
 proyecto deben comprobarse expresamente con su URL canónica.
 
 **Resultado local del 14 de noviembre de 2026:** integración aprobada con
-HAPI 8.12.0-2 fijado por digest, 82 comprobaciones aprobadas y sin fallos,
+HAPI 8.12.0-2 fijado por digest, 120 comprobaciones aprobadas y sin fallos,
 errores ni advertencias. Se ejecutaron las 16 comprobaciones originales de
-SQL → FHIR y las 20 del grupo Encounter/Condition;
+SQL → FHIR, las 20 del grupo Encounter/Condition y las 38 de Immunization;
 se registraron las dos omisiones previstas (lectura pública y ValueSet en
 línea). El contenedor se eliminó al finalizar. La
-[evidencia de integración](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/encounter-condition-hapi/resumen.json)
+[evidencia de integración](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
 incluye el resultado de cada grupo; los registros y el entorno de R se
 conservan en la misma carpeta. Es una comprobación técnica con datos ficticios.
 
@@ -1090,6 +1177,15 @@ de Condition inexistentes, además de un destino incorrecto con
 `Reference.type` explícito. En este servidor, la referencia literal incorrecta
 sin `Reference.type` no fue rechazada por `$validate`: por eso los ejemplos
 lo declaran y el mapeador comprueba además el tipo de la referencia literal.
+
+El grupo obligatorio `Immunization desde SQL, perfil R4, dosis y referencias`
+añade dos eventos ficticios, con `occurrenceDateTime` y `occurrenceString`,
+número de dosis entero o textual y una cantidad `0.50`. Comprueba los perfiles
+base, Patient y Encounter referenciados, persistencia, lectura que conserva
+escala, comparación de tablas y la vista de catálogo en V8 y DuckDB. Exige
+que el validador rechace estado inválido, destino de paciente incorrecto con
+tipo explícito, comparador en SimpleQuantity y una entrada de educación que
+incumpla `imm-1`. La política de aceptación impide omitir este grupo.
 
 ### SQL → FHIR con PostgreSQL y SQL Server
 
@@ -1409,9 +1505,38 @@ Para citar el paquete:
 
 ```r
 citation("fhirviews")
+toBibtex(citation("fhirviews"))
 ```
 
-**Autor y mantenedor:** Ronald Fabricio Salas Guerrero.
+**Autor y mantenedor:** Ronald Fabricio Salas Guerrero,
+[ORCID 0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522).
+El identificador figura en `Authors@R`, `inst/CITATION`,
+[`CITATION.cff`](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff) y
+[`.zenodo.json`](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
+El archivo CFF habilita la cita del repositorio en GitHub; la cita de R
+incluye la versión instalada.
+
+**Estado de Zenodo:** metadatos preparados; depósito y DOI pendientes de
+publicación y verificación. La versión `0.5.0.9000` sigue siendo de desarrollo.
+ORCID identifica al autor; un DOI de versión identifica el archivo concreto
+publicado en Zenodo, y el DOI de concepto agrupa sus versiones. Para reproducir
+un análisis, cita la versión utilizada y su DOI de versión cuando exista.
+
+Para completar el archivo en Zenodo:
+
+1. Vincula la cuenta de GitHub y activa `f-slg/fhirviews` en
+   [Zenodo/GitHub](https://zenodo.org/account/settings/github/).
+2. Revisa autor, ORCID, licencia, descripción y versión que se archivará.
+   Zenodo utiliza `.zenodo.json` cuando están presentes ambos formatos; al
+   publicar una versión deben mantenerse coherentes CFF, DESCRIPTION y etiqueta.
+3. Archiva la versión seleccionada y verifica su registro, archivos y DOI.
+   Después incorpora el DOI real en estos metadatos, en `inst/CITATION` y
+   en los README. Los metadatos preparados no equivalen a un depósito publicado.
+
+Consulta la [guía oficial de Zenodo](https://help.zenodo.org/docs/github/) para
+la conexión y el archivo de versiones. La publicación de una versión estable
+y el envío a CRAN se gestionan de forma expresa.
+
 Licencia [MIT](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md). Las licencias y atribuciones del código y los datos
 incluidos se detallan en [`inst/COPYRIGHTS`](inst/COPYRIGHTS).
 

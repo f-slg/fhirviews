@@ -1,7 +1,8 @@
 #' Construir recursos FHIR R4 desde tablas o consultas SQL
 #'
 #' Define un mapeo explicito de columnas a destinos FHIR y construye un
-#' recurso por fila. Admite `Patient`, `Observation`, `Encounter` y `Condition`.
+#' recurso por fila. Admite `Patient`, `Observation`, `Encounter`, `Condition`
+#' e `Immunization`.
 #' No intenta invertir un `ViewDefinition`, que puede haber perdido datos.
 #'
 #' Los destinos usan nombres JSON de FHIR, puntos e indices desde cero:
@@ -21,6 +22,11 @@
 #' identificadores, tipos primitivos, destinos de referencias y bindings
 #' requeridos que pueden enumerarse con la terminologia R4 incluida. Para
 #' `Coding` y `CodeableConcept` se comprueba el par `system`/`code`.
+#' Se conserva la restriccion de `SimpleQuantity`: no admite `comparator`,
+#' por ejemplo en `Immunization.doseQuantity`. Una `Quantity` general puede
+#' admitirlo. El estado, la vacuna, el paciente y una variante de
+#' `occurrence[x]` son obligatorios en `Immunization`; si se construye
+#' `protocolApplied`, cada entrada exige una variante de `doseNumber[x]`.
 #' Esto no sustituye la validacion de invariantes, terminologias y perfiles
 #' con [fhir_validar()]. No se inventan codigos, unidades o estados.
 #'
@@ -28,19 +34,22 @@
 #' conserva la escala (`"1.00"` se escribe como el numero JSON `1.00`).
 #' Para conservar un `DECIMAL(p,s)` de SQL, extraelo como texto en la
 #' consulta; una vez convertido a un numero de R no se recuperan sus ceros.
-#' `Date` se convierte a fecha y `POSIXct`/`POSIXlt` a UTC. Los identificadores
+#' `Date` se admite como `date` o `dateTime`, conservando precision de fecha;
+#' `POSIXct`/`POSIXlt` se convierten a UTC. Los identificadores
 #' tambien aceptan enteros seguros, convertidos a texto; para BIGINT usa un
 #' CAST a texto en SQL. El resto de textos no admite conversion implicita.
 #'
-#' @param recurso Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"` o
-#'   `"Condition"`.
+#' @param recurso Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"`,
+#'   `"Condition"` o `"Immunization"`.
 #' @param campos Vector de texto con destinos FHIR como nombres y columnas
 #'   de origen como valores.
 #' @param constantes Lista con nombre de valores fijos, con destinos FHIR
 #'   como nombres. Se aplica a cada fila.
 #' @param referencias Vector con nombre: destino terminado en `.reference`
 #'   y tipo de recurso al que apunta. Convierte la clave de origen en una
-#'   referencia relativa, por ejemplo `Patient/p1`.
+#'   referencia relativa, por ejemplo `Patient/p1`. Una referencia construida
+#'   requiere `reference`, `identifier` o `display`; `type` solo no identifica
+#'   un destino.
 #' @param datos Un `data.frame`; cada fila representa un recurso.
 #' @param mapa Mapeo creado con `fhir_mapa()`.
 #' @param con_db Conexion DBI abierta (DuckDB, PostgreSQL, SQLite, SQL Server,
@@ -246,7 +255,7 @@ elemento_mapeo <- function(ctx, nombre) {
     list(tipo = partes[1], prefijo = paste(partes[-1], collapse = "."))
   } else if (!is.null(tipo) && tipo %in% c("BackboneElement", "Element")) {
     list(tipo = ctx$tipo, prefijo = ruta)
-  } else list(tipo = tipo, prefijo = "")
+  } else list(tipo = if (is.null(tipo)) NULL else e$contextos[[tipo]] %||% tipo, prefijo = "")
   if (identical(tipo, "Reference")) siguiente$destinos <- e$destinos
   c(e, list(tipo = tipo, ruta = ruta, siguiente = siguiente))
 }
@@ -266,6 +275,9 @@ ruta_mapeo <- function(campo, recurso) {
     if (!length(m)) error_mapeo("Destino mal escrito.", campo = campo)
     e <- elemento_mapeo(ctx, m[2])
     if (is.null(e)) error_mapeo("El destino no existe en FHIR R4.", campo = campo)
+    if (identical(e$max, "0")) {
+      error_mapeo("El destino esta prohibido por el perfil de tipo FHIR.", campo = campo)
+    }
     if (identical(e$tipo, "Resource")) {
       error_mapeo("No se admite construir recursos contained; construye recursos separados.", campo = campo)
     }
@@ -329,7 +341,7 @@ valor_mapeo <- function(x, tipo, fila, campo, referencia = NULL) {
   if (is.na(x)) return(NULL)
   if (is.factor(x)) x <- as.character(x)
   if (is.character(x) && !nzchar(x)) return(NULL)
-  if (inherits(x, "Date") && tipo == "date") x <- format(x, "%Y-%m-%d")
+  if (inherits(x, "Date") && tipo %in% c("date", "dateTime")) x <- format(x, "%Y-%m-%d")
   if (inherits(x, "POSIXt") && tipo %in% c("dateTime", "instant")) {
     x <- format(x, "%Y-%m-%dT%H:%M:%OS6Z", tz = "UTC")
   }
@@ -481,6 +493,9 @@ validar_destino_referencia <- function(tipo, destinos, fila = NULL, campo) {
 }
 
 validar_referencia_mapeo <- function(referencia, destinos, fila, campo) {
+  if (is.null(referencia$reference) && is.null(referencia$identifier) && is.null(referencia$display)) {
+    error_mapeo("Una referencia requiere reference, identifier o display; type solo no identifica un destino.", fila, campo)
+  }
   declarada <- referencia$type
   if (!is.null(declarada)) {
     declarada <- sub("^http://hl7.org/fhir/StructureDefinition/", "", declarada)

@@ -201,6 +201,99 @@ test_that("Encounter y Condition desde SQL, perfiles R4 y referencias", {
   expect_equal(vista_ejecutar_duckdb(lc, vc, con_db = db), tc)
 })
 
+test_that("Immunization desde SQL, perfil R4, dosis y referencias", {
+  con <- fhir_conectar(servidor_escritura(), panel = FALSE)
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("duckdb", "1.3.0")
+  db <- conectar_duckdb()
+  on.exit(DBI::dbDisconnect(db), add = TRUE)
+  creados <- list()
+  on.exit(for (r in rev(creados)) try(fhir_borrar(con, r), silent = TRUE), add = TRUE)
+  marca <- marca_prueba()
+  ip <- paste0(marca, "-p")
+  ie <- paste0(marca, "-e")
+  ids <- paste0(marca, "-i", 1:2)
+  perfil <- "http://hl7.org/fhir/StructureDefinition/Immunization"
+  DBI::dbWriteTable(db, "paciente_im", data.frame(id = ip))
+  DBI::dbWriteTable(db, "encuentro_im", data.frame(id = ie, paciente = ip))
+  DBI::dbWriteTable(db, "vacunaciones", data.frame(id = ids, paciente = ip, encuentro = ie,
+    estado = c("completed", "not-done"), fecha = c("2026-01-14T10:00:00-05:00", NA),
+    fecha_texto = c(NA, "Fecha desconocida"), dosis = c("0.50", NA), unidad = c("mL", NA),
+    sistema_unidad = c("http://unitsofmeasure.org", NA), numero = c(1L, NA_integer_),
+    numero_texto = c(NA, "desconocido"), motivo = c(NA, "Registro ficticio: no administrada"),
+    fuente = c(TRUE, FALSE)))
+  mp <- fhir_mapa("Patient", c(id = "id"))
+  me <- fhir_mapa("Encounter", c(id = "id", "subject.reference" = "paciente"),
+    constantes = list(status = "finished", "class.system" = "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+      "class.code" = "AMB", "subject.type" = "Patient"), referencias = c("subject.reference" = "Patient"))
+  mi <- fhir_mapa("Immunization", c(id = "id", status = "estado", "patient.reference" = "paciente",
+    "encounter.reference" = "encuentro", occurrenceDateTime = "fecha", occurrenceString = "fecha_texto",
+    "doseQuantity.value" = "dosis", "doseQuantity.unit" = "unidad", "doseQuantity.code" = "unidad",
+    "doseQuantity.system" = "sistema_unidad", "protocolApplied[0].doseNumberPositiveInt" = "numero",
+    "protocolApplied[0].doseNumberString" = "numero_texto", "statusReason.text" = "motivo", primarySource = "fuente"),
+    constantes = list("meta.profile[0]" = perfil, "patient.type" = "Patient", "encounter.type" = "Encounter",
+      "vaccineCode.coding[0].system" = "https://example.org/fhir/CodeSystem/vacunas",
+      "vaccineCode.coding[0].code" = "VAC-FICT-01", "vaccineCode.text" = "Vacuna ficticia"),
+    referencias = c("patient.reference" = "Patient", "encounter.reference" = "Encounter"))
+  p <- fhir_desde_sql(db, "SELECT * FROM paciente_im WHERE id = ?", mp, list(ip))
+  e <- fhir_desde_sql(db, "SELECT * FROM encuentro_im WHERE id = ?", me, list(ie))
+  vacunas <- fhir_desde_sql(db, "SELECT * FROM vacunaciones ORDER BY id", mi)
+  archivo <- withr_tempfile(".ndjson")
+  fhir_escribir(c(p, e, vacunas), archivo)
+  textos <- readLines(archivo, encoding = "UTF-8")
+  expect_length(textos, 4L)
+  expect_match(textos[3], '"value":0.50', fixed = TRUE)
+  perfiles <- paste0("http://hl7.org/fhir/StructureDefinition/", c("Patient", "Encounter", "Immunization", "Immunization"))
+  for (i in seq_along(textos)) {
+    expect_true(attr(fhir_validar(con, textos[i], perfil = perfiles[i]), "valido"))
+    creado <- fhir_actualizar(con, textos[i])
+    creados <- c(creados, list(creado))
+    expect_identical(creado$id, c(ip, ie, ids)[i])
+  }
+  for (r in creados[3:4]) {
+    expect_identical(r$patient$reference, paste0("Patient/", ip))
+    expect_identical(r$encounter$reference, paste0("Encounter/", ie))
+  }
+  # Controles del perfil: estado, destino de referencia, SimpleQuantity e imm-1.
+  invalidos <- list(vacunas[[1]], vacunas[[1]], vacunas[[1]], vacunas[[1]])
+  invalidos[[1]]$status <- "inexistente"
+  invalidos[[2]]$patient <- list(reference = paste0("Encounter/", ie), type = "Encounter")
+  invalidos[[3]]$doseQuantity$comparator <- "<"
+  invalidos[[4]]$education <- list(list(presentationDate = "2026-01-14"))
+  for (r in invalidos) {
+    validacion <- fhir_validar(con, r, perfil = perfil)
+    detalle <- paste(capture.output(as.data.frame(validacion)), collapse = "\n")
+    expect_false(isTRUE(attr(validacion, "valido")), info = detalle)
+    expect_true(any(validacion$severidad %in% c("error", "fatal")), info = detalle)
+  }
+  leidas <- c(fhir_leer(con, "Immunization", ids[1], como_recursos = TRUE),
+              fhir_leer(con, "Immunization", ids[2], como_recursos = TRUE))
+  expect_identical(vapply(leidas, `[[`, "", "id"), ids)
+  expect_identical(leidas[[1]]$occurrenceDateTime, "2026-01-14T10:00:00-05:00")
+  expect_identical(leidas[[2]]$occurrenceString, "Fecha desconocida")
+  expect_null(leidas[[2]]$doseQuantity)
+  expect_false(leidas[[2]]$primarySource)
+  vista <- vista_crear("Immunization", c(paciente = "patient.getReferenceKey(Patient)",
+    encuentro = "encounter.getReferenceKey(Encounter)", estado = "status",
+    fecha_texto = "occurrence.ofType(string)", dosis = "doseQuantity.value",
+    limite = "doseQuantity.value.lowBoundary()", numero = "protocolApplied.doseNumber.ofType(positiveInt).first()",
+    numero_texto = "protocolApplied.doseNumber.ofType(string).first()"))
+  v8 <- vista_ejecutar(leidas, vista)
+  sql <- vista_ejecutar_duckdb(leidas, vista, con_db = db)
+  expect_identical(v8$id, ids)
+  expect_identical(v8$paciente, rep(ip, 2L))
+  expect_identical(v8$encuentro, rep(ie, 2L))
+  expect_identical(v8$estado, c("completed", "not-done"))
+  expect_equal(v8$dosis, c(0.5, NA_real_))
+  expect_equal(v8$limite, c(0.495, NA_real_))
+  expect_identical(v8$fecha_texto, c(NA_character_, "Fecha desconocida"))
+  expect_equal(v8$numero, c(1L, NA_integer_))
+  expect_identical(v8$numero_texto, c(NA_character_, "desconocido"))
+  expect_equal(sql, v8)
+  catalogo <- vista_plantilla("inmunizaciones")
+  expect_equal(vista_ejecutar_duckdb(leidas, catalogo, con_db = db), vista_ejecutar(leidas, catalogo))
+})
+
 test_that("ciclo completo de escritura en un servidor de pruebas", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   marca <- marca_prueba()

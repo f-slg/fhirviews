@@ -18,8 +18,8 @@ fhir_desde_tabla(datos, mapa)
 fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
 }
 \arguments{
-\item{recurso}{Tipo FHIR: \code{"Patient"}, \code{"Observation"}, \code{"Encounter"} o
-\code{"Condition"}.}
+\item{recurso}{Tipo FHIR: \code{"Patient"}, \code{"Observation"}, \code{"Encounter"},
+\code{"Condition"} o \code{"Immunization"}.}
 
 \item{campos}{Vector de texto con destinos FHIR como nombres y columnas
 de origen como valores.}
@@ -29,7 +29,9 @@ como nombres. Se aplica a cada fila.}
 
 \item{referencias}{Vector con nombre: destino terminado en \code{.reference}
 y tipo de recurso al que apunta. Convierte la clave de origen en una
-referencia relativa, por ejemplo \code{Patient/p1}.}
+referencia relativa, por ejemplo \code{Patient/p1}. Una referencia construida
+requiere \code{reference}, \code{identifier} o \code{display}; \code{type} solo no identifica
+un destino.}
 
 \item{datos}{Un \code{data.frame}; cada fila representa un recurso.}
 
@@ -53,7 +55,8 @@ Usa \code{\link[=fhir_escribir]{fhir_escribir()}} para guardar JSON o NDJSON con
 }
 \description{
 Define un mapeo explicito de columnas a destinos FHIR y construye un
-recurso por fila. Admite \code{Patient}, \code{Observation}, \code{Encounter} y \code{Condition}.
+recurso por fila. Admite \code{Patient}, \code{Observation}, \code{Encounter}, \code{Condition}
+e \code{Immunization}.
 No intenta invertir un \code{ViewDefinition}, que puede haber perdido datos.
 }
 \details{
@@ -74,6 +77,11 @@ R4 4.0.1. Se revisan campos obligatorios, elementos de eleccion, fechas,
 identificadores, tipos primitivos, destinos de referencias y bindings
 requeridos que pueden enumerarse con la terminologia R4 incluida. Para
 \code{Coding} y \code{CodeableConcept} se comprueba el par \code{system}/\code{code}.
+Se conserva la restriccion de \code{SimpleQuantity}: no admite \code{comparator},
+por ejemplo en \code{Immunization.doseQuantity}. Una \code{Quantity} general puede
+admitirlo. El estado, la vacuna, el paciente y una variante de
+\code{occurrence[x]} son obligatorios en \code{Immunization}; si se construye
+\code{protocolApplied}, cada entrada exige una variante de \code{doseNumber[x]}.
 Esto no sustituye la validacion de invariantes, terminologias y perfiles
 con \code{\link[=fhir_validar]{fhir_validar()}}. No se inventan codigos, unidades o estados.
 
@@ -81,7 +89,8 @@ Los destinos decimales aceptan numeros o texto numerico JSON. El texto
 conserva la escala (\code{"1.00"} se escribe como el numero JSON \code{1.00}).
 Para conservar un \code{DECIMAL(p,s)} de SQL, extraelo como texto en la
 consulta; una vez convertido a un numero de R no se recuperan sus ceros.
-\code{Date} se convierte a fecha y \code{POSIXct}/\code{POSIXlt} a UTC. Los identificadores
+\code{Date} se admite como \code{date} o \code{dateTime}, conservando precision de fecha;
+\code{POSIXct}/\code{POSIXlt} se convierten a UTC. Los identificadores
 tambien aceptan enteros seguros, convertidos a texto; para BIGINT usa un
 CAST a texto en SQL. El resto de textos no admite conversion implicita.
 }

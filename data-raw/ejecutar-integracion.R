@@ -6,7 +6,8 @@ comprobar_integracion <- function(tabla) {
     "terminologia del servidor: $expand y $validate-code en lote",
     "exportacion masiva ($export) de punta a punta",
     "SQL a FHIR, perfiles R4, referencias y retorno a tablas",
-    "Encounter y Condition desde SQL, perfiles R4 y referencias"
+    "Encounter y Condition desde SQL, perfiles R4 y referencias",
+    "Immunization desde SQL, perfil R4, dosis y referencias"
   )
   if (!all(requeridas %in% tabla$test) || anyDuplicated(tabla$test)) {
     stop("Faltan grupos obligatorios o hay resultados duplicados.")

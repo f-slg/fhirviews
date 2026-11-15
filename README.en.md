@@ -22,7 +22,7 @@
 as a `ViewDefinition` and reuse it on local files, server responses or
 population-level exports.
 
-It also builds **Patient, Observation, Encounter and Condition** from a `data.frame`
+It also builds **Patient, Observation, Encounter, Condition and Immunization** from a `data.frame`
 or a SQL query through DBI, with explicit column, constant and reference
 mappings. JSON and NDJSON output preserve decimal scale.
 
@@ -104,7 +104,7 @@ files. Compatibility of the SQL engine is tested separately.
 | Read NDJSON and gzip without holding the whole output in memory | `vista_ejecutar_lotes()` |
 | Run a SQL-translatable view on NDJSON or Parquet | `vista_ejecutar_duckdb()` — experimental |
 | Query several tables with SQL | `vista_duckdb()` — views evaluated with V8 and stored in one transaction |
-| Build Patient, Observation, Encounter and Condition from SQL queries or tables | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
+| Build Patient, Observation, Encounter, Condition and Immunization from SQL queries or tables | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
 | Save resources preserving original JSON decimals | `fhir_escribir()` — JSON or NDJSON |
 | Start from public health views | `vista_catalogo()`, `vista_plantilla()` |
 | Define cohorts with the codes of a ValueSet | `tx_expandir()`, `vista_con_valueset()` |
@@ -647,13 +647,13 @@ create when you are done; lazy results depend on their connection staying open.
 
 `fhir_desde_sql()` runs a query through an open **DBI** connection and builds
 resources according to a `fhir_mapa()`. `fhir_desde_tabla()` applies the same
-mapping to a `data.frame`. Supports **Patient, Observation, Encounter and
-Condition from FHIR R4 4.0.1**.
+mapping to a `data.frame`. Supports **Patient, Observation, Encounter, Condition and
+Immunization from FHIR R4 4.0.1**.
 
 ```mermaid
 flowchart LR
     DB["SQL query / data.frame"] --> M["Explicit fields and R4 types"]
-    M --> R["Patient / Observation / Encounter / Condition"]
+    M --> R["Patient / Observation / Encounter / Condition / Immunization"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → table"]
     R --> C["Profile validation with fhir_validar"]
@@ -744,7 +744,7 @@ codes and units for your actual data and profiles.
 | `NA`, `NULL`, `""`, empty collections | Omitted. Empty objects and positions are compacted; indices identify construction positions, not persistent `null` gaps. |
 | `id` | Must be mapped, valid and unique in the result. Safe integers are converted to text. |
 | Booleans and integers | Require logical or in-range integral values. Strings such as `"false"` are not coerced and `1.7` is not truncated. |
-| Dates | Accept valid partial FHIR dates and `Date`. Date-times require a timezone; `POSIXct`/`POSIXlt` become UTC. |
+| Dates | Accept valid partial FHIR dates and `Date`. `Date` retains date precision for `date` and `dateTime`; instants require a time. Date-times with a time require a timezone; `POSIXct`/`POSIXlt` become UTC. |
 | Errors | Class `fhirviews_error_mapeo`, with `fila` and `campo` when known. |
 
 For multiple given names, prepare one row per patient and a list-column:
@@ -792,7 +792,7 @@ that has already converted it to `72`.
 Local checks cover paths, types, cardinalities, required base elements,
 incompatible choice fields, reference targets and **required** bindings that
 can be fully enumerated from the R4 package. These include `Patient.gender`,
-`Observation.status`, `Encounter.status`, Condition clinical and verification
+`Observation.status`, `Encounter.status`, `Immunization.status`, Condition clinical and verification
 statuses, and nested fields such as `HumanName.use`. `Coding` and
 `CodeableConcept` need a `system`/`code` pair from the ValueSet. Additional
 translations are allowed when at least one pair matches. Required
@@ -843,17 +843,72 @@ unique IDs. Persist referenced resources first or use an appropriate
 transaction. Check base or project profiles with `fhir_validar()` before
 using the output with your server.
 
+### Immunizations from SQL
+
+`Immunization` represents a recorded vaccination event. The mapper requires
+an ID unique per row, plus the R4 mandatory elements:
+
+| Element | Construction rule |
+|---|---|
+| `status` | Exact code: `completed`, `not-done` or `entered-in-error`. |
+| `vaccineCode` | CodeableConcept describing the vaccine. The base binding is an example; project profiles can require a particular system and catalogue. |
+| `patient.reference` | Must target Patient; Group and other types are rejected. |
+| `occurrenceDateTime` or `occurrenceString` | Exactly one variant is required. The first carries a valid FHIR date/time; the second preserves a textual description of the date. |
+| `encounter.reference` | Optional; targets Encounter. |
+| `protocolApplied[0].doseNumberPositiveInt` or `doseNumberString` | Each protocolApplied entry needs exactly one dose-number variant. Integers must be positive; text is not implicitly converted to integers. |
+| `doseQuantity` | SimpleQuantity; comparator is prohibited. Numeric text such as `"0.50"` retains decimal scale. |
+| `primarySource` | Explicit logical value. The mapper does not infer source provenance or implicitly turn 0/1 or strings into booleans. |
+
+SimpleQuantity restrictions apply in their type context, including doseQuantity
+and Range endpoints. General Quantity fields retain their allowed comparators.
+Date values retain `YYYY-MM-DD` precision in occurrenceDateTime; POSIXct values
+are converted to UTC. Fill only one of the two occurrence variants and one of
+the two dose-number variants.
+
+The complete SQLite example creates Patient and Encounter, runs SQL queries,
+constructs two Immunizations, writes NDJSON and returns date, textual date,
+quantity and dose number as separate table columns:
+
+```r
+source(system.file("examples", "inmunizaciones-sql.R", package = "fhirviews"))
+```
+
+The example declares `primarySource = TRUE` because both fictional records
+come from the primary source. Status does not automatically fill or remove
+dates, dose quantities or reasons. Vaccine codes are fictional and use
+`https://example.org/fhir/CodeSystem/vacunas`. Actual systems, codes and units
+must match the data source and project profiles.
+
+Optional objects need consistent missing values. The example computes
+`encounter.type` with SQL CASE so it is absent when the encounter is absent;
+quantity value, unit and system are all absent when no quantity is supplied.
+A nested constant creates that content in every row. References containing
+only type are rejected; reference, identifier or display is required. If SQLite returns
+boolean indicators as integers, validate that they contain only 0, 1 or NA,
+explicitly convert them to logical values in R and use fhir_desde_tabla().
+Drivers returning native booleans can use them directly in fhir_desde_sql().
+
+The existing `vista_plantilla("inmunizaciones")` catalogue view is also tested.
+Its date column selects the dateTime variant; the example adds fecha_texto
+using `occurrence.ofType(string)` to retain the textual variant as well.
+
+Use fhir_validar() with
+`http://hl7.org/fhir/StructureDefinition/Immunization` or the project's
+canonical profile. Invariants and clinical terminology need this validation;
+for example, education entries must include documentType or reference under
+R4 invariant imm-1.
+
 ### Supported resources and next groups
 
 The reader and view engine already work with other FHIR resource types.
-Construction from SQL or tables supports **Patient, Observation, Encounter
-and Condition**. Further resources are added in verified groups.
+Construction from SQL or tables supports **Patient, Observation, Encounter,
+Condition and Immunization**. Further resources are added in verified groups.
 
 | Status | Resources | Workflow |
 |---|---|---|
 | Supported | `Patient`, `Observation` | Patients and results with preserved decimal scale. |
 | Supported | `Encounter`, `Condition` | Patient → encounter → diagnosis, with references between them. |
-| Proposed next group | `Immunization` | Patient → vaccination event, with an explicit vaccine, status and date. |
+| Supported | `Immunization` | Patient → vaccination event, with an explicit vaccine, status and date. |
 | Pending | `Specimen`, `DiagnosticReport` | Specimen → observations → report, with several result references. |
 | Pending | `MedicationRequest`, `MedicationDispense` | Prescribing and dispensing, with explicit medication and dosage data. |
 | Pending, as needed | `Organization`, `Practitioner` | Institutions and professionals referenced by these resources. |
@@ -1068,11 +1123,12 @@ profiles**; clinical or national profiles need explicit checks against their
 canonical URLs.
 
 **Local result on 14 November 2026:** integration passed with digest-pinned
-HAPI 8.12.0-2, 82 passing assertions and no failures, errors or warnings.
-All 16 original SQL → FHIR assertions and the 20 Encounter/Condition checks
+HAPI 8.12.0-2, 120 passing assertions and no failures, errors or warnings.
+All 16 original SQL → FHIR assertions, the 20 Encounter/Condition checks
+and the 38 Immunization checks
 ran. The two expected skips (public-server
 reads and inline ValueSet validation) were recorded, and the container was
-removed. The [integration evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/encounter-condition-hapi/resumen.json)
+removed. The [integration evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
 records each group; logs and the R environment are kept alongside it.
 This is a technical check with fictional data.
 
@@ -1085,6 +1141,14 @@ incorrect reference target with explicit `Reference.type`. This server did
 not reject the wrong literal reference when `Reference.type` was absent:
 examples therefore declare it, and the mapper also checks identifiable
 types in literal references.
+
+The required `Immunization desde SQL, perfil R4, dosis y referencias` group
+adds two fictional events with dateTime/string occurrence, integer/text dose
+number and a `0.50` quantity. It checks profiles, persisted Patient/Encounter
+references, scale-preserving reads, V8/DuckDB tables and the catalogue view.
+Negative controls require the server to reject invalid status, an incorrect
+explicit patient type, a SimpleQuantity comparator and an education entry
+violating imm-1. Acceptance fails if this group is skipped.
 
 ### SQL → FHIR with PostgreSQL and SQL Server
 
@@ -1402,9 +1466,37 @@ To cite the package:
 
 ```r
 citation("fhirviews")
+toBibtex(citation("fhirviews"))
 ```
 
-**Author and maintainer:** Ronald Fabricio Salas Guerrero.
+**Author and maintainer:** Ronald Fabricio Salas Guerrero,
+[ORCID 0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522).
+The identifier is recorded in Authors@R, inst/CITATION,
+[CITATION.cff](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff) and
+[.zenodo.json](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
+CFF enables GitHub repository citation; R's citation includes the installed
+package version.
+
+**Zenodo status:** metadata prepared; deposit and DOI await publication and
+verification. Version 0.5.0.9000 remains a development version. ORCID identifies
+the author; a version DOI identifies the archived software files, and a
+concept DOI groups its versions. Cite the version used and its version DOI
+when available.
+
+To complete the archive:
+
+1. Link GitHub and enable f-slg/fhirviews in
+   [Zenodo/GitHub](https://zenodo.org/account/settings/github/).
+2. Review the author, ORCID, license, description and version. Zenodo uses
+   .zenodo.json when both files are present; keep CFF, DESCRIPTION and the
+   release tag consistent when publishing.
+3. Archive the selected version and verify its record, files and DOI. Then
+   add the real DOI to these metadata files, inst/CITATION and both README
+   files. Prepared metadata alone is not a published deposit.
+
+See the [official Zenodo guide](https://help.zenodo.org/docs/github/).
+Stable releases and CRAN submission are managed explicitly.
+
 [MIT](LICENSE.md) license. The licenses and attributions of the bundled code and
 data are detailed in [`inst/COPYRIGHTS`](inst/COPYRIGHTS).
 

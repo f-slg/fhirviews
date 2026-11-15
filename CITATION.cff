@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: >-
+  Si utiliza fhirviews, cite la version exacta del software. La version
+  0.5.0.9000 es de desarrollo; el DOI de Zenodo se incorporara cuando
+  exista un deposito publicado y verificado.
+type: software
+title: "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR"
+version: 0.5.0.9000
+authors:
+  - family-names: "Salas Guerrero"
+    given-names: "Ronald Fabricio"
+    email: "fabriciosalasguerrero@gmail.com"
+    orcid: "https://orcid.org/0000-0001-5077-1522"
+repository-code: "https://github.com/f-slg/fhirviews"
+url: "https://f-slg.github.io/fhirviews/"
+license: MIT
+keywords:
+  - FHIR
+  - SQL on FHIR
+  - FHIRPath
+  - R
+  - interoperability
+abstract: >-
+  R client for FHIR R4 servers and SQL on FHIR view engine, with explicit
+  mappings from SQL query results and R tables to Patient, Observation,
+  Encounter, Condition and Immunization resources. Supports JSON and NDJSON
+  output, decimal precision, R4 structural checks and server profile validation.
