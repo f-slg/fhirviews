@@ -19,6 +19,16 @@ en tablas siguiendo la especificación SQL on FHIR (`ViewDefinition`).
   una lista de recursos, un Bundle o un archivo NDJSON y obtener un
   `data.frame`, con fhirpath.js o con DuckDB.
 
+- **SQL a FHIR**:
+  [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md),
+  [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  y
+  [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  construyen Patient, Observation, Encounter, Condition e Immunization
+  con mapeos explicitos.
+  [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
+  guarda JSON o NDJSON.
+
 Las expresiones FHIRPath se evalúan con la biblioteca `fhirpath.js` a
 través del paquete V8.
 
@@ -45,11 +55,17 @@ través del paquete V8.
 
 ### Limitaciones conocidas
 
-- Los decimales de FHIR se leen como números de JavaScript (y de R), así
-  que pierden los ceros finales que indican la precisión: `1.10` se lee
-  como `1.1`. Esto afecta a
-  [`toString()`](https://rdrr.io/r/base/toString.html) y a las
-  comparaciones de precisión de FHIRPath, no al valor numérico.
+- La evaluacion y escritura JSON conservan los literales decimales de la
+  fuente. Los numeros ordinarios de R no conservan escala; modificar las
+  listas descarta el JSON original. Los limites decimales SQL admiten
+  rutas estaticas con indices explicitos y escalas de -18 a 8, sin
+  inferir precision despues de operaciones o iteraciones.
+
+- SQL a FHIR admite Patient, Observation, Encounter, Condition e
+  Immunization, una fila por recurso, sin agrupacion automatica ni
+  recursos contained. Las comprobaciones locales no sustituyen la
+  validacion de perfiles con
+  [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
 
 ## See also
 
@@ -64,12 +80,13 @@ Useful links:
 ## Author
 
 **Maintainer**: Ronald Fabricio Salas Guerrero
-<fabriciosalasguerrero@gmail.com> \[copyright holder\]
+<fabriciosalasguerrero@gmail.com>
+([ORCID](https://orcid.org/0000-0001-5077-1522)) \[copyright holder\]
 
 Authors:
 
 - Ronald Fabricio Salas Guerrero <fabriciosalasguerrero@gmail.com>
-  \[copyright holder\]
+  ([ORCID](https://orcid.org/0000-0001-5077-1522)) \[copyright holder\]
 
 Other contributors:
 
@@ -86,6 +103,11 @@ Other contributors:
 
 - Michael Mclaughlin (decimal.js library bundled in fhirpath.js)
   \[copyright holder\]
+
+- Jos de Jong (lossless-json library in inst/js) \[copyright holder\]
+
+- Health Level Seven International (FHIR R4 mapping metadata in
+  inst/schema) \[copyright holder\]
 
 - Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js)
   \[copyright holder\]

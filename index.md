@@ -1,6 +1,7 @@
 # fhirviews
 
-**De recursos FHIR a tablas reproducibles en R.**
+**De recursos FHIR a tablas reproducibles en R, y de SQL a FHIR mediante
+mapeos explícitos.**
 
 **Español** ·
 [English](https://github.com/f-slg/fhirviews/blob/main/README.en.md)
@@ -9,6 +10,11 @@
 recursos en `data.frame` mediante **SQL on FHIR** y **FHIRPath**. Define
 una vista una vez, guárdala como `ViewDefinition` y reutilízala sobre
 archivos locales, respuestas del servidor o exportaciones poblacionales.
+
+También construye **Patient, Observation, Encounter, Condition e
+Immunization** desde un `data.frame` o una consulta SQL por DBI, con un
+mapeo explícito de columnas, constantes y referencias. La salida se
+guarda como JSON o NDJSON conservando la escala decimal.
 
 Está pensado para análisis clínico, investigación, vigilancia
 epidemiológica y docencia desde R. Incluye autenticación SMART on FHIR,
@@ -27,15 +33,45 @@ separado.
 de 0.5.0](https://f-slg.github.io/fhirviews/NEWS.md) · [Reportar un
 problema](https://github.com/f-slg/fhirviews/issues/new/choose)
 
-![Flujo de transformación: recurso Patient en JSON, columnas definidas
-en un ViewDefinition y tabla resultante en
-R](reference/figures/README-json-tabla.png)
+``` mermaid
+flowchart TB
+    accTitle: Recorridos de fhirviews con FHIR R4
+    accDescr: Una vista extrae tablas de recursos FHIR. Otro recorrido construye recursos R4 desde filas mediante un mapeo explicito, conserva decimales y permite validar perfiles.
+    subgraph LECTURA["FHIR → tablas"]
+        direction LR
+        FHIR["FHIR R4<br/>servidor o archivos"] --> VIEW["ViewDefinition<br/>FHIRPath"]
+        VIEW --> TABLE["Tablas<br/>R y SQL"]
+    end
+    subgraph CONSTRUCCION["Tablas → FHIR R4"]
+        direction LR
+        ROWS["Filas<br/>R o SQL DBI"] --> MAP["Mapeo<br/>explícito"]
+        MAP --> R4["Recursos<br/>FHIR R4"]
+        R4 --> OUT["JSON / NDJSON"]
+        R4 --> PROFILE["Validar perfiles<br/>con servidor"]
+    end
+```
 
-> **Versión 0.5.0 · enviada a CRAN el 6 de noviembre de 2026, en
+La lectura usa V8 o el traductor DuckDB experimental. La construcción
+admite **Patient, Observation, Encounter, Condition e Immunization** y
+conserva la escala decimal disponible en el origen. Para construir
+recursos desde una tabla extraída, prepara las filas y elige un mapa;
+las columnas omitidas o agregadas necesitan decisiones propias.
+
+> **Versión 0.5.0 · enviada a CRAN el 7 de noviembre de 2026, en
 > revisión.** Procesamiento por bloques, recuperación de exportaciones
 > con validación de contenido y mejoras de privacidad. El motor SQL de
 > DuckDB sigue siendo **experimental**. Mientras CRAN la publica,
 > instálala desde GitHub.
+
+> **Desarrollo 0.5.0.9000:** añade SQL → FHIR y conformidad 144/144 en
+> ambos motores. Estas mejoras pertenecen al código de desarrollo, no al
+> candidato 0.5.0 enviado previamente a CRAN.
+
+> **Prioridad actual: estabilizar R4.** El cierre se limita a los cinco
+> recursos construidos actualmente y exige el ensayo instalado, la
+> validación de perfiles base y un piloto externo. La federación y la
+> conversión R4/R6 quedan para una etapa posterior. [Alcance y criterios
+> de cierre](#estabilizaci%C3%B3n-de-r4).
 
 ## Contenido
 
@@ -52,12 +88,14 @@ R](reference/figures/README-json-tabla.png)
   masiva](#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva)
 - [Procesar archivos por bloques](#procesar-archivos-por-bloques)
 - [Trabajar con DuckDB](#trabajar-con-duckdb)
+- [De SQL a FHIR](#de-sql-a-fhir)
 - [Vistas de salud pública y
   terminologías](#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas)
 - [Validación y privacidad](#validaci%C3%B3n-y-privacidad)
 - [Conformidad y pruebas](#conformidad-y-pruebas)
 - [Rendimiento](#rendimiento)
 - [Alcance y límites](#alcance-y-l%C3%ADmites)
+- [Estabilización de R4](#estabilizaci%C3%B3n-de-r4)
 - [Piloto y documentación local](#piloto-y-documentaci%C3%B3n-local)
 - [Guías y referencia](#gu%C3%ADas-y-referencia)
 - [Contribuir, citar y licencia](#contribuir-citar-y-licencia)
@@ -73,6 +111,8 @@ R](reference/figures/README-json-tabla.png)
 | Recorrer NDJSON y gzip sin reunir toda la salida en memoria | [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md) |
 | Ejecutar una vista traducible a SQL sobre NDJSON o Parquet | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md) — experimental |
 | Consultar varias tablas con SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) — vistas evaluadas con V8 y guardadas en una transacción |
+| Construir Patient, Observation, Encounter, Condition e Immunization desde tablas o consultas SQL | [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md) |
+| Guardar recursos conservando decimales del JSON original | [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md) — JSON o NDJSON |
 | Partir de vistas para salud pública | [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md), [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md) |
 | Definir cohortes con códigos de un ValueSet | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md), [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) |
 | Escribir y validar recursos en el servidor | [`fhir_crear()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_actualizar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_borrar()`](https://f-slg.github.io/fhirviews/reference/fhir_crear.md), [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md) |
@@ -81,19 +121,6 @@ Un `ViewDefinition` describe las columnas, filtros y colecciones que se
 quieren extraer mediante expresiones FHIRPath. Guardar esa definición
 junto al análisis hace explícitas las decisiones de transformación y
 facilita su revisión.
-
-``` mermaid
-flowchart LR
-    A["Archivos JSON / NDJSON / gzip"] --> V["ViewDefinition + FHIRPath"]
-    B["Servidor FHIR R4"] --> C["Cliente y exportación Bulk Data"]
-    C --> V
-    V --> D["data.frame en R"]
-    V --> E["Una tabla por bloque"]
-    V --> F["DuckDB SQL · experimental"]
-    D --> G["Análisis, indicadores y tableros"]
-    E --> G
-    F --> G
-```
 
 ## Instalación
 
@@ -193,10 +220,11 @@ vista_reutilizable <- vista_leer("signos-vitales.json")
 
 ## Arquitectura y secuencia de procesamiento
 
-Las responsabilidades se distribuyen en cuatro capas. El cliente obtiene
+La extracción se distribuye en cuatro capas. El cliente obtiene
 recursos; la definición declara la extracción; los motores generan
 filas; el consumidor decide cómo guardar, resumir o consultar el
-resultado.
+resultado. La [construcción desde SQL](#de-sql-a-fhir) tiene un mapeo y
+controles propios.
 
 ``` mermaid
 flowchart TB
@@ -220,6 +248,7 @@ flowchart TB
         DF["data.frame completo"]
         CB["procesar(tabla, bloque)"]
         DB["Tabla DuckDB o consulta diferida"]
+        DBI["Tablas DBI en una transacción"]
     end
     REST --> HTTP --> RES
     FILE --> RES --> V8 --> DF
@@ -234,6 +263,7 @@ flowchart TB
     VALID --> SQL
     SQL --> DF
     SQL --> DB
+    V8 -->|"vista_duckdb"| DBI
 ```
 
 Para construir un análisis reproducible, sigue esta secuencia:
@@ -659,6 +689,405 @@ deben permanecer disponibles. Cierra las conexiones creadas cuando
 termines; los resultados diferidos dependen de que su conexión siga
 abierta.
 
+## De SQL a FHIR
+
+[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+ejecuta una consulta mediante una conexión **DBI**, lee sus filas y
+construye recursos con un
+[`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
+[`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+aplica el mismo mapeo a un `data.frame`. Admite **Patient, Observation,
+Encounter, Condition e Immunization de FHIR R4 4.0.1**.
+
+``` mermaid
+flowchart LR
+    DB["Consulta SQL DBI / data.frame"] --> M["fhir_mapa: columnas, constantes y referencias"]
+    M --> CHECK["Construir y comprobar estructura R4"]
+    CHECK --> R["Patient, Observation, Encounter,<br/>Condition e Immunization"]
+    R --> J["JSON / NDJSON"]
+    R --> V["ViewDefinition → tabla"]
+    R --> C["Validación de perfiles con fhir_validar"]
+```
+
+SQL on FHIR define una **proyección** de recursos a tablas. El camino de
+regreso necesita un mapeo propio: `where()`, `first()`, `join()`,
+agregaciones o columnas omitidas pueden perder información. Un
+`ViewDefinition` no se invierte automáticamente y no se promete
+reconstruir el recurso original.
+
+### Ejemplo completo con una base SQL
+
+Este ejemplo usa SQLite en memoria y datos ficticios. Instala `DBI` y
+`RSQLite` si los necesitas. Con DuckDB, PostgreSQL o SQL Server, cambia
+la conexión por la de su controlador DBI y adapta la sintaxis de la
+consulta.
+
+``` r
+
+library(fhirviews)
+con_db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+
+DBI::dbWriteTable(con_db, "pacientes", data.frame(
+  paciente_id = c("p1", "p2"), sexo = c("female", "male"),
+  nacimiento = c("1985-03-12", "2001-11-30"),
+  apellido = c("Paredes", "Salazar"), nombre = c("Ana", "Jorge")
+))
+DBI::dbWriteTable(con_db, "resultados", data.frame(
+  resultado_id = c("o1", "o2"), paciente_id = c("p1", "p2"),
+  valor = c("98.00", "131.0"), unidad = c("mg/dL", "mg/dL")
+))
+
+mapa_pacientes <- fhir_mapa("Patient", c(
+  id = "paciente_id", gender = "sexo", birthDate = "nacimiento",
+  "name[0].family" = "apellido", "name[0].given[0]" = "nombre"
+))
+pacientes <- fhir_desde_sql(con_db,
+  "SELECT * FROM pacientes ORDER BY paciente_id", mapa_pacientes)
+
+mapa_resultados <- fhir_mapa("Observation", c(
+  id = "resultado_id", "subject.reference" = "paciente_id",
+  "valueQuantity.value" = "valor", "valueQuantity.unit" = "unidad"
+), constantes = list(
+  status = "final", "code.text" = "Glucosa"
+), referencias = c("subject.reference" = "Patient"))
+observaciones <- fhir_desde_sql(con_db,
+  "SELECT * FROM resultados ORDER BY resultado_id", mapa_resultados)
+
+observaciones[[1]]$subject$reference  # "Patient/p1"
+vista_fhirpath(observaciones, "value.ofType(Quantity).value")  # 98, 131
+
+salida <- tempfile(fileext = ".ndjson")
+fhir_escribir(c(pacientes, observaciones), salida)
+fhir_escribir(observaciones, tempfile(fileext = ".json"), formato = "json")
+
+# Comprobar los campos extraídos de los recursos construidos
+vista <- vista_crear("Observation", c(
+  paciente = "subject.getReferenceKey(Patient)",
+  valor = "value.ofType(Quantity).value"
+))
+vista_ejecutar(salida, vista)
+#   id paciente valor
+# 1 o1       p1    98
+# 2 o2       p2   131
+
+# Parámetros enlazados por el controlador, sin interpolar valores
+uno <- fhir_desde_sql(con_db,
+  "SELECT * FROM pacientes WHERE paciente_id = ?", mapa_pacientes,
+  parametros = list("p1"))
+DBI::dbDisconnect(con_db)
+```
+
+Los nombres de las funciones y argumentos permanecen en español. El
+marcador de parámetro depende del controlador: `?` en SQLite/DuckDB; por
+ejemplo, `$1` en RPostgres. Las uniones, filtros y traducciones de
+códigos se definen en la consulta o antes de construir los recursos.
+`status = "final"` y el nombre de la medición son decisiones explícitas
+del ejemplo, no valores predeterminados. En una implementación real
+declara los sistemas, códigos y unidades que correspondan a tus datos y
+perfiles.
+
+### Reglas del mapeo
+
+| Elemento | Comportamiento |
+|----|----|
+| `campos` | Los nombres son destinos JSON FHIR y los valores son columnas de origen. |
+| `constantes` | Lista con destinos y valores fijos. No puede repetir un destino de `campos`. |
+| `referencias` | Destino `.reference` → tipo FHIR; una clave `p1` produce `Patient/p1`. Recibe claves, no URLs ni referencias ya prefijadas. |
+| `name[0].family` | Índices desde cero; los campos repetidos deben indicar un índice. |
+| `name[0].given[]` | Colección de primitivos desde una columna de listas; `[]` solo puede aparecer al final. |
+| Campos de elección | Se usa el nombre JSON concreto: `valueQuantity.value`, `deceasedBoolean`, etc. No se evalúan expresiones FHIRPath. |
+| `NA`, `NULL`, `""`, colecciones vacías | Se omiten; los objetos y posiciones sin contenido se compactan. Los índices identifican posiciones de construcción, no huecos que se guardan como `null`. |
+| `id` | Debe estar mapeado, ser válido y único en el resultado. Los enteros seguros se convierten a texto. |
+| Booleanos y enteros | Se exigen valores lógicos o enteros dentro del rango FHIR; no se convierte `"false"` en booleano ni se trunca `1.7`. |
+| `code`, `uri`, `url`, `canonical` | Un código permite solo espacios simples internos; las URI no permiten separadores, incluidos tabulaciones y espacios Unicode. El constructor rechaza el valor sin recortarlo ni modificarlo. |
+| Fechas | Se aceptan fechas FHIR parciales válidas y `Date`. `Date` conserva precisión de fecha en destinos `date` y `dateTime`; los instantes requieren hora. Las fechas con hora requieren zona; `POSIXct`/`POSIXlt` se convierten a UTC. |
+| Errores | Clase `fhirviews_error_mapeo`, con `fila` y `campo` cuando se conocen. |
+
+Para varios nombres por paciente, prepara una fila por paciente y
+columnas de listas, por ejemplo:
+
+``` r
+
+datos <- data.frame(id = "p1")
+datos$nombres <- list(c("Ana", "Lucía"))
+mapa <- fhir_mapa("Patient", c(id = "id", "name[0].given[]" = "nombres"))
+fhir_desde_tabla(datos, mapa)
+```
+
+Las filas con el mismo `id` se rechazan; no se agrupan ni sobrescriben
+silenciosamente. Una consulta con varias filas por paciente debe
+agruparse antes. Una consulta sin filas produce cero recursos.
+
+### Decimales, validación y salida
+
+Una columna decimal acepta números o **literales numéricos como texto**.
+`"1.00"` se escribe como el número JSON `1.00`, sin comillas. Si el
+controlador convierte un `DECIMAL(p,s)` a `double`, ya se han perdido
+sus ceros finales: extráelo como texto con el `CAST` apropiado de tu
+motor. Para BIGINT y claves fuera del rango de enteros seguros, usa
+también texto. Se rechazan `NaN`, infinitos numéricos y conversiones
+incompatibles.
+
+[`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
+conserva los literales de la fuente JSON y reemplaza el archivo
+indicado: NDJSON contiene un recurso por línea; `formato = "json"`
+contiene un arreglo, no un Bundle de transacción. Modificar las listas
+de recursos descarta la fuente original; a partir de números de R no es
+posible recuperar la escala perdida. La conversión no envía recursos al
+servidor.
+
+Al volver a leer recursos de un servidor, utiliza el modo que conserva
+la fuente. La lectura habitual devuelve una lista de R y no retiene la
+escala:
+
+``` r
+
+# con_fhir es una conexión creada con fhir_conectar()
+originales <- fhir_leer(con_fhir, "Observation", "o1", como_recursos = TRUE)
+vista_fhirpath(originales, "value.ofType(Quantity).value.lowBoundary()")
+fhir_escribir(originales, tempfile(fileext = ".ndjson"))
+```
+
+`como_recursos = TRUE` devuelve una colección `fhir_recursos`; por
+defecto,
+[`fhir_leer()`](https://f-slg.github.io/fhirviews/reference/fhir_leer.md)
+mantiene la lista habitual para conservar compatibilidad. No se puede
+recuperar `72.00` desde una lista que ya lo convirtió en `72`.
+
+Las comprobaciones locales cubren rutas, tipos, cardinalidades,
+obligatorios del modelo base, elecciones incompatibles, destinos de
+referencias y los bindings **required** que pueden enumerarse
+completamente con el paquete R4. Incluyen `Patient.gender`,
+`Observation.status`, `Encounter.status`, `Immunization.status` y los
+estados clínico y de verificación de `Condition`, además de códigos
+anidados como `HumanName.use`. Para `Coding` y `CodeableConcept` se
+exige un par `system`/`code` del ValueSet; se permiten traducciones
+adicionales si hay al menos uno válido. Un `CodeableConcept` requerido
+necesita codificación: `text` no la sustituye. Los bindings extensibles,
+preferidos y de ejemplo conservan su flexibilidad; por ejemplo,
+`Encounter.class` es extensible.
+
+El generador registra versión y SHA256 de la fuente y conserva los
+bindings y los destinos de `Reference`. Los conjuntos con filtros,
+imports o fuentes externas se remiten al servidor de terminología; no se
+usa una lista parcial como si fuera completa. Las referencias comprueban
+el destino declarado en `referencias`, el tipo identificable en
+literales `Tipo/id` o URLs y la coherencia con `Reference.type`. Los
+identificadores externos y las referencias URN requieren comprobaciones
+de existencia y resolución en el servidor.
+
+**Estas comprobaciones no son validación completa de FHIR**: los
+perfiles, invariantes y terminologías se comprueban con
+`fhir_validar(con, recurso, perfil = "URL-canónica")` sobre los recursos
+y el servidor elegidos.
+
+[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+recoge toda la consulta en memoria y conserva la conexión abierta;
+ciérrala cuando termines. Este módulo no ofrece todavía agrupación
+automática de filas, recursos `contained`, envío masivo ni traducción de
+`StructureMap`. El ejemplo ejecutable se instala en
+`system.file("examples", "sql-a-fhir.R", package = "fhirviews")`.
+
+### Encuentros y diagnósticos desde SQL
+
+`Encounter` necesita `status` y `class`. `Condition` necesita `subject`
+en el snapshot base; sus invariantes y los perfiles pueden exigir otros
+campos. El estado clínico y el de verificación usan `CodeableConcept`,
+por lo que deben declarar su sistema y código. Los estados proceden de
+los datos o de constantes explícitas del mapeo.
+
+``` r
+
+me <- fhir_mapa("Encounter", c(
+  id = "id", status = "estado", "class.code" = "clase",
+  "subject.reference" = "paciente", "period.start" = "inicio"
+), constantes = list(
+  "class.system" = "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+  "subject.type" = "Patient"
+), referencias = c("subject.reference" = "Patient"))
+
+mc <- fhir_mapa("Condition", c(
+  id = "id", "subject.reference" = "paciente",
+  "encounter.reference" = "encuentro",
+  "clinicalStatus.coding[0].code" = "estado", "code.text" = "descripcion"
+), constantes = list(
+  "clinicalStatus.coding[0].system" =
+    "http://terminology.hl7.org/CodeSystem/condition-clinical",
+  "subject.type" = "Patient", "encounter.type" = "Encounter"
+), referencias = c(
+  "subject.reference" = "Patient", "encounter.reference" = "Encounter"
+))
+```
+
+Las columnas `estado` de ambos mapeos representan vocabularios
+diferentes: por ejemplo, `finished` para el encuentro y `active` para el
+diagnóstico. El ejemplo ejecutable completo crea las tablas ficticias,
+ejecuta consultas con parámetros, incluye el estado de verificación,
+escribe NDJSON y reconstruye una tabla de diagnósticos enlazados:
+
+``` r
+
+source(system.file("examples", "encuentros-diagnosticos.R", package = "fhirviews"))
+```
+
+Usa una consulta con una fila por encuentro y otra con una fila por
+diagnóstico. Un paciente puede aparecer en varios recursos mediante
+referencias; las filas del mismo recurso siguen exigiendo un `id` único.
+En un servidor, guarda primero los recursos referenciados o utiliza una
+transacción apropiada. Verifica con
+[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md)
+los perfiles base o los perfiles canónicos del proyecto antes de
+utilizar su salida.
+
+### Inmunizaciones desde SQL
+
+`Immunization` representa un evento de vacunación registrado. El mapeo
+exige `id`, único por fila, además de los obligatorios de R4:
+
+| Elemento | Regla de construcción |
+|----|----|
+| `status` | Código exacto: `completed`, `not-done` o `entered-in-error`. |
+| `vaccineCode` | `CodeableConcept` con la vacuna. El binding base es de ejemplo; el perfil del proyecto puede exigir un sistema y catálogo concretos. |
+| `patient.reference` | Referencia a `Patient`; `Group` y otros tipos se rechazan. |
+| `occurrenceDateTime` o `occurrenceString` | Debe existir exactamente una variante. La primera admite una fecha FHIR válida; la segunda conserva texto cuando la fecha no está expresada como fecha. |
+| `encounter.reference` | Opcional; su destino es `Encounter`. |
+| `protocolApplied[0].doseNumberPositiveInt` o `doseNumberString` | Si existe una entrada de `protocolApplied`, exige exactamente una variante de número de dosis. El entero debe ser positivo; el texto no se convierte automáticamente a entero. |
+| `doseQuantity` | Cantidad de tipo `SimpleQuantity`; se prohíbe `comparator`. El valor decimal puede venir como texto, por ejemplo `"0.50"`, para conservar la escala. |
+| `primarySource` | Valor lógico explícito. El mapeador no deduce si una fuente es primaria ni convierte `0`, `1`, `"true"` o `"false"` automáticamente. |
+
+Las `Quantity` generales conservan los comparadores admitidos por su
+modelo. La restricción de `SimpleQuantity` se aplica en su contexto, por
+ejemplo a `doseQuantity` y a los extremos de un `Range`.
+
+El siguiente mapeo recibe las claves del paciente y del encuentro, las
+dos variantes de fecha y las dos de número de dosis en columnas
+independientes:
+
+``` r
+
+mi <- fhir_mapa("Immunization", c(
+  id = "id", status = "estado", "patient.reference" = "paciente",
+  "encounter.reference" = "encuentro", "encounter.type" = "tipo_encuentro",
+  "vaccineCode.coding[0].system" = "sistema_vacuna",
+  "vaccineCode.coding[0].code" = "vacuna", "vaccineCode.text" = "descripcion",
+  occurrenceDateTime = "fecha", occurrenceString = "fecha_texto",
+  "doseQuantity.value" = "dosis", "doseQuantity.unit" = "unidad",
+  "doseQuantity.code" = "unidad", "doseQuantity.system" = "sistema_unidad",
+  "protocolApplied[0].doseNumberPositiveInt" = "numero",
+  "protocolApplied[0].doseNumberString" = "numero_texto",
+  "statusReason.text" = "motivo"
+), constantes = list("patient.type" = "Patient", primarySource = TRUE),
+referencias = c("patient.reference" = "Patient", "encounter.reference" = "Encounter"))
+
+# con_db es la conexión DBI abierta y vacunaciones contiene una fila por evento.
+sql <- paste(
+  "SELECT *, CASE WHEN NULLIF(encuentro, '') IS NOT NULL THEN 'Encounter' END AS tipo_encuentro",
+  "FROM vacunaciones ORDER BY id"
+)
+vacunas <- fhir_desde_sql(con_db, sql, mi)
+```
+
+Aquí `primarySource = TRUE` es una decisión explícita del ejemplo: todas
+sus filas representan registros de la fuente primaria. Los estados,
+motivos, unidades, fechas y dosis deben proceder de los datos o de
+constantes que correspondan a ese origen. El estado `not-done` no
+rellena ni elimina campos por su cuenta. Los códigos de vacuna del
+ejemplo instalado son ficticios y usan
+`https://example.org/fhir/CodeSystem/vacunas`.
+
+Para una fecha conocida, llena `fecha` y deja `fecha_texto = NA`. Para
+una fecha textual, haz lo contrario. `Date` se conserva como
+`YYYY-MM-DD` en `occurrenceDateTime`, sin inventar una hora; `POSIXct`
+se convierte a UTC. El mismo criterio de exclusión se aplica a `numero`
+y `numero_texto`.
+
+Si no hay encuentro, el `CASE` deja también su tipo vacío. Si no hay
+cantidad de dosis, deja vacíos su valor, unidad y sistema. Una constante
+en una ruta anidada crea ese contenido en todas las filas: los campos de
+objetos opcionales deben conservar sus ausencias conjuntamente. El
+constructor rechaza una referencia que solo contenga `type`; necesita
+`reference`, `identifier` o `display`. Para booleanos que SQLite
+entregue como enteros, verifica primero que solo haya `0`, `1` o `NA`,
+conviértelos a lógicos en R y usa
+[`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md);
+las conexiones que entregan booleanos nativos pueden usarlos
+directamente en
+[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
+
+El ejemplo completo crea Patient y Encounter, consulta SQLite, construye
+las dos variantes de Immunization, escribe NDJSON y obtiene una tabla
+con fecha, fecha textual, cantidad y número de dosis:
+
+``` r
+
+source(system.file("examples", "inmunizaciones-sql.R", package = "fhirviews"))
+```
+
+La vista de catálogo `vista_plantilla("inmunizaciones")` sigue
+disponible. Su columna `fecha` proyecta la variante `dateTime`; para
+conservar también `occurrenceString`, el ejemplo define una columna
+`fecha_texto` con `occurrence.ofType(string)`.
+
+Valida el JSON contra
+`http://hl7.org/fhir/StructureDefinition/Immunization` o la URL canónica
+del perfil del proyecto mediante
+[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
+Las invariantes y la terminología clínica se comprueban en esa etapa;
+por ejemplo, cada entrada de `education` debe contener `documentType` o
+`reference` según la invariante R4 `imm-1`.
+
+### Recursos admitidos y próximos grupos
+
+El lector y las vistas ya pueden trabajar con otros tipos de recursos
+FHIR. La construcción desde SQL o tablas admite **Patient, Observation,
+Encounter, Condition e Immunization**. La ampliación se hace por grupos
+comprobados:
+
+| Estado | Recursos | Recorrido |
+|----|----|----|
+| Admitidos | `Patient`, `Observation` | Pacientes y resultados, con escala decimal conservada. |
+| Admitidos | `Encounter`, `Condition` | Paciente → encuentro → diagnóstico, con referencias entre los tres. |
+| Admitido | `Immunization` | Paciente → evento de vacunación, con vacuna, estado y fecha explícitos. |
+| Pendiente | `Specimen`, `DiagnosticReport` | Muestra → observaciones → informe, con varias referencias a resultados. |
+| Pendiente | `MedicationRequest`, `MedicationDispense` | Prescripción y dispensación, con medicamento y datos de dosificación declarados. |
+| Pendiente según el origen | `Organization`, `Practitioner` | Instituciones y profesionales referenciados por los recursos anteriores. |
+
+El orden prioriza vigilancia y puede adaptarse al origen de datos. No
+hace falta un conversor independiente por recurso: el motor de rutas,
+tipos, cardinalidades y campos de elección ya usa metadatos de los
+snapshots canónicos de **FHIR R4 4.0.1**. Antes de ampliar el soporte se
+requiere:
+
+1.  Ampliar el generador `data-raw/mapeo_r4.py` con una lista explícita
+    de recursos y sus tipos dependientes, manteniendo la versión y
+    procedencia del esquema, sus bindings a ValueSets y los destinos de
+    `Reference`.
+2.  Revisar los bindings del recurso y qué conjuntos pueden enumerarse.
+    Añadir un recurso al esquema no comprueba por sí solo toda su
+    terminología ni sus invariantes. Los bindings externos y los
+    perfiles se validarán con el servidor correspondiente.
+3.  Comprobar los obligatorios y las elecciones de cada recurso. Por
+    ejemplo, `Encounter` exige `status` y `class`; `Condition`,
+    `subject`; `Immunization`, `status`, `vaccineCode`, `patient` y una
+    de las variantes `occurrence[x]`. Los perfiles del proyecto pueden
+    exigir campos adicionales.
+4.  Diseñar las colecciones de objetos antes de ofrecer referencias o
+    grupos de longitud variable. Hoy se admite `result[0].reference`,
+    pero `[]` solo construye colecciones de primitivos; no construye por
+    sí solo una lista variable de objetos `Reference` o
+    `dosageInstruction`.
+5.  Exigir por recurso casos válidos e inválidos y un recorrido
+    reproducible: SQL → FHIR → `$validate` del perfil base → guardar y
+    leer → tabla con V8 y DuckDB. Revisar referencias, ausentes, códigos
+    inválidos y elecciones incompatibles; añadir la URL canónica del
+    perfil del proyecto cuando se disponga de él. La documentación y los
+    ejemplos se amplían con cada grupo.
+
+Los recursos pendientes todavía no están habilitados en
+[`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
+Las referencias pueden apuntar a tipos R4 válidos que ya existan en el
+servidor, como `Practitioner`, aunque este módulo aún no los construya.
+
 ## Vistas de salud pública y terminologías
 
 El catálogo incluye siete vistas: pacientes, diagnósticos, encuentros,
@@ -772,21 +1201,39 @@ en memoria salvo que se solicite explícitamente caché en disco con
 
 El paquete incluye el [banco oficial de SQL on
 FHIR](https://github.com/FHIR/sql-on-fhir.js/tree/main/tests). Los dos
-motores superan **133/133 pruebas del perfil shareable** y **7/11
-experimentales** del banco incluido. Las cuatro pendientes corresponden
-a `lowBoundary()` y `highBoundary()` y a diferencias de precisión o zona
-horaria. La conformidad se refiere a ese banco y no certifica un sistema
-clínico.
+motores superan **144/144 pruebas del banco incluido**:
+
+| Motor               | Shareable | Experimental |   Total |
+|---------------------|----------:|-------------:|--------:|
+| V8 / fhirpath.js    |   133/133 |        11/11 | 144/144 |
+| DuckDB / SQL nativo |   133/133 |        11/11 | 144/144 |
+
+Las cuatro pruebas experimentales de límites ahora conservan la
+precisión de `1.0` y completan las zonas desconocidas de DateTime
+(`+14:00` en el límite inferior, `-12:00` en el superior), conservando
+zonas explícitas. El banco se lee sin alterar sus literales ni
+resultados esperados. V8 usa un lector JSON portable; DuckDB relaciona
+los tokens numéricos originales con `json_tree()`. La conformidad se
+refiere a ese banco y no certifica un sistema clínico.
 
 ``` r
 
 vista_conformidad()                   # motor V8
 vista_conformidad(motor = "duckdb")   # requiere DuckDB y su extensión json
+vista_conformidad(descargar = TRUE)  # contrastar con el banco actual de GitHub
+vista_conformidad(informe = "sof-test-results.json") # formato de la matriz pública
 ```
 
-![Resultados por archivo del banco SQL on FHIR: todas las pruebas
-shareable aprobadas y cuatro experimentales
-pendientes](reference/figures/README-conformidad.png)
+El 144/144 no significa que toda expresión FHIRPath sea traducible a
+SQL. Los límites decimales en DuckDB admiten literales sin signo o rutas
+estáticas desde el recurso con índices explícitos, escalas entre -18 y 8
+y números representables en `DECIMAL(38,18)`. Las escalas negativas
+corresponden a exponentes positivos. No se admite el argumento opcional
+de precisión ni se infiere escala tras operaciones, filtros o
+iteraciones. Esos casos fallan con un mensaje explícito. Con Parquet o
+tablas ya normalizadas se usa la representación JSON disponible; no se
+recupera una escala que se haya perdido antes. Las vistas que no usan
+límites decimales no pagan el coste de extraer los tokens y rutas.
 
 CI comprueba el paquete en Windows, macOS Intel y Linux, además de
 R-devel y R 4.1. macOS usa por defecto `macos-26-intel`; esta matriz no
@@ -801,7 +1248,8 @@ de pruebas propio**:
 
 ``` sh
 FHIRVIEWS_SERVIDOR_ESCRITURA=http://localhost:8080/fhir \
-  Rscript -e 'devtools::test(filter = "servidor")'
+FHIRVIEWS_SOLO_SERVIDOR_PROPIO=true NOT_CRAN=true \
+  Rscript -e 'testthat::test_local(filter = "^servidor$")'
 ```
 
 Ese servidor debe permitir escritura; algunas pruebas requieren
@@ -823,20 +1271,155 @@ El script usa una imagen fijada por digest, abre un puerto aleatorio
 solo en localhost y elimina su propio contenedor al terminar, incluso si
 las pruebas fallan. Imprime la carpeta que conserva los registros, el
 resumen JSON y CSV, las omisiones y el entorno de R. La ejecución exige
-escritura, transacciones, terminología básica y Bulk Data; una omisión
-inesperada hace fallar la prueba. La variante de ValueSet en línea no
-admitida por HAPI queda registrada aparte. El workflow **Integracion
-HAPI** ejecuta este mismo script y conserva los resultados durante 14
-días. En la primera ejecución puede descargar la imagen y la extensión
-JSON de DuckDB.
+escritura, transacciones, terminología básica, Bulk Data y el nuevo
+recorrido SQL → FHIR → servidor → tabla; una omisión inesperada hace
+fallar la prueba. La variante de ValueSet en línea no admitida por HAPI
+queda registrada aparte. El workflow **Integracion HAPI** ejecuta este
+mismo script y conserva los resultados durante 14 días. En la primera
+ejecución puede descargar la imagen y la extensión JSON de DuckDB.
+
+### Validación de SQL → FHIR contra perfiles R4
+
+El grupo obligatorio
+`SQL a FHIR, perfiles R4, referencias y retorno a tablas` usa un Patient
+y dos Observation ficticios obtenidos de consultas DuckDB con
+parámetros. Realiza estas comprobaciones:
+
+1.  Construye y escribe los recursos conservando un decimal `72.00`.
+2.  Ejecuta `$validate` con los perfiles base explícitos
+    `http://hl7.org/fhir/StructureDefinition/Patient` y
+    `http://hl7.org/fhir/StructureDefinition/Observation`.
+3.  Guarda los recursos de prueba con sus identificadores y comprueba
+    que `Observation.subject.reference` apunta al Patient creado.
+4.  Envía un `gender` inválido y exige que el validador detecte el
+    error.
+5.  Lee con `fhir_leer(..., como_recursos = TRUE)` y compara los
+    valores, referencias y límites decimales usando V8 y SQL nativo.
+6.  Elimina los recursos de prueba; el script elimina además su
+    contenedor.
+
+El resumen incluye fallos, errores, advertencias, comprobaciones y
+razones de omisión. La política de aceptación impide aprobar si falta
+este grupo. Esta validación cubre perfiles **base R4**; los perfiles
+clínicos o nacionales del proyecto deben comprobarse expresamente con su
+URL canónica.
+
+**Ensayo local de cierre R4:** integración aprobada con HAPI 8.12.0-2
+fijado por digest, **130 comprobaciones** y sin fallos, errores ni
+advertencias. Incluye las 16 originales de SQL → FHIR, las 20 de
+Encounter/Condition, las 38 de Immunization y las 10 del nuevo grupo del
+candidato R4. Se registraron las dos omisiones previstas (lectura
+pública y ValueSet en línea), y el contenedor se eliminó al finalizar.
+La [evidencia actual de
+integración](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json)
+incluye cada grupo, los registros y el entorno de R en la misma carpeta.
+La [ejecución anterior de 120
+comprobaciones](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
+se conserva como evidencia histórica. Ambas usan datos ficticios.
+
+El nuevo grupo obligatorio
+`Encounter y Condition desde SQL, perfiles R4 y referencias` construye
+Patient → Encounter → Condition con consultas DuckDB parametrizadas.
+Valida los perfiles base explícitos, guarda y lee los tres recursos y
+comprueba las referencias y las tablas en V8 y DuckDB. Sus controles
+negativos exigen que HAPI rechace un estado de Encounter y un código
+clínico de Condition inexistentes, además de un destino incorrecto con
+`Reference.type` explícito. En este servidor, la referencia literal
+incorrecta sin `Reference.type` no fue rechazada por `$validate`: por
+eso los ejemplos lo declaran y el mapeador comprueba además el tipo de
+la referencia literal.
+
+El grupo obligatorio
+`Immunization desde SQL, perfil R4, dosis y referencias` añade dos
+eventos ficticios, con `occurrenceDateTime` y `occurrenceString`, número
+de dosis entero o textual y una cantidad `0.50`. Comprueba los perfiles
+base, Patient y Encounter referenciados, persistencia, lectura que
+conserva escala, comparación de tablas y la vista de catálogo en V8 y
+DuckDB. Exige que el validador rechace estado inválido, destino de
+paciente incorrecto con tipo explícito, comparador en SimpleQuantity y
+una entrada de educación que incumpla `imm-1`. La política de aceptación
+impide omitir este grupo.
+
+### SQL → FHIR con PostgreSQL y SQL Server
+
+Además de las pruebas locales con DuckDB y SQLite, el script
+`data-raw/probar-sql-dbi.sh` ejecuta consultas contra **dos bases reales
+y aisladas**. Crea contenedores propios de PostgreSQL y SQL Server
+Developer, fijados por digest en `data-raw/postgres-image.txt` y
+`data-raw/sqlserver-image.txt`, y los elimina al finalizar. Publica
+puertos aleatorios solamente en localhost y usa credenciales aleatorias
+de un solo uso, que no escribe en los informes. Los datos son ficticios.
+
+Requisitos: Docker o Podman, `openssl`, los paquetes R siguientes y un
+controlador **Microsoft ODBC Driver 18 for SQL Server** disponible para
+`odbc`. `RPostgres` requiere las bibliotecas de PostgreSQL y `odbc`,
+unixODBC. El script inicia SQL Server con `ACCEPT_EULA=Y` y edición
+Developer, para desarrollo y pruebas, conforme a las condiciones de la
+imagen de Microsoft.
+
+``` r
+
+install.packages(c("DBI", "RPostgres", "odbc", "duckdb", "pkgload", "testthat"))
+```
+
+``` sh
+# Ejecutar desde la raíz del repositorio; la carpeta indicada debe ser nueva.
+FHIRVIEWS_CONTENEDOR=podman bash data-raw/probar-sql-dbi.sh /tmp/fhirviews-sql-dbi
+# También se admite FHIRVIEWS_CONTENEDOR=docker.
+```
+
+`FHIRVIEWS_ODBC_DRIVER` permite indicar otro nombre registrado o la ruta
+absoluta de la biblioteca del controlador; por defecto usa
+`ODBC Driver 18 for SQL Server`. `FHIRVIEWS_SQL_ESPERA` ajusta la espera
+de conexión, en segundos, cuyo valor predeterminado es 120. La conexión
+de prueba ODBC cifra el tráfico y acepta el certificado del contenedor
+local; esa configuración corresponde a este ensayo aislado.
+
+Cada base debe superar cinco grupos obligatorios:
+
+1.  Tipos nativos: fechas `Date`, booleanos, tildes y claves BIGINT
+    mayores que `2^53`, extraídas como texto sin redondeo.
+2.  Construcción de Patient con nombres, fecha de nacimiento, estado
+    activo y omisión de valores SQL `NULL`.
+3.  Consultas con parámetros (`$1` en RPostgres; `?` en ODBC), cero
+    filas, texto con caracteres SQL y rechazo de identificadores
+    duplicados o códigos inválidos.
+4.  Construcción de Observation con referencias al paciente, fecha con
+    hora en UTC y un `DECIMAL(12,2)` extraído como texto para conservar
+    `72.00`. En SQL Server se convierte explícitamente `DATETIMEOFFSET`
+    a UTC y `DATETIME2` antes de leerlo como `POSIXct`.
+5.  Escritura y lectura NDJSON y comparación de valores y límites
+    decimales al regresar a tablas mediante V8 y DuckDB.
+
+Las consultas y los `CAST` son específicos de cada base;
+[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+los ejecuta mediante DBI. La validación de perfiles base R4 se comprueba
+por separado en la integración HAPI descrita arriba.
+
+**Resultado local del 14 de noviembre de 2026:** 72 comprobaciones
+aprobadas, sin fallos, errores, advertencias ni omisiones. Se probaron
+PostgreSQL 17.12 con RPostgres 1.4.10 y SQL Server 2022 CU27
+(16.0.4295.3) con `odbc` 1.7.2 y Microsoft ODBC 18.6.1.1. Ambos
+contenedores se eliminaron. La [evidencia
+DBI](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/sql-dbi/resumen.json)
+incluye las versiones y el resultado de cada grupo; la misma carpeta
+guarda los recursos de salida ficticios, los registros y el entorno de
+R. Las consultas ejecutables están en el script del repositorio.
+
+El workflow **Integracion SQL DBI** ejecuta el mismo ensayo y conserva
+sus resultados durante 14 días; exige los diez grupos y rechaza
+cualquier fallo, advertencia u omisión. Consulta la CI del commit que se
+vaya a publicar para comprobar también la matriz de R en Windows, macOS
+y Linux.
 
 ### Secuencia de comprobación del candidato
 
 La matriz de R-CMD-check prueba primero el paquete y después instala el
 archivo fuente construido en una biblioteca nueva. La aceptación se
 ejecuta en otro proceso R y comprueba la ruta de carga, la ayuda, las
-viñetas y el informe del perfil solicitado. El perfil completo añade
-rollback y reintento transaccional.
+viñetas y el informe del perfil solicitado. Ambos perfiles exigen el
+recorrido de cinco tipos R4; el completo añade SQL parametrizado,
+comparación V8/DuckDB y recuperación transaccional.
 
 ``` mermaid
 flowchart TD
@@ -844,14 +1427,20 @@ flowchart TD
     B --> C["R CMD check y pruebas del paquete"]
     C --> D["Instalar el mismo tar.gz en una biblioteca nueva"]
     D --> E["Proceso R independiente: verificar paquete y documentación"]
-    E --> F["Piloto básico o completo según la matriz"]
+    E --> F["Cinco tipos R4 y perfil básico o completo"]
     F --> G{"Resultado técnico"}
     G -->|"Sin errores ni advertencias"| H["Aprobado para ese perfil"]
     G -->|"Advertencias"| I["Requiere revisión y salida distinta de cero"]
     G -->|"Error"| J["No aprobado y salida distinta de cero"]
     A --> K["Workflow HAPI: integración aislada"]
-    A --> L["Workflow pkgdown: construir documentación"]
-    H --> M["Evaluación con usuarios todavía pendiente"]
+    A --> L["Integración PostgreSQL y SQL Server"]
+    A --> P["pkgdown local; Pages en main"]
+    H --> T["Revisar todos los controles del mismo commit"]
+    K --> T
+    L --> T
+    P --> T
+    T --> M["Piloto externo con protocolo R4"]
+    M --> N["Resolver hallazgos y elegir versión estable"]
 ```
 
 Los informes de aceptación se guardan como artefactos `piloto-*` durante
@@ -861,6 +1450,80 @@ verifican el alcance declarado, y su resultado debe consultarse para el
 commit específico que se vaya a entregar.
 
 ## Rendimiento
+
+### Evaluación experimental de Rust
+
+El paquete usa R, JavaScript/V8 y DuckDB. Ya existe un **prototipo Rust
+probado** para la validación estructural de SQL → FHIR, en
+[`data-raw/experimento-rust`](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust).
+Ese laboratorio queda excluido del paquete R; instalar fhirviews
+conserva los requisitos actuales. El constructor público sigue
+utilizando R.
+
+Se compararon tres recorridos completos: R actual, R con un plan R4
+preparado y el mismo constructor de primitivos en R con validación
+estructural por lotes en un ejecutable Rust. Los tres usan los mismos
+metadatos R4. La medición incluye el arranque del ejecutable, lectura
+del plan y transporte por archivos temporales; la preparación única
+compartida, de **0,52 s**, se registra aparte.
+
+**Resultado local del 15 de noviembre de 2026:** medianas de tres
+repeticiones por método y recurso, con **3.000 filas por lote**, paquete
+instalado con bytecode, Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 e Intel
+i7-10750H.
+
+| Recurso      | R actual (s) | R con plan (s) | R + Rust (s) | R actual / Rust |
+|--------------|-------------:|---------------:|-------------:|----------------:|
+| Patient      |        6,031 |          3,444 |        2,856 |           2,11× |
+| Encounter    |       12,231 |          7,988 |        2,748 |           4,45× |
+| Condition    |       13,753 |          8,888 |        3,153 |           4,36× |
+| Observation  |       10,904 |          5,891 |        2,553 |           4,27× |
+| Immunization |       11,799 |          7,173 |        3,052 |           3,87× |
+
+Se registraron **90 muestras**: 300 y 3.000 filas, cinco recursos, tres
+métodos y tres repeticiones, con orden de métodos aleatorio y semilla
+fija. Cada lote produjo el mismo JSON exacto. Frente al plan preparado
+en R, Rust fue entre **1,21 y 2,91 veces** más rápido en esta máquina.
+Los tiempos de preparación y compilación quedan separados de los tiempos
+por lote.
+
+La comprobación funcional pasó **587 controles diferenciales** y **7
+tests Rust**. Cubre JSON/NDJSON, salida de SQL on FHIR, `FALSE`,
+ausentes, Unicode, obligatorios, elecciones, referencias, precedencia de
+errores y la misma clase, fila y campo de error. Conserva `0.50`, `0.5`,
+`72.00` y decimales que exceden la precisión de un `double`; se
+verificaron también los límites FHIRPath. Los mensajes del prototipo son
+resumidos; todavía deben ajustarse para una API pública. La matriz CI
+añade paridad funcional en Windows, macOS y Linux.
+
+En una ejecución separada con 3.000 Immunization, el pico de suma RSS de
+R y sus hijos fue **170,2 MiB** con R actual, **184,1 MiB** con el plan
+R y **192,6 MiB** con Rust. Es una muestra por método, tomada cada 10 ms
+durante todo el proceso; puede contar páginas compartidas más de una
+vez. No demuestra un ahorro de memoria. Estas mediciones de rendimiento
+son solo de Linux.
+
+La mejora justifica continuar con la validación por lotes. Antes de
+habilitarla como motor opcional faltan la interfaz nativa con R, errores
+completos, distribución de dependencias y pruebas de instalación
+conforme a CRAN. La CLI de Windows no demuestra compatibilidad de una
+futura biblioteca Rust con Rtools. Se conservará una alternativa en R y
+se volverá a medir la interfaz elegida. Rust no sustituye aquí
+FHIRPath/V8, DuckDB ni la validación de perfiles.
+
+Los [resultados y
+hashes](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust/resultados-20261115)
+y las [instrucciones de
+reproducción](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md)
+documentan los límites de la comparación. El archivo Zenodo `0.5.0.9000`
+precede a este experimento; la constancia del laboratorio identifica su
+propio commit. El diagrama inicial describe las funciones del paquete
+disponible.
+
+### Mediciones anteriores de V8 y DuckDB
+
+Las mediciones de esta sección son anteriores a los cambios de precisión
+de 0.5.0.9000; no se han vuelto a medir con esta versión de desarrollo.
 
 La siguiente medición compara ambos motores con pacientes sintéticos y
 una vista que incluye `where`, cuatro columnas y `forEach` sobre `name`.
@@ -965,9 +1628,11 @@ Script:
 - **FHIRPath.** La evaluación ocurre en V8. La resolución remota con
   `resolve()` está desactivada; las consultas de terminología se
   realizan con las funciones `tx_*` antes de ejecutar la vista.
-- **Precisión y fechas.** Los números de JSON pierden los ceros
-  decimales finales al leerse. Las fechas se conservan como texto ISO
-  8601 para admitir valores parciales como `2025` o `2025-03`.
+- **Precisión y fechas.** La evaluación y salida JSON/NDJSON conservan
+  los literales decimales de la fuente original. Las columnas numéricas
+  ordinarias de R no conservan su escala; modificar recursos descarta su
+  fuente JSON. Las fechas quedan como texto ISO 8601 para admitir `2025`
+  o `2025-03`.
 - **Memoria y esquema.**
   [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md)
   reúne el resultado en memoria; el procesamiento por bloques requiere
@@ -980,14 +1645,89 @@ Script:
   `$export` dependen de la configuración y los permisos del servidor
   conectado.
 
-Las prioridades de desarrollo incluyen estabilizar el motor DuckDB,
-mejorar la precisión decimal y ampliar las operaciones de búsqueda y
-terminología. Las propuestas y su seguimiento están en [GitHub
+Las propuestas y su seguimiento están en [GitHub
 Issues](https://github.com/f-slg/fhirviews/issues).
+
+## Estabilización de R4
+
+La próxima entrega consolidará **FHIR R4 4.0.1** con un alcance
+explícito. La versión de desarrollo sigue siendo `0.5.0.9000`; preparar
+y comprobar un candidato no cambia su versión, publica un lanzamiento ni
+emite un DOI.
+
+| Componente | Alcance del cierre R4 |
+|----|----|
+| Cliente y vistas V8 | Recursos R4, paginación, autenticación y operaciones según las capacidades del servidor. |
+| Construcción desde tablas o DBI | `Patient`, `Observation`, `Encounter`, `Condition` e `Immunization`; una fila por recurso y mapeos explícitos. |
+| Validación local | Tipos, cardinalidades, elecciones, fechas, destinos y bindings requeridos enumerables. Los controles léxicos de `code` y URI siguen las [reglas de primitivos R4](https://hl7.org/fhir/R4/datatypes.html#primitive). |
+| Perfiles y terminología | HAPI comprueba perfiles base; perfiles del proyecto, invariantes y terminología externa se contrastan con su entorno acordado. |
+| Motor DuckDB | Conserva la etiqueta experimental y el subconjunto FHIRPath documentado; se compara con V8. |
+| Otros recursos desde SQL | Se incorporarán por grupos después de este cierre. La lectura y las vistas pueden trabajar con otros recursos R4. |
+| Federación y otras versiones | Consultas conjuntas entre servidores y conversión R4/R6 pendientes; no hay una API multiversión habilitada. |
+
+El cierre técnico exige que el **mismo archivo fuente** se instale y
+apruebe en una biblioteca nueva, con ayuda, viñetas y ejemplos
+incluidos. El control `r4_cinco_recursos` construye seis recursos
+ficticios: un Patient, un Encounter, un Condition, un Observation y dos
+Immunization. En ambos perfiles comprueba:
+
+- Referencias a Patient y Encounter, booleanos falsos y ausencia
+  completa de los objetos opcionales cuando faltan sus datos.
+- Fecha válida de nacimiento, las dos variantes de `occurrence[x]` y las
+  dos de `doseNumber[x]`, sin rellenar las variantes ausentes.
+- Literales `72.00` y `0.50` en JSON y NDJSON, límites inferiores
+  `71.995` y `0.495`, y regreso a las cinco tablas con V8.
+- Rechazo de cinco casos: sujeto obligatorio ausente, ids duplicados,
+  estado inválido, paciente ausente y comparador prohibido en
+  SimpleQuantity.
+
+El perfil `completo` construye los recursos mediante consultas
+parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL.
+El grupo obligatorio HAPI valida los seis textos JSON contra sus
+perfiles base y exige que un Patient alterado sea rechazado. Las
+integraciones PostgreSQL y SQL Server se mantienen como comprobaciones
+adicionales de sus controladores y tipos nativos.
+
+La **evaluación externa** requiere que otra persona instale el
+candidato, explique los resultados, modifique una vista, contraste el
+NDJSON y repita las tareas. El protocolo
+[PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md)
+incluye tareas, referencias y criterios de cierre. Los informes
+automáticos dejan `validacion_usuario_externo = pendiente` hasta
+documentar esa evaluación aparte. El ensayo local marca la validación de
+perfiles como no evaluada; HAPI aporta su evidencia independiente, y los
+perfiles propios requieren otra comprobación.
+
+Después del piloto y de corregir sus hallazgos se fijará la versión
+estable y su artefacto. El candidato de desarrollo ya tiene un DOI
+Zenodo verificado y el ORCID del autor; su archivo se detalla en la
+sección de cita. El orden posterior será federación entre servidores R4
+y, después, adaptadores y exportación R4/R6 por recurso. Rust ya tiene
+un prototipo medido; su incorporación depende de la interfaz nativa, la
+distribución y las pruebas de instalación.
 
 ## Piloto y documentación local
 
-### Descargar el kit para participantes
+### Protocolo actual para el cierre R4
+
+La [guía del participante
+R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md)
+se distribuye con el paquete en `examples/PILOTO-R4.md`. Usa el
+candidato que indique su manifiesto y el ensayo instalado de esta
+sección. Para ejecutar solamente el recorrido de seis recursos, sin todo
+el kit de vigilancia:
+
+``` r
+
+Sys.setenv(FHIRVIEWS_R4_SALIDA = "r4-basico-01", FHIRVIEWS_R4_SQL = "false")
+source(system.file("examples", "r4-estabilidad.R", package = "fhirviews"))
+```
+
+Con `FHIRVIEWS_R4_SQL = "true"` requiere DBI/DuckDB y compara ambos
+motores. Cada carpeta debe ser nueva. Este ejemplo local utiliza datos
+ficticios y conserva los JSON de salida y su resumen.
+
+### Kit anterior de participantes: candidato 0.5.0
 
 **[Descargar el kit del piloto
 ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip)**
@@ -1017,7 +1757,9 @@ También puedes consultar los protocolos en el repositorio:
 El ZIP contiene los materiales de evaluación, no el paquete R. Mientras
 el lanzamiento siga en borrador, el mantenedor entrega el archivo
 candidato identificado en el manifiesto para evaluar exactamente la
-misma versión.
+misma versión. Este kit v1 mantiene la referencia histórica al candidato
+0.5.0; para el cierre actual de SQL → FHIR R4 usa el protocolo R4
+anterior.
 
 ### Instalar el candidato y ejecutar el ensayo
 
@@ -1027,7 +1769,7 @@ el archivo fuente que te entregue el mantenedor:
 ``` r
 
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9000.tar.gz", repos = NULL, type = "source")
 ```
 
 Reinicia R, elige una carpeta nueva y ejecuta:
@@ -1047,11 +1789,13 @@ Abre `piloto-basico-01/aceptacion.csv` para ver los controles y
 advertencia requiere revisión y evita la aprobación automática; el
 informe registra códigos seguros sin copiar los mensajes originales.
 
-El perfil `basico` comprueba la API, los resultados de vigilancia y el
-rechazo estricto de un bloque incompatible. Para comprobar también
-rollback y reintentos, instala `DBI` y `duckdb`, cambia el perfil a
-`completo` y usa otra carpeta nueva. Los archivos permanecen locales;
-completa `experiencia-usuario.txt` con los obstáculos, la ayuda
+El informe actual usa `esquema_informe = 2`. El perfil `basico`
+comprueba la API, los resultados de vigilancia, el rechazo estricto de
+un bloque incompatible y el recorrido R4 de cinco tipos desde tablas.
+Para comprobar también rollback, consultas SQL parametrizadas y ambas
+implementaciones de las cinco vistas, instala `DBI` y `duckdb`, cambia
+el perfil a `completo` y usa otra carpeta nueva. Los archivos permanecen
+locales; completa `experiencia-usuario.txt` con los obstáculos, la ayuda
 necesaria y tu evaluación. La aprobación técnica deja pendiente esa
 evaluación humana y no valida un servidor ni datos propios.
 
@@ -1065,7 +1809,7 @@ browseVignettes("fhirviews")
 ```
 
 La [guía del
-mantenedor](https://f-slg.github.io/fhirviews/inst/examples/PILOTO-MANTENEDOR.md)
+mantenedor](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-MANTENEDOR.md)
 describe cómo construir y verificar el candidato, interpretar los
 códigos y cerrar el piloto. También se distribuye dentro del paquete, en
 `examples/PILOTO-MANTENEDOR.md`.
@@ -1085,11 +1829,14 @@ la sección anterior, sin depender de la disponibilidad del sitio web.
 | [Arquitectura](https://f-slg.github.io/fhirviews/articles/arquitectura.html) | Motores, evaluación por lotes y seguridad |
 | [Referencia de funciones](https://f-slg.github.io/fhirviews/reference/) | Firmas, argumentos y ejemplos de la API |
 
-Proyectos relacionados: [pobecu](https://f-slg.github.io/pobecu/) para
-población de Ecuador, [geoecu](https://f-slg.github.io/geoecu/) para
-límites territoriales y
-[aprende-fhir](https://github.com/f-slg/aprende-fhir) para docencia con
-un caso clínico ficticio.
+Proyectos relacionados: [pobecu](https://f-slg.github.io/pobecu/) aporta
+proyecciones poblacionales del INEC y permite calcular tasas;
+[geoecu](https://f-slg.github.io/geoecu/) aporta límites territoriales
+de CONALI para mapearlas. El artículo de [tasas por
+cantón](https://f-slg.github.io/fhirviews/articles/tasas-pobecu.html)
+muestra el recorrido completo desde datos FHIR hasta la tasa y el mapa.
+[aprende-fhir](https://github.com/f-slg/aprende-fhir) ofrece material
+docente con un caso clínico ficticio.
 
 ## Contribuir, citar y licencia
 
@@ -1107,11 +1854,67 @@ Para citar el paquete:
 ``` r
 
 citation("fhirviews")
+toBibtex(citation("fhirviews"))
 ```
 
-**Autor y mantenedor:** Ronald Fabricio Salas Guerrero. Licencia
-[MIT](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md). Las
-licencias y atribuciones del código y los datos incluidos se detallan en
+**Autor y mantenedor:** Ronald Fabricio Salas Guerrero, [ORCID
+0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522). El
+identificador figura en `Authors@R`, `inst/CITATION`,
+[`CITATION.cff`](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)
+y
+[`.zenodo.json`](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
+El archivo CFF habilita la cita del repositorio en GitHub; la cita de R
+incluye la versión instalada.
+
+**Zenodo: publicado y verificado.** El código de desarrollo
+**0.5.0.9000** está archivado desde el commit
+`565243ec06f4dad88e898761a98a4f23c9fe8f95`, con fecha de publicación 15
+de noviembre de 2026 (UTC).
+
+| Identificador | Uso |
+|----|----|
+| [10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726) | DOI de la versión archivada `0.5.0.9000`; úsalo para reproducir ese código. |
+| [10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725) | DOI de concepto que agrupa las versiones del proyecto. |
+| [0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522) | ORCID del autor; identifica a la persona. |
+
+Zenodo preserva el ZIP fuente generado por GitHub, con su propio
+checksum. El paquete R probado se ofrece como archivo complementario en
+la [prerelease
+`v0.5.0.9000`](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0.9000);
+su hash y sus comprobaciones se documentan por separado. El registro
+Zenodo no incluye automáticamente ese `tar.gz` ni los otros archivos
+adjuntos de GitHub. La [constancia de
+verificación](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
+conserva el commit, los DOI, la identidad del autor y los hashes del
+archivo real.
+
+**No hizo falta esperar a CRAN.** Este archivo de desarrollo es
+independiente del envío **`0.5.0`** a CRAN y no lo reemplaza. La
+integración se confirmó observando el registro publicado, su versión y
+ORCID, la integridad del ZIP, su contenido frente al commit fijado y la
+resolución del DOI.
+
+Para citar el archivo: Salas Guerrero, R. F. (2026). *fhirviews: FHIR
+desde R y vistas tabulares con SQL on FHIR* (0.5.0.9000, desarrollo).
+Zenodo. <https://doi.org/10.5281/zenodo.24238726>. La cita de R incluye
+este DOI solo para `0.5.0.9000`; otras versiones conservan su número y
+la URL del repositorio. El CFF y la cita actual se completaron después
+de emitir el DOI; el ZIP archivado conserva los metadatos previos a su
+emisión. El DOI de versión sigue identificando ese archivo inmutable.
+
+Para próximos lanzamientos, actualiza versión y metadatos, publica una
+nueva etiqueta y verifica el nuevo registro dentro de la misma familia
+de versiones. Zenodo utiliza `.zenodo.json` cuando coexiste con CFF.
+Consulta la [guía de
+archivo](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
+y la [documentación oficial](https://help.zenodo.org/docs/github/).
+Incluir un ORCID en los metadatos no vincula por sí solo la cuenta
+personal del mantenedor en Zenodo. La versión estable se decidirá
+después del piloto.
+
+Licencia [MIT](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md).
+Las licencias y atribuciones del código y los datos incluidos se
+detallan en
 [`inst/COPYRIGHTS`](https://f-slg.github.io/fhirviews/inst/COPYRIGHTS).
 
 fhirviews es un proyecto independiente. FHIR® y HL7® son marcas

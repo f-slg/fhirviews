@@ -9,7 +9,7 @@ concreta (_history)."><meta property="og:image" content="https://f-slg.github.io
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@ concreta (_history)."><meta property="og:image" content="https://f-slg.github.io
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Leer un recurso</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.5.0/R/cliente.R" class="external-link"><code>R/cliente.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/cliente.R" class="external-link"><code>R/cliente.R</code></a></small>
       <div class="d-none name"><code>fhir_leer.Rd</code></div>
     </div>
 
@@ -52,7 +52,7 @@ concreta (<code>_history</code>).</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">fhir_leer</span><span class="op">(</span><span class="va">con</span>, <span class="va">recurso</span>, id <span class="op">=</span> <span class="cn">NULL</span>, version <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">fhir_leer</span><span class="op">(</span><span class="va">con</span>, <span class="va">recurso</span>, id <span class="op">=</span> <span class="cn">NULL</span>, version <span class="op">=</span> <span class="cn">NULL</span>, como_recursos <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,10 +75,19 @@ concreta (<code>_history</code>).</p>
 <dt id="arg-version">version<a class="anchor" aria-label="anchor" href="#arg-version"></a></dt>
 <dd><p>Versión opcional (<code>vid</code>) para leer el historial.</p></dd>
 
+
+<dt id="arg-como-recursos">como_recursos<a class="anchor" aria-label="anchor" href="#arg-como-recursos"></a></dt>
+<dd><p>Con <code>TRUE</code>, devuelve <code><a href="fhir_recursos.html">fhir_recursos()</a></code> con la fuente
+JSON original, para conservar escala decimal al ejecutar vistas o
+escribir NDJSON. Con <code>FALSE</code> (por defecto), devuelve la lista habitual
+de R, cuyos numeros no conservan ceros finales. Para un Bundle se
+aplican las reglas de extraccion de <code><a href="fhir_recursos.html">fhir_recursos()</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>El recurso como lista de R.</p>
+    <p>El recurso como lista de R; con <code>como_recursos = TRUE</code>, una
+coleccion <code>fhir_recursos</code> con su JSON fuente.</p>
     </div>
 
     <div class="section level2">

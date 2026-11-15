@@ -17,7 +17,7 @@ comandos de DuckDB)."><meta property="og:image" content="https://f-slg.github.io
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -49,7 +49,7 @@ comandos de DuckDB)."><meta property="og:image" content="https://f-slg.github.io
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Traducir un ViewDefinition a SQL de DuckDB (experimental)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.5.0/R/sql.R" class="external-link"><code>R/sql.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/sql.R" class="external-link"><code>R/sql.R</code></a></small>
       <div class="d-none name"><code>vista_sql.Rd</code></div>
     </div>
 
@@ -106,7 +106,16 @@ navegación por campos (los elementos de elección como <code>value</code> o
 <code>toInteger()</code>, <code>toDecimal()</code>, <code>toBoolean()</code> y sus <code>convertsTo...()</code>),
 aritmética, <code><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor()</a></code>, <code><a href="https://rdrr.io/r/base/Round.html" class="external-link">round()</a></code>, <code><a href="https://rdrr.io/r/base/seek.html" class="external-link">truncate()</a></code>,
 <code><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt()</a></code>, <code><a href="https://rdrr.io/r/stats/power.html" class="external-link">power()</a></code> exacta, comparaciones de fechas y horas con su
-precisión y <code>lowBoundary()</code>/<code>highBoundary()</code> de fechas y horas.</p>
+precisión y <code>lowBoundary()</code>/<code>highBoundary()</code> de fechas, horas y decimales.
+Los limites decimales conservan el literal JSON mediante sus tokens y
+las rutas de <code>json_tree()</code>. Admiten literales numericos sin signo o rutas desde el
+recurso con indices explicitos (por ejemplo
+<code>component[0].value.ofType(Quantity).value.lowBoundary()</code>), escalas de
+-18 a 8 y valores representables en <code>DECIMAL(38,18)</code>. No se infiere la
+escala despues de operaciones, filtros o iteraciones; esas expresiones
+se rechazan. No se admite el argumento opcional de precision en SQL.
+Con Parquet o tablas previamente normalizadas, la precision disponible
+es la de su JSON actual; no se recupera la representacion FHIR original.</p>
 <p>La traducción reproduce el resultado de <code>fhirpath.js</code>
 (<code><a href="vista_ejecutar.html">vista_ejecutar()</a></code>). Si una expresión usa algo que no se puede traducir
 con certeza, se produce un error de clase <code>fhirviews_error_sql</code> que

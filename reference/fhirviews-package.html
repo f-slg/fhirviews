@@ -9,7 +9,7 @@ tablas siguiendo la especificación SQL on FHIR (ViewDefinition)."><meta propert
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@ tablas siguiendo la especificación SQL on FHIR (ViewDefinition)."><meta propert
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR</h1>
-      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/v0.5.0/R/fhirviews-package.R" class="external-link"><code>R/fhirviews-package.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/f-slg/fhirviews/blob/main/R/fhirviews-package.R" class="external-link"><code>R/fhirviews-package.R</code></a></small>
       <div class="d-none name"><code>fhirviews-package.Rd</code></div>
     </div>
 
@@ -65,6 +65,10 @@ las operaciones <code>$everything</code>, <code>$validate</code> y <code>$export
 <li><p><strong>Vistas</strong> (funciones <code>vista_*</code>): ejecutar un <code>ViewDefinition</code> sobre una
 lista de recursos, un Bundle o un archivo NDJSON y obtener un
 <code>data.frame</code>, con fhirpath.js o con DuckDB.</p></li>
+<li><p><strong>SQL a FHIR</strong>: <code><a href="fhir_mapa.html">fhir_mapa()</a></code>, <code><a href="fhir_mapa.html">fhir_desde_tabla()</a></code> y
+<code><a href="fhir_mapa.html">fhir_desde_sql()</a></code> construyen Patient, Observation, Encounter, Condition
+e Immunization con mapeos
+explicitos. <code><a href="fhir_escribir.html">fhir_escribir()</a></code> guarda JSON o NDJSON.</p></li>
 </ul><p>Las expresiones FHIRPath se evalúan con la biblioteca <code>fhirpath.js</code> a
 través del paquete V8.</p>
 </div>
@@ -91,10 +95,15 @@ RStudio (5 por defecto).</p></li>
 <div class="section">
 <h3 id="limitaciones-conocidas">Limitaciones conocidas<a class="anchor" aria-label="anchor" href="#limitaciones-conocidas"></a></h3>
 
-<ul><li><p>Los decimales de FHIR se leen como números de JavaScript (y de R), así
-que pierden los ceros finales que indican la precisión: <code>1.10</code> se lee
-como <code>1.1</code>. Esto afecta a <code><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString()</a></code> y a las comparaciones de
-precisión de FHIRPath, no al valor numérico.</p></li>
+<ul><li><p>La evaluacion y escritura JSON conservan los literales decimales de la
+fuente. Los numeros ordinarios de R no conservan escala; modificar las
+listas descarta el JSON original. Los limites decimales SQL admiten
+rutas estaticas con indices explicitos y escalas de -18 a 8, sin
+inferir precision despues de operaciones o iteraciones.</p></li>
+<li><p>SQL a FHIR admite Patient, Observation, Encounter, Condition e Immunization,
+una fila por recurso, sin
+agrupacion automatica ni recursos contained. Las comprobaciones locales
+no sustituyen la validacion de perfiles con <code><a href="fhir_validar.html">fhir_validar()</a></code>.</p></li>
 </ul></div>
 
     </div>
@@ -107,13 +116,15 @@ precisión de FHIRPath, no al valor numérico.</p></li>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
-    <p><strong>Maintainer</strong>: Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> [copyright holder]</p>
-<p>Authors:</p><ul><li><p>Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> [copyright holder]</p></li>
+    <p><strong>Maintainer</strong>: Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> (<a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID</a>) [copyright holder]</p>
+<p>Authors:</p><ul><li><p>Ronald Fabricio Salas Guerrero <a href="mailto:fabriciosalasguerrero@gmail.com">fabriciosalasguerrero@gmail.com</a> (<a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID</a>) [copyright holder]</p></li>
 </ul><p>Other contributors:</p><ul><li><p>National Library of Medicine (fhirpath.js and ucum-lhc libraries in inst/js) [copyright holder]</p></li>
 <li><p>Health Samurai (fhirpath.js library in inst/js) [copyright holder]</p></li>
 <li><p>The ANTLR Project (antlr4 runtime bundled in fhirpath.js) [copyright holder]</p></li>
 <li><p>Sasha Koss (date-fns library bundled in fhirpath.js) [copyright holder]</p></li>
 <li><p>Michael Mclaughlin (decimal.js library bundled in fhirpath.js) [copyright holder]</p></li>
+<li><p>Jos de Jong (lossless-json library in inst/js) [copyright holder]</p></li>
+<li><p>Health Level Seven International (FHIR R4 mapping metadata in inst/schema) [copyright holder]</p></li>
 <li><p>Regenstrief Institute, Inc. (UCUM table bundled in fhirpath.js) [copyright holder]</p></li>
 <li><p>SQL on FHIR project contributors (conformance test suite in inst/sof-tests) [copyright holder]</p></li>
 </ul></div>

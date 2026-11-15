@@ -79,7 +79,7 @@ falta internet. Con `descargar = TRUE` se usa la versión más reciente.
 ``` r
 vista_conformidad("basic.json")
 #> Banco de pruebas de SQL on FHIR (FHIR/sql-on-fhir.js@6677c20, 2026-07-09) 
-#> fhirviews 0.5.0 · fhirpath.js 5.2.2
+#> fhirviews 0.5.0.9000 · fhirpath.js 5.2.2
 #> 
 #>   shareable       11 de  11 aprobadas
 #>   total           11 de  11 aprobadas
@@ -87,8 +87,8 @@ vista_conformidad("basic.json")
 res <- vista_conformidad()
 table(res$perfil, res$aprobada)
 #>               
-#>                FALSE TRUE
-#>   experimental     4    7
-#>   shareable        0  133
+#>                TRUE
+#>   experimental   11
+#>   shareable     133
 # }
 ```

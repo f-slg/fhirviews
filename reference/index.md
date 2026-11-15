@@ -95,6 +95,18 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 - [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
   : Guardar vistas en DuckDB
 
+## De SQL a FHIR
+
+Construir Patient, Observation, Encounter, Condition e Immunization
+desde R o DBI.
+
+- [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  : Construir recursos FHIR R4 desde tablas o consultas SQL
+- [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
+  : Escribir recursos FHIR como JSON o NDJSON
+
 ## Catálogo de vistas
 
 ViewDefinition listos para vigilancia y salud pública.

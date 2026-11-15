@@ -1,18 +1,41 @@
 # Primeros pasos con fhirviews
 
-fhirviews tiene dos partes que se usan juntas:
+fhirviews tiene tres partes que se pueden combinar:
 
 1.  un **cliente FHIR** (`fhir_*`) para hablar con un servidor HL7 FHIR
     R4 desde R, como harías con Postman;
 2.  un **motor de vistas** (`vista_*`) que convierte recursos FHIR en
     tablas con el estándar [SQL on FHIR](https://sql-on-fhir.org/)
-    (`ViewDefinition`).
+    (`ViewDefinition`);
+3.  un **constructor de recursos** que convierte tablas de R o consultas
+    SQL en Patient, Observation, Encounter, Condition e Immunization
+    mediante
+    [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md),
+    [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+    y
+    [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md),
+    con salida JSON o NDJSON por
+    [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md).
 
-Esta viñeta recorre las dos con el caso clínico ficticio del taller
-[aprende-fhir](https://github.com/f-slg/aprende-fhir): Luis Alberto
-Paredes Cevallos, nacido en Riobamba y residente en Quito, que consulta
-por una intoxicación alimentaria y luego es diagnosticado y tratado por
-un cáncer de mama.
+Esta viñeta recorre el cliente y las vistas con el caso clínico ficticio
+del taller [aprende-fhir](https://github.com/f-slg/aprende-fhir): Luis
+Alberto Paredes Cevallos, nacido en Riobamba y residente en Quito, que
+consulta por una intoxicación alimentaria y luego es diagnosticado y
+tratado por un cáncer de mama.
+
+El recorrido SQL → FHIR → tabla está en el ejemplo instalado
+`system.file("examples", "sql-a-fhir.R", package = "fhirviews")` y en
+las ayudas de
+[`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+y
+[`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md).
+No es una inversión automática de un `ViewDefinition`: requiere declarar
+los campos que se van a construir. El ejemplo
+`system.file("examples", "encuentros-diagnosticos.R", package = "fhirviews")`
+añade el recorrido paciente → encuentro → diagnóstico con códigos,
+estados y referencias explícitos.
+`system.file("examples", "inmunizaciones-sql.R", package = "fhirviews")`
+añade vacunaciones, fechas conocidas o textuales y número de dosis.
 
 ``` r
 

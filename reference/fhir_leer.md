@@ -6,7 +6,7 @@ versión concreta (`_history`).
 ## Usage
 
 ``` r
-fhir_leer(con, recurso, id = NULL, version = NULL)
+fhir_leer(con, recurso, id = NULL, version = NULL, como_recursos = FALSE)
 ```
 
 ## Arguments
@@ -28,9 +28,20 @@ fhir_leer(con, recurso, id = NULL, version = NULL)
 
   Versión opcional (`vid`) para leer el historial.
 
+- como_recursos:
+
+  Con `TRUE`, devuelve
+  [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md)
+  con la fuente JSON original, para conservar escala decimal al ejecutar
+  vistas o escribir NDJSON. Con `FALSE` (por defecto), devuelve la lista
+  habitual de R, cuyos numeros no conservan ceros finales. Para un
+  Bundle se aplican las reglas de extraccion de
+  [`fhir_recursos()`](https://f-slg.github.io/fhirviews/reference/fhir_recursos.md).
+
 ## Value
 
-El recurso como lista de R.
+El recurso como lista de R; con `como_recursos = TRUE`, una coleccion
+`fhir_recursos` con su JSON fuente.
 
 ## Examples
 
