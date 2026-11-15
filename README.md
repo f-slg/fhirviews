@@ -1631,6 +1631,17 @@ incluye la versión instalada.
 
 **Estado de Zenodo:** metadatos preparados; depósito y DOI pendientes de
 publicación y verificación. La versión `0.5.0.9000` sigue siendo de desarrollo.
+**No hace falta esperar a CRAN:** Zenodo puede archivar una versión de software
+desde GitHub o mediante una carga manual. La publicación en CRAN y la emisión
+del DOI son procesos independientes, según las
+[opciones oficiales de archivo de software](https://help.zenodo.org/docs/github/).
+
+El archivo previsto corresponde al **candidato R4 `0.5.0.9000`**, identificado
+como desarrollo y separado del envío **`0.5.0`** a CRAN. Una versión posterior
+se archivará como otra versión del mismo proyecto; se comprobará la relación
+entre sus DOI antes de actualizar las citas. Los metadatos de Zenodo declaran
+la versión explícitamente y conservan el ORCID del autor.
+
 ORCID identifica al autor; un DOI de versión identifica el archivo concreto
 publicado en Zenodo, y el DOI de concepto agrupa sus versiones. Para reproducir
 un análisis, cita la versión utilizada y su DOI de versión cuando exista.
@@ -1642,6 +1653,9 @@ Para completar el archivo en Zenodo:
 2. Revisa autor, ORCID, licencia, descripción y versión que se archivará.
    Zenodo utiliza `.zenodo.json` cuando están presentes ambos formatos; al
    publicar una versión deben mantenerse coherentes CFF, DESCRIPTION y etiqueta.
+   El ORCID en los metadatos identifica al autor. Vincular además la cuenta
+   ORCID en Zenodo es una acción de la cuenta del mantenedor; no queda hecha
+   automáticamente por incluir el identificador en el repositorio.
 3. Archiva la versión seleccionada y verifica su registro, archivos y DOI.
    Después incorpora el DOI real en estos metadatos, en `inst/CITATION` y
    en los README. Los metadatos preparados no equivalen a un depósito publicado.
@@ -1649,6 +1663,11 @@ Para completar el archivo en Zenodo:
 Consulta la [guía oficial de Zenodo](https://help.zenodo.org/docs/github/) para
 la conexión y el archivo de versiones. La publicación de una versión estable
 y el envío a CRAN se gestionan de forma expresa.
+
+La [guía de preparación del archivo](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
+describe los archivos, hashes y pasos de comprobación. El script de preparación
+trabaja sobre un commit fijo y no publica ni transmite datos. Un borrador de
+GitHub o un DOI reservado aún no equivalen a un registro Zenodo publicado.
 
 Licencia [MIT](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md). Las licencias y atribuciones del código y los datos
 incluidos se detallan en [`inst/COPYRIGHTS`](inst/COPYRIGHTS).

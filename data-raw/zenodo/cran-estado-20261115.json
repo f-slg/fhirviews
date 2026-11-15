@@ -1,0 +1,14 @@
+{
+  "consulta_utc": "2026-11-15T02:12:51.627400+00:00",
+  "fuente": "https://cran.r-project.org/incoming/newbies/",
+  "archivo": "fhirviews_0.5.0.tar.gz",
+  "fecha_directorio_sin_zona": "2026-11-07 21:47",
+  "total_archivos": 424,
+  "archivos_anteriores": 232,
+  "empates": 0,
+  "rango_por_fecha": [
+    233,
+    233
+  ],
+  "turno_oficial": false
+}
