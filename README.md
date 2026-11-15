@@ -1313,20 +1313,64 @@ y su resultado debe consultarse para el commit específico que se vaya a entrega
 
 ## Rendimiento
 
-### Estado de la evaluación de Rust
+### Evaluación experimental de Rust
 
-El paquete actual utiliza R, JavaScript/V8 y el motor nativo de DuckDB.
-**Rust todavía no está implementado ni se ha comparado con R.** El perfilado
-exploratorio de SQL → FHIR señaló la validación y las referencias como zonas
-que conviene medir; no demuestra una ganancia que pueda atribuirse a Rust.
+El paquete usa R, JavaScript/V8 y DuckDB. Ya existe un **prototipo Rust probado**
+para la validación estructural de SQL → FHIR, en
+[`data-raw/experimento-rust`](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust).
+Ese laboratorio queda excluido del paquete R; instalar fhirviews conserva los
+requisitos actuales. El constructor público sigue utilizando R.
 
-La evaluación posterior al cierre R4 comparará tres opciones sobre los mismos
-datos: R actual, un plan de validación preparado una sola vez por mapa y un
-prototipo por lotes en Rust. Se exigirán tiempos repetidos y memoria, los cinco
-tipos R4, iguales errores con fila/campo y los mismos resultados JSON, incluida
-la distinción entre `0.50`, `0.5` y `72.00`. La decisión incluirá instalación,
-compatibilidad Windows/macOS/Linux y mantenimiento. Esta evaluación queda
-pendiente; el flujo inicial muestra las funciones disponibles actualmente.
+Se compararon tres recorridos completos: R actual, R con un plan R4 preparado
+y el mismo constructor de primitivos en R con validación estructural por lotes
+en un ejecutable Rust. Los tres usan los mismos metadatos R4. La medición
+incluye el arranque del ejecutable, lectura del plan y transporte por archivos
+temporales; la preparación única compartida, de **0,52 s**, se registra aparte.
+
+**Resultado local del 15 de noviembre de 2026:** medianas de tres repeticiones
+por método y recurso, con **3.000 filas por lote**, paquete instalado con
+bytecode, Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 e Intel i7-10750H.
+
+| Recurso | R actual (s) | R con plan (s) | R + Rust (s) | R actual / Rust |
+|---|---:|---:|---:|---:|
+| Patient | 6,031 | 3,444 | 2,856 | 2,11× |
+| Encounter | 12,231 | 7,988 | 2,748 | 4,45× |
+| Condition | 13,753 | 8,888 | 3,153 | 4,36× |
+| Observation | 10,904 | 5,891 | 2,553 | 4,27× |
+| Immunization | 11,799 | 7,173 | 3,052 | 3,87× |
+
+Se registraron **90 muestras**: 300 y 3.000 filas, cinco recursos, tres métodos
+y tres repeticiones, con orden de métodos aleatorio y semilla fija. Cada lote
+produjo el mismo JSON exacto. Frente al plan preparado en R, Rust fue entre
+**1,21 y 2,91 veces** más rápido en esta máquina. Los tiempos de preparación
+y compilación quedan separados de los tiempos por lote.
+
+La comprobación funcional pasó **587 controles diferenciales** y **7 tests Rust**.
+Cubre JSON/NDJSON, salida de SQL on FHIR, `FALSE`, ausentes, Unicode,
+obligatorios, elecciones, referencias, precedencia de errores y la misma clase,
+fila y campo de error. Conserva `0.50`, `0.5`, `72.00` y decimales que exceden
+la precisión de un `double`; se verificaron también los límites FHIRPath.
+Los mensajes del prototipo son resumidos; todavía deben ajustarse para una API
+pública. La matriz CI añade paridad funcional en Windows, macOS y Linux.
+
+En una ejecución separada con 3.000 Immunization, el pico de suma RSS de R y
+sus hijos fue **170,2 MiB** con R actual, **184,1 MiB** con el plan R y
+**192,6 MiB** con Rust. Es una muestra por método, tomada cada 10 ms durante
+todo el proceso; puede contar páginas compartidas más de una vez. No demuestra
+un ahorro de memoria. Estas mediciones de rendimiento son solo de Linux.
+
+La mejora justifica continuar con la validación por lotes. Antes de habilitarla
+como motor opcional faltan la interfaz nativa con R, errores completos,
+distribución de dependencias y pruebas de instalación conforme a CRAN.
+La CLI de Windows no demuestra compatibilidad de una futura biblioteca Rust
+con Rtools. Se conservará una alternativa en R y se volverá a medir la interfaz
+elegida. Rust no sustituye aquí FHIRPath/V8, DuckDB ni la validación de perfiles.
+
+Los [resultados y hashes](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust/resultados-20261115)
+y las [instrucciones de reproducción](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md)
+documentan los límites de la comparación. El archivo Zenodo `0.5.0.9000`
+precede a este experimento; la constancia del laboratorio identifica su propio
+commit. El diagrama inicial describe las funciones del paquete disponible.
 
 ### Mediciones anteriores de V8 y DuckDB
 
@@ -1487,9 +1531,11 @@ su evidencia independiente, y los perfiles propios requieren otra comprobación.
 
 Después del piloto y de corregir sus hallazgos se fijará la versión estable y
 su artefacto. El candidato de desarrollo ya tiene un DOI Zenodo verificado
-y el ORCID del autor; su archivo se detalla en la sección de cita. El orden posterior será federación entre
-servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust se
-evaluará con mediciones cuando exista un cuello de botella reproducible.
+y el ORCID del autor; su archivo se detalla en la sección de cita. El orden
+posterior será federación entre servidores R4 y, después, adaptadores y
+exportación R4/R6 por recurso. Rust ya tiene un prototipo medido; su
+incorporación depende de la interfaz nativa, la distribución y las pruebas
+de instalación.
 
 ## Piloto y documentación local
 

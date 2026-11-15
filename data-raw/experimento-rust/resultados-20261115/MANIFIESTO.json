@@ -1,0 +1,52 @@
+{
+  "estado": "experimento_reproducible_sin_integracion_en_paquete",
+  "fecha_utc": "2026-11-15",
+  "commit_codigo_experimental": "678e31775d23ec5015a5e4e1e7a5e965020a8778",
+  "codigo_r4_de_referencia": "565243ec06f4dad88e898761a98a4f23c9fe8f95",
+  "metadatos_cita_de_la_instalacion": "6af9004ec5834046f8ddfb242d1bb2d75d505a22",
+  "version_paquete": "0.5.0.9000",
+  "plataforma_mediciones": "Linux x86_64",
+  "muestras_tiempo": 90,
+  "repeticiones_por_celda": 3,
+  "comparaciones_diferenciales": 587,
+  "tests_unitarios_rust": 7,
+  "perfil_instalacion": "Paquete R instalado con bytecode; no pkgload",
+  "binario_sha256": "47e8226b2e56ef27e43cc11faaca5705cb39e6db0dccc938d56a23ebde52b059",
+  "fuentes_sha256": {
+    "data-raw/experimento-rust/Cargo.lock": "ad09d133030aa1efc5119b815a42f18daa4739970bc4701e9503edbdf5d53c7b",
+    "data-raw/experimento-rust/Cargo.toml": "b15dcca13ec9f58b6c395a03c9f66a109f1f67a0f350e92dc17271a4e1ae03c5",
+    "data-raw/experimento-rust/aristas.R": "1411674d4ab8e1146a4f93ecd2d028099b419d7aa1a914caa147ea1608b3de8e",
+    "data-raw/experimento-rust/ayudas.R": "4204a0b3d1d8630e8421a8bacdd53aeb8f78b5414eb3ea2c7c95951cf5439c81",
+    "data-raw/experimento-rust/cargar.R": "79440cb916895c804a4c33bbc6efab6a61e28c31e9b5803544367f56effa323a",
+    "data-raw/experimento-rust/casos.R": "2b31084465c38a70be63f72d3acfbbd0898b1e733db3cbfb6c91206111d18bd3",
+    "data-raw/experimento-rust/comprobar.R": "4bf6dc74ffc4de72cfde16eee44dd61bfdc0cbb055d8fc32d1e1b3353a8f0151",
+    "data-raw/experimento-rust/medir.R": "672026804abc22a76cb611d7a05192f45dd539a33c75ffb46468c0147ab4084e",
+    "data-raw/experimento-rust/memoria.R": "13e49fffdfc74e9dcd3c59df274901833ef79ab1826a593b86f6114cae16548f",
+    "data-raw/experimento-rust/memoria.py": "1e53a8778b12f0130355396a7d18c77f7d155473d9dd4ff27b91c8dd10af1c4e",
+    "data-raw/experimento-rust/src/main.rs": "ab35d3eac4da5051487d495b20abf664b41342d7f007664e6997c1f14b33bf2f"
+  },
+  "referencia_sha256": {
+    "R/fhir-desde-sql.R": "844c85bb474f13c41c29b899958afed112e3d3eebbdbf790b8ad7b909b8b8cf2",
+    "inst/schema/mapeo-r4.json": "62c6d41676df17dfc0e9c81eadd114653706e0f9da8e9706ee8e98cbc08a7e61"
+  },
+  "resultados_sha256": {
+    "aristas.json": "36ae8119b188863f4bf535095c64108508eeb4dc4c689a2a5d483de25cb10092",
+    "entorno.json": "74c7098cac21908102c69aa03e6a5e6929c3a2101a7c0f2bdc1ea775dbddaa8d",
+    "licencias.json": "dbe8e309adcd76ff82f887786040171c2ffcd7cec3a39ebb65f1134424d4f6c8",
+    "maquina.json": "5db50c31be6a6aeca002544bf2cb49d9025d2bf706852086f7a3338b3dfd3e52",
+    "memoria.json": "c8cba8d2dc37b9b6f28c6fc57ef54cc625e4e9674cb1a323e26dcb26bbc868d7",
+    "paridad.json": "f33db14943c01fa0d3b9b723f791eafab2bd05c1ccb3ddcac38c11f8a7b9a03a",
+    "resumen.csv": "06df05e8738f6b966ded5b88095f757547e4eb61ab5084c360b445caf20061cf",
+    "tiempos.csv": "039691e357faef17859bffbab13e08c4cc89ff3c8eec83b89ac0503ee30a3c55",
+    "unitarios-rust.log": "7bdeab2a04cfa5a192517c986b4305af7cf2900d68fd7e5512f95f4702e58355"
+  },
+  "limitaciones": [
+    "Datos ficticios; tres repeticiones por celda; una maquina Linux.",
+    "Memoria: una ejecucion por metodo; suma RSS muestreada cada 10 ms, con posible doble conteo de paginas compartidas.",
+    "Rust valida estructuras ya tipadas por R. No es validador FHIR general ni conversor R4/R6.",
+    "Los mensajes Rust son resumidos; se contrasta clase, fila y campo de error.",
+    "La medicion final excluye la corrida exploratoria con pkgload y trabajos de compilacion concurrentes.",
+    "El archivo Zenodo 0.5.0.9000 precede a este experimento; no contiene estos resultados."
+  ],
+  "logs_rutas_normalizadas": true
+}
