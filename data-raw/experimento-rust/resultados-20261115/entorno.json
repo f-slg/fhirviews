@@ -1,0 +1,22 @@
+{
+  "estado": "completado",
+  "fecha_utc": "2026-11-15 05:02:05 UTC",
+  "preparacion_compartida_segundos": 0.52,
+  "repeticiones": 3,
+  "semilla": 20261115,
+  "recursos": ["Patient", "Encounter", "Condition", "Observation", "Immunization"],
+  "filas": [300, 3000],
+  "metodos": ["original", "preparado", "rust"],
+  "alcance": "Constructor completo por lote, incluido arranque CLI Rust, lectura del plan y transporte temporal. Excluye compilacion, carga de paquete, preparacion unica y creacion del mapa.",
+  "comparacion_json_exacta_cada_lote": true,
+  "sistema": {
+    "sysname": "Linux",
+    "release": "7.0.0-43-generic",
+    "version": "#43-Ubuntu SMP PREEMPT_DYNAMIC Fri Oct 23 13:25:25 UTC 2026",
+    "machine": "x86_64"
+  },
+  "carga": "Paquete instalado con bytecode; sin pkgload",
+  "version_r": "R version 4.5.2 (2025-10-31)",
+  "version_paquete": "0.5.0.9000",
+  "sesion": ["R version 4.5.2 (2025-10-31)", "Platform: x86_64-pc-linux-gnu", "Running under: Ubuntu 26.04.1 LTS", "", "Matrix products: default", "BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.1 ", "LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.1;  LAPACK version 3.12.0", "", "locale:", " [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       ", " [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   ", " [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          ", "[10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   ", "", "time zone: America/Guayaquil", "tzcode source: system (glibc)", "", "attached base packages:", "[1] stats     graphics  grDevices utils     datasets  methods   base     ", "", "other attached packages:", "[1] fhirviews_0.5.0.9000", "", "loaded via a namespace (and not attached):", "[1] compiler_4.5.2 cli_3.6.6      tools_4.5.2    curl_8.1.0     Rcpp_1.1.2    ", "[6] V8_8.2.0       jsonlite_2.0.0 rlang_1.3.0   "]
+}

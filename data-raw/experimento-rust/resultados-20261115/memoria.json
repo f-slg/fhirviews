@@ -1,0 +1,27 @@
+{
+  "intervalo_objetivo_segundos": 0.01,
+  "alcance": "Un proceso nuevo por metodo. Pico de suma RSS de R y sus hijos durante carga, preparacion y constructor. Puede contar paginas compartidas mas de una vez; no es memoria exclusiva ni una garantia de pico entre muestras.",
+  "resultados": [
+    {
+      "metodo": "original",
+      "recurso": "Immunization",
+      "filas": 3000,
+      "rss_sumado_pico_bytes": 178438144,
+      "muestras": 1227
+    },
+    {
+      "metodo": "preparado",
+      "recurso": "Immunization",
+      "filas": 3000,
+      "rss_sumado_pico_bytes": 193056768,
+      "muestras": 813
+    },
+    {
+      "metodo": "rust",
+      "recurso": "Immunization",
+      "filas": 3000,
+      "rss_sumado_pico_bytes": 202006528,
+      "muestras": 395
+    }
+  ]
+}

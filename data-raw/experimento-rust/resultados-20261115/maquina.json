@@ -1,0 +1,10 @@
+{
+  "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz",
+  "cpu_logicas": 12,
+  "rustc": "rustc 1.75.0 (82e1608df 2023-12-21)",
+  "cargo": "cargo 1.75.0 (1d8b05cdd 2023-11-20)",
+  "sha256": {
+    "data-raw/experimento-rust/src/main.rs": "ab35d3eac4da5051487d495b20abf664b41342d7f007664e6997c1f14b33bf2f",
+    "data-raw/experimento-rust/Cargo.lock": "ad09d133030aa1efc5119b815a42f18daa4739970bc4701e9503edbdf5d53c7b"
+  }
+}
