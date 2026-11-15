@@ -1486,6 +1486,28 @@ another constructor or replace profile validation.
 
 ### Current R4 protocol
 
+**[Download the external R4 pilot kit ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip)**
+· [ZIP SHA-256](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256)
+
+The kit includes the **checked 0.5.0.9001 package**, its identity, a launcher,
+R/FHIR protocols and a local form. Pilot materials are in Spanish. Extract the
+entire ZIP and open R in that folder. Install the dependencies listed in
+`LEEME.md`, then run:
+
+```r
+source("INICIAR.R")
+iniciar_piloto("basico", "sesion-P01-intento01")
+abrir_sesion("sesion-P01-intento01")
+```
+
+The launcher verifies the archive before installing into an isolated library.
+The complete profile adds DBI/DuckDB and requires R >= 4.2 in this kit; basic
+uses R >= 4.1. The form keeps separate profiles, tasks, assistance and issues,
+with JSON/CSV/text export. It does not run R or send results. Technical checks
+leave human tasks and closure decisions pending. The
+[kit instructions](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md)
+describe session planning and repeated attempts without overwriting earlier ones.
+
 The [R4 participant guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md) is installed as
 `examples/PILOTO-R4.md`. To run only the six-resource R4 round trip:
 
