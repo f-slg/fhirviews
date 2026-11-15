@@ -1,0 +1,54 @@
+{
+  "commit_fuente": "533fee34d4137553f9caae6eeccff681dab7f5ed",
+  "componente": "fhirviews-rust-validator",
+  "contrato": "fhirviews-r4-validator/1",
+  "formato": 1,
+  "paquetes": {
+    "aarch64-apple-darwin": {
+      "archivo": "fhirviews-rust-validator-0.1.0-aarch64-apple-darwin.zip",
+      "arquitectura": "arm64",
+      "bytes": 2368516,
+      "comprobaciones": 286,
+      "directorio": "fhirviews-rust-validator-0.1.0-aarch64-apple-darwin",
+      "ejecutable": "bin/fhirviews-rust-validator",
+      "plataforma": "macos-apple-silicon",
+      "sha256": "5f8a1a8906ee8e2a9c69970d205b06b7122d4f005fff696b3f9281c1b9c020b9",
+      "sistema": "Darwin"
+    },
+    "x86_64-apple-darwin": {
+      "archivo": "fhirviews-rust-validator-0.1.0-x86_64-apple-darwin.zip",
+      "arquitectura": "x86_64",
+      "bytes": 2506553,
+      "comprobaciones": 286,
+      "directorio": "fhirviews-rust-validator-0.1.0-x86_64-apple-darwin",
+      "ejecutable": "bin/fhirviews-rust-validator",
+      "plataforma": "macos-intel",
+      "sha256": "2e543667842a3276482b69c25ea44362ef78fdbb159a4de25fe5e5f5542f8547",
+      "sistema": "Darwin"
+    },
+    "x86_64-pc-windows-msvc": {
+      "archivo": "fhirviews-rust-validator-0.1.0-x86_64-pc-windows-msvc.zip",
+      "arquitectura": "x86_64",
+      "bytes": 2344785,
+      "comprobaciones": 286,
+      "directorio": "fhirviews-rust-validator-0.1.0-x86_64-pc-windows-msvc",
+      "ejecutable": "bin/fhirviews-rust-validator.exe",
+      "plataforma": "windows-x86_64",
+      "sha256": "e84c79bef0b7529758b6ede13b898aa9207c722625eae02122dacaf32ecd0fe1",
+      "sistema": "Windows"
+    },
+    "x86_64-unknown-linux-musl": {
+      "archivo": "fhirviews-rust-validator-0.1.0-x86_64-unknown-linux-musl.zip",
+      "arquitectura": "x86_64",
+      "bytes": 5239847,
+      "comprobaciones": 286,
+      "directorio": "fhirviews-rust-validator-0.1.0-x86_64-unknown-linux-musl",
+      "ejecutable": "bin/fhirviews-rust-validator",
+      "plataforma": "linux-x86_64",
+      "sha256": "359bc0e2177c244335e0011991c335ff82bdc5aaba4f7cdf82f73299c26cdd08",
+      "sistema": "Linux"
+    }
+  },
+  "version": "0.1.0",
+  "version_fhir": "4.0.1"
+}
