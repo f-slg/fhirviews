@@ -1,5 +1,9 @@
 # fhirviews 0.5.0.9002
 
+* La prueba de privacidad de Bulk Data distingue el token de una ruta de
+  archivos: usa una credencial ficticia inequivoca y una carpeta que contiene
+  `abc`. Evita fallos intermitentes al coincidir esas letras con una ruta
+  temporal y mantiene la comprobacion de que no se imprime la credencial.
 * El constructor SQL/R a FHIR incorpora `Specimen` y `DiagnosticReport` R4,
   con metadatos generados de los snapshots oficiales 4.0.1. No exige paciente
   o status en Specimen ni subject en DiagnosticReport cuando la base R4 no

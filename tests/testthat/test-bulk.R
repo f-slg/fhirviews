@@ -69,8 +69,10 @@ simular_espera <- function(envir = parent.frame()) {
 test_that("fhir_exportar sigue el ciclo de Bulk Data y descarga los NDJSON", {
   p <- servidor_exportacion()
   esperas <- simular_espera()
-  con <- con_simulada(token = "abc")
-  carpeta <- withr_tempfile()
+  token <- "token-bulk-privado-no-imprimir-7N53"
+  con <- con_simulada(token = token)
+  # Una ruta legitima puede contener abc; no debe confundirse con el token.
+  carpeta <- withr_tempfile(fileext = "-abc")
   exp <- fhir_exportar(con, "paciente", tipos = c("Patient", "Condition"),
                        desde = as.Date("2025-01-01"),
                        filtros = c("Condition?code=A90", "Patient?active=true"),
@@ -99,8 +101,8 @@ test_that("fhir_exportar sigue el ciclo de Bulk Data y descarga los NDJSON", {
   descarga <- p$lista[[5]]
   expect_match(descarga$url, "archivos/p.ndjson$")
   expect_identical(descarga$headers$Accept, "application/fhir+ndjson")
-  expect_match(httr2::req_get_headers(descarga, "reveal")$Authorization,
-               "Bearer abc")
+  expect_identical(httr2::req_get_headers(descarga, "reveal")$Authorization,
+                   paste("Bearer", token))
 
   # Los archivos se leen y se usan en vistas
   pacientes <- vista_ejecutar(exp$archivos$Patient,
@@ -111,7 +113,8 @@ test_that("fhir_exportar sigue el ciclo de Bulk Data y descarga los NDJSON", {
   salida <- capture.output(print(exp))
   expect_match(salida[1], "completada")
   expect_true(any(grepl("Patient.*1 archivo, 2 recursos", salida)))
-  expect_false(any(grepl("abc", salida)))
+  expect_true(any(grepl(carpeta, salida, fixed = TRUE)))
+  expect_false(any(grepl(token, salida, fixed = TRUE)))
 })
 
 test_that("sin requiresAccessToken no se env\u00eda el token a los archivos", {

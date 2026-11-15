@@ -1205,7 +1205,14 @@ Silicon. The workflow can be run manually, choosing between macOS 26 Intel and
 macOS 15 Intel, to retry availability problems. The selector does not guarantee
 provider capacity: macOS remains a required check. On R 4.1 and R-devel, the
 client and V8 are checked. The three systems on R release include DuckDB and its
-SQL tests. HTTP tests use mocked responses. The write integration is enabled
+SQL tests.
+
+The Bulk Data privacy test uses a complete fictitious credential and a folder
+containing `abc`: it requires the path to be shown and the token to remain
+hidden, without mistaking path text for an exposed credential. It also checks
+the exact download authorization header.
+
+HTTP tests use mocked responses. The write integration is enabled
 separately against **your own test server**:
 
 ```sh
