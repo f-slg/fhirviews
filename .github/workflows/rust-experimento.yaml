@@ -48,7 +48,12 @@ jobs:
         with:
           dependencies: '"hard"'
       - name: Instalar el paquete R con bytecode
-        run: R CMD INSTALL --no-multiarch .
+        shell: Rscript {0}
+        run: |
+          ejecutable <- file.path(R.home("bin"),
+            if (.Platform$OS.type == "windows") "R.exe" else "R")
+          estado <- system2(ejecutable, c("CMD", "INSTALL", "--no-multiarch", "."))
+          stopifnot(estado == 0L)
       - name: Preparar el compilador del laboratorio
         run: rustup toolchain install 1.75.0 --profile minimal --no-self-update
       - name: Compilar el nucleo con dependencias fijadas
