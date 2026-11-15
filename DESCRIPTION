@@ -6,7 +6,8 @@ Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",
              email = "fabriciosalasguerrero@gmail.com",
-             role = c("aut", "cre", "cph")),
+             role = c("aut", "cre", "cph"),
+             comment = c(ORCID = "0000-0001-5077-1522")),
       person("National Library of Medicine", role = "cph",
              comment = "fhirpath.js and ucum-lhc libraries in inst/js"),
       person("Health Samurai", role = "cph",
@@ -38,7 +39,8 @@ Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     second engine translates views to 'DuckDB' SQL to process millions of
     resources from 'NDJSON' or 'Parquet' files. Includes the official 'SQL on
     FHIR' conformance test suite, explicit mappings from database query
-    results to FHIR R4 Patient, Observation, Encounter and Condition resources,
+    results to FHIR R4 Patient, Observation, Encounter, Condition and
+    Immunization resources,
     export of views to 'DuckDB', and
     integration with the 'RStudio' Connections pane and addins.
     Documentation is in Spanish.

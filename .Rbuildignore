@@ -17,3 +17,5 @@
 ^paper$
 ^README\.en\.md$
 ^conformidad$
+^CITATION\.cff$
+^\.zenodo\.json$

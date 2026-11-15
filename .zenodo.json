@@ -1,0 +1,14 @@
+{
+  "title": "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR",
+  "upload_type": "software",
+  "description": "R client for FHIR R4 servers and SQL on FHIR view engine. Includes explicit SQL/table mappings to Patient, Observation, Encounter, Condition and Immunization, JSON/NDJSON output, decimal precision and R4 structural checks. Clinical and national profiles require validation against their canonical definitions. Development versions must be identified as such when deposited.",
+  "creators": [
+    {
+      "name": "Salas Guerrero, Ronald Fabricio",
+      "orcid": "0000-0001-5077-1522"
+    }
+  ],
+  "access_right": "open",
+  "license": "mit",
+  "keywords": ["FHIR", "SQL on FHIR", "FHIRPath", "R", "interoperability"]
+}

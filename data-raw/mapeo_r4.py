@@ -13,7 +13,7 @@ import zipfile
 from pathlib import Path
 
 url = 'https://hl7.org/fhir/R4/definitions.json.zip'
-recursos = ['Patient', 'Observation', 'Encounter', 'Condition']
+recursos = ['Patient', 'Observation', 'Encounter', 'Condition', 'Immunization']
 archivo = Path(sys.argv[1] if len(sys.argv) > 1 else '/tmp/fhirviews-r4-definitions.zip')
 if not archivo.exists():
     urllib.request.urlretrieve(url, archivo)
@@ -58,6 +58,8 @@ with zipfile.ZipFile(archivo) as z:
         return salida or None
 
     defs = {}
+    # Mantener el perfil separado: Quantity general admite comparator.
+    perfiles_tipo = {'http://hl7.org/fhir/StructureDefinition/SimpleQuantity': 'SimpleQuantity'}
     for fuente in ['profiles-types.json', 'profiles-resources.json']:
         for entry in json.loads(z.read(fuente))['entry']:
             sd = entry['resource']
@@ -65,6 +67,9 @@ with zipfile.ZipFile(archivo) as z:
                     and sd.get('url') == 'http://hl7.org/fhir/StructureDefinition/' + sd.get('type', '')
                     and sd.get('derivation') == 'specialization'):
                 defs[sd['type']] = sd
+            elif (sd.get('resourceType') == 'StructureDefinition' and 'snapshot' in sd
+                  and sd.get('url') in perfiles_tipo and sd.get('derivation') == 'constraint'):
+                defs[perfiles_tipo[sd['url']]] = sd
     pendientes = list(recursos)
     esquemas = {}
     while pendientes:
@@ -90,6 +95,17 @@ with zipfile.ZipFile(archivo) as z:
             if e.get('base', {}).get('path') == 'Resource.id':
                 tipos = ['id']
             elementos[ruta] = dict(min=e['min'], max=e['max'], tipos=tipos)
+            contextos = {}
+            for t in e.get('type', []):
+                perfiles = t.get('profile', [])
+                if len(perfiles) == 1 and perfiles[0] in perfiles_tipo:
+                    contexto = perfiles_tipo[perfiles[0]]
+                    if contexto not in defs or defs[contexto]['type'] != t['code']:
+                        raise ValueError('Perfil de tipo no disponible: ' + perfiles[0])
+                    contextos[t['code']] = contexto
+            if contextos:
+                elementos[ruta]['contextos'] = contextos
+                pendientes.extend(contextos.values())
             destinos = [p.rsplit('/', 1)[-1] for t in e.get('type', [])
                         if t['code'] == 'Reference' for p in t.get('targetProfile', [])]
             if destinos:
