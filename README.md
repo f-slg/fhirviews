@@ -1784,7 +1784,12 @@ El formulario conserva fichas separadas, tareas, ayudas e incidencias, y exporta
 JSON/CSV/texto. No ejecuta R ni envía resultados. La comprobación técnica deja
 pendientes las tareas humanas y la decisión de cierre. Las
 [instrucciones del kit](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md)
-explican cómo acordar las sesiones y repetir sin sobrescribir los intentos.
+son la guía detallada para participantes: explican cómo comprobar la descarga,
+elegir perfil y nivel técnico, ejecutar y repetir tareas, interpretar los
+cinco controles, exportar fichas y compartir evidencia con privacidad. Los
+[protocolos de perfil R y FHIR](https://github.com/f-slg/fhirviews/tree/main/data-raw/piloto-r4-v2)
+describen las tareas individuales. El formulario y el lanzador son herramientas
+distintas: uno registra la sesión; el otro instala y ejecuta los controles.
 
 La [guía del participante R4](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md) se incluye en el kit. Usa el candidato que indique su manifiesto
 y el ensayo instalado de esta sección. Para ejecutar solamente el recorrido
@@ -1831,9 +1836,22 @@ cierre actual de SQL → FHIR R4 usa el protocolo R4 anterior.
 
 </details>
 
-### Instalar el candidato y ejecutar el ensayo
+### Alternativa avanzada: ejecutar el control técnico del paquete
 
-El piloto usa los datos ficticios incluidos. Instala las dependencias y el
+Este procedimiento manual instala un archivo fuente y ejecuta el ejemplo
+técnico incluido en el paquete. **No reemplaza el kit del piloto externo**:
+no verifica el ZIP completo, no instala en la biblioteca aislada del kit y no
+incluye por sí solo la observación de tareas, la ficha de participante ni el
+cierre humano. Para participar, sigue la sección anterior y su
+[guía detallada](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md).
+
+Úsalo solo si el mantenedor solicita explícitamente repetir ese control. El
+archivo debe ser el candidato exacto identificado en `CANDIDATO.json`; no
+descargues un `.tar.gz` de otra versión y lo presentes como resultado del kit.
+
+#### Control técnico manual (no es una sesión completa del piloto)
+
+El control usa los datos ficticios incluidos. Instala las dependencias y el
 archivo fuente que te entregue el mantenedor:
 
 ```r

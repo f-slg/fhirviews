@@ -1,16 +1,16 @@
 {
   "estado": "preparado_y_comprobado_tecnicamente",
   "version_candidato": "0.5.0.9002",
-  "fuente_kit_commit": "c95134e6dc8d7877171c5cf2d423e998acf71f5d",
+  "fuente_kit_commit": "57adbacdde416ca67e5cdd44d939ce220760ff9d",
   "fuente_candidato_commit": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
   "zip": {
     "archivo": "fhirviews-kit-piloto-r4-v2.zip",
-    "bytes": 1356556,
-    "sha256": "4f3430fbd43d0abc87f5c4d3d554dc3370889ddae8d9b807f0dfa53aab4a7f0d",
+    "bytes": 1366513,
+    "sha256": "de927ae5233ca9224826572a7e636090502cb0221a7030d8358cc0d72c77be05",
     "archivos": 15
   },
   "paquete_sha256": "305e5db0d637aecfbea612201abd4efc1995e6769a7026d29be1fc52308e8833",
-  "comprobado_utc": "2026-11-15T18:43:07.992063+00:00",
+  "comprobado_utc": "2026-11-15T19:25:31+00:00",
   "pruebas_locales": {
     "ZIP_reconstruido_identico": true,
     "hashes_internos": true,
@@ -30,9 +30,15 @@
       "estados_y_revision_humana": true,
       "importacion_y_perfiles": true,
       "sin_almacenamiento_local": true
+    },
+    "documentacion_participante": {
+      "README_kit_detallado": true,
+      "README_principal_es_en_revisados": true,
+      "enlaces_locales_y_repositorio": true,
+      "bloques_codigo_balanceados": true
     }
   },
   "evaluacion_usuario_externo": "pendiente",
   "participantes": "sin_asignar",
-  "notas": "Las pruebas técnicas no completan tareas humanas. Los perfiles se probaron localmente; CI debe verificarlos en Windows, macOS y Linux."
+  "notas": "Kit reconstruido desde el commit identificado y verificado con prueba de reproducción byte a byte. Perfiles básico/completo y formulario aprobados. Para DuckDB completo se permitió descargar la extensión json; los datos de prueba son ficticios. La evaluación humana y asignación de participantes siguen pendientes. La CI de esta revisión de documentación está pendiente."
 }
