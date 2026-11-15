@@ -1573,7 +1573,16 @@ CFF enables GitHub repository citation; R's citation includes the installed
 package version.
 
 **Zenodo status:** metadata prepared; deposit and DOI await publication and
-verification. Version 0.5.0.9000 remains a development version. ORCID identifies
+verification. Version 0.5.0.9000 remains a development version.
+**CRAN publication is not a prerequisite:** software can be archived from
+GitHub or uploaded manually through the
+[official Zenodo software workflows](https://help.zenodo.org/docs/github/).
+The planned archive is the **0.5.0.9000 R4 development candidate**, separate
+from the **0.5.0** artifact submitted to CRAN. Later versions will be recorded
+as further versions of the same project, checking their DOI relationships
+before changing citations. Zenodo metadata explicitly declares the version.
+
+ORCID identifies
 the author; a version DOI identifies the archived software files, and a
 concept DOI groups its versions. Cite the version used and its version DOI
 when available.
@@ -1590,6 +1599,12 @@ To complete the archive:
    files. Prepared metadata alone is not a published deposit.
 
 See the [official Zenodo guide](https://help.zenodo.org/docs/github/).
+
+The [archive preparation guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
+describes the files, hashes and verification steps. Its script uses a fixed
+commit and does not publish or transmit data. A GitHub draft or reserved DOI
+is not a published Zenodo record. Linking the maintainer's ORCID account in
+Zenodo is separate from including that identifier in the software metadata.
 Stable releases and CRAN submission are managed explicitly.
 
 [MIT](LICENSE.md) license. The licenses and attributions of the bundled code and
