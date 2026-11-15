@@ -15,7 +15,7 @@
 #'   `data.frame`, con fhirpath.js o con DuckDB.
 #' * **SQL a FHIR**: `fhir_mapa()`, `fhir_desde_tabla()` y
 #'   `fhir_desde_sql()` construyen Patient, Observation, Encounter, Condition
-#'   e Immunization con mapeos
+#'   Immunization, Specimen y DiagnosticReport con mapeos
 #'   explicitos. `fhir_escribir()` guarda JSON o NDJSON.
 #'
 #' Las expresiones FHIRPath se evalúan con la biblioteca `fhirpath.js` a
@@ -45,7 +45,8 @@
 #'   listas descarta el JSON original. Los limites decimales SQL admiten
 #'   rutas estaticas con indices explicitos y escalas de -18 a 8, sin
 #'   inferir precision despues de operaciones o iteraciones.
-#' * SQL a FHIR admite Patient, Observation, Encounter, Condition e Immunization,
+#' * SQL a FHIR admite Patient, Observation, Encounter, Condition, Immunization,
+#'   Specimen y DiagnosticReport,
 #'   una fila por recurso, sin
 #'   agrupacion automatica ni recursos contained. Las comprobaciones locales
 #'   no sustituyen la validacion de perfiles con `fhir_validar()`.

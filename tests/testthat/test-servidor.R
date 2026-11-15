@@ -324,6 +324,60 @@ test_that("Immunization desde SQL, perfil R4, dosis y referencias", {
   expect_equal(vista_ejecutar_duckdb(leidas, catalogo, con_db = db), vista_ejecutar(leidas, catalogo))
 })
 
+test_that("Specimen y DiagnosticReport desde SQL, perfiles R4 y retorno a tablas", {
+  con <- fhir_conectar(servidor_escritura(), panel = FALSE)
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("duckdb", "1.3.0")
+  e <- new.env(parent = globalenv())
+  sys.source(system.file("examples", "laboratorio-r4.R", package = "fhirviews"), e)
+  prefijo <- marca_prueba()
+  ejemplo <- e$laboratorio_r4(prefijo)
+  if (nzchar(Sys.getenv("FHIRVIEWS_RUST_BIN"))) {
+    componente <- fhir_componente_rust(Sys.getenv("FHIRVIEWS_RUST_BIN"), fallback = FALSE)
+    expect_identical(ejemplo, e$laboratorio_r4(prefijo, componente))
+  }
+  recursos <- ejemplo$recursos
+  archivo <- withr_tempfile(".ndjson")
+  fhir_escribir(recursos, archivo)
+  textos <- readLines(archivo, encoding = "UTF-8")
+  expect_length(textos, 5L)
+  expect_match(textos[2], '"value":5.00', fixed = TRUE)
+  expect_match(textos[3], '"value":72.00', fixed = TRUE)
+  creados <- list()
+  on.exit(for (r in rev(creados)) try(fhir_borrar(con, r), silent = TRUE), add = TRUE)
+  base <- "http://hl7.org/fhir/StructureDefinition/"
+  for (i in seq_along(recursos)) {
+    v <- fhir_validar(con, textos[i], perfil = paste0(base, recursos[[i]]$resourceType))
+    expect_true(isTRUE(attr(v, "valido")), info = paste(capture.output(as.data.frame(v)), collapse = "\n"))
+    creado <- fhir_actualizar(con, textos[i])
+    creados <- c(creados, list(creado))
+    expect_identical(creado$id, recursos[[i]]$id)
+  }
+  leidos <- fhir_recursos(NULL)
+  for (r in creados) leidos <- c(leidos, fhir_leer(con, r$resourceType, r$id, como_recursos = TRUE))
+  expect_identical(leidos[[5]]$result, recursos[[5]]$result)
+  expect_identical(leidos[[5]]$specimen, recursos[[5]]$specimen)
+  expect_identical(leidos[[3]]$specimen$reference, paste0("Specimen/", prefijo, "-s"))
+  db <- conectar_duckdb(); on.exit(DBI::dbDisconnect(db), add = TRUE)
+  for (nombre in names(ejemplo$vistas)) {
+    tabla <- vista_ejecutar(leidos, ejemplo$vistas[[nombre]])
+    expect_equal(tabla, ejemplo$tablas[[nombre]])
+    expect_equal(vista_ejecutar_duckdb(leidos, ejemplo$vistas[[nombre]], con_db = db), tabla)
+  }
+  invalidos <- list(recursos[[2]], recursos[[2]], recursos[[5]], recursos[[5]], recursos[[5]], recursos[[5]])
+  invalidos[[1]]$status <- "inexistente"
+  invalidos[[2]]$subject <- list(reference = paste0("Observation/", prefijo, "-o1"), type = "Observation")
+  invalidos[[3]]$status <- "inexistente"
+  invalidos[[4]]$code <- NULL
+  invalidos[[5]]$result <- list(list(reference = paste0("Specimen/", prefijo, "-s"), type = "Specimen"))
+  invalidos[[6]]$media <- list(list(comment = "Sin link obligatorio"))
+  for (r in invalidos) {
+    v <- fhir_validar(con, r, perfil = paste0(base, r$resourceType))
+    expect_false(isTRUE(attr(v, "valido")))
+    expect_true(any(v$severidad %in% c("error", "fatal")))
+  }
+})
+
 test_that("ciclo completo de escritura en un servidor de pruebas", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   marca <- marca_prueba()

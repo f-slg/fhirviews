@@ -1,15 +1,18 @@
 #' Construir recursos FHIR R4 desde tablas o consultas SQL
 #'
 #' Define un mapeo explicito de columnas a destinos FHIR y construye un
-#' recurso por fila. Admite `Patient`, `Observation`, `Encounter`, `Condition`
-#' e `Immunization`.
+#' recurso por fila. Admite `Patient`, `Observation`, `Encounter`, `Condition`,
+#' `Immunization`, `Specimen` y `DiagnosticReport`.
 #' No intenta invertir un `ViewDefinition`, que puede haber perdido datos.
 #'
 #' Los destinos usan nombres JSON de FHIR, puntos e indices desde cero:
 #' `name[0].family`, `code.coding[0].code`, `valueQuantity.value`.
 #' Un destino terminado en `[]`, como `name[0].given[]`, toma una columna
-#' de listas de valores primitivos. Cada elemento repetido debe declarar
-#' su indice o `[]`; no se evalua FHIRPath ni codigo R en el mapeo.
+#' de listas de valores primitivos. Tambien se admite una coleccion de
+#' referencias como `result[].reference`: cada clave de la lista produce
+#' una referencia. Esa coleccion no puede compartir destinos con otros
+#' campos o indices del mismo arreglo. Los demas objetos repetidos usan
+#' indices explicitos; no se evalua FHIRPath ni codigo R en el mapeo.
 #'
 #' `NA`, `NULL`, cadenas vacias y listas vacias se omiten. Los indices
 #' sin contenido se compactan; no se escriben objetos vacios ni `null`.
@@ -32,6 +35,10 @@
 #' `protocolApplied`, cada entrada exige una variante de `doseNumber[x]`.
 #' Esto no sustituye la validacion de invariantes, terminologias y perfiles
 #' con [fhir_validar()]. No se inventan codigos, unidades o estados.
+#' En la base R4, `Specimen.status` y `Specimen.subject` son opcionales;
+#' el sujeto tambien puede ser un origen ambiental. `DiagnosticReport`
+#' exige `status` y `code`, admite multiples referencias `result` a
+#' `Observation` y `specimen` a `Specimen`, y exige `link` en cada `media`.
 #'
 #' Los destinos decimales aceptan numeros o texto numerico JSON. El texto
 #' conserva la escala (`"1.00"` se escribe como el numero JSON `1.00`).
@@ -43,7 +50,7 @@
 #' CAST a texto en SQL. El resto de textos no admite conversion implicita.
 #'
 #' @param recurso Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"`,
-#'   `"Condition"` o `"Immunization"`.
+#'   `"Condition"`, `"Immunization"`, `"Specimen"` o `"DiagnosticReport"`.
 #' @param campos Vector de texto con destinos FHIR como nombres y columnas
 #'   de origen como valores.
 #' @param constantes Lista con nombre de valores fijos, con destinos FHIR
@@ -61,6 +68,9 @@
 #'   ejecuta tal como se recibe; se recomienda usar parametros para valores.
 #' @param parametros Lista opcional de parametros enlazados por el
 #'   controlador DBI, sin interpolarlos en el SQL.
+#' @param componente Componente opcional creado con [fhir_componente_rust()].
+#'   `NULL` conserva la validacion estructural en R. La conversion de tipos,
+#'   construccion y serializacion siguen siendo las mismas en ambos casos.
 #'
 #' @return `fhir_mapa()` devuelve un `fhir_mapa`. Las otras funciones
 #'   devuelven [fhir_recursos()], sin enviar recursos a un servidor FHIR ni
@@ -94,6 +104,15 @@ fhir_mapa <- function(recurso, campos = character(), constantes = list(),
     error_mapeo("El mapeo debe incluir id y no repetir destinos.")
   }
   rutas <- stats::setNames(lapply(destinos, ruta_mapeo, recurso = recurso), destinos)
+  for (i in seq_along(rutas)) {
+    prefijo <- rutas[[i]]$coleccion_referencia
+    if (is.null(prefijo)) next
+    otros <- vapply(rutas[-i], function(r) r$normalizada, character(1))
+    if (any(otros == prefijo | startsWith(otros, paste0(prefijo, "/")))) {
+      error_mapeo("Una coleccion [].reference no puede compartir campos o indices del mismo arreglo.",
+                  campo = destinos[i])
+    }
+  }
   # Ningun destino puede ser padre de otro, ni [] coexistir con indices.
   normalizadas <- vapply(rutas, function(r) r$normalizada, character(1))
   for (i in seq_along(normalizadas)) {
@@ -121,7 +140,7 @@ fhir_mapa <- function(recurso, campos = character(), constantes = list(),
 
 #' @rdname fhir_mapa
 #' @export
-fhir_desde_tabla <- function(datos, mapa) {
+fhir_desde_tabla <- function(datos, mapa, componente = NULL) {
   comprobar_mapa(mapa)
   if (!is.data.frame(datos) || anyDuplicated(names(datos))) {
     error_mapeo("{.arg datos} debe ser un data.frame con columnas unicas.")
@@ -130,44 +149,54 @@ fhir_desde_tabla <- function(datos, mapa) {
   if (length(faltan)) {
     error_mapeo("Faltan columnas requeridas por el mapeo: {.val {faltan}}.")
   }
+  if (!is.null(componente)) comprobar_componente_rust(componente)
   if (!nrow(datos)) return(fhir_recursos(NULL))
+  if (!is.null(componente)) return(construir_con_componente(datos, mapa, componente))
   recursos <- lapply(seq_len(nrow(datos)), function(i) {
-    r <- list(resourceType = mapa$recurso)
-    for (destino in names(mapa$rutas)) {
-      valor <- if (destino %in% names(mapa$campos)) {
-        datos[[mapa$campos[[destino]]]][[i]]
-      } else mapa$constantes[[destino]]
-      ruta <- mapa$rutas[[destino]]
-      referencia <- mapa$referencias[destino]
-      if (!length(referencia) || is.na(referencia)) referencia <- NULL
-      convertir <- function(v) valor_mapeo(v, ruta$tipo, i, destino, referencia)
-      if (isTRUE(ruta$coleccion)) {
-        valor <- lapply(seq_along(valor), function(j) convertir(valor[[j]]))
-        valor <- Filter(Negate(is.null), valor)
-        if (!length(valor)) valor <- NULL
-      } else valor <- convertir(valor)
-      if (!is.null(valor)) r <- asignar_mapeo(r, ruta$pasos, valor)
-    }
-    r <- compactar_mapeo(r)
+    r <- construir_fila_mapeada(datos, mapa, i)
     validar_recurso_mapeado(r, list(tipo = mapa$recurso, prefijo = ""), i)
     r
   })
+  finalizar_recursos_mapeados(recursos)
+}
+
+construir_fila_mapeada <- function(datos, mapa, i) {
+  r <- list(resourceType = mapa$recurso)
+  for (destino in names(mapa$rutas)) {
+    valor <- if (destino %in% names(mapa$campos)) {
+      datos[[mapa$campos[[destino]]]][[i]]
+    } else mapa$constantes[[destino]]
+    ruta <- mapa$rutas[[destino]]
+    referencia <- mapa$referencias[destino]
+    if (!length(referencia) || is.na(referencia)) referencia <- NULL
+    convertir <- function(v) valor_mapeo(v, ruta$tipo, i, destino, referencia)
+    if (isTRUE(ruta$coleccion)) {
+      valor <- lapply(seq_along(valor), function(j) convertir(valor[[j]]))
+      valor <- Filter(Negate(is.null), valor)
+      if (!length(valor)) valor <- NULL
+    } else valor <- convertir(valor)
+    if (!is.null(valor)) r <- asignar_mapeo(r, ruta$pasos, valor)
+  }
+  compactar_mapeo(r)
+}
+
+finalizar_recursos_mapeados <- function(recursos, textos = NULL) {
   ids <- vapply(recursos, function(r) r$id %||% "", character(1))
   if (any(!nzchar(ids)) || anyDuplicated(ids)) {
     error_mapeo("Cada fila debe producir un id no vacio y unico.", campo = "id")
   }
-  fhir_recursos(motor_actual()$serializar_recursos(recursos))
+  fhir_recursos(textos %||% motor_actual()$serializar_recursos(recursos))
 }
 
 #' @rdname fhir_mapa
 #' @export
-fhir_desde_sql <- function(con_db, sql, mapa, parametros = NULL) {
+fhir_desde_sql <- function(con_db, sql, mapa, parametros = NULL, componente = NULL) {
   comprobar_mapa(mapa)
   if (!es_texto(sql)) error_mapeo("{.arg sql} debe ser una consulta de texto.")
   rlang::check_installed("DBI", reason = "para leer la consulta SQL.")
   datos <- if (is.null(parametros)) DBI::dbGetQuery(con_db, sql) else
     DBI::dbGetQuery(con_db, sql, params = parametros)
-  fhir_desde_tabla(datos, mapa)
+  fhir_desde_tabla(datos, mapa, componente = componente)
 }
 
 #' Escribir recursos FHIR como JSON o NDJSON
@@ -272,6 +301,8 @@ ruta_mapeo <- function(campo, recurso) {
   pasos <- list()
   normal <- character()
   destinos <- NULL
+  coleccion <- FALSE
+  coleccion_referencia <- NULL
   for (i in seq_along(partes)) {
     m <- regmatches(partes[i], regexec(
       "^([A-Za-z][A-Za-z0-9]*)(\\[([0-9]*)\\])?$", partes[i]))[[1]]
@@ -290,12 +321,23 @@ ruta_mapeo <- function(campo, recurso) {
       error_mapeo("Los campos repetidos requieren [indice] o [] y los simples no los admiten.",
                   campo = campo)
     }
-    coleccion <- arreglo && !nzchar(m[4])
-    if (coleccion && i != length(partes)) {
-      error_mapeo("[] solo se admite al final del destino.", campo = campo)
+    dinamico <- arreglo && !nzchar(m[4])
+    if (dinamico) {
+      if (coleccion) error_mapeo("Solo se admite una coleccion [] por destino.", campo = campo)
+      coleccion <- TRUE
+      if (i != length(partes) &&
+          !(i == length(partes) - 1L && identical(e$tipo, "Reference") &&
+            identical(partes[i + 1L], "reference"))) {
+        error_mapeo("[] solo se admite al final o en una coleccion [].reference.", campo = campo)
+      }
     }
     pasos <- c(pasos, list(m[2]))
     normal <- c(normal, m[2])
+    if (dinamico && i != length(partes)) {
+      coleccion_referencia <- paste(normal, collapse = "/")
+      pasos <- c(pasos, list(0L))
+      normal <- c(normal, "*")
+    }
     if (arreglo && !coleccion) {
       indice <- as.numeric(m[4])
       if (!is.finite(indice) || indice > 10000 ||
@@ -312,12 +354,16 @@ ruta_mapeo <- function(campo, recurso) {
     error_mapeo("El destino debe ser un campo primitivo, no un objeto completo.", campo = campo)
   }
   list(pasos = pasos, tipo = e$tipo, coleccion = coleccion,
+       coleccion_referencia = coleccion_referencia,
        destinos = destinos,
        normalizada = paste(normal, collapse = "/"))
 }
 
 asignar_mapeo <- function(x, pasos, valor) {
   clave <- pasos[[1]]
+  if (identical(clave, 0L)) {
+    return(lapply(valor, function(v) asignar_mapeo(NULL, pasos[-1], v)))
+  }
   if (is.null(x)) x <- list()
   if (is.integer(clave) && length(x) < clave) length(x) <- clave
   if (length(pasos) == 1L) x[clave] <- list(valor) else {

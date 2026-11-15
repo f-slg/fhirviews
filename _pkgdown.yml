@@ -100,10 +100,11 @@ reference:
   - vista_json
   - vista_duckdb
 - title: De SQL a FHIR
-  desc: Construir Patient, Observation, Encounter, Condition e Immunization desde R o DBI.
+  desc: Construir siete tipos de recurso R4 desde R o DBI, con validacion R o un componente Rust opcional.
   contents:
   - fhir_mapa
   - fhir_escribir
+  - fhir_componente_rust
 - title: Catálogo de vistas
   desc: ViewDefinition listos para vigilancia y salud pública.
   contents:

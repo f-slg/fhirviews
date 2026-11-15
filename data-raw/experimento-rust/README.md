@@ -1,8 +1,11 @@
 # Laboratorio Rust para validacion estructural R4
 
-Estado: prototipo medido, excluido de la distribucion R mediante `.Rbuildignore`.
-No cambia `fhir_desde_tabla()`, DESCRIPTION, NAMESPACE ni la instalacion del
-paquete. No convierte versiones FHIR y no es un validador general de JSON FHIR.
+Este directorio conserva el laboratorio y las mediciones de **0.5.0.9000**,
+excluidos de la distribucion R mediante `.Rbuildignore`. Desde **0.5.0.9002**
+el nucleo comun vive en [componentes/rust](../../componentes/rust) y existe una
+API publica opcional `fhir_componente_rust()`. La CLI del laboratorio usa ese
+mismo nucleo. La instalacion del paquete no instala ni compila Rust. No hay
+conversion entre versiones FHIR ni validacion general de JSON FHIR.
 
 ## Pregunta y alcance
 
@@ -23,10 +26,11 @@ flowchart TB
 ```
 
 Los metadatos se compilan desde `inst/schema/mapeo-r4.json`; los tipos de recurso
-conocidos proceden del mismo modelo R4 de fhirpath.js. Se preparan 62 contextos
-y 148 tipos del modelo, incluidos tipos base. No se habilitan nuevos recursos
-de construccion: siguen siendo Patient, Observation, Encounter, Condition e
-Immunization. Los primitivos llegan tipados por R; la CLI no sustituye esa etapa.
+conocidos proceden del mismo modelo R4 de fhirpath.js. La medicion historica
+preparo 62 contextos y 148 tipos del modelo, incluidos tipos base, para cinco
+constructores. El desarrollo 0.5.0.9002 incorpora tambien Specimen y
+DiagnosticReport; sus tiempos y la API publica se miden por separado.
+Los primitivos llegan tipados por R; la CLI no sustituye esa etapa.
 
 Rust comprueba obligatorios, elecciones, cardinalidades, bindings requeridos
 enumerables y destinos de referencias. Recorre JSON por linea con `RawValue`
@@ -114,7 +118,8 @@ En este ensayo el compilador se alojo en /tmp, sin modificar el perfil de shell.
 export FHIRVIEWS_RUST_LIB=/ruta/biblioteca-R
 
 cargo +1.75.0 build --release --locked --jobs 2 --manifest-path data-raw/experimento-rust/Cargo.toml
-cargo +1.75.0 test --locked --jobs 2 --manifest-path data-raw/experimento-rust/Cargo.toml
+# En el desarrollo actual, las pruebas del nucleo comun estan aqui:
+cargo +1.75.0 test --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
 
 # Cada salida debe ser nueva; en Windows el ejecutable termina en .exe.
 Rscript data-raw/experimento-rust/comprobar.R data-raw/experimento-rust/target/release/fhirviews-validator-experiment /tmp/paridad-nueva
@@ -136,13 +141,16 @@ conserva versiones y sesion R. Las [licencias](resultados-20261115/licencias.jso
 proceden de cargo metadata y corresponden a las dependencias fijadas, no a
 fuentes vendorizadas. El archivo Zenodo 0.5.0.9000 es anterior a este experimento.
 
-## Decision y trabajo antes de integrarlo
+## Decision e integracion posterior
 
 La mejora justifica continuar en validacion estructural por lotes. La opcion
 de R con plan tambien mejora el tiempo y conserva una alternativa sin Rust.
-Para activar un motor opcional faltan una interfaz nativa, errores completos,
-pruebas de instalacion/ABI, distribucion y atribucion de dependencias, y medir
-de nuevo el recorrido completo. Se debe conservar la posibilidad de usar R.
+La API opcional de 0.5.0.9002 utiliza una CLI versionada, diagnosticos R
+completos y respaldo explicito; conserva el constructor R predeterminado.
+Esta primera integracion no enlaza a la ABI de R. Los ejecutables se compilan
+y distribuyen aparte; una integracion nativa y su instalacion, atribuciones
+y dependencias requieren trabajo adicional. Los tiempos de la API actual
+no se deducen de la tabla historica.
 No se propone reemplazar V8/FHIRPath ni DuckDB, que ya ejecutan motores nativos.
 
 CRAN exige declarar cargo/rustc si se incorporan al paquete, comprobar el

@@ -13,13 +13,13 @@ fhir_mapa(
   referencias = character()
 )
 
-fhir_desde_tabla(datos, mapa)
+fhir_desde_tabla(datos, mapa, componente = NULL)
 
-fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
+fhir_desde_sql(con_db, sql, mapa, parametros = NULL, componente = NULL)
 }
 \arguments{
 \item{recurso}{Tipo FHIR: \code{"Patient"}, \code{"Observation"}, \code{"Encounter"},
-\code{"Condition"} o \code{"Immunization"}.}
+\code{"Condition"}, \code{"Immunization"}, \code{"Specimen"} o \code{"DiagnosticReport"}.}
 
 \item{campos}{Vector de texto con destinos FHIR como nombres y columnas
 de origen como valores.}
@@ -36,6 +36,10 @@ un destino.}
 \item{datos}{Un \code{data.frame}; cada fila representa un recurso.}
 
 \item{mapa}{Mapeo creado con \code{fhir_mapa()}.}
+
+\item{componente}{Componente opcional creado con \code{\link[=fhir_componente_rust]{fhir_componente_rust()}}.
+\code{NULL} conserva la validacion estructural en R. La conversion de tipos,
+construccion y serializacion siguen siendo las mismas en ambos casos.}
 
 \item{con_db}{Conexion DBI abierta (DuckDB, PostgreSQL, SQLite, SQL Server,
 etc., mediante su controlador DBI).}
@@ -55,16 +59,19 @@ Usa \code{\link[=fhir_escribir]{fhir_escribir()}} para guardar JSON o NDJSON con
 }
 \description{
 Define un mapeo explicito de columnas a destinos FHIR y construye un
-recurso por fila. Admite \code{Patient}, \code{Observation}, \code{Encounter}, \code{Condition}
-e \code{Immunization}.
+recurso por fila. Admite \code{Patient}, \code{Observation}, \code{Encounter}, \code{Condition},
+\code{Immunization}, \code{Specimen} y \code{DiagnosticReport}.
 No intenta invertir un \code{ViewDefinition}, que puede haber perdido datos.
 }
 \details{
 Los destinos usan nombres JSON de FHIR, puntos e indices desde cero:
 \verb{name[0].family}, \verb{code.coding[0].code}, \code{valueQuantity.value}.
 Un destino terminado en \verb{[]}, como \verb{name[0].given[]}, toma una columna
-de listas de valores primitivos. Cada elemento repetido debe declarar
-su indice o \verb{[]}; no se evalua FHIRPath ni codigo R en el mapeo.
+de listas de valores primitivos. Tambien se admite una coleccion de
+referencias como \verb{result[].reference}: cada clave de la lista produce
+una referencia. Esa coleccion no puede compartir destinos con otros
+campos o indices del mismo arreglo. Los demas objetos repetidos usan
+indices explicitos; no se evalua FHIRPath ni codigo R en el mapeo.
 
 \code{NA}, \code{NULL}, cadenas vacias y listas vacias se omiten. Los indices
 sin contenido se compactan; no se escriben objetos vacios ni \code{null}.
@@ -87,6 +94,10 @@ admitirlo. El estado, la vacuna, el paciente y una variante de
 \code{protocolApplied}, cada entrada exige una variante de \code{doseNumber[x]}.
 Esto no sustituye la validacion de invariantes, terminologias y perfiles
 con \code{\link[=fhir_validar]{fhir_validar()}}. No se inventan codigos, unidades o estados.
+En la base R4, \code{Specimen.status} y \code{Specimen.subject} son opcionales;
+el sujeto tambien puede ser un origen ambiental. \code{DiagnosticReport}
+exige \code{status} y \code{code}, admite multiples referencias \code{result} a
+\code{Observation} y \code{specimen} a \code{Specimen}, y exige \code{link} en cada \code{media}.
 
 Los destinos decimales aceptan numeros o texto numerico JSON. El texto
 conserva la escala (\code{"1.00"} se escribe como el numero JSON \code{1.00}).

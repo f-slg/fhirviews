@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: >-
-  Si utiliza este desarrollo 0.5.0.9001, cite su version y commit exactos.
+  Si utiliza este desarrollo 0.5.0.9002, cite su version y commit exactos.
   Todavia no tiene DOI de version. El DOI 10.5281/zenodo.24238726 identifica
   exclusivamente el archivo anterior 0.5.0.9000, separado del envio 0.5.0 a CRAN.
 type: software
 title: "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR"
-version: 0.5.0.9001
+version: 0.5.0.9002
 authors:
   - family-names: "Salas Guerrero"
     given-names: "Ronald Fabricio"
@@ -23,5 +23,6 @@ keywords:
 abstract: >-
   R client for FHIR R4 servers and SQL on FHIR view engine, with explicit
   mappings from SQL query results and R tables to Patient, Observation,
-  Encounter, Condition and Immunization resources. Supports JSON and NDJSON
-  output, decimal precision, R4 structural checks and server profile validation.
+  Encounter, Condition, Immunization, Specimen and DiagnosticReport resources.
+  Supports JSON and NDJSON output, decimal precision, R4 structural checks,
+  an optional external Rust component and server profile validation.
