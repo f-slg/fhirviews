@@ -35,12 +35,12 @@ La respuesta, como
 ``` r
 con <- fhir_conectar("https://hapi.fhir.org/baseR4")
 fhir_ejecutar_texto("GET Patient?_summary=count", con)
-#> <fhir_respuesta> 200 · Bundle (searchset, total 22705, 0 entradas)
+#> <fhir_respuesta> 200 · Bundle (searchset, total 22997, 0 entradas)
 #> {
 #>   "resourceType": "Bundle",
-#>   "id": "36dac8ee-30f9-4547-9e65-a15fd014f3f1",
+#>   "id": "7455104c-a789-45b5-8ebf-bcb9f8662758",
 #>   "meta": {
-#>     "lastUpdated": "2026-11-15T06:43:20.377-05:00",
+#>     "lastUpdated": "2026-11-15T09:35:10.103-05:00",
 #>     "tag": [
 #>       {
 #>         "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationValue",
@@ -50,7 +50,7 @@ fhir_ejecutar_texto("GET Patient?_summary=count", con)
 #>     ]
 #>   },
 #>   "type": "searchset",
-#>   "total": 22705
+#>   "total": 22997
 #> }
 
 fhir_ejecutar_texto('

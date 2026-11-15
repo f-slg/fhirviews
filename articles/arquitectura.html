@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -119,12 +119,14 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
     MP --&gt;|"fhir_validar"| CL
     RE --&gt; DUCK["Traductor SQL DuckDB&lt;br/&gt;experimental, R/sql.R"]
     DUCK --&gt; TABLE["Tablas o consulta diferida"]</code></pre>
-<p>El mapeo SQL a FHIR admite Patient, Observation, Encounter, Condition
-e Immunization de R4 4.0.1. Los controles locales revisan la estructura;
-la validación de perfiles usa el servidor mediante
-<code><a href="../reference/fhir_validar.html">fhir_validar()</a></code>. El traductor DuckDB es una alternativa al
-motor V8 para las vistas admitidas. La federación, la conversión R4/R6 y
-un prototipo Rust permanecen pendientes.</p>
+<p>El mapeo SQL a FHIR admite Patient, Observation, Encounter,
+Condition, Immunization, Specimen y DiagnosticReport de R4 4.0.1. Los
+controles locales revisan la estructura; la validación de perfiles usa
+el servidor mediante <code><a href="../reference/fhir_validar.html">fhir_validar()</a></code>. El traductor DuckDB es
+una alternativa al motor V8 para las vistas admitidas. La federación, la
+conversión R4/R6 permanecen pendientes. La validación estructural
+dispone de un componente Rust externo opcional, seleccionado
+explícitamente desde R.</p>
 <p>El paquete separa las siguientes responsabilidades:</p>
 <table class="table">
 <colgroup>
@@ -186,10 +188,19 @@ original</td>
 <code>R/fhir-desde-sql.R</code>,
 <code>inst/schema/mapeo-r4.json</code>
 </td>
-<td>Mapear columnas a Patient, Observation, Encounter, Condition e
-Immunization, comprobar estructura y escribir JSON/NDJSON</td>
+<td>Mapear columnas a siete tipos R4, comprobar estructura y escribir
+JSON/NDJSON</td>
 </tr>
 <tr class="odd">
+<td>Componente Rust opcional</td>
+<td>
+<code>R/componente-rust.R</code>,
+<code>componentes/rust/</code>
+</td>
+<td>Validar recursos construidos y tipificados por R mediante una CLI
+con contrato versionado y respaldo R explícito</td>
+</tr>
+<tr class="even">
 <td>Decimales</td>
 <td>
 <code>R/sql-limites.R</code>,
@@ -495,7 +506,7 @@ del número de recursos:</p>
 <span>                     por_cada <span class="op">=</span> <span class="st">"telecom"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="va">vista</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.011   0.000   0.010</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.013   0.000   0.011</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="orden-de-columnas-y-de-filas">Orden de columnas y de filas<a class="anchor" aria-label="anchor" href="#orden-de-columnas-y-de-filas"></a>
@@ -638,36 +649,56 @@ concretos. No evalúa código R ni intenta invertir expresiones de un
 <code>ViewDefinition</code>.</p>
 <p>Los metadatos de <code>inst/schema/mapeo-r4.json</code> se derivan de
 los snapshots base de Patient, Observation, Encounter, Condition,
-Immunization y sus tipos en FHIR R4 4.0.1. El generador conserva el
-SHA256 del archivo fuente, los destinos de Reference y los bindings.
-Enumera solo ValueSets completos y simples del paquete; las fuentes
-externas, filtros e imports se remiten a validación terminológica
-externa. Se comprueban rutas, tipos, cardinalidades, campos
-obligatorios, elecciones incompatibles y códigos de bindings requeridos
-enumerados. Para Coding/CodeableConcept se exige al menos un par
-system/code del ValueSet; las traducciones adicionales están permitidas.
-Los bindings extensibles, preferidos y de ejemplo conservan su
-flexibilidad. Las referencias comprueban los destinos declarados y los
-tipos identificables en referencias literales, además de la coherencia
-con Reference.type. Los contextos de <code>SimpleQuantity</code> se
-conservan por separado y prohíben <code>comparator</code>, incluido
-<code>Immunization.doseQuantity</code> y los extremos de un Range. Las
-Quantity generales mantienen su esquema base. <code>Date</code> conserva
-precisión de fecha al mapearse a <code>dateTime</code>; no se asigna una
-hora a un dato sin hora. <code><a href="../reference/fhir_escribir.html">fhir_escribir()</a></code> conserva los
-decimales aportados como texto numérico, incluidos ceros finales,
-mediante lossless-json. Las comprobaciones locales no ejecutan todas las
-invariantes, perfiles ni servicios de terminología: esa etapa
-corresponde a <code><a href="../reference/fhir_validar.html">fhir_validar()</a></code> sobre un servidor
-configurado.</p>
+Immunization, Specimen, DiagnosticReport y sus tipos en FHIR R4 4.0.1.
+El generador conserva el SHA256 del archivo fuente, los destinos de
+Reference y los bindings. Enumera solo ValueSets completos y simples del
+paquete; las fuentes externas, filtros e imports se remiten a validación
+terminológica externa. Se comprueban rutas, tipos, cardinalidades,
+campos obligatorios, elecciones incompatibles y códigos de bindings
+requeridos enumerados. Para Coding/CodeableConcept se exige al menos un
+par system/code del ValueSet; las traducciones adicionales están
+permitidas. Los bindings extensibles, preferidos y de ejemplo conservan
+su flexibilidad. Las referencias comprueban los destinos declarados y
+los tipos identificables en referencias literales, además de la
+coherencia con Reference.type. Los contextos de
+<code>SimpleQuantity</code> se conservan por separado y prohíben
+<code>comparator</code>, incluido <code>Immunization.doseQuantity</code>
+y los extremos de un Range. Las Quantity generales mantienen su esquema
+base. <code>Date</code> conserva precisión de fecha al mapearse a
+<code>dateTime</code>; no se asigna una hora a un dato sin hora.
+<code><a href="../reference/fhir_escribir.html">fhir_escribir()</a></code> conserva los decimales aportados como texto
+numérico, incluidos ceros finales, mediante lossless-json. Las
+comprobaciones locales no ejecutan todas las invariantes, perfiles ni
+servicios de terminología: esa etapa corresponde a
+<code><a href="../reference/fhir_validar.html">fhir_validar()</a></code> sobre un servidor configurado.</p>
 <p>El ejemplo instalado <code>examples/sql-a-fhir.R</code> recorre SQL →
 recursos → NDJSON → vista tabular con datos ficticios. La integración
-aislada añade validación contra los cinco perfiles base, persistencia de
+aislada añade validación contra los siete perfiles base, persistencia de
 los recursos de prueba y lectura de sus referencias antes de comparar
 los dos motores. El ejemplo
 <code>examples/encuentros-diagnosticos.R</code> muestra el recorrido
 enlazado y <code>examples/inmunizaciones-sql.R</code>, la vacunación con
-ambos tipos de fecha y dosis.</p>
+ambos tipos de fecha y dosis. <code>examples/laboratorio-r4.R</code>
+construye una muestra, dos observaciones y un informe mediante SQL, con
+colecciones <code>result[].reference</code> y
+<code>specimen[].reference</code>; compara las tablas V8 y DuckDB y se
+contrasta con HAPI.</p>
+<p>Los destinos <code>[].reference</code> distribuyen una lista de
+claves o referencias literales por fila y conservan su orden y
+duplicados. No pueden compartir campos o índices del mismo arreglo;
+otros objetos complejos repetidos usan índices explícitos. No se
+infieren relaciones entre listas independientes.</p>
+<p><code><a href="../reference/fhir_componente_rust.html">fhir_componente_rust()</a></code> selecciona una CLI externa: R
+prepara y reutiliza un plan basado en los mismos metadatos y verifica
+contrato, versión FHIR, identidad del esquema y conteo de recursos. El
+componente revisa la estructura de recursos ya tipificados por R,
+leyendo NDJSON por líneas. Un rechazo se reproduce con R para conservar
+mensaje y precedencia; un fallo de proceso puede activar el respaldo R
+con un aviso. No evalúa FHIRPath ni perfiles. Los archivos temporales se
+eliminan al terminar y no hay consultas de red. La consulta DBI, los
+recursos y el JSON siguen en memoria R. Esta interfaz no enlaza a la ABI
+de R; el ejecutable se compila y distribuye aparte, sin instalarlo
+durante la instalación del paquete.</p>
 </div>
 <div class="section level2">
 <h2 id="limitaciones-conocidas">Limitaciones conocidas<a class="anchor" aria-label="anchor" href="#limitaciones-conocidas"></a>
@@ -683,10 +714,9 @@ escalas de -18 a 8 y valores representables en
 que pierden identidad se rechazan en SQL. No se recupera la escala
 original desde datos ya normalizados en Parquet u otra tabla.</li>
 <li>
-<strong>SQL a FHIR.</strong> Patient, Observation, Encounter,
-Condition e Immunization, una fila por recurso, sin agrupación
-automática, <code>contained</code>, envío masivo ni interpretación de
-StructureMap.</li>
+<strong>SQL a FHIR.</strong> Siete tipos R4, una fila por recurso,
+sin agrupación automática, <code>contained</code>, envío masivo ni
+interpretación de StructureMap.</li>
 <li>
 <strong>Referencias.</strong> <code>getReferenceKey()</code> no
 resuelve referencias <code>urn:uuid:</code> (las de los Bundle de

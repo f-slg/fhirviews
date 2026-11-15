@@ -2,8 +2,8 @@
 
 Define un mapeo explicito de columnas a destinos FHIR y construye un
 recurso por fila. Admite `Patient`, `Observation`, `Encounter`,
-`Condition` e `Immunization`. No intenta invertir un `ViewDefinition`,
-que puede haber perdido datos.
+`Condition`, `Immunization`, `Specimen` y `DiagnosticReport`. No intenta
+invertir un `ViewDefinition`, que puede haber perdido datos.
 
 ## Usage
 
@@ -15,17 +15,17 @@ fhir_mapa(
   referencias = character()
 )
 
-fhir_desde_tabla(datos, mapa)
+fhir_desde_tabla(datos, mapa, componente = NULL)
 
-fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
+fhir_desde_sql(con_db, sql, mapa, parametros = NULL, componente = NULL)
 ```
 
 ## Arguments
 
 - recurso:
 
-  Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"`, `"Condition"`
-  o `"Immunization"`.
+  Tipo FHIR: `"Patient"`, `"Observation"`, `"Encounter"`, `"Condition"`,
+  `"Immunization"`, `"Specimen"` o `"DiagnosticReport"`.
 
 - campos:
 
@@ -52,6 +52,14 @@ fhir_desde_sql(con_db, sql, mapa, parametros = NULL)
 - mapa:
 
   Mapeo creado con `fhir_mapa()`.
+
+- componente:
+
+  Componente opcional creado con
+  [`fhir_componente_rust()`](https://f-slg.github.io/fhirviews/reference/fhir_componente_rust.md).
+  `NULL` conserva la validacion estructural en R. La conversion de
+  tipos, construccion y serializacion siguen siendo las mismas en ambos
+  casos.
 
 - con_db:
 
@@ -83,8 +91,11 @@ para guardar JSON o NDJSON conservando decimales.
 Los destinos usan nombres JSON de FHIR, puntos e indices desde cero:
 `name[0].family`, `code.coding[0].code`, `valueQuantity.value`. Un
 destino terminado en `[]`, como `name[0].given[]`, toma una columna de
-listas de valores primitivos. Cada elemento repetido debe declarar su
-indice o `[]`; no se evalua FHIRPath ni codigo R en el mapeo.
+listas de valores primitivos. Tambien se admite una coleccion de
+referencias como `result[].reference`: cada clave de la lista produce
+una referencia. Esa coleccion no puede compartir destinos con otros
+campos o indices del mismo arreglo. Los demas objetos repetidos usan
+indices explicitos; no se evalua FHIRPath ni codigo R en el mapeo.
 
 `NA`, `NULL`, cadenas vacias y listas vacias se omiten. Los indices sin
 contenido se compactan; no se escriben objetos vacios ni `null`. Cada
@@ -107,7 +118,11 @@ obligatorios en `Immunization`; si se construye `protocolApplied`, cada
 entrada exige una variante de `doseNumber[x]`. Esto no sustituye la
 validacion de invariantes, terminologias y perfiles con
 [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
-No se inventan codigos, unidades o estados.
+No se inventan codigos, unidades o estados. En la base R4,
+`Specimen.status` y `Specimen.subject` son opcionales; el sujeto tambien
+puede ser un origen ambiental. `DiagnosticReport` exige `status` y
+`code`, admite multiples referencias `result` a `Observation` y
+`specimen` a `Specimen`, y exige `link` en cada `media`.
 
 Los destinos decimales aceptan numeros o texto numerico JSON. El texto
 conserva la escala (`"1.00"` se escribe como el numero JSON `1.00`).

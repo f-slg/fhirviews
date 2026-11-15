@@ -1,5 +1,37 @@
 # Changelog
 
+## fhirviews 0.5.0.9002
+
+- El constructor SQL/R a FHIR incorpora `Specimen` y `DiagnosticReport`
+  R4, con metadatos generados de los snapshots oficiales 4.0.1. No exige
+  paciente o status en Specimen ni subject en DiagnosticReport cuando la
+  base R4 no los exige; el id sigue siendo obligatorio por el contrato
+  del constructor.
+- Nuevas colecciones de referencias como `result[].reference`,
+  `specimen[].reference` y `parent[].reference`, desde columnas de
+  listas. Mantienen orden y duplicados y rechazan campos/indices que se
+  solapen. Los demas objetos complejos repetidos siguen usando indices
+  explicitos.
+- [`fhir_componente_rust()`](https://f-slg.github.io/fhirviews/reference/fhir_componente_rust.md)
+  selecciona un ejecutable local opcional mediante un contrato CLI
+  versionado.
+  [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  y
+  [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+  aceptan `componente`; R conserva las conversiones, construccion y
+  salida. Los errores de datos mantienen el diagnostico R completo y su
+  precedencia; el respaldo R avisa ante indisponibilidad o
+  incumplimiento del contrato. La instalacion del paquete no instala
+  Rust ni compila el componente.
+- Nuevo ejemplo `inst/examples/laboratorio-r4.R`: consulta SQL, muestra,
+  dos observaciones, informe con colecciones variables y tablas
+  equivalentes en V8/DuckDB. El candidato de piloto 0.5.0.9001 conserva
+  su identidad.
+- Concatenar recursos a un acumulador `fhir_recursos(NULL)` conserva
+  ahora los literales decimales de las partes no vacias. Antes el
+  acumulador descartaba la fuente JSON y cambiaba los limites de
+  precision al volver a evaluar decimales recuperados del servidor.
+
 ## fhirviews 0.5.0.9001
 
 - El repositorio incluye un kit externo R4 con el candidato comprobado,

@@ -1,0 +1,64 @@
+# Componente Rust opcional para la construccion SQL a FHIR R4
+
+Selecciona un ejecutable local del componente
+`fhirviews-rust-validator`. Se usa mediante el argumento `componente` de
+[`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
+o
+[`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
+No descarga, compila ni instala Rust o ejecutables. La instalacion y el
+uso predeterminado de fhirviews siguen utilizando R.
+
+## Usage
+
+``` r
+fhir_componente_rust(binario, fallback = TRUE, tiempo = 60L)
+```
+
+## Arguments
+
+- binario:
+
+  Ruta al ejecutable compilado del componente. Tambien acepta el nombre
+  de un ejecutable disponible en `PATH`.
+
+- fallback:
+
+  Si se permite validar en R cuando el componente no puede ejecutar su
+  contrato; avisa en cada llamada afectada.
+
+- tiempo:
+
+  Limite entero de segundos de cada proceso, entre 1 y 3600.
+
+## Value
+
+Un objeto `fhir_componente_rust`. No ejecuta el binario hasta construir
+un lote no vacio.
+
+## Details
+
+El componente revisa estructuras que R ya construyo y tipifico. No
+evalua FHIRPath, no convierte versiones FHIR y no sustituye
+[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
+El protocolo es `fhirviews-r4-validator/1`. Se comprueban capacidades,
+version FHIR, identidad del esquema y numero de recursos revisados. El
+plan se prepara una vez por sesion y se reutiliza entre llamadas.
+
+Ante un error de datos se usa el validador R para emitir el mismo
+diagnostico, clase, fila y campo que el constructor predeterminado. Ante
+ausencia, timeout o respuesta incompatible del ejecutable,
+`fallback = TRUE` avisa y valida el lote con R; `FALSE` produce un error
+`fhirviews_error_componente`. Un error de datos no activa ese respaldo.
+
+La comunicacion usa archivos temporales locales en una carpeta privada,
+eliminados al terminar. Los recursos no se envian a una red. Se debe
+elegir un ejecutable de confianza: se ejecuta con los permisos del
+proceso R. La consulta SQL y el resultado construido siguen residiendo
+en memoria.
+
+## Examples
+
+``` r
+componente <- fhir_componente_rust("/ruta/al/fhirviews-rust-validator")
+# fhir_desde_tabla(datos, mapa, componente = componente)
+```

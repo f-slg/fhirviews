@@ -11,10 +11,11 @@ recursos en `data.frame` mediante **SQL on FHIR** y **FHIRPath**. Define
 una vista una vez, guárdala como `ViewDefinition` y reutilízala sobre
 archivos locales, respuestas del servidor o exportaciones poblacionales.
 
-También construye **Patient, Observation, Encounter, Condition e
-Immunization** desde un `data.frame` o una consulta SQL por DBI, con un
-mapeo explícito de columnas, constantes y referencias. La salida se
-guarda como JSON o NDJSON conservando la escala decimal.
+También construye **Patient, Observation, Encounter, Condition,
+Immunization, Specimen y DiagnosticReport** desde un `data.frame` o una
+consulta SQL por DBI, con un mapeo explícito de columnas, constantes y
+referencias. La salida se guarda como JSON o NDJSON conservando la
+escala decimal.
 
 Está pensado para análisis clínico, investigación, vigilancia
 epidemiológica y docencia desde R. Incluye autenticación SMART on FHIR,
@@ -45,33 +46,37 @@ flowchart TB
     subgraph CONSTRUCCION["Tablas → FHIR R4"]
         direction LR
         ROWS["Filas<br/>R o SQL DBI"] --> MAP["Mapeo<br/>explícito"]
-        MAP --> R4["Recursos<br/>FHIR R4"]
+        MAP --> BUILD["Tipado y construcción<br/>en R"]
+        BUILD --> CHECK["Comprobar estructura<br/>R o componente Rust opcional"]
+        CHECK --> R4["Recursos<br/>FHIR R4"]
         R4 --> OUT["JSON / NDJSON"]
         R4 --> PROFILE["Validar perfiles<br/>con servidor"]
     end
 ```
 
 La lectura usa V8 o el traductor DuckDB experimental. La construcción
-admite **Patient, Observation, Encounter, Condition e Immunization** y
-conserva la escala decimal disponible en el origen. Para construir
-recursos desde una tabla extraída, prepara las filas y elige un mapa;
-las columnas omitidas o agregadas necesitan decisiones propias.
+admite **Patient, Observation, Encounter, Condition, Immunization,
+Specimen y DiagnosticReport** y conserva la escala decimal disponible en
+el origen. Para construir recursos desde una tabla extraída, prepara las
+filas y elige un mapa; las columnas omitidas o agregadas necesitan
+decisiones propias.
 
 ## Estado y versiones
 
 | Versión o componente | Estado y uso |
 |----|----|
-| **Desarrollo actual: `0.5.0.9001`** | Código de GitHub. SQL → FHIR para cinco recursos R4, ocho vistas de catálogo y la nueva vista de alergias. Todavía sin DOI de versión propio. |
+| **Desarrollo actual: `0.5.0.9002`** | Código de GitHub. SQL → FHIR para siete recursos R4, colecciones de referencias y API para un componente Rust externo opcional; ocho vistas de catálogo. Todavía sin DOI de versión propio. |
+| **Candidato de piloto `0.5.0.9001`** | El kit publicado conserva el paquete comprobado con cinco constructores. No incorpora los dos nuevos constructores ni la API del componente Rust. |
 | **Archivo `0.5.0.9000`** | Código anterior preservado en [Zenodo](https://doi.org/10.5281/zenodo.24238726). Su DOI identifica ese archivo concreto. |
 | **`0.5.0`** | [Lanzamiento de GitHub](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), enviado a CRAN el 7 de noviembre de 2026. No incluye SQL → FHIR. Consulta el [catálogo oficial de CRAN](https://cran.r-project.org/web/packages/available_packages_by_name.html) para su publicación. |
-| **Rust** | Laboratorio probado, separado del paquete instalado. [Resultados y límites](#rendimiento). |
+| **Rust** | Componente CLI opcional, compilado y seleccionado por el usuario; R sigue siendo la ruta predeterminada. El ejecutable se distribuye aparte. [Uso](#validaci%C3%B3n-con-el-componente-rust-opcional) · [Resultados y límites](#rendimiento). |
 | **Federación y R4/R6** | Trabajo previsto; todavía no disponible. [Pendientes y orden de trabajo](#pendientes-y-orden-de-trabajo). |
 
 La prioridad es cerrar R4 con el candidato instalado y un piloto
 externo. La lectura y las vistas pueden trabajar con otros recursos R4;
-la construcción desde SQL mantiene **Patient, Observation, Encounter,
-Condition e Immunization**. Publicar en GitHub o Zenodo y ser aceptado
-por CRAN son procesos independientes.
+la construcción desde SQL admite los siete tipos indicados; los perfiles
+propios necesitan validación adicional. Publicar en GitHub o Zenodo y
+ser aceptado por CRAN son procesos independientes.
 
 ## Contenido
 
@@ -113,7 +118,8 @@ por CRAN son procesos independientes.
 | Recorrer NDJSON y gzip sin reunir toda la salida en memoria | [`vista_ejecutar_lotes()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_lotes.md) |
 | Ejecutar una vista traducible a SQL sobre NDJSON o Parquet | [`vista_ejecutar_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar_duckdb.md) — experimental |
 | Consultar varias tablas con SQL | [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md) — vistas evaluadas con V8 y guardadas en una transacción |
-| Construir Patient, Observation, Encounter, Condition e Immunization desde tablas o consultas SQL | [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md) |
+| Construir siete tipos de recursos R4 desde tablas o consultas SQL | [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md), [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md) |
+| Seleccionar el validador estructural Rust externo opcional | [`fhir_componente_rust()`](https://f-slg.github.io/fhirviews/reference/fhir_componente_rust.md) y argumento `componente` |
 | Guardar recursos conservando decimales del JSON original | [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md) — JSON o NDJSON |
 | Partir de vistas para salud pública | [`vista_catalogo()`](https://f-slg.github.io/fhirviews/reference/vista_catalogo.md), [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md) |
 | Definir cohortes con códigos de un ValueSet | [`tx_expandir()`](https://f-slg.github.io/fhirviews/reference/tx_expandir.md), [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md) |
@@ -699,13 +705,14 @@ construye recursos con un
 [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md).
 [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
 aplica el mismo mapeo a un `data.frame`. Admite **Patient, Observation,
-Encounter, Condition e Immunization de FHIR R4 4.0.1**.
+Encounter, Condition, Immunization, Specimen y DiagnosticReport de FHIR
+R4 4.0.1**.
 
 ``` mermaid
 flowchart LR
     DB["Consulta SQL DBI / data.frame"] --> M["fhir_mapa: columnas, constantes y referencias"]
     M --> CHECK["Construir y comprobar estructura R4"]
-    CHECK --> R["Patient, Observation, Encounter,<br/>Condition e Immunization"]
+    CHECK --> R["Patient, Observation, Encounter, Condition,<br/>Immunization, Specimen y DiagnosticReport"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → tabla"]
     R --> C["Validación de perfiles con fhir_validar"]
@@ -796,7 +803,8 @@ perfiles.
 | `constantes` | Lista con destinos y valores fijos. No puede repetir un destino de `campos`. |
 | `referencias` | Destino `.reference` → tipo FHIR; una clave `p1` produce `Patient/p1`. Recibe claves, no URLs ni referencias ya prefijadas. |
 | `name[0].family` | Índices desde cero; los campos repetidos deben indicar un índice. |
-| `name[0].given[]` | Colección de primitivos desde una columna de listas; `[]` solo puede aparecer al final. |
+| `name[0].given[]` | Colección de primitivos desde una columna de listas. |
+| `result[].reference` | Colección de referencias desde una columna de listas. Mantiene orden y duplicados y omite ausentes; admite `referencias = c("result[].reference" = "Observation")`. No puede compartir otros campos ni índices del mismo arreglo. |
 | Campos de elección | Se usa el nombre JSON concreto: `valueQuantity.value`, `deceasedBoolean`, etc. No se evalúan expresiones FHIRPath. |
 | `NA`, `NULL`, `""`, colecciones vacías | Se omiten; los objetos y posiciones sin contenido se compactan. Los índices identifican posiciones de construcción, no huecos que se guardan como `null`. |
 | `id` | Debe estar mapeado, ser válido y único en el resultado. Los enteros seguros se convierten a texto. |
@@ -1038,19 +1046,137 @@ Las invariantes y la terminología clínica se comprueban en esa etapa;
 por ejemplo, cada entrada de `education` debe contener `documentType` o
 `reference` según la invariante R4 `imm-1`.
 
+### Muestras e informes de laboratorio
+
+`Specimen` admite muestras clínicas y ambientales. En la base R4,
+`status` y `subject` son opcionales; si se aporta estado se comprueba su
+ValueSet y el origen puede ser Patient, Group, Device, Substance o
+Location. También se comprueban las alternativas
+`collection.collected[x]` y los destinos de `parent`, `request`,
+`collection.collector` y los aditivos. El `id` sigue siendo obligatorio
+por el contrato del constructor.
+
+`DiagnosticReport` exige `status` y `code`. Su `subject` es opcional en
+la base R4; `result` referencia Observation y `specimen`, Specimen. Las
+variantes de `effective[x]` son excluyentes, `issued` necesita un
+instante con zona horaria y cada entrada `media` necesita `link`. Los
+perfiles del proyecto pueden exigir más campos. Las invariantes y
+terminologías externas se contrastan con
+[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
+
+Un informe puede contener cualquier número de referencias por fila:
+
+``` r
+
+informes <- data.frame(id = c("d1", "d2"))
+informes$resultados <- list(c("o1", "o2"), "o3")
+informes$muestras <- list("s1", c("s2", "s3"))
+mapa <- fhir_mapa("DiagnosticReport", c(
+  id = "id", "result[].reference" = "resultados", "specimen[].reference" = "muestras"
+), constantes = list(status = "final", "code.text" = "Informe ficticio"),
+referencias = c("result[].reference" = "Observation", "specimen[].reference" = "Specimen"))
+recursos <- fhir_desde_tabla(informes, mapa)
+recursos[[1]]$result
+# list(list(reference = "Observation/o1"), list(reference = "Observation/o2"))
+```
+
+El mapa crea las referencias; los recursos enlazados se construyen
+aparte. No se mezclan `result[].reference` y `result[0].display` u otros
+destinos del mismo arreglo. Las demás colecciones de objetos siguen
+usando índices explícitos, por ejemplo `presentedForm[0].contentType` y
+`presentedForm[0].data`. No se agrupan filas automáticamente ni se
+infiere la correspondencia entre listas independientes.
+
+El ejemplo instalado
+[laboratorio-r4.R](https://github.com/f-slg/fhirviews/blob/main/inst/examples/laboratorio-r4.R)
+crea tablas DuckDB ficticias, construye Patient, Specimen, dos
+Observation y DiagnosticReport mediante consultas SQL, y compara tres
+vistas con V8 y DuckDB. Las colecciones de resultados y muestras
+proceden de agregaciones SQL
+[`list()`](https://rdrr.io/r/base/list.html):
+
+``` r
+
+source(system.file("examples", "laboratorio-r4.R", package = "fhirviews"))
+ejemplo <- laboratorio_r4()
+ejemplo$tablas$resultados  # dos filas: una por Observation referenciada
+fhir_escribir(ejemplo$recursos, tempfile(fileext = ".ndjson"))
+```
+
+La integración HAPI exige validar los perfiles base, guardar, recuperar
+y comparar referencias y tablas; también debe rechazar estados,
+destinos, campos obligatorios y entradas `media` inválidos. Los
+literales `5.00`, `72.00` y `13.50` conservan su escala al escribir y
+evaluar límites.
+
+### Validación con el componente Rust opcional
+
+[`fhir_componente_rust()`](https://f-slg.github.io/fhirviews/reference/fhir_componente_rust.md)
+está disponible desde **0.5.0.9002**. El ejecutable
+[componentes/rust](https://github.com/f-slg/fhirviews/tree/main/componentes/rust)
+se compila aparte con Cargo y rustc \>= 1.75:
+
+``` sh
+cargo build --release --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
+cargo test --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
+```
+
+``` r
+
+componente <- fhir_componente_rust(
+  "componentes/rust/target/release/fhirviews-rust-validator",
+  fallback = FALSE, tiempo = 60L) # en Windows, termina en .exe
+ejemplo_rust <- laboratorio_r4(componente = componente)
+stopifnot(identical(ejemplo$recursos, ejemplo_rust$recursos))
+# También: fhir_desde_tabla(datos, mapa, componente = componente)
+#          fhir_desde_sql(db, sql, mapa, parametros, componente = componente)
+```
+
+Sin `componente`, la validación estructural sigue en R. El componente
+revisa recursos ya construidos y tipificados por R: campos obligatorios,
+elecciones, cardinalidades, bindings enumerables y destinos de
+referencias. R conserva las conversiones, la serialización y los
+decimales. No evalúa SQL on FHIR ni FHIRPath, no convierte R4/R6 y no
+sustituye un validador de perfiles.
+
+El contrato CLI `fhirviews-r4-validator/1` comprueba capacidades,
+versión FHIR, identidad del esquema y conteo de recursos. El plan se
+prepara una vez por sesión R; el proceso Rust lo lee en cada llamada.
+Ante datos inválidos, R reproduce el primer error con su mensaje
+completo, clase, fila y campo. `fallback = TRUE` avisa y valida con R si
+el ejecutable falta, falla, excede el tiempo o devuelve una respuesta
+incompatible. `FALSE` exige el componente y produce
+`fhirviews_error_componente` ante esos fallos.
+
+La comunicación usa archivos temporales locales que se eliminan al
+terminar; el componente no usa la red. La consulta DBI y los recursos
+siguen completos en memoria R. La instalación del paquete no descarga
+Rust ni ejecutables. La CLI evita enlazar con la ABI de R; una
+integración nativa y su distribución serían trabajos adicionales. Usa un
+ejecutable de confianza.
+
+La [revisión de
+Helios](https://github.com/f-slg/fhirviews/blob/main/data-raw/revision-helios-20261115.md)
+identifica mejoras aplicables: interfaces entre componentes, esquema
+fijo, procesamiento incremental y capacidades por versión. Esta entrega
+aplica la interfaz opcional y las colecciones de referencias. Los
+cursores DBI por bloques, Arrow directo y adaptadores multiversión
+siguen pendientes. La comparación es de diseño y código; no se realizó
+un benchmark contra Helios.
+
 ### Recursos admitidos y próximos grupos
 
 El lector y las vistas ya pueden trabajar con otros tipos de recursos
 FHIR. La construcción desde SQL o tablas admite **Patient, Observation,
-Encounter, Condition e Immunization**. La ampliación se hace por grupos
-comprobados:
+Encounter, Condition, Immunization, Specimen y DiagnosticReport**. La
+ampliación se hace por grupos comprobados:
 
 | Estado | Recursos | Recorrido |
 |----|----|----|
 | Admitidos | `Patient`, `Observation` | Pacientes y resultados, con escala decimal conservada. |
 | Admitidos | `Encounter`, `Condition` | Paciente → encuentro → diagnóstico, con referencias entre los tres. |
 | Admitido | `Immunization` | Paciente → evento de vacunación, con vacuna, estado y fecha explícitos. |
-| Pendiente | `Specimen`, `DiagnosticReport` | Muestra → observaciones → informe, con varias referencias a resultados. |
+| Admitidos desde 0.5.0.9002 | `Specimen`, `DiagnosticReport` | Muestra → observaciones → informe, con colecciones de referencias variables. |
 | Pendiente | `MedicationRequest`, `MedicationDispense` | Prescripción y dispensación, con medicamento y datos de dosificación declarados. |
 | Pendiente según el origen | `Organization`, `Practitioner` | Instituciones y profesionales referenciados por los recursos anteriores. |
 
@@ -1073,11 +1199,10 @@ requiere:
     `subject`; `Immunization`, `status`, `vaccineCode`, `patient` y una
     de las variantes `occurrence[x]`. Los perfiles del proyecto pueden
     exigir campos adicionales.
-4.  Diseñar las colecciones de objetos antes de ofrecer referencias o
-    grupos de longitud variable. Hoy se admite `result[0].reference`,
-    pero `[]` solo construye colecciones de primitivos; no construye por
-    sí solo una lista variable de objetos `Reference` o
-    `dosageInstruction`.
+4.  Diseñar las colecciones de objetos. Se admiten colecciones de
+    primitivos y referencias `[].reference`; los demás objetos, como
+    `dosageInstruction`, requieren índices explícitos y reglas para
+    relacionar sus columnas.
 5.  Exigir por recurso casos válidos e inválidos y un recorrido
     reproducible: SQL → FHIR → `$validate` del perfil base → guardar y
     leer → tabla con V8 y DuckDB. Revisar referencias, ausentes, códigos
@@ -1476,9 +1601,66 @@ commit específico que se vaya a entregar.
 
 ## Rendimiento
 
+### Medición de la API Rust en 0.5.0.9002
+
+El [informe
+verificable](https://github.com/f-slg/fhirviews/tree/main/data-raw/validacion-0.5.0.9002)
+corresponde al paquete instalado desde el commit `8d6a122`, con bytecode
+R, Ubuntu 26.04.1, Intel i7-10750H, R 4.5.2 y Rust 1.75.0. Compara los
+siete mapas ficticios de `tests/testthat/helper-constructor-r4.R`: **126
+muestras**, 300 y 3.000 filas, tres repeticiones y orden aleatorio. Cada
+llamada produjo el mismo JSON exacto que la ruta R.
+
+Medianas para **3.000 filas**, en segundos:
+
+| Recurso          |  R (s) | R con plan (s) | Componente Rust (s) | R / Rust |
+|------------------|-------:|---------------:|--------------------:|---------:|
+| Condition        |  6,983 |          6,703 |               2,307 |    3,03× |
+| DiagnosticReport | 19,695 |         15,755 |               6,352 |    3,10× |
+| Encounter        |  8,666 |          5,500 |               2,642 |    3,28× |
+| Immunization     |  9,317 |          5,837 |               3,116 |    2,99× |
+| Observation      | 10,098 |          6,043 |               2,986 |    3,38× |
+| Patient          |  3,362 |          1,855 |               1,538 |    2,19× |
+| Specimen         |  9,564 |          6,382 |               3,447 |    2,77× |
+
+En estos mapas y equipo, el componente fue entre **2,19 y 3,38 veces**
+más rápido que R público, y entre **1,21 y 2,91 veces** más rápido que
+el plan R experimental. Los mapas tienen estructuras distintas; las
+cifras no comparan la complejidad de los recursos ni prueban que se
+hayan agotado las mejoras R.
+
+**Los lotes pequeños pueden favorecer R.** Para 300 Patient se midieron
+0,341 s con R, 0,166 s con el plan R y 0,437 s con el componente. El
+plan R experimental también fue más rápido que Rust en algunos otros
+lotes de 300. Por eso la selección es explícita y R sigue siendo la
+opción predeterminada; no hay un umbral automático de activación
+validado para otras cargas.
+
+La preparación del plan R experimental tardó 0,692 s y la primera
+llamada al componente, con tres Patient, 0,437 s; se registran aparte.
+Los tiempos por lote incluyen comprobación del binario, arranque,
+transporte temporal y lectura del plan. Se excluyen compilación,
+instalación, generación de filas/mapas, comparación del resultado y GC
+previo. Se guardan las muestras individuales, que muestran variación;
+tres repeticiones no constituyen un estudio general de rendimiento. No
+se midieron memoria de esta API, rendimiento en otros sistemas, perfiles
+clínicos, consultas SQL on FHIR ni Helios.
+
+El archivo fuente comprobado pasó `R CMD check --as-cran --no-manual`
+con **0 errores, 0 advertencias y 1 nota por la numeración de
+desarrollo**. Las diez comprobaciones CI del código pasaron: cinco
+configuraciones R, componente Rust en tres plataformas, HAPI y SQL DBI.
+Cada plataforma ejecutó 286 comprobaciones dirigidas y los 587 controles
+del laboratorio; el núcleo incluye 12 pruebas nativas. Los resultados y
+los SHA-256 quedan conservados junto al script
+[medir-componente-rust.R](https://github.com/f-slg/fhirviews/blob/main/data-raw/medir-componente-rust.R).
+
+Laboratorio histórico Rust de 0.5.0.9000
+
 ### Evaluación experimental de Rust
 
-El constructor público utiliza R. El [laboratorio
+El constructor público utiliza R por defecto; desde 0.5.0.9002 puede
+seleccionar el componente CLI descrito arriba. El [laboratorio
 Rust](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust)
 queda fuera del paquete instalado. Sus mediciones de referencia usan
 **0.5.0.9000**, Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 e Intel i7-10750H;
@@ -1503,8 +1685,9 @@ no demuestran ahorro de memoria.
 
 Pasaron siete tests Rust y 587 controles diferenciales en Windows, macOS
 y Linux. La CI contrasta también la paridad con desarrollos posteriores.
-Quedan pendientes interfaz nativa con R, errores completos, ABI/Rtools y
-distribución para CRAN. Consulta [resultados, hashes y
+La API CLI de 0.5.0.9002 conserva diagnósticos R completos y respaldo
+explícito; un enlace nativo, su ABI/toolchain y distribución dentro del
+paquete serían trabajo adicional. Consulta [resultados, hashes y
 reproducción](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md).
 
 Mediciones históricas de motores y comparación con fhircrackr
@@ -1542,13 +1725,12 @@ reproducible está en
 
 ### Comparación con fhircrackr
 
-[fhircrackr](https://CRAN.R-project.org/package=fhircrackr) es el
-paquete de CRAN más usado para aplanar recursos FHIR en R. Describe las
-columnas con XPath sobre Bundles XML y expande las colecciones con
-`fhir_melt()`. La comparación obtiene **la misma tabla** con ambos
-paquetes: filtro por fecha, cuatro columnas por paciente y una fila por
-nombre. Antes de medir, el script comprueba que los tres resultados sean
-idénticos.
+[fhircrackr](https://CRAN.R-project.org/package=fhircrackr) es un
+paquete de CRAN para aplanar recursos FHIR en R. Describe las columnas
+con XPath sobre Bundles XML y expande las colecciones con `fhir_melt()`.
+La comparación obtiene **la misma tabla** con ambos paquetes: filtro por
+fecha, cuatro columnas por paciente y una fila por nombre. Antes de
+medir, el script comprueba que los tres resultados sean idénticos.
 
 | Pacientes | Filas | fhircrackr 2.4.0 · 1 núcleo | fhircrackr 2.4.0 · 8 núcleos | fhirviews · V8 | fhirviews · DuckDB |
 |---:|---:|---:|---:|---:|---:|
@@ -1640,25 +1822,29 @@ Issues](https://github.com/f-slg/fhirviews/issues).
 ## Estabilización de R4
 
 La próxima entrega consolidará **FHIR R4 4.0.1** con un alcance
-explícito. La versión de desarrollo sigue siendo `0.5.0.9001`; preparar
-y comprobar un candidato no cambia su versión, publica un lanzamiento ni
-emite un DOI.
+explícito. La versión de desarrollo actual es `0.5.0.9002`. El kit del
+piloto conserva `0.5.0.9001`, con cinco constructores; la ampliación a
+siete tipos y el componente Rust necesitan su propia evidencia y
+evaluación. Preparar un candidato no publica un lanzamiento ni emite un
+DOI.
 
 | Componente | Alcance del cierre R4 |
 |----|----|
 | Cliente y vistas V8 | Recursos R4, paginación, autenticación y operaciones según las capacidades del servidor. |
-| Construcción desde tablas o DBI | `Patient`, `Observation`, `Encounter`, `Condition` e `Immunization`; una fila por recurso y mapeos explícitos. |
+| Construcción desde tablas o DBI | Siete tipos: `Patient`, `Observation`, `Encounter`, `Condition`, `Immunization`, `Specimen` y `DiagnosticReport`; una fila por recurso y mapeos explícitos. |
 | Validación local | Tipos, cardinalidades, elecciones, fechas, destinos y bindings requeridos enumerables. Los controles léxicos de `code` y URI siguen las [reglas de primitivos R4](https://hl7.org/fhir/R4/datatypes.html#primitive). |
 | Perfiles y terminología | HAPI comprueba perfiles base; perfiles del proyecto, invariantes y terminología externa se contrastan con su entorno acordado. |
 | Motor DuckDB | Conserva la etiqueta experimental y el subconjunto FHIRPath documentado; se compara con V8. |
-| Otros recursos desde SQL | Se incorporarán por grupos después de este cierre. La lectura y las vistas pueden trabajar con otros recursos R4. |
+| Componente Rust | API opcional mediante CLI externa, con respaldo R explícito. Ejecutable y distribución nativa independientes del paquete R. |
+| Otros recursos desde SQL | Medicamentos y actores se incorporarán por grupos. La lectura y las vistas pueden trabajar con otros recursos R4. |
 | Federación y otras versiones | Consultas conjuntas entre servidores y conversión R4/R6 pendientes; no hay una API multiversión habilitada. |
 
 El cierre técnico exige que el **mismo archivo fuente** se instale y
 apruebe en una biblioteca nueva, con ayuda, viñetas y ejemplos
-incluidos. El control `r4_cinco_recursos` construye seis recursos
-ficticios: un Patient, un Encounter, un Condition, un Observation y dos
-Immunization. En ambos perfiles comprueba:
+incluidos. El control del candidato de piloto 0.5.0.9001
+`r4_cinco_recursos` construye seis recursos ficticios: un Patient, un
+Encounter, un Condition, un Observation y dos Immunization. En ambos
+perfiles comprueba:
 
 - Referencias a Patient y Encounter, booleanos falsos y ausencia
   completa de los objetos opcionales cuando faltan sus datos.
@@ -1689,11 +1875,12 @@ perfiles propios requieren otra comprobación.
 
 Después del piloto y de corregir sus hallazgos se fijará la versión
 estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y
-el ORCID del autor; el desarrollo actual 0.5.0.9001 mantiene metadatos
+el ORCID del autor; el desarrollo actual 0.5.0.9002 mantiene metadatos
 de cita separados. El orden posterior será federación entre servidores
-R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust ya
-tiene un prototipo medido; su incorporación depende de la interfaz
-nativa, la distribución y las pruebas de instalación.
+R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust dispone
+de una interfaz CLI opcional; la integración nativa, los binarios
+distribuidos y las pruebas de instalación de esos artefactos siguen
+siendo trabajos separados.
 
 ## Pendientes y orden de trabajo
 
@@ -1704,15 +1891,15 @@ tienen evidencia. Las siguientes tareas requieren trabajo adicional:
 |----|----|----|
 | 1 | **Piloto externo R4** | Una persona ajena al desarrollo instala el candidato identificado, repite las tareas y registra comprensión, ayuda y hallazgos con el [protocolo R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). La CI no sustituye esa evaluación. |
 | 2 | **Entrega estable del alcance R4** | Resolver los hallazgos, elegir versión y artefacto, comprobar ese mismo archivo y verificar su cita. El envío `0.5.0` a CRAN conserva su seguimiento independiente. |
-| 3 | **Motor Rust opcional** | Definir la interfaz estable con R, completar diagnósticos y fallback, probar instalación/ABI con Rtools y preparar dependencias/licencias para CRAN. La [CLI experimental](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust) aún no cumple ese papel. |
-| 4 | **Más constructores R4** | Después del cierre, incorporar `Specimen` y `DiagnosticReport`, seguidos de medicamentos y actores según las fuentes. Cada grupo necesita metadatos, colecciones, referencias y retorno SQL → FHIR → perfiles → tablas. |
+| 3 | **Distribución del componente Rust** | La API CLI y el respaldo R ya existen en 0.5.0.9002. La API actual ya está medida; falta decidir distribución de ejecutables por plataforma y evaluar otras cargas; un enlace nativo y su incorporación al paquete exigirían revisar ABI, toolchains, vendoring y licencias para CRAN. |
+| 4 | **Más constructores R4** | `Specimen` y `DiagnosticReport` ya están incorporados. Siguen medicamentos y actores según las fuentes; cada grupo necesita metadatos, colecciones, referencias y retorno SQL → FHIR → perfiles → tablas. |
 | 5 | **Federación entre servidores R4** | Conservar origen y procedencia, distinguir ids repetidos entre servidores, revisar referencias y contrastar las consultas conjuntas. |
 | 6 | **Adaptadores R4/R6** | Elegir recursos y reglas por versión, conservar el original y documentar pérdidas o campos sin equivalencia antes de exportar. |
 
 La nueva vista `alergias` amplía la extracción de
-**AllergyIntolerance**; la construcción SQL → FHIR sigue limitada a
-cinco tipos. La lectura de alergias no acredita un nuevo conversor ni
-sustituye la validación de perfiles.
+**AllergyIntolerance**; la construcción SQL → FHIR admite siete tipos.
+La lectura de alergias no acredita un nuevo conversor ni sustituye la
+validación de perfiles.
 
 ## Piloto y documentación local
 
@@ -1887,14 +2074,14 @@ toBibtex(citation("fhirviews"))
 
 | Qué utilizaste | Cómo identificarlo |
 |----|----|
-| Desarrollo actual `0.5.0.9001` | Cita la versión instalada y conserva el SHA del commit. Todavía no tiene DOI de versión. |
+| Desarrollo actual `0.5.0.9002` | Cita la versión instalada y conserva el SHA del commit. Todavía no tiene DOI de versión. |
 | Archivo `0.5.0.9000` | [DOI 10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726), correspondiente al código archivado desde `565243e`. |
 | Proyecto y sus versiones | [DOI de concepto 10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725). Para reproducir un análisis, identifica además la versión concreta. |
 
 ORCID identifica al autor; Zenodo preserva un archivo citable. Pueden
 utilizarse antes de la publicación en CRAN: no son un trámite previo
 obligatorio ni una certificación de aceptación. La cita de R incorpora
-el DOI de `0.5.0.9000` solo para esa versión. El desarrollo `0.5.0.9001`
+el DOI de `0.5.0.9000` solo para esa versión. El desarrollo `0.5.0.9002`
 conserva su propia versión y la URL del repositorio. Los metadatos están
 en
 [`CITATION.cff`](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)

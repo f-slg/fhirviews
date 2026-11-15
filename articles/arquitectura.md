@@ -45,13 +45,15 @@ flowchart LR
     DUCK --> TABLE["Tablas o consulta diferida"]
 ```
 
-El mapeo SQL a FHIR admite Patient, Observation, Encounter, Condition e
-Immunization de R4 4.0.1. Los controles locales revisan la estructura;
-la validación de perfiles usa el servidor mediante
+El mapeo SQL a FHIR admite Patient, Observation, Encounter, Condition,
+Immunization, Specimen y DiagnosticReport de R4 4.0.1. Los controles
+locales revisan la estructura; la validación de perfiles usa el servidor
+mediante
 [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
 El traductor DuckDB es una alternativa al motor V8 para las vistas
-admitidas. La federación, la conversión R4/R6 y un prototipo Rust
-permanecen pendientes.
+admitidas. La federación, la conversión R4/R6 permanecen pendientes. La
+validación estructural dispone de un componente Rust externo opcional,
+seleccionado explícitamente desde R.
 
 El paquete separa las siguientes responsabilidades:
 
@@ -64,7 +66,8 @@ El paquete separa las siguientes responsabilidades:
 | Recursos | `R/recursos.R` | Reunir recursos de cualquier fuente y conservar su JSON original |
 | Motor de vistas | `R/vista.R`, `R/validar.R` | Validar y ejecutar `ViewDefinition`, armar la tabla |
 | Motor de FHIRPath | `R/motor.R`, `inst/js/fhirviews.js` | Evaluar expresiones FHIRPath por lotes |
-| SQL a FHIR | `R/fhir-desde-sql.R`, `inst/schema/mapeo-r4.json` | Mapear columnas a Patient, Observation, Encounter, Condition e Immunization, comprobar estructura y escribir JSON/NDJSON |
+| SQL a FHIR | `R/fhir-desde-sql.R`, `inst/schema/mapeo-r4.json` | Mapear columnas a siete tipos R4, comprobar estructura y escribir JSON/NDJSON |
+| Componente Rust opcional | `R/componente-rust.R`, `componentes/rust/` | Validar recursos construidos y tipificados por R mediante una CLI con contrato versionado y respaldo R explícito |
 | Decimales | `R/sql-limites.R`, `inst/js/lossless-json/` | Conservar los literales numericos y calcular limites con su escala |
 
 ## Cliente FHIR
@@ -308,7 +311,7 @@ vista <- vista_crear("Patient", c(sistema = "system", valor = "value"),
                      por_cada = "telecom")
 system.time(vista_ejecutar(caso, vista))
 #>    user  system elapsed 
-#>   0.011   0.000   0.010
+#>   0.013   0.000   0.011
 ```
 
 ### Orden de columnas y de filas
@@ -437,23 +440,23 @@ concretos. No evalúa código R ni intenta invertir expresiones de un
 `ViewDefinition`.
 
 Los metadatos de `inst/schema/mapeo-r4.json` se derivan de los snapshots
-base de Patient, Observation, Encounter, Condition, Immunization y sus
-tipos en FHIR R4 4.0.1. El generador conserva el SHA256 del archivo
-fuente, los destinos de Reference y los bindings. Enumera solo ValueSets
-completos y simples del paquete; las fuentes externas, filtros e imports
-se remiten a validación terminológica externa. Se comprueban rutas,
-tipos, cardinalidades, campos obligatorios, elecciones incompatibles y
-códigos de bindings requeridos enumerados. Para Coding/CodeableConcept
-se exige al menos un par system/code del ValueSet; las traducciones
-adicionales están permitidas. Los bindings extensibles, preferidos y de
-ejemplo conservan su flexibilidad. Las referencias comprueban los
-destinos declarados y los tipos identificables en referencias literales,
-además de la coherencia con Reference.type. Los contextos de
-`SimpleQuantity` se conservan por separado y prohíben `comparator`,
-incluido `Immunization.doseQuantity` y los extremos de un Range. Las
-Quantity generales mantienen su esquema base. `Date` conserva precisión
-de fecha al mapearse a `dateTime`; no se asigna una hora a un dato sin
-hora.
+base de Patient, Observation, Encounter, Condition, Immunization,
+Specimen, DiagnosticReport y sus tipos en FHIR R4 4.0.1. El generador
+conserva el SHA256 del archivo fuente, los destinos de Reference y los
+bindings. Enumera solo ValueSets completos y simples del paquete; las
+fuentes externas, filtros e imports se remiten a validación
+terminológica externa. Se comprueban rutas, tipos, cardinalidades,
+campos obligatorios, elecciones incompatibles y códigos de bindings
+requeridos enumerados. Para Coding/CodeableConcept se exige al menos un
+par system/code del ValueSet; las traducciones adicionales están
+permitidas. Los bindings extensibles, preferidos y de ejemplo conservan
+su flexibilidad. Las referencias comprueban los destinos declarados y
+los tipos identificables en referencias literales, además de la
+coherencia con Reference.type. Los contextos de `SimpleQuantity` se
+conservan por separado y prohíben `comparator`, incluido
+`Immunization.doseQuantity` y los extremos de un Range. Las Quantity
+generales mantienen su esquema base. `Date` conserva precisión de fecha
+al mapearse a `dateTime`; no se asigna una hora a un dato sin hora.
 [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
 conserva los decimales aportados como texto numérico, incluidos ceros
 finales, mediante lossless-json. Las comprobaciones locales no ejecutan
@@ -464,11 +467,33 @@ sobre un servidor configurado.
 
 El ejemplo instalado `examples/sql-a-fhir.R` recorre SQL → recursos →
 NDJSON → vista tabular con datos ficticios. La integración aislada añade
-validación contra los cinco perfiles base, persistencia de los recursos
+validación contra los siete perfiles base, persistencia de los recursos
 de prueba y lectura de sus referencias antes de comparar los dos
 motores. El ejemplo `examples/encuentros-diagnosticos.R` muestra el
 recorrido enlazado y `examples/inmunizaciones-sql.R`, la vacunación con
-ambos tipos de fecha y dosis.
+ambos tipos de fecha y dosis. `examples/laboratorio-r4.R` construye una
+muestra, dos observaciones y un informe mediante SQL, con colecciones
+`result[].reference` y `specimen[].reference`; compara las tablas V8 y
+DuckDB y se contrasta con HAPI.
+
+Los destinos `[].reference` distribuyen una lista de claves o
+referencias literales por fila y conservan su orden y duplicados. No
+pueden compartir campos o índices del mismo arreglo; otros objetos
+complejos repetidos usan índices explícitos. No se infieren relaciones
+entre listas independientes.
+
+[`fhir_componente_rust()`](https://f-slg.github.io/fhirviews/reference/fhir_componente_rust.md)
+selecciona una CLI externa: R prepara y reutiliza un plan basado en los
+mismos metadatos y verifica contrato, versión FHIR, identidad del
+esquema y conteo de recursos. El componente revisa la estructura de
+recursos ya tipificados por R, leyendo NDJSON por líneas. Un rechazo se
+reproduce con R para conservar mensaje y precedencia; un fallo de
+proceso puede activar el respaldo R con un aviso. No evalúa FHIRPath ni
+perfiles. Los archivos temporales se eliminan al terminar y no hay
+consultas de red. La consulta DBI, los recursos y el JSON siguen en
+memoria R. Esta interfaz no enlaza a la ABI de R; el ejecutable se
+compila y distribuye aparte, sin instalarlo durante la instalación del
+paquete.
 
 ## Limitaciones conocidas
 
@@ -480,9 +505,9 @@ ambos tipos de fecha y dosis.
   precisión y las operaciones que pierden identidad se rechazan en SQL.
   No se recupera la escala original desde datos ya normalizados en
   Parquet u otra tabla.
-- **SQL a FHIR.** Patient, Observation, Encounter, Condition e
-  Immunization, una fila por recurso, sin agrupación automática,
-  `contained`, envío masivo ni interpretación de StructureMap.
+- **SQL a FHIR.** Siete tipos R4, una fila por recurso, sin agrupación
+  automática, `contained`, envío masivo ni interpretación de
+  StructureMap.
 - **Referencias.** `getReferenceKey()` no resuelve referencias
   `urn:uuid:` (las de los Bundle de transacción) ni a recursos
   contenidos (`#id`): devuelve vacío.

@@ -38,13 +38,13 @@ Source:
 [`inst/CITATION`](https://github.com/f-slg/fhirviews/blob/main/inst/CITATION)
 
 Salas Guerrero, R. F. (2026). fhirviews: FHIR desde R y vistas tabulares
-con SQL on FHIR. Paquete de R versión 0.5.0.9001.
+con SQL on FHIR. Paquete de R versión 0.5.0.9002.
 https://github.com/f-slg/fhirviews
 
     @Manual{fhirviews,
       title = {fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR},
       author = {Ronald Fabricio {Salas Guerrero}},
       year = {2026},
-      note = {Paquete de R versión 0.5.0.9001},
+      note = {Paquete de R versión 0.5.0.9002},
       url = {https://github.com/f-slg/fhirviews},
     }

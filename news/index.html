@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,6 +42,15 @@
       <small>Source: <a href="https://github.com/f-slg/fhirviews/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0.9002" id="fhirviews-0509002">fhirviews 0.5.0.9002<a class="anchor" aria-label="anchor" href="#fhirviews-0509002"></a></h2>
+<ul><li>El constructor SQL/R a FHIR incorpora <code>Specimen</code> y <code>DiagnosticReport</code> R4, con metadatos generados de los snapshots oficiales 4.0.1. No exige paciente o status en Specimen ni subject en DiagnosticReport cuando la base R4 no los exige; el id sigue siendo obligatorio por el contrato del constructor.</li>
+<li>Nuevas colecciones de referencias como <code>result[].reference</code>, <code>specimen[].reference</code> y <code>parent[].reference</code>, desde columnas de listas. Mantienen orden y duplicados y rechazan campos/indices que se solapen. Los demas objetos complejos repetidos siguen usando indices explicitos.</li>
+<li>
+<code><a href="../reference/fhir_componente_rust.html">fhir_componente_rust()</a></code> selecciona un ejecutable local opcional mediante un contrato CLI versionado. <code><a href="../reference/fhir_mapa.html">fhir_desde_tabla()</a></code> y <code><a href="../reference/fhir_mapa.html">fhir_desde_sql()</a></code> aceptan <code>componente</code>; R conserva las conversiones, construccion y salida. Los errores de datos mantienen el diagnostico R completo y su precedencia; el respaldo R avisa ante indisponibilidad o incumplimiento del contrato. La instalacion del paquete no instala Rust ni compila el componente.</li>
+<li>Nuevo ejemplo <code>inst/examples/laboratorio-r4.R</code>: consulta SQL, muestra, dos observaciones, informe con colecciones variables y tablas equivalentes en V8/DuckDB. El candidato de piloto 0.5.0.9001 conserva su identidad.</li>
+<li>Concatenar recursos a un acumulador <code>fhir_recursos(NULL)</code> conserva ahora los literales decimales de las partes no vacias. Antes el acumulador descartaba la fuente JSON y cambiaba los limites de precision al volver a evaluar decimales recuperados del servidor.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0.9001" id="fhirviews-0509001">fhirviews 0.5.0.9001<a class="anchor" aria-label="anchor" href="#fhirviews-0509001"></a></h2>
 <ul><li>El repositorio incluye un kit externo R4 con el candidato comprobado, verificacion SHA-256, instalacion aislada, protocolos R/FHIR y formulario local. Las tareas y decisiones humanas empiezan pendientes. El kit no se distribuye dentro del paquete R ni envia resultados automaticamente.</li>

@@ -97,8 +97,8 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 
 ## De SQL a FHIR
 
-Construir Patient, Observation, Encounter, Condition e Immunization
-desde R o DBI.
+Construir siete tipos de recurso R4 desde R o DBI, con validacion R o un
+componente Rust opcional.
 
 - [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
   [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
@@ -106,6 +106,8 @@ desde R o DBI.
   : Construir recursos FHIR R4 desde tablas o consultas SQL
 - [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
   : Escribir recursos FHIR como JSON o NDJSON
+- [`fhir_componente_rust()`](https://f-slg.github.io/fhirviews/reference/fhir_componente_rust.md)
+  : Componente Rust opcional para la construccion SQL a FHIR R4
 
 ## Catálogo de vistas
 

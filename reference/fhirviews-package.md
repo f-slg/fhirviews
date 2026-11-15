@@ -24,8 +24,8 @@ en tablas siguiendo la especificación SQL on FHIR (`ViewDefinition`).
   [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
   y
   [`fhir_desde_sql()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
-  construyen Patient, Observation, Encounter, Condition e Immunization
-  con mapeos explicitos.
+  construyen Patient, Observation, Encounter, Condition Immunization,
+  Specimen y DiagnosticReport con mapeos explicitos.
   [`fhir_escribir()`](https://f-slg.github.io/fhirviews/reference/fhir_escribir.md)
   guarda JSON o NDJSON.
 
@@ -61,10 +61,10 @@ través del paquete V8.
   rutas estaticas con indices explicitos y escalas de -18 a 8, sin
   inferir precision despues de operaciones o iteraciones.
 
-- SQL a FHIR admite Patient, Observation, Encounter, Condition e
-  Immunization, una fila por recurso, sin agrupacion automatica ni
-  recursos contained. Las comprobaciones locales no sustituyen la
-  validacion de perfiles con
+- SQL a FHIR admite Patient, Observation, Encounter, Condition,
+  Immunization, Specimen y DiagnosticReport, una fila por recurso, sin
+  agrupacion automatica ni recursos contained. Las comprobaciones
+  locales no sustituyen la validacion de perfiles con
   [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
 
 ## See also
