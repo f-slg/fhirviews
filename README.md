@@ -1441,7 +1441,7 @@ mantienen como comprobaciones adicionales de sus controladores y tipos nativos.
 
 La **evaluación externa** requiere que otra persona instale el candidato,
 explique los resultados, modifique una vista, contraste el NDJSON y repita las
-tareas. El protocolo [PILOTO-R4.md](inst/examples/PILOTO-R4.md) incluye tareas,
+tareas. El protocolo [PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md) incluye tareas,
 referencias y criterios de cierre. Los informes automáticos dejan
 `validacion_usuario_externo = pendiente` hasta documentar esa evaluación aparte.
 El ensayo local marca la validación de perfiles como no evaluada; HAPI aporta
@@ -1457,7 +1457,7 @@ evaluará con mediciones cuando exista un cuello de botella reproducible.
 
 ### Protocolo actual para el cierre R4
 
-La [guía del participante R4](inst/examples/PILOTO-R4.md) se distribuye con el
+La [guía del participante R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md) se distribuye con el
 paquete en `examples/PILOTO-R4.md`. Usa el candidato que indique su manifiesto
 y el ensayo instalado de esta sección. Para ejecutar solamente el recorrido
 de seis recursos, sin todo el kit de vigilancia:
@@ -1541,7 +1541,7 @@ help("vista_ejecutar_lotes", package = "fhirviews")
 browseVignettes("fhirviews")
 ```
 
-La [guía del mantenedor](inst/examples/PILOTO-MANTENEDOR.md) describe cómo
+La [guía del mantenedor](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-MANTENEDOR.md) describe cómo
 construir y verificar el candidato, interpretar los códigos y cerrar el piloto.
 También se distribuye dentro del paquete, en `examples/PILOTO-MANTENEDOR.md`.
 

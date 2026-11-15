@@ -1385,7 +1385,7 @@ PostgreSQL and SQL Server integration continues to check native database types.
 
 An external participant must install the exact tested candidate, interpret the
 results, change a view, compare it with NDJSON and repeat the agreed tasks.
-[PILOTO-R4.md](inst/examples/PILOTO-R4.md), distributed with the package, provides
+[PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md), distributed with the package, provides
 the protocol in Spanish. Automated reports retain
 `validacion_usuario_externo = pendiente`; the local trial marks profile
 validation as unevaluated, with HAPI evidence recorded separately.
@@ -1400,7 +1400,7 @@ measured, reproducible bottleneck.
 
 ### Current R4 protocol
 
-The [R4 participant guide](inst/examples/PILOTO-R4.md) is installed as
+The [R4 participant guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md) is installed as
 `examples/PILOTO-R4.md`. To run only the six-resource R4 round trip:
 
 ```r
@@ -1483,7 +1483,7 @@ help("vista_ejecutar_lotes", package = "fhirviews")
 browseVignettes("fhirviews")
 ```
 
-The [maintainer's guide](inst/examples/PILOTO-MANTENEDOR.md) (in Spanish)
+The [maintainer's guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-MANTENEDOR.md) (in Spanish)
 describes how to build and verify the candidate, interpret the codes and close
 the pilot. It is also distributed with the package, in
 `examples/PILOTO-MANTENEDOR.md`.
