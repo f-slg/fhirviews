@@ -1,16 +1,16 @@
 {
   "estado": "preparado_y_comprobado_tecnicamente",
   "version_candidato": "0.5.0.9002",
-  "fuente_kit_commit": "79f6a40b88aa1fb5ad90c5d9b90fe06f2bd46ced",
+  "fuente_kit_commit": "c95134e6dc8d7877171c5cf2d423e998acf71f5d",
   "fuente_candidato_commit": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
   "zip": {
     "archivo": "fhirviews-kit-piloto-r4-v2.zip",
-    "bytes": 1326132,
-    "sha256": "853de8ef500039c3937d0f27b8ffe1abb2cefe11598ef28fafd9f743702a9614",
-    "archivos": 14
+    "bytes": 1356556,
+    "sha256": "4f3430fbd43d0abc87f5c4d3d554dc3370889ddae8d9b807f0dfa53aab4a7f0d",
+    "archivos": 15
   },
   "paquete_sha256": "305e5db0d637aecfbea612201abd4efc1995e6769a7026d29be1fc52308e8833",
-  "comprobado_utc": "2026-11-15T17:50:59.665720+00:00",
+  "comprobado_utc": "2026-11-15T18:43:07.992063+00:00",
   "pruebas_locales": {
     "ZIP_reconstruido_identico": true,
     "hashes_internos": true,
@@ -34,5 +34,5 @@
   },
   "evaluacion_usuario_externo": "pendiente",
   "participantes": "sin_asignar",
-  "notas": "Las pruebas técnicas no completan tareas humanas. Los perfiles se validaron localmente; requieren repetición en CI Windows, macOS y Linux."
+  "notas": "Las pruebas técnicas no completan tareas humanas. Los perfiles se probaron localmente; CI debe verificarlos en Windows, macOS y Linux."
 }
