@@ -1,6 +1,6 @@
 # Perfil R: analisis y uso del paquete
 
-Candidato 0.5.0.9001; datos ficticios. Abre el formulario y registra lo observado.
+Candidato 0.5.0.9002; datos ficticios. Abre el formulario y registra lo observado.
 El perfil de persona y el perfil tecnico basico/completo son decisiones distintas.
 Acuerda el alcance antes de empezar; consulta LEEME.md para preparar R.
 
@@ -13,7 +13,7 @@ Instalar la copia comprobada y abrir su ayuda sin usar otra instalacion.
 3. Ejecutar el lanzador desde la carpeta del kit; el ejemplo usa el perfil sugerido y se adapta al acordado.
 4. Abrir la sesion aislada para las tareas manuales; si habia otra copia cargada, reiniciar R.
 
-**Contraste:** fhirviews 0.5.0.9001; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.
+**Contraste:** fhirviews 0.5.0.9002; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.
 
 **Evidencia:** SESION.json, candidato.txt, ruta de la biblioteca y ayuda consultada.
 
@@ -32,7 +32,7 @@ browseVignettes("fhirviews")
 Interpretar el resultado tecnico, las omisiones y la evaluacion humana pendiente.
 
 1. Abrir piloto/aceptacion.json y aceptacion.csv dentro de la sesion.
-2. Contrastar version 0.5.0.9001, MD5 y esquema_informe = 2.
+2. Contrastar version 0.5.0.9002, MD5 y esquema_informe = 2.
 3. Explicar api_instalada, vigilancia, contrato_estricto, recuperacion y r4_cinco_recursos.
 4. Registrar advertencias o fallos sin convertirlos en aprobaciones.
 
@@ -96,7 +96,7 @@ Explicar la relacion entre alergia, reaccion, manifestacion y categorias.
 3. Contrastar categorias como listas, gravedad por reaccion, criticidad y valores ausentes.
 4. Revisar que los estados se seleccionan por sistema y no se mezclan dos Coding.
 
-**Contraste:** a1 aporta tres filas; a2 y a3 una cada uno. Los constructores siguen limitados a cinco tipos.
+**Contraste:** a1 aporta tres filas; a2 y a3 una cada uno. AllergyIntolerance se extrae mediante una vista; no es un constructor SQL → FHIR.
 
 **Evidencia:** Conteo de ids, filas y campos contrastados con los recursos ficticios.
 
@@ -139,14 +139,15 @@ Entregar evidencia revisable y un cierre acordado, separado del resultado tecnic
 
 **Evidencia:** Ficha exportada, experiencia-usuario.txt y acuerdos de seguimiento.
 
-## R09. Contrastar SQL y recuperacion cuando se acuerde (opcional)
+## R09. Construir Specimen y DiagnosticReport desde SQL (opcional)
 
-Ampliar el alcance con DuckDB sin presentar una omision como aprobacion.
+Ampliar el recorrido del perfil completo con los constructores del candidato.
 
-1. Si se acordo completo, revisar consultas parametrizadas, recuperacion y comparacion V8/DuckDB.
-2. Explicar rollback, la repeticion completa y los cinco tipos del recorrido R4.
-3. Si no se evalua, marcar no_evaluada y justificar el alcance excluido.
+1. Revisar y ejecutar `examples/laboratorio-r4.R` desde la instalacion aislada; usar solo datos ficticios.
+2. Identificar Patient, Specimen, dos Observation y DiagnosticReport; seguir `result[].reference` y `specimen[].reference`.
+3. Comparar las tablas de resultados y muestras entre V8 y DuckDB; registrar ayuda y cualquier diferencia.
+4. Si no se evalua, marcar no_evaluada y justificar la exclusion; requiere DBI y DuckDB.
 
-**Contraste:** En completo los cinco controles se aprueban; basico no acredita recuperacion ni paridad SQL del participante.
+**Contraste:** El ejemplo genera una muestra, dos observaciones y un informe que conserva referencias variables. Esta tarea opcional no altera los cinco controles de aceptacion.
 
-**Evidencia:** Informe completo y explicacion, o razon documentada de exclusion.
+**Evidencia:** Salida del ejemplo, tablas comparadas y explicacion, o razon documentada de exclusion.

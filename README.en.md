@@ -74,7 +74,7 @@ about omitted or aggregated columns.
 | Version or component | Status and use |
 |---|---|
 | **Current development: `0.5.0.9002`** | GitHub source. SQL → FHIR for seven R4 resources, variable reference collections and an API for an optional external Rust component; eight catalogue views. No version DOI assigned yet. |
-| **Pilot candidate `0.5.0.9001`** | The published kit retains its checked package with five constructors. It does not include the two new constructors or Rust component API. |
+| **Pilot candidate `0.5.0.9002`** | Updated external R4 kit with the exact checked package, seven constructors and an optional laboratory task for Specimen and DiagnosticReport. Human evaluation remains pending. |
 | **Archived `0.5.0.9000`** | Earlier source preserved in [Zenodo](https://doi.org/10.5281/zenodo.24238726). Its DOI identifies that specific archive. |
 | **`0.5.0`** | [GitHub release](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), submitted to CRAN on 7 November 2026. Does not include SQL → FHIR. Consult the [official CRAN catalogue](https://cran.r-project.org/web/packages/available_packages_by_name.html) for publication. |
 | **Rust** | Optional CLI component selected by the user; R remains the default. Separate ZIPs for Linux x86_64, Windows x64 and macOS Intel/Apple Silicon, with SHA-256 and provenance. [Usage](#validation-with-the-optional-rust-component) · [Results and limits](#performance). |
@@ -1647,9 +1647,10 @@ Proposals and their tracking are in
 ## Stabilising R4
 
 The current priority is to consolidate **FHIR R4 4.0.1** before federation or
-R4/R6 conversion. Current development is `0.5.0.9002`; the published pilot
-kit remains at `0.5.0.9001` with five constructors. The two new constructors
-and Rust API need their own evidence and user evaluation. Verifying a candidate
+R4/R6 conversion. Current development and the updated pilot candidate are
+`0.5.0.9002`. The kit's historical acceptance control covers six fictitious
+resources across five types; a separate optional complete-profile task runs
+the Specimen and DiagnosticReport laboratory example. Verifying a candidate
 does not publish a release, change its version or issue a DOI.
 
 | Component | Scope of the R4 milestone |
@@ -1662,7 +1663,7 @@ does not publish a release, change its version or issue a DOI.
 | Rust component | Optional external CLI, with explicit R fallback. Executable distribution and native linking remain separate from the R package. |
 | Additional resources and versions | Medication and actor constructors, server federation and R4/R6 conversion remain pending. No multiversion API is enabled. |
 
-Both acceptance profiles of the 0.5.0.9001 pilot require `r4_cinco_recursos`: six fictitious resources
+Both acceptance profiles of the pilot require `r4_cinco_recursos`: six fictitious resources
 of five types, including two Immunization records. It checks references,
 false booleans, missing optional objects, date and dose choices, JSON/NDJSON
 round trips and the five V8 views. Decimal literals `72.00` and `0.50` retain
@@ -1673,11 +1674,14 @@ prohibited SimpleQuantity comparator.
 The complete profile builds through parameterised DBI/DuckDB queries and checks
 all five views with the SQL engine. A mandatory HAPI group validates the exact
 six JSON resources against their base profiles and rejects an altered Patient.
+The separate optional R09/F09 task runs the installed laboratory example for
+Patient, Specimen, two Observations and DiagnosticReport, including variable
+result references and V8/DuckDB comparison.
 PostgreSQL and SQL Server integration continues to check native database types.
 
 An external participant must install the exact tested candidate, interpret the
 results, change a view, compare it with NDJSON and repeat the agreed tasks.
-[PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md), distributed with the package, provides
+[`PILOTO-R4.md`](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md), included in the updated kit, provides
 the protocol in Spanish. Automated reports retain
 `validacion_usuario_externo = pendiente`; the local trial marks profile
 validation as unevaluated, with HAPI evidence recorded separately.
@@ -1698,7 +1702,7 @@ evidence. The following work remains:
 
 | Priority | Task | Completion criterion |
 |---|---|---|
-| 1 | **External R4 pilot** | An independent participant installs the identified candidate, repeats the tasks and records understanding, assistance and findings using the [R4 protocol](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). CI does not replace this assessment. |
+| 1 | **External R4 pilot** | An independent participant installs the identified candidate, repeats the tasks and records understanding, assistance and findings using the [R4 protocol](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md). CI does not replace this assessment. |
 | 2 | **Stable R4 delivery** | Address findings, select the version and artifact, check that exact archive and verify its citation. The `0.5.0` CRAN submission has separate tracking. |
 | 3 | **Further Rust evaluation** | The API, R fallback and ZIPs for four platforms have separate tests. Evaluate other loads, machines and memory. Existing API timings used the GNU Linux executable and do not measure the new ZIPs. Native linking within the R package would require separate ABI, toolchain, vendoring and licence work. |
 | 4 | **More R4 constructors** | `Specimen` and `DiagnosticReport` are included. Medication and actor resources follow as needed; each group needs metadata, collections, references and a SQL → FHIR → profiles → tables round trip. |
@@ -1716,7 +1720,7 @@ another constructor or replace profile validation.
 **[Download the external R4 pilot kit ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip)**
 · [ZIP SHA-256](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256)
 
-The kit includes the **checked 0.5.0.9001 package**, its identity, a launcher,
+The kit includes the **checked 0.5.0.9002 package**, its identity, a launcher,
 R/FHIR protocols and a local form. Pilot materials are in Spanish. Extract the
 entire ZIP and open R in that folder. Install the dependencies listed in
 `LEEME.md`, then run:
@@ -1735,8 +1739,7 @@ leave human tasks and closure decisions pending. The
 [kit instructions](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/LEEME.md)
 describe session planning and repeated attempts without overwriting earlier ones.
 
-The [R4 participant guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md) is installed as
-`examples/PILOTO-R4.md`. To run only the six-resource R4 round trip:
+The [R4 participant guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md) is included in the kit. The legacy acceptance run checks six resources across five types; the complete profile's optional R09/F09 task also runs the Specimen and DiagnosticReport example. To run only the six-resource acceptance round trip:
 
 ```r
 Sys.setenv(FHIRVIEWS_R4_SALIDA = "r4-basico-01", FHIRVIEWS_R4_SQL = "false")
@@ -1786,7 +1789,7 @@ source archive provided by the maintainer:
 
 ```r
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9001.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9002.tar.gz", repos = NULL, type = "source")
 ```
 
 Restart R, choose a new folder and run:

@@ -1,16 +1,16 @@
 {
   "estado": "preparado_y_comprobado_tecnicamente",
-  "version_candidato": "0.5.0.9001",
-  "fuente_kit_commit": "d343233ac4beca43d97ddf0ce08720b780aedba9",
-  "fuente_candidato_commit": "1ca5f0d2780e7d32eb6764f0ed4e58785337dd22",
+  "version_candidato": "0.5.0.9002",
+  "fuente_kit_commit": "79f6a40b88aa1fb5ad90c5d9b90fe06f2bd46ced",
+  "fuente_candidato_commit": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
   "zip": {
     "archivo": "fhirviews-kit-piloto-r4-v2.zip",
-    "bytes": 1309764,
-    "sha256": "947e1ae4ef9b57e1bba50e13e1ade50f92cb13863eab75f4ca5a8007a6a075bd",
+    "bytes": 1326132,
+    "sha256": "853de8ef500039c3937d0f27b8ffe1abb2cefe11598ef28fafd9f743702a9614",
     "archivos": 14
   },
-  "paquete_sha256": "1611547017136408fe112988ae038319dee398d4d2e2bc846d1bc2e4a6a2d251",
-  "comprobado_utc": "2026-11-15T11:30:35.863556+00:00",
+  "paquete_sha256": "305e5db0d637aecfbea612201abd4efc1995e6769a7026d29be1fc52308e8833",
+  "comprobado_utc": "2026-11-15T17:50:59.665720+00:00",
   "pruebas_locales": {
     "ZIP_reconstruido_identico": true,
     "hashes_internos": true,
@@ -22,6 +22,7 @@
     ],
     "carpetas_con_espacios": true,
     "abrir_sesion_aislada_y_alergias": true,
+    "laboratorio_specimen_diagnosticreport_v8_duckdb": true,
     "formulario": {
       "motor": "jsdom 26.1.0",
       "tipo_datos": "SIMULADOS; no fichas de participantes",
@@ -33,5 +34,5 @@
   },
   "evaluacion_usuario_externo": "pendiente",
   "participantes": "sin_asignar",
-  "notas": "Las pruebas tecnicas no completan tareas humanas. Los controles de plataforma se consultan en la CI del kit."
+  "notas": "Las pruebas técnicas no completan tareas humanas. Los perfiles se validaron localmente; requieren repetición en CI Windows, macOS y Linux."
 }

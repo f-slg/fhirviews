@@ -8,7 +8,7 @@ observados de participantes.
 ## Identidad y controles
 
 Consultar `CANDIDATO.json` y el SHA-256 del archivo antes de instalar. En el
-informe técnico deben coincidir versión 0.5.0.9001, MD5 y esquema 2. Los cinco
+informe técnico deben coincidir versión 0.5.0.9002, MD5 y esquema 2. Los cinco
 controles son `api_instalada`, `vigilancia`, `contrato_estricto`, `recuperacion`
 y `r4_cinco_recursos`. Básico excluye recuperación; completo la exige.
 
@@ -16,7 +16,7 @@ La vigilancia incluida parte de 755 eventos: 661 confirmados, 94 excluidos y
 65 cantones. Cuenta eventos, no pacientes únicos ni tasas. Las referencias del
 ensayo instalado y su informe permiten revisar los totales y el control negativo.
 
-## Seis recursos R4
+## Seis recursos del control historico
 
 `piloto/r4/recursos-r4.ndjson` tiene Patient/p1, Encounter/e1, Condition/c1,
 Observation/o1 e Immunization/i1/i2. Las referencias al paciente se conservan;
@@ -64,3 +64,11 @@ Contrastar los hallazgos de dos intentos, no sus tiempos ni rutas. Mantener por
 separado el resultado técnico y la decisión humana. Para el perfil completo,
 revisar recuperación y el regreso a tablas V8/DuckDB; un perfil básico no los
 acredita. Registrar los hallazgos y responsables antes de decidir el cierre.
+
+## Specimen y DiagnosticReport del candidato actual
+
+En el perfil completo se puede ejecutar `laboratorio_r4()` desde el ejemplo
+instalado. Produce un paciente, una muestra, dos observaciones y un informe;
+el informe enlaza las dos observaciones y la muestra. Las tablas `muestras`,
+`observaciones` y `resultados` deben coincidir entre V8 y DuckDB. Son datos
+ficticios; esta tarea opcional no evalua perfiles nacionales ni instala Rust.
