@@ -4,7 +4,7 @@
 #' comunes en vigilancia y salud pública: pacientes con su dirección de
 #' residencia, signos vitales, diagnósticos, enfermedades de notificación
 #' obligatoria, inmunizaciones, encuentros y prescripciones de
-#' medicamentos. Todas usan `getResourceKey()` para la columna `id` y
+#' medicamentos, alergias e intolerancias. Todas usan `getResourceKey()` para la columna `id` y
 #' `getReferenceKey()` para las claves de otros recursos (por ejemplo
 #' `paciente`), de modo que las tablas se pueden unir entre sí.
 #'
@@ -12,6 +12,9 @@
 #' `vistas` del paquete (`system.file("vistas", package = "fhirviews")`), y
 #' dan los mismos resultados con [vista_ejecutar()] y con
 #' [vista_ejecutar_duckdb()].
+#' La vista `alergias` produce una fila por manifestacion de cada reaccion,
+#' conservando una fila cuando no hay reacciones. Para contar alergias,
+#' cuenta los valores distintos de `id`; `categoria` es una columna de listas.
 #'
 #' @return Un `data.frame` con una fila por vista y las columnas `nombre`
 #'   (para [vista_plantilla()]), `recurso` (tipo de recurso FHIR), `titulo`
@@ -62,6 +65,9 @@ vista_catalogo <- function() {
 #' @examples
 #' caso <- system.file("extdata", "caso_clinico.ndjson", package = "fhirviews")
 #' vista_ejecutar(caso, vista_plantilla("signos_vitales"))
+#'
+#' alergias <- system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")
+#' vista_ejecutar(alergias, vista_plantilla("alergias"))[, c("id", "paciente", "reaccion")]
 #'
 #' # Solo los casos de dengue hemorrágico (A91)
 #' dengue <- system.file("extdata", "dengue_2025.ndjson.gz",

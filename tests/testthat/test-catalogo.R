@@ -4,7 +4,7 @@ test_that("el catalogo lista las vistas incluidas", {
   expect_named(cat_, c("nombre", "recurso", "titulo", "descripcion"))
   expect_true(all(c("pacientes", "signos_vitales", "diagnosticos",
                     "inmunizaciones", "encuentros", "medicamentos",
-                    "notificacion_obligatoria") %in% cat_$nombre))
+                    "notificacion_obligatoria", "alergias") %in% cat_$nombre))
   expect_false(anyNA(cat_$titulo))
   expect_false(anyNA(cat_$descripcion))
   expect_identical(cat_$recurso[cat_$nombre == "signos_vitales"],
@@ -121,7 +121,8 @@ test_that("las vistas del catalogo dan lo mismo con V8 y DuckDB", {
                                package = "fhirviews"),
     dengue = system.file("extdata", "dengue_2025.ndjson.gz",
                          package = "fhirviews"),
-    limite = recursos_limite()
+    limite = recursos_limite(),
+    alergias = system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")
   )
   filas <- 0L
   for (nombre in vista_catalogo()$nombre) {

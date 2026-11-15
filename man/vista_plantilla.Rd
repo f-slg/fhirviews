@@ -36,6 +36,9 @@ de codificación.
 caso <- system.file("extdata", "caso_clinico.ndjson", package = "fhirviews")
 vista_ejecutar(caso, vista_plantilla("signos_vitales"))
 
+alergias <- system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")
+vista_ejecutar(alergias, vista_plantilla("alergias"))[, c("id", "paciente", "reaccion")]
+
 # Solo los casos de dengue hemorrágico (A91)
 dengue <- system.file("extdata", "dengue_2025.ndjson.gz",
                       package = "fhirviews")
