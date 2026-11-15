@@ -47,6 +47,11 @@ locales. La compatibilidad del motor SQL se comprueba por separado.
 > motores. Estas mejoras pertenecen al código de desarrollo, no al candidato
 > 0.5.0 enviado previamente a CRAN.
 
+> **Prioridad actual: estabilizar R4.** El cierre se limita a los cinco recursos
+> construidos actualmente y exige el ensayo instalado, la validación de perfiles
+> base y un piloto externo. La federación y la conversión R4/R6 quedan para una
+> etapa posterior. [Alcance y criterios de cierre](#estabilización-de-r4).
+
 ## Contenido
 
 - [Qué puedes hacer](#qué-puedes-hacer)
@@ -65,6 +70,7 @@ locales. La compatibilidad del motor SQL se comprueba por separado.
 - [Conformidad y pruebas](#conformidad-y-pruebas)
 - [Rendimiento](#rendimiento)
 - [Alcance y límites](#alcance-y-límites)
+- [Estabilización de R4](#estabilización-de-r4)
 - [Piloto y documentación local](#piloto-y-documentación-local)
 - [Guías y referencia](#guías-y-referencia)
 - [Contribuir, citar y licencia](#contribuir-citar-y-licencia)
@@ -718,6 +724,7 @@ correspondan a tus datos y perfiles.
 | `NA`, `NULL`, `""`, colecciones vacías | Se omiten; los objetos y posiciones sin contenido se compactan. Los índices identifican posiciones de construcción, no huecos que se guardan como `null`. |
 | `id` | Debe estar mapeado, ser válido y único en el resultado. Los enteros seguros se convierten a texto. |
 | Booleanos y enteros | Se exigen valores lógicos o enteros dentro del rango FHIR; no se convierte `"false"` en booleano ni se trunca `1.7`. |
+| `code`, `uri`, `url`, `canonical` | Un código permite solo espacios simples internos; las URI no permiten separadores, incluidos tabulaciones y espacios Unicode. El constructor rechaza el valor sin recortarlo ni modificarlo. |
 | Fechas | Se aceptan fechas FHIR parciales válidas y `Date`. `Date` conserva precisión de fecha en destinos `date` y `dateTime`; los instantes requieren hora. Las fechas con hora requieren zona; `POSIXct`/`POSIXlt` se convierten a UTC. |
 | Errores | Clase `fhirviews_error_mapeo`, con `fila` y `campo` cuando se conocen. |
 
@@ -1158,15 +1165,16 @@ omisión. La política de aceptación impide aprobar si falta este grupo. Esta
 validación cubre perfiles **base R4**; los perfiles clínicos o nacionales del
 proyecto deben comprobarse expresamente con su URL canónica.
 
-**Resultado local del 14 de noviembre de 2026:** integración aprobada con
-HAPI 8.12.0-2 fijado por digest, 120 comprobaciones aprobadas y sin fallos,
-errores ni advertencias. Se ejecutaron las 16 comprobaciones originales de
-SQL → FHIR, las 20 del grupo Encounter/Condition y las 38 de Immunization;
-se registraron las dos omisiones previstas (lectura pública y ValueSet en
-línea). El contenedor se eliminó al finalizar. La
-[evidencia de integración](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
-incluye el resultado de cada grupo; los registros y el entorno de R se
-conservan en la misma carpeta. Es una comprobación técnica con datos ficticios.
+**Ensayo local de cierre R4:** integración aprobada con HAPI 8.12.0-2 fijado
+por digest, **130 comprobaciones** y sin fallos, errores ni advertencias.
+Incluye las 16 originales de SQL → FHIR, las 20 de Encounter/Condition,
+las 38 de Immunization y las 10 del nuevo grupo del candidato R4. Se registraron
+las dos omisiones previstas (lectura pública y ValueSet en línea), y el contenedor
+se eliminó al finalizar. La
+[evidencia actual de integración](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json)
+incluye cada grupo, los registros y el entorno de R en la misma carpeta.
+La [ejecución anterior de 120 comprobaciones](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
+se conserva como evidencia histórica. Ambas usan datos ficticios.
 
 El nuevo grupo obligatorio `Encounter y Condition desde SQL, perfiles R4 y
 referencias` construye Patient → Encounter → Condition con consultas DuckDB
@@ -1392,14 +1400,78 @@ Script: [`data-raw/benchmark-fhircrackr-observation.R`](https://github.com/f-slg
 - **Capacidades del servidor.** SMART, `$validate`, terminología y `$export`
   dependen de la configuración y los permisos del servidor conectado.
 
-Las prioridades de desarrollo incluyen estabilizar el motor DuckDB, mejorar
-la precisión decimal y ampliar las operaciones de búsqueda y terminología.
 Las propuestas y su seguimiento están en
 [GitHub Issues](https://github.com/f-slg/fhirviews/issues).
 
+## Estabilización de R4
+
+La próxima entrega consolidará **FHIR R4 4.0.1** con un alcance explícito.
+La versión de desarrollo sigue siendo `0.5.0.9000`; preparar y comprobar un
+candidato no cambia su versión, publica un lanzamiento ni emite un DOI.
+
+| Componente | Alcance del cierre R4 |
+|---|---|
+| Cliente y vistas V8 | Recursos R4, paginación, autenticación y operaciones según las capacidades del servidor. |
+| Construcción desde tablas o DBI | `Patient`, `Observation`, `Encounter`, `Condition` e `Immunization`; una fila por recurso y mapeos explícitos. |
+| Validación local | Tipos, cardinalidades, elecciones, fechas, destinos y bindings requeridos enumerables. Los controles léxicos de `code` y URI siguen las [reglas de primitivos R4](https://hl7.org/fhir/R4/datatypes.html#primitive). |
+| Perfiles y terminología | HAPI comprueba perfiles base; perfiles del proyecto, invariantes y terminología externa se contrastan con su entorno acordado. |
+| Motor DuckDB | Conserva la etiqueta experimental y el subconjunto FHIRPath documentado; se compara con V8. |
+| Otros recursos desde SQL | Se incorporarán por grupos después de este cierre. La lectura y las vistas pueden trabajar con otros recursos R4. |
+| Federación y otras versiones | Consultas conjuntas entre servidores y conversión R4/R6 pendientes; no hay una API multiversión habilitada. |
+
+El cierre técnico exige que el **mismo archivo fuente** se instale y apruebe
+en una biblioteca nueva, con ayuda, viñetas y ejemplos incluidos. El control
+`r4_cinco_recursos` construye seis recursos ficticios: un Patient, un Encounter,
+un Condition, un Observation y dos Immunization. En ambos perfiles comprueba:
+
+- Referencias a Patient y Encounter, booleanos falsos y ausencia completa de
+  los objetos opcionales cuando faltan sus datos.
+- Fecha válida de nacimiento, las dos variantes de `occurrence[x]` y las dos
+  de `doseNumber[x]`, sin rellenar las variantes ausentes.
+- Literales `72.00` y `0.50` en JSON y NDJSON, límites inferiores `71.995`
+  y `0.495`, y regreso a las cinco tablas con V8.
+- Rechazo de cinco casos: sujeto obligatorio ausente, ids duplicados,
+  estado inválido, paciente ausente y comparador prohibido en SimpleQuantity.
+
+El perfil `completo` construye los recursos mediante consultas parametrizadas
+DBI/DuckDB y compara las cinco vistas con el motor SQL. El grupo obligatorio
+HAPI valida los seis textos JSON contra sus perfiles base y exige que un
+Patient alterado sea rechazado. Las integraciones PostgreSQL y SQL Server se
+mantienen como comprobaciones adicionales de sus controladores y tipos nativos.
+
+La **evaluación externa** requiere que otra persona instale el candidato,
+explique los resultados, modifique una vista, contraste el NDJSON y repita las
+tareas. El protocolo [PILOTO-R4.md](inst/examples/PILOTO-R4.md) incluye tareas,
+referencias y criterios de cierre. Los informes automáticos dejan
+`validacion_usuario_externo = pendiente` hasta documentar esa evaluación aparte.
+El ensayo local marca la validación de perfiles como no evaluada; HAPI aporta
+su evidencia independiente, y los perfiles propios requieren otra comprobación.
+
+Después del piloto y de corregir sus hallazgos se fijará la versión estable y
+su artefacto. ORCID ya identifica al autor; el DOI de Zenodo sigue pendiente
+de conexión, depósito y verificación. El orden posterior será federación entre
+servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust se
+evaluará con mediciones cuando exista un cuello de botella reproducible.
+
 ## Piloto y documentación local
 
-### Descargar el kit para participantes
+### Protocolo actual para el cierre R4
+
+La [guía del participante R4](inst/examples/PILOTO-R4.md) se distribuye con el
+paquete en `examples/PILOTO-R4.md`. Usa el candidato que indique su manifiesto
+y el ensayo instalado de esta sección. Para ejecutar solamente el recorrido
+de seis recursos, sin todo el kit de vigilancia:
+
+```r
+Sys.setenv(FHIRVIEWS_R4_SALIDA = "r4-basico-01", FHIRVIEWS_R4_SQL = "false")
+source(system.file("examples", "r4-estabilidad.R", package = "fhirviews"))
+```
+
+Con `FHIRVIEWS_R4_SQL = "true"` requiere DBI/DuckDB y compara ambos motores.
+Cada carpeta debe ser nueva. Este ejemplo local utiliza datos ficticios y
+conserva los JSON de salida y su resumen.
+
+### Kit anterior de participantes: candidato 0.5.0
 
 **[Descargar el kit del piloto ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip)**
 
@@ -1423,6 +1495,8 @@ También puedes consultar los protocolos en el repositorio:
 El ZIP contiene los materiales de evaluación, no el paquete R. Mientras el
 lanzamiento siga en borrador, el mantenedor entrega el archivo candidato
 identificado en el manifiesto para evaluar exactamente la misma versión.
+Este kit v1 mantiene la referencia histórica al candidato 0.5.0; para el
+cierre actual de SQL → FHIR R4 usa el protocolo R4 anterior.
 
 ### Instalar el candidato y ejecutar el ensayo
 
@@ -1431,7 +1505,7 @@ archivo fuente que te entregue el mantenedor:
 
 ```r
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9000.tar.gz", repos = NULL, type = "source")
 ```
 
 Reinicia R, elige una carpeta nueva y ejecuta:
@@ -1450,8 +1524,10 @@ Abre `piloto-basico-01/aceptacion.csv` para ver los controles y
 revisión y evita la aprobación automática; el informe registra códigos seguros
 sin copiar los mensajes originales.
 
-El perfil `basico` comprueba la API, los resultados de vigilancia y el rechazo
-estricto de un bloque incompatible. Para comprobar también rollback y reintentos,
+El informe actual usa `esquema_informe = 2`. El perfil `basico` comprueba la API,
+los resultados de vigilancia, el rechazo estricto de un bloque incompatible y
+el recorrido R4 de cinco tipos desde tablas. Para comprobar también rollback,
+consultas SQL parametrizadas y ambas implementaciones de las cinco vistas,
 instala `DBI` y `duckdb`, cambia el perfil a `completo` y usa otra carpeta nueva.
 Los archivos permanecen locales; completa `experiencia-usuario.txt` con los
 obstáculos, la ayuda necesaria y tu evaluación. La aprobación técnica deja

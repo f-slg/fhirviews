@@ -7,7 +7,8 @@ comprobar_integracion <- function(tabla) {
     "exportacion masiva ($export) de punta a punta",
     "SQL a FHIR, perfiles R4, referencias y retorno a tablas",
     "Encounter y Condition desde SQL, perfiles R4 y referencias",
-    "Immunization desde SQL, perfil R4, dosis y referencias"
+    "Immunization desde SQL, perfil R4, dosis y referencias",
+    "Candidato R4 con cinco recursos y perfiles base"
   )
   if (!all(requeridas %in% tabla$test) || anyDuplicated(tabla$test)) {
     stop("Faltan grupos obligatorios o hay resultados duplicados.")

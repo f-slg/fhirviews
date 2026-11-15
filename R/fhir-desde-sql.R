@@ -22,6 +22,9 @@
 #' identificadores, tipos primitivos, destinos de referencias y bindings
 #' requeridos que pueden enumerarse con la terminologia R4 incluida. Para
 #' `Coding` y `CodeableConcept` se comprueba el par `system`/`code`.
+#' Los valores `code` admiten solo espacios simples internos; `uri`, `url`
+#' y `canonical` no admiten espacios ni otros caracteres de separacion.
+#' Estos controles lexicos no comprueban que una URL exista.
 #' Se conserva la restriccion de `SimpleQuantity`: no admite `comparator`,
 #' por ejemplo en `Immunization.doseQuantity`. Una `Quantity` general puede
 #' admitirlo. El estado, la vacuna, el paciente y una variante de
@@ -380,6 +383,12 @@ valor_mapeo <- function(x, tipo, fila, campo, referencia = NULL) {
     return(list(`__fhirviews_decimal` = x))
   }
   if (!is.character(x)) error_mapeo("Se esperaba texto.", fila, campo)
+  if (tipo == "code" && !grepl("(*UCP)\\A\\S+( \\S+)*\\z", x, perl = TRUE)) {
+    error_mapeo("Un code FHIR solo admite espacios simples internos.", fila, campo)
+  }
+  if (tipo %in% c("uri", "url", "canonical") && grepl("(*UCP)\\s", x, perl = TRUE)) {
+    error_mapeo("Una URI FHIR no admite espacios ni caracteres de separacion.", fila, campo)
+  }
   if (tipo == "id" && !grepl("^[A-Za-z0-9.-]{1,64}$", x)) {
     error_mapeo("Identificador FHIR no valido.", fila, campo)
   }

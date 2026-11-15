@@ -42,7 +42,7 @@ writeLines(c(
   'Sys.setenv(FHIRVIEWS_PILOTO_SALIDA = args[2L], FHIRVIEWS_PILOTO_PERFIL = args[3L], FHIRVIEWS_CANDIDATO_MD5 = args[4L], TZ = "UTC")',
   'script <- system.file("examples", "piloto.R", package = "fhirviews")',
   'if (!nzchar(script)) stop("El candidato no incluye el kit de piloto; reconstruya el archivo.", call. = FALSE)',
-  'stopifnot(length(utils::help("vista_ejecutar_lotes", package = "fhirviews")) == 1L)',
+  'for (nombre in c("vista_ejecutar_lotes", "fhir_mapa", "fhir_desde_sql", "fhir_desde_tabla", "fhir_escribir")) stopifnot(length(utils::help(nombre, package = "fhirviews")) == 1L)',
   'vinetas <- utils::vignette(package = "fhirviews")$results',
   'if (is.null(vinetas) || !all(c("fhirviews", "vistas", "servidores-y-volumen") %in% vinetas[, "Item"])) stop("El candidato no incluye las vinetas construidas; reconstruya con R CMD build.", call. = FALSE)',
   'writeLines(c("ayuda=vista_ejecutar_lotes", paste0("vinetas=", paste(vinetas[, "Item"], collapse = ","))), file.path(dirname(args[2L]), "documentacion-local.txt"))',
@@ -51,7 +51,19 @@ writeLines(c(
   'stopifnot(identical(informe$resultado_tecnico, "aprobado"),',
   '          identical(informe$perfil, args[3L]),',
   '          identical(informe$candidato_md5, args[4L]),',
-  '          identical(informe$version_fhirviews, as.character(utils::packageVersion("fhirviews"))))'
+  '          identical(informe$version_fhirviews, as.character(utils::packageVersion("fhirviews"))),',
+  '          informe$esquema_informe == 2L,',
+  '          identical(informe$hallazgos$r4$version_fhir, "4.0.1"),',
+  '          informe$hallazgos$r4$recursos == 6L,',
+  '          setequal(unlist(informe$hallazgos$r4$tipos), c("Patient", "Observation", "Encounter", "Condition", "Immunization")),',
+  '          informe$hallazgos$r4$negativos_rechazados == 5L)',
+  'esperados <- c("api_instalada", "vigilancia", "contrato_estricto", "recuperacion", "r4_cinco_recursos")',
+  'stopifnot(identical(vapply(informe$controles, function(x) x$prueba, character(1)), esperados),',
+  '          identical(informe$controles[[5L]]$estado, "aprobado"))',
+  'estados <- rep("aprobado", length(esperados))',
+  'if (args[3L] == "basico") estados[4L] <- "no_evaluado"',
+  'stopifnot(identical(vapply(informe$controles, function(x) x$estado, character(1)), estados))',
+  'if (args[3L] == "completo") stopifnot(setequal(unlist(informe$hallazgos$r4$motores), c("V8", "DuckDB")))'
 ), hijo)
 log_aceptacion <- file.path(salida, "aceptacion.log")
 estado <- system2(file.path(R.home("bin"), "Rscript"),

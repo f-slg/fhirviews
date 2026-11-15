@@ -18,6 +18,7 @@ test_that("el piloto basico distingue aprobacion tecnica y validacion de usuario
     expect_identical(resultado$resultado_tecnico, "aprobado")
     expect_identical(resultado$validacion_usuario_externo, "pendiente")
     expect_identical(resultado$perfil, "basico")
+    expect_equal(resultado$esquema_informe, 2L)
     expect_equal(resultado$hallazgos$vigilancia$eventos_confirmados, 661)
     expect_equal(resultado$hallazgos$contrato_estricto$bloque_rechazado, 2)
     expect_equal(resultado$hallazgos$contrato_estricto$bloques_entregados, 1)
@@ -25,6 +26,12 @@ test_that("el piloto basico distingue aprobacion tecnica y validacion de usuario
     expect_identical(resultado$controles[[4]]$estado, "no_evaluado")
     expect_true(all(vapply(resultado$controles[1:3], function(x) x$estado == "aprobado", logical(1))))
     expect_true(file.exists(file.path(carpeta, "vigilancia", "casos_confirmados.csv")))
+    expect_equal(resultado$hallazgos$r4$recursos, 6L)
+    expect_setequal(unlist(resultado$hallazgos$r4$tipos),
+      c("Patient", "Observation", "Encounter", "Condition", "Immunization"))
+    expect_identical(resultado$controles[[5]]$estado, "aprobado")
+    expect_identical(resultado$hallazgos$r4$validacion_perfiles, "no_evaluada_sin_servidor")
+    expect_true(file.exists(file.path(carpeta, "r4", "recursos-r4.ndjson")))
     expect_error(source(script), "ya existe")
   })
 })
@@ -49,6 +56,8 @@ test_that("el perfil completo verifica tambien la recuperacion transaccional", {
     resultado <- jsonlite::read_json(file.path(carpeta, "aceptacion.json"))
     expect_identical(resultado$resultado_tecnico, "aprobado")
     expect_true(all(vapply(resultado$controles, function(x) x$estado == "aprobado", logical(1))))
+    expect_setequal(unlist(resultado$hallazgos$r4$motores), c("V8", "DuckDB"))
+    expect_match(resultado$hallazgos$r4$origen, "consultas parametrizadas")
   }, "completo")
 })
 
@@ -65,9 +74,38 @@ test_that("las advertencias requieren revision sin exponer sus mensajes", {
     expect_identical(r$resultado_tecnico, "requiere_revision")
     expect_identical(r$controles[[2]]$estado, "requiere_revision")
     expect_equal(r$controles[[2]]$advertencias, 2)
-    expect_length(r$advertencias, 2L)
+    expect_equal(length(r$advertencias), sum(vapply(r$controles, function(x) x$advertencias, numeric(1))))
     expect_false(grepl("mensaje privado", texto, fixed = TRUE))
     expect_true(file.exists(file.path(carpeta, "experiencia-usuario.txt")))
+  })
+})
+
+test_that("la aceptacion R4 detecta la perdida de escala y conserva el entorno", {
+  con_piloto(function(carpeta, script) {
+    anterior <- Sys.getenv(c("FHIRVIEWS_R4_SALIDA", "FHIRVIEWS_R4_SQL"), unset = NA_character_)
+    original <- fhir_desde_tabla
+    local_mocked_bindings(fhir_desde_tabla = function(datos, mapa) {
+      if (mapa$recurso == "Immunization") datos$dosis[1L] <- "0.5"
+      original(datos, mapa)
+    })
+    expect_error(source(script), "r4_cinco_recursos")
+    r <- jsonlite::read_json(file.path(carpeta, "aceptacion.json"))
+    expect_identical(r$resultado_tecnico, "no_aprobado")
+    expect_identical(r$controles[[5]]$estado, "fallo")
+    expect_identical(r$validacion_usuario_externo, "pendiente")
+    expect_identical(Sys.getenv(names(anterior), unset = NA_character_), anterior)
+  })
+})
+
+test_that("el control R4 no acepta un constructor incompleto", {
+  con_piloto(function(carpeta, script) {
+    local_mocked_bindings(fhir_desde_tabla = function(datos, mapa) {
+      stop("detalle privado de origen", call. = FALSE)
+    })
+    expect_error(source(script), "r4_cinco_recursos")
+    texto <- paste(readLines(file.path(carpeta, "aceptacion.json")), collapse = "")
+    expect_false(grepl("detalle privado", texto, fixed = TRUE))
+    expect_identical(jsonlite::fromJSON(texto)$resultado_tecnico, "no_aprobado")
   })
 })
 

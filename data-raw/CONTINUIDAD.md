@@ -1,13 +1,45 @@
 # Continuidad del proyecto fhirviews
 
-Actualizado: 4 de noviembre de 2026.
+Estado vigente actualizado: cierre R4 de noviembre de 2026.
 
 ## Decisiones del mantenedor
 
-- Repositorio `f-slg/fhirviews` privado por solicitud expresa del mantenedor.
+- Repositorio `f-slg/fhirviews` publico por instruccion posterior del mantenedor.
 - No enviar el paquete a CRAN todavía. Una comprobación con `--as-cran` no es un envío.
 - La versión 0.5.0 queda preparada como borrador de lanzamiento en GitHub, con su archivo `fhirviews_0.5.0.tar.gz`. No publicar el lanzamiento ni enviar a CRAN sin una nueva instrucción.
 - Mantener el motor SQL de DuckDB identificado como experimental.
+- Priorizar el cierre del alcance R4 antes de federacion o conversion R6.
+- Desarrollo actual 0.5.0.9000: Patient, Observation, Encounter, Condition e
+  Immunization desde tablas o DBI. La rama de exploracion R6 no esta integrada.
+
+## Cierre R4 actual
+
+La aceptacion del candidato pasa al esquema de informe 2. Ambos perfiles
+exigen el recorrido de seis recursos ficticios de cinco tipos; el completo
+usa SQL parametrizado y compara las cinco vistas V8/DuckDB. La instalacion
+independiente exige el informe y todos los estados esperados de este protocolo.
+El kit incluye PILOTO-R4.md; el ZIP v1 conserva el candidato historico 0.5.0.
+
+Se corrigieron code con separadores invalidos y uri/url/canonical con espacios,
+reproducidos antes del cambio y cubiertos por pruebas de regresion. Los
+valores se rechazan sin normalizarlos silenciosamente.
+
+HAPI aislado aprobo 130 comprobaciones, incluidos los seis JSON del candidato
+contra los cinco perfiles base y un control negativo. Sin fallos ni avisos;
+solo las dos omisiones previstas. Contenedor eliminado y evidencia en
+validacion-0.5.0.9000/cierre-r4/hapi/.
+
+Quedan la evaluacion por una persona externa, los perfiles propios acordados,
+la seleccion de version estable y el deposito Zenodo con DOI verificado.
+ORCID ya esta incorporado. No se inventa evaluacion humana, perfiles o DOI.
+El estado del envio anterior 0.5.0 a CRAN se documenta en README y debe
+comprobarse aparte de este desarrollo. No se publica una nueva version como
+parte de la preparacion del candidato.
+
+## Historial anterior
+
+Las secciones siguientes conservan estados de sus fechas respectivas, incluida
+la etapa privada del repositorio y entregas anteriores de la integracion.
 
 ## Trabajo realizado
 

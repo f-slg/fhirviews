@@ -1,0 +1,15 @@
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/fhirviews-cierre-r4-instalado-basico/piloto/vigilancia
+Recorrido R4 aprobado con seis recursos ficticios y cinco tipos.
+            prueba      estado advertencias codigo
+     api_instalada    aprobado            0
+        vigilancia    aprobado            0
+ contrato_estricto    aprobado            0
+      recuperacion no_evaluado            0
+ r4_cinco_recursos    aprobado            0
+Informe local del piloto: /tmp/fhirviews-cierre-r4-instalado-basico/piloto

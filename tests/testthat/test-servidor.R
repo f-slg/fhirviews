@@ -44,6 +44,36 @@ marca_prueba <- function() {
 
 sis_prueba <- "https://f-slg.github.io/fhirviews/prueba"
 
+test_that("Candidato R4 con cinco recursos y perfiles base", {
+  con <- fhir_conectar(servidor_escritura(), panel = FALSE)
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("duckdb", "1.3.0")
+  salida <- tempfile("candidato-r4-")
+  on.exit(unlink(salida, recursive = TRUE), add = TRUE)
+  anterior <- Sys.getenv(c("FHIRVIEWS_R4_SALIDA", "FHIRVIEWS_R4_SQL"), unset = NA_character_)
+  on.exit(for (nombre in names(anterior)) {
+    if (is.na(anterior[[nombre]])) Sys.unsetenv(nombre) else
+      do.call(Sys.setenv, stats::setNames(list(anterior[[nombre]]), nombre))
+  }, add = TRUE)
+  Sys.setenv(FHIRVIEWS_R4_SALIDA = salida, FHIRVIEWS_R4_SQL = "true")
+  expect_output(source(system.file("examples", "r4-estabilidad.R", package = "fhirviews")),
+                 "Recorrido R4 aprobado")
+  textos <- readLines(file.path(salida, "recursos-r4.ndjson"), encoding = "UTF-8")
+  expect_length(textos, 6L)
+  for (texto in textos) {
+    tipo <- jsonlite::fromJSON(texto)$resourceType
+    perfil <- paste0("http://hl7.org/fhir/StructureDefinition/", tipo)
+    expect_true(attr(fhir_validar(con, texto, perfil = perfil), "valido"))
+  }
+  # El mismo validador debe detectar una alteracion del candidato.
+  invalido <- fhir_recursos(textos)[[1L]]
+  invalido$gender <- "invalido"
+  validacion <- fhir_validar(con, invalido,
+    perfil = "http://hl7.org/fhir/StructureDefinition/Patient")
+  expect_false(isTRUE(attr(validacion, "valido")))
+  expect_true(any(validacion$severidad %in% c("error", "fatal")))
+})
+
 test_that("SQL a FHIR, perfiles R4, referencias y retorno a tablas", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   skip_if_not_installed("DBI")

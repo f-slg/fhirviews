@@ -14,8 +14,8 @@ construcción instaladas:
 
 ```sh
 R CMD build . --no-manual
-Rscript data-raw/probar-candidato.R fhirviews_0.5.0.tar.gz /ruta/piloto-basico-01 basico
-Rscript data-raw/probar-candidato.R fhirviews_0.5.0.tar.gz /ruta/piloto-completo-01 completo
+Rscript data-raw/probar-candidato.R fhirviews_0.5.0.9000.tar.gz /ruta/piloto-basico-01 basico
+Rscript data-raw/probar-candidato.R fhirviews_0.5.0.9000.tar.gz /ruta/piloto-completo-01 completo
 ```
 
 Cada salida debe ser nueva. `basico` necesita las dependencias obligatorias del
@@ -38,7 +38,7 @@ ni se cambian permisos como parte de esta aceptación.
 
 ## Interpretar los informes
 
-`aceptacion.json` incluye `esquema_informe = 1`, el perfil, el checksum disponible,
+`aceptacion.json` incluye `esquema_informe = 2`, el perfil, el checksum disponible,
 los controles, advertencias y diagnósticos. `aceptacion.csv` resume los controles.
 `sessionInfo.txt` conserva el entorno; `experiencia-usuario.txt` deja pendiente
 la evaluación humana. Revise los archivos antes de compartirlos: el entorno puede
@@ -75,9 +75,33 @@ los totales de datos ficticios. Los errores no reconocidos usan `error_inesperad
 | `rechazo_estricto_incorrecto` | Revisar bloque rechazado, fase y llamadas al consumidor |
 | `advertencias_requieren_revision` | Consultar los códigos en `advertencias`; repetir después de investigar |
 | `error_inesperado` | Reproducir el control con datos ficticios y obtener un diagnóstico local |
+| `r4_recorrido_incompleto` | Reconstruir y verificar el candidato con sus cinco recursos y controles negativos |
 
 Las advertencias se clasifican como `advertencia_tipo` o
 `advertencia_procesamiento`; sus textos y clases arbitrarias no se persisten.
+
+## Aceptación del alcance R4 actual
+
+Ambos perfiles exigen `r4_cinco_recursos`. El script instalado
+`r4-estabilidad.R` construye seis recursos de cinco tipos: Patient, Encounter,
+Condition, Observation y dos Immunization. Comprueba referencias, falsos,
+ausentes, fechas, elecciones de dosis, escala `72.00`/`0.50`, escritura
+JSON/NDJSON y regreso a las cinco tablas V8. Exige cinco rechazos: sujeto
+obligatorio ausente, ids duplicados, estado inválido, paciente ausente y
+comparador prohibido en SimpleQuantity.
+
+`basico` construye desde data.frames. `completo` usa consultas DBI parametrizadas
+en DuckDB y compara también las cinco vistas traducidas a SQL. El ejemplo
+conserva `r4/recursos-r4.ndjson`, `r4/recursos-r4.json` y `r4/resumen.json`.
+La aceptación del archivo instalado exige informe de versión 2 y todos los
+controles actuales; un candidato anterior queda rechazado aunque apruebe su
+propio protocolo antiguo.
+
+La aprobación local no valida perfiles. El grupo obligatorio HAPI
+`Candidato R4 con cinco recursos y perfiles base` valida los seis JSON exactos
+contra sus perfiles base y rechaza un Patient alterado. Los perfiles propios
+se evalúan con el participante. Usa [PILOTO-R4.md](PILOTO-R4.md) para la sesión
+externa actual; el kit v1 conserva la referencia al candidato histórico 0.5.0.
 
 ## Referencias de los datos ficticios
 

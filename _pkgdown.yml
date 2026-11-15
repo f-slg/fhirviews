@@ -100,7 +100,7 @@ reference:
   - vista_json
   - vista_duckdb
 - title: De SQL a FHIR
-  desc: Construir Patient y Observation con mapeos explicitos desde R o DBI.
+  desc: Construir Patient, Observation, Encounter, Condition e Immunization desde R o DBI.
   contents:
   - fhir_mapa
   - fhir_escribir

@@ -11,7 +11,7 @@ local({
     if (!nzchar(carpeta)) stop("Configura FHIRVIEWS_PILOTO_SALIDA con una carpeta nueva.")
     if (file.exists(carpeta)) stop("La carpeta del piloto ya existe; elige una nueva.")
     if (!dir.create(carpeta, recursive = TRUE)) stop("No se pudo crear la salida del piloto.")
-    nombres <- c("api_instalada", "vigilancia", "contrato_estricto", "recuperacion")
+    nombres <- c("api_instalada", "vigilancia", "contrato_estricto", "recuperacion", "r4_cinco_recursos")
     controles <- data.frame(prueba = nombres, estado = "pendiente", segundos = 0,
                             clase_error = "", codigo = "", advertencias = 0L,
                             stringsAsFactors = FALSE)
@@ -35,7 +35,7 @@ local({
       jsonlite::write_json(list(
         resultado_tecnico = if (!completo) "no_aprobado" else
           if (length(advertencias)) "requiere_revision" else "aprobado",
-        esquema_informe = 1L,
+        esquema_informe = 2L,
         politica_advertencias = "Toda advertencia requiere revision; no se aprueba automaticamente",
         advertencias = advertencias,
         diagnosticos = diagnosticos,
@@ -58,6 +58,8 @@ local({
         "Interpretacion de eventos frente a pacientes o tasas: pendiente",
         "Crear o modificar una vista y contrastarla con el recurso original: pendiente",
         "Identificar el bloque rechazado y lo que pudo escribirse: pendiente",
+        "Contrastar Patient, Encounter, Condition, Observation e Immunization con el NDJSON: pendiente",
+        "Explicar la escala 0.50/72.00, las referencias y las elecciones de fecha/dosis: pendiente",
         "Tiempo dedicado y obstaculos: ",
         "Problema minimo reproducible con datos ficticios: ",
         "Conclusion del participante y revision del mantenedor: pendiente",
@@ -99,7 +101,7 @@ local({
     verificar("api_instalada", {
       exigir(identical(formals(vista_ejecutar_lotes)$estricto, FALSE),
              "api_incompatible")
-      for (nombre in c("vigilancia.R", "lotes-transaccion.R", "PILOTO-MANTENEDOR.md")) {
+      for (nombre in c("vigilancia.R", "lotes-transaccion.R", "r4-estabilidad.R", "PILOTO-MANTENEDOR.md")) {
         exigir(nzchar(system.file("examples", nombre, package = "fhirviews")),
                "ejemplo_ausente")
       }
@@ -178,6 +180,24 @@ local({
       exigir(requireNamespace("DBI", quietly = TRUE) &&
                 requireNamespace("duckdb", quietly = TRUE), "dependencia_ausente")
       source(system.file("examples", "lotes-transaccion.R", package = "fhirviews"))
+    })
+    verificar("r4_cinco_recursos", {
+      anterior <- Sys.getenv(c("FHIRVIEWS_R4_SALIDA", "FHIRVIEWS_R4_SQL"), unset = NA_character_)
+      tryCatch({
+        Sys.setenv(FHIRVIEWS_R4_SALIDA = file.path(carpeta, "r4"),
+                   FHIRVIEWS_R4_SQL = if (perfil == "completo") "true" else "false")
+        r4 <- source(system.file("examples", "r4-estabilidad.R", package = "fhirviews"),
+                      local = new.env(parent = environment()))$value
+        exigir(identical(r4$version_fhir, "4.0.1") && r4$recursos == 6L &&
+                 length(r4$tipos) == 5L && r4$negativos_rechazados == 5L,
+               "r4_recorrido_incompleto")
+        hallazgos$r4 <- r4
+      }, finally = {
+        for (nombre in names(anterior)) {
+          if (is.na(anterior[[nombre]])) Sys.unsetenv(nombre) else
+            do.call(Sys.setenv, stats::setNames(list(anterior[[nombre]]), nombre))
+        }
+      })
     })
     writeLines(c(
       "PILOTO TECNICO CON DATOS FICTICIOS.",
