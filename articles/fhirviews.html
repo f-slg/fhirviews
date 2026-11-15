@@ -27,7 +27,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -349,22 +349,24 @@ claves de otros recursos (<code>paciente</code>,
 mismo con <code><a href="../reference/vista_ejecutar.html">vista_ejecutar()</a></code> que con el motor DuckDB.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/vista_catalogo.html">vista_catalogo</a></span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nombre"</span>, <span class="st">"recurso"</span>, <span class="st">"titulo"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;                     nombre           recurso</span></span>
-<span><span class="co">#&gt; 1             diagnosticos         Condition</span></span>
-<span><span class="co">#&gt; 2               encuentros         Encounter</span></span>
-<span><span class="co">#&gt; 3           inmunizaciones      Immunization</span></span>
-<span><span class="co">#&gt; 4             medicamentos MedicationRequest</span></span>
-<span><span class="co">#&gt; 5 notificacion_obligatoria         Condition</span></span>
-<span><span class="co">#&gt; 6                pacientes           Patient</span></span>
-<span><span class="co">#&gt; 7           signos_vitales       Observation</span></span>
-<span><span class="co">#&gt;                                     titulo</span></span>
-<span><span class="co">#&gt; 1                             Diagnósticos</span></span>
-<span><span class="co">#&gt; 2                               Encuentros</span></span>
-<span><span class="co">#&gt; 3                           Inmunizaciones</span></span>
-<span><span class="co">#&gt; 4           Prescripciones de medicamentos</span></span>
-<span><span class="co">#&gt; 5 Enfermedades de notificación obligatoria</span></span>
-<span><span class="co">#&gt; 6                                Pacientes</span></span>
-<span><span class="co">#&gt; 7                           Signos vitales</span></span></code></pre></div>
+<span><span class="co">#&gt;                     nombre            recurso</span></span>
+<span><span class="co">#&gt; 1                 alergias AllergyIntolerance</span></span>
+<span><span class="co">#&gt; 2             diagnosticos          Condition</span></span>
+<span><span class="co">#&gt; 3               encuentros          Encounter</span></span>
+<span><span class="co">#&gt; 4           inmunizaciones       Immunization</span></span>
+<span><span class="co">#&gt; 5             medicamentos  MedicationRequest</span></span>
+<span><span class="co">#&gt; 6 notificacion_obligatoria          Condition</span></span>
+<span><span class="co">#&gt; 7                pacientes            Patient</span></span>
+<span><span class="co">#&gt; 8           signos_vitales        Observation</span></span>
+<span><span class="co">#&gt;                                       titulo</span></span>
+<span><span class="co">#&gt; 1 Alergias e intolerancias por manifestación</span></span>
+<span><span class="co">#&gt; 2                               Diagnósticos</span></span>
+<span><span class="co">#&gt; 3                                 Encuentros</span></span>
+<span><span class="co">#&gt; 4                             Inmunizaciones</span></span>
+<span><span class="co">#&gt; 5             Prescripciones de medicamentos</span></span>
+<span><span class="co">#&gt; 6   Enfermedades de notificación obligatoria</span></span>
+<span><span class="co">#&gt; 7                                  Pacientes</span></span>
+<span><span class="co">#&gt; 8                             Signos vitales</span></span></code></pre></div>
 <p><code><a href="../reference/vista_plantilla.html">vista_plantilla()</a></code> devuelve una de ellas, lista para
 ejecutar:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">

@@ -29,8 +29,8 @@ archivos locales. La compatibilidad del motor SQL se comprueba por
 separado.
 
 [Documentación](https://f-slg.github.io/fhirviews/) ·
-[Referencia](https://f-slg.github.io/fhirviews/reference/) · [Novedades
-de 0.5.0](https://f-slg.github.io/fhirviews/NEWS.md) · [Reportar un
+[Referencia](https://f-slg.github.io/fhirviews/reference/) ·
+[Novedades](https://f-slg.github.io/fhirviews/NEWS.md) · [Reportar un
 problema](https://github.com/f-slg/fhirviews/issues/new/choose)
 
 ``` mermaid
@@ -57,48 +57,50 @@ conserva la escala decimal disponible en el origen. Para construir
 recursos desde una tabla extraída, prepara las filas y elige un mapa;
 las columnas omitidas o agregadas necesitan decisiones propias.
 
-> **Versión 0.5.0 · enviada a CRAN el 7 de noviembre de 2026, en
-> revisión.** Procesamiento por bloques, recuperación de exportaciones
-> con validación de contenido y mejoras de privacidad. El motor SQL de
-> DuckDB sigue siendo **experimental**. Mientras CRAN la publica,
-> instálala desde GitHub.
+## Estado y versiones
 
-> **Desarrollo 0.5.0.9000:** añade SQL → FHIR y conformidad 144/144 en
-> ambos motores. Estas mejoras pertenecen al código de desarrollo, no al
-> candidato 0.5.0 enviado previamente a CRAN.
+| Versión o componente | Estado y uso |
+|----|----|
+| **Desarrollo actual: `0.5.0.9001`** | Código de GitHub. SQL → FHIR para cinco recursos R4, ocho vistas de catálogo y la nueva vista de alergias. Todavía sin DOI de versión propio. |
+| **Archivo `0.5.0.9000`** | Código anterior preservado en [Zenodo](https://doi.org/10.5281/zenodo.24238726). Su DOI identifica ese archivo concreto. |
+| **`0.5.0`** | [Lanzamiento de GitHub](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), enviado a CRAN el 7 de noviembre de 2026. No incluye SQL → FHIR. Consulta el [catálogo oficial de CRAN](https://cran.r-project.org/web/packages/available_packages_by_name.html) para su publicación. |
+| **Rust** | Laboratorio probado, separado del paquete instalado. [Resultados y límites](#rendimiento). |
+| **Federación y R4/R6** | Trabajo previsto; todavía no disponible. [Pendientes y orden de trabajo](#pendientes-y-orden-de-trabajo). |
 
-> **Prioridad actual: estabilizar R4.** El cierre se limita a los cinco
-> recursos construidos actualmente y exige el ensayo instalado, la
-> validación de perfiles base y un piloto externo. La federación y la
-> conversión R4/R6 quedan para una etapa posterior. [Alcance y criterios
-> de cierre](#estabilizaci%C3%B3n-de-r4).
+La prioridad es cerrar R4 con el candidato instalado y un piloto
+externo. La lectura y las vistas pueden trabajar con otros recursos R4;
+la construcción desde SQL mantiene **Patient, Observation, Encounter,
+Condition e Immunization**. Publicar en GitHub o Zenodo y ser aceptado
+por CRAN son procesos independientes.
 
 ## Contenido
 
-- [Qué puedes hacer](#qu%C3%A9-puedes-hacer)
-- [Instalación](#instalaci%C3%B3n)
-- [Inicio rápido: de FHIR a una
-  tabla](#inicio-r%C3%A1pido-de-fhir-a-una-tabla)
-- [Arquitectura y secuencia de
-  procesamiento](#arquitectura-y-secuencia-de-procesamiento)
-- [Semántica de una vista](#sem%C3%A1ntica-de-una-vista)
-- [Elegir cómo procesar los datos](#elegir-c%C3%B3mo-procesar-los-datos)
-- [Consultar un servidor FHIR](#consultar-un-servidor-fhir)
-- [Autenticación y exportación
-  masiva](#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva)
-- [Procesar archivos por bloques](#procesar-archivos-por-bloques)
-- [Trabajar con DuckDB](#trabajar-con-duckdb)
-- [De SQL a FHIR](#de-sql-a-fhir)
-- [Vistas de salud pública y
-  terminologías](#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas)
-- [Validación y privacidad](#validaci%C3%B3n-y-privacidad)
-- [Conformidad y pruebas](#conformidad-y-pruebas)
-- [Rendimiento](#rendimiento)
-- [Alcance y límites](#alcance-y-l%C3%ADmites)
-- [Estabilización de R4](#estabilizaci%C3%B3n-de-r4)
-- [Piloto y documentación local](#piloto-y-documentaci%C3%B3n-local)
-- [Guías y referencia](#gu%C3%ADas-y-referencia)
-- [Contribuir, citar y licencia](#contribuir-citar-y-licencia)
+- **Empezar:** [Qué puedes hacer](#qu%C3%A9-puedes-hacer) ·
+  [Instalación](#instalaci%C3%B3n) · [Inicio
+  rápido](#inicio-r%C3%A1pido-de-fhir-a-una-tabla).
+- **Extraer y consultar:** [Servidor FHIR](#consultar-un-servidor-fhir)
+  · [Autenticación y Bulk
+  Data](#autenticaci%C3%B3n-y-exportaci%C3%B3n-masiva) · [Archivos por
+  bloques](#procesar-archivos-por-bloques) ·
+  [DuckDB](#trabajar-con-duckdb).
+- **Construir recursos:** [SQL → FHIR](#de-sql-a-fhir) · [Reglas del
+  mapeo](#reglas-del-mapeo) · [Recursos
+  admitidos](#recursos-admitidos-y-pr%C3%B3ximos-grupos).
+- **Comprender las vistas:**
+  [Arquitectura](#arquitectura-y-secuencia-de-procesamiento) ·
+  [Semántica](#sem%C3%A1ntica-de-una-vista) · [Elegir el
+  motor](#elegir-c%C3%B3mo-procesar-los-datos) · [Catálogo y
+  terminologías](#vistas-de-salud-p%C3%BAblica-y-terminolog%C3%ADas).
+- **Comprobar resultados:** [Validación y
+  privacidad](#validaci%C3%B3n-y-privacidad) · [Conformidad y
+  pruebas](#conformidad-y-pruebas) · [Rendimiento y Rust](#rendimiento)
+  · [Límites](#alcance-y-l%C3%ADmites).
+- **Seguir el desarrollo:** [Cierre R4](#estabilizaci%C3%B3n-de-r4) ·
+  [Pendientes](#pendientes-y-orden-de-trabajo) ·
+  [Piloto](#piloto-y-documentaci%C3%B3n-local) ·
+  [Guías](#gu%C3%ADas-y-referencia).
+- **Autoría y colaboración:** [Citar el paquete](#citar-el-paquete) ·
+  [Contribuir](#contribuir) · [Licencia](#licencia).
 
 ## Qué puedes hacer
 
@@ -1090,9 +1092,9 @@ servidor, como `Practitioner`, aunque este módulo aún no los construya.
 
 ## Vistas de salud pública y terminologías
 
-El catálogo incluye siete vistas: pacientes, diagnósticos, encuentros,
-inmunizaciones, medicamentos, signos vitales y notificación obligatoria.
-Puedes inspeccionarlas y adaptar sus constantes:
+El catálogo incluye ocho vistas: pacientes, diagnósticos, encuentros,
+inmunizaciones, medicamentos, signos vitales, alergias y notificación
+obligatoria. Puedes inspeccionarlas y adaptar sus constantes:
 
 ``` r
 
@@ -1114,6 +1116,29 @@ invoca `$validate-code`.
 [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md)
 incorpora los códigos expandidos a la vista para que su ejecución
 posterior no dependa de la red.
+
+### Alergias e intolerancias R4
+
+La vista `alergias` conserva cada manifestación dentro de su reacción,
+con su gravedad y fecha. Las categorías se guardan como listas. Un
+registro sin reacciones conserva una fila; `criticidad` y
+`gravedad_reaccion` son campos distintos y no se completan ni se
+infieren entre sí.
+
+``` r
+
+archivo <- system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")
+alergias <- vista_ejecutar(archivo, vista_plantilla("alergias"))
+alergias[, c("id", "paciente", "estado_clinico", "gravedad_reaccion", "reaccion_codigo")]
+length(unique(alergias$id))  # 3 registros de alergia; la tabla tiene 5 filas
+```
+
+Los datos son ficticios. Las filas pueden repetir `id` cuando hay varias
+manifestaciones; cuenta ids distintos para contar registros de alergia.
+Los códigos de estado se seleccionan por su sistema canónico. Código,
+sistema y descripción de sustancia o manifestación proceden del mismo
+primer `Coding`. La definición se puede consultar con
+`vista_json(vista_plantilla("alergias"))`.
 
 ### Demostración reproducible de vigilancia
 
@@ -1310,8 +1335,8 @@ advertencias. Incluye las 16 originales de SQL → FHIR, las 20 de
 Encounter/Condition, las 38 de Immunization y las 10 del nuevo grupo del
 candidato R4. Se registraron las dos omisiones previstas (lectura
 pública y ValueSet en línea), y el contenedor se eliminó al finalizar.
-La [evidencia actual de
-integración](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json)
+La [evidencia de integración de
+0.5.0.9000](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json)
 incluye cada grupo, los registros y el entorno de R en la misma carpeta.
 La [ejecución anterior de 120
 comprobaciones](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
@@ -1453,24 +1478,12 @@ commit específico que se vaya a entregar.
 
 ### Evaluación experimental de Rust
 
-El paquete usa R, JavaScript/V8 y DuckDB. Ya existe un **prototipo Rust
-probado** para la validación estructural de SQL → FHIR, en
-[`data-raw/experimento-rust`](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust).
-Ese laboratorio queda excluido del paquete R; instalar fhirviews
-conserva los requisitos actuales. El constructor público sigue
-utilizando R.
-
-Se compararon tres recorridos completos: R actual, R con un plan R4
-preparado y el mismo constructor de primitivos en R con validación
-estructural por lotes en un ejecutable Rust. Los tres usan los mismos
-metadatos R4. La medición incluye el arranque del ejecutable, lectura
-del plan y transporte por archivos temporales; la preparación única
-compartida, de **0,52 s**, se registra aparte.
-
-**Resultado local del 15 de noviembre de 2026:** medianas de tres
-repeticiones por método y recurso, con **3.000 filas por lote**, paquete
-instalado con bytecode, Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 e Intel
-i7-10750H.
+El constructor público utiliza R. El [laboratorio
+Rust](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust)
+queda fuera del paquete instalado. Sus mediciones de referencia usan
+**0.5.0.9000**, Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 e Intel i7-10750H;
+son anteriores a 0.5.0.9001. Medianas para 3.000 filas, tres
+repeticiones por método:
 
 | Recurso      | R actual (s) | R con plan (s) | R + Rust (s) | R actual / Rust |
 |--------------|-------------:|---------------:|-------------:|----------------:|
@@ -1480,45 +1493,21 @@ i7-10750H.
 | Observation  |       10,904 |          5,891 |        2,553 |           4,27× |
 | Immunization |       11,799 |          7,173 |        3,052 |           3,87× |
 
-Se registraron **90 muestras**: 300 y 3.000 filas, cinco recursos, tres
-métodos y tres repeticiones, con orden de métodos aleatorio y semilla
-fija. Cada lote produjo el mismo JSON exacto. Frente al plan preparado
-en R, Rust fue entre **1,21 y 2,91 veces** más rápido en esta máquina.
-Los tiempos de preparación y compilación quedan separados de los tiempos
-por lote.
+Las 90 muestras contrastan JSON exacto en cada lote e incluyen arranque
+de Rust, lectura del plan y transporte temporal. La preparación común es
+de 0,52 s. Frente al plan R, Rust fue entre 1,21 y 2,91 veces más rápido
+en este equipo. En una ejecución separada con 3.000 Immunization, la
+suma RSS muestreada fue de 170,2 MiB (R), 184,1 MiB (plan R) y 192,6 MiB
+(Rust); puede contar páginas compartidas dos veces. Estas medidas Linux
+no demuestran ahorro de memoria.
 
-La comprobación funcional pasó **587 controles diferenciales** y **7
-tests Rust**. Cubre JSON/NDJSON, salida de SQL on FHIR, `FALSE`,
-ausentes, Unicode, obligatorios, elecciones, referencias, precedencia de
-errores y la misma clase, fila y campo de error. Conserva `0.50`, `0.5`,
-`72.00` y decimales que exceden la precisión de un `double`; se
-verificaron también los límites FHIRPath. Los mensajes del prototipo son
-resumidos; todavía deben ajustarse para una API pública. La matriz CI
-añade paridad funcional en Windows, macOS y Linux.
+Pasaron siete tests Rust y 587 controles diferenciales en Windows, macOS
+y Linux. La CI contrasta también la paridad con desarrollos posteriores.
+Quedan pendientes interfaz nativa con R, errores completos, ABI/Rtools y
+distribución para CRAN. Consulta [resultados, hashes y
+reproducción](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md).
 
-En una ejecución separada con 3.000 Immunization, el pico de suma RSS de
-R y sus hijos fue **170,2 MiB** con R actual, **184,1 MiB** con el plan
-R y **192,6 MiB** con Rust. Es una muestra por método, tomada cada 10 ms
-durante todo el proceso; puede contar páginas compartidas más de una
-vez. No demuestra un ahorro de memoria. Estas mediciones de rendimiento
-son solo de Linux.
-
-La mejora justifica continuar con la validación por lotes. Antes de
-habilitarla como motor opcional faltan la interfaz nativa con R, errores
-completos, distribución de dependencias y pruebas de instalación
-conforme a CRAN. La CLI de Windows no demuestra compatibilidad de una
-futura biblioteca Rust con Rtools. Se conservará una alternativa en R y
-se volverá a medir la interfaz elegida. Rust no sustituye aquí
-FHIRPath/V8, DuckDB ni la validación de perfiles.
-
-Los [resultados y
-hashes](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust/resultados-20261115)
-y las [instrucciones de
-reproducción](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md)
-documentan los límites de la comparación. El archivo Zenodo `0.5.0.9000`
-precede a este experimento; la constancia del laboratorio identifica su
-propio commit. El diagrama inicial describe las funciones del paquete
-disponible.
+Mediciones históricas de motores y comparación con fhircrackr
 
 ### Mediciones anteriores de V8 y DuckDB
 
@@ -1651,7 +1640,7 @@ Issues](https://github.com/f-slg/fhirviews/issues).
 ## Estabilización de R4
 
 La próxima entrega consolidará **FHIR R4 4.0.1** con un alcance
-explícito. La versión de desarrollo sigue siendo `0.5.0.9000`; preparar
+explícito. La versión de desarrollo sigue siendo `0.5.0.9001`; preparar
 y comprobar un candidato no cambia su versión, publica un lanzamiento ni
 emite un DOI.
 
@@ -1699,12 +1688,31 @@ perfiles como no evaluada; HAPI aporta su evidencia independiente, y los
 perfiles propios requieren otra comprobación.
 
 Después del piloto y de corregir sus hallazgos se fijará la versión
-estable y su artefacto. El candidato de desarrollo ya tiene un DOI
-Zenodo verificado y el ORCID del autor; su archivo se detalla en la
-sección de cita. El orden posterior será federación entre servidores R4
-y, después, adaptadores y exportación R4/R6 por recurso. Rust ya tiene
-un prototipo medido; su incorporación depende de la interfaz nativa, la
-distribución y las pruebas de instalación.
+estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y
+el ORCID del autor; el desarrollo actual 0.5.0.9001 mantiene metadatos
+de cita separados. El orden posterior será federación entre servidores
+R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust ya
+tiene un prototipo medido; su incorporación depende de la interfaz
+nativa, la distribución y las pruebas de instalación.
+
+## Pendientes y orden de trabajo
+
+Las pruebas automáticas, el archivo Zenodo y el laboratorio Rust ya
+tienen evidencia. Las siguientes tareas requieren trabajo adicional:
+
+| Prioridad | Pendiente | Criterio para cerrarlo |
+|----|----|----|
+| 1 | **Piloto externo R4** | Una persona ajena al desarrollo instala el candidato identificado, repite las tareas y registra comprensión, ayuda y hallazgos con el [protocolo R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). La CI no sustituye esa evaluación. |
+| 2 | **Entrega estable del alcance R4** | Resolver los hallazgos, elegir versión y artefacto, comprobar ese mismo archivo y verificar su cita. El envío `0.5.0` a CRAN conserva su seguimiento independiente. |
+| 3 | **Motor Rust opcional** | Definir la interfaz estable con R, completar diagnósticos y fallback, probar instalación/ABI con Rtools y preparar dependencias/licencias para CRAN. La [CLI experimental](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust) aún no cumple ese papel. |
+| 4 | **Más constructores R4** | Después del cierre, incorporar `Specimen` y `DiagnosticReport`, seguidos de medicamentos y actores según las fuentes. Cada grupo necesita metadatos, colecciones, referencias y retorno SQL → FHIR → perfiles → tablas. |
+| 5 | **Federación entre servidores R4** | Conservar origen y procedencia, distinguir ids repetidos entre servidores, revisar referencias y contrastar las consultas conjuntas. |
+| 6 | **Adaptadores R4/R6** | Elegir recursos y reglas por versión, conservar el original y documentar pérdidas o campos sin equivalencia antes de exportar. |
+
+La nueva vista `alergias` amplía la extracción de
+**AllergyIntolerance**; la construcción SQL → FHIR sigue limitada a
+cinco tipos. La lectura de alergias no acredita un nuevo conversor ni
+sustituye la validación de perfiles.
 
 ## Piloto y documentación local
 
@@ -1728,6 +1736,8 @@ motores. Cada carpeta debe ser nueva. Este ejemplo local utiliza datos
 ficticios y conserva los JSON de salida y su resumen.
 
 ### Kit anterior de participantes: candidato 0.5.0
+
+Material histórico del piloto 0.5.0
 
 **[Descargar el kit del piloto
 ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip)**
@@ -1754,12 +1764,11 @@ También puedes consultar los protocolos en el repositorio:
 - [Instrucciones y archivos del
   kit](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/LEEME.md).
 
-El ZIP contiene los materiales de evaluación, no el paquete R. Mientras
-el lanzamiento siga en borrador, el mantenedor entrega el archivo
-candidato identificado en el manifiesto para evaluar exactamente la
-misma versión. Este kit v1 mantiene la referencia histórica al candidato
-0.5.0; para el cierre actual de SQL → FHIR R4 usa el protocolo R4
-anterior.
+El ZIP contiene los materiales de evaluación, no el paquete R. Para un
+piloto, el mantenedor entrega el archivo candidato identificado en el
+manifiesto para evaluar exactamente la misma versión. Este kit v1
+mantiene la referencia histórica al candidato 0.5.0; para el cierre
+actual de SQL → FHIR R4 usa el protocolo R4 anterior.
 
 ### Instalar el candidato y ejecutar el ensayo
 
@@ -1769,7 +1778,7 @@ el archivo fuente que te entregue el mantenedor:
 ``` r
 
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9000.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9001.tar.gz", repos = NULL, type = "source")
 ```
 
 Reinicia R, elige una carpeta nueva y ejecuta:
@@ -1838,7 +1847,42 @@ muestra el recorrido completo desde datos FHIR hasta la tasa y el mapa.
 [aprende-fhir](https://github.com/f-slg/aprende-fhir) ofrece material
 docente con un caso clínico ficticio.
 
-## Contribuir, citar y licencia
+## Citar el paquete
+
+**Autor y mantenedor:** Ronald Fabricio Salas Guerrero, [ORCID
+0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522).
+
+``` r
+
+citation("fhirviews")
+toBibtex(citation("fhirviews"))
+```
+
+| Qué utilizaste | Cómo identificarlo |
+|----|----|
+| Desarrollo actual `0.5.0.9001` | Cita la versión instalada y conserva el SHA del commit. Todavía no tiene DOI de versión. |
+| Archivo `0.5.0.9000` | [DOI 10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726), correspondiente al código archivado desde `565243e`. |
+| Proyecto y sus versiones | [DOI de concepto 10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725). Para reproducir un análisis, identifica además la versión concreta. |
+
+ORCID identifica al autor; Zenodo preserva un archivo citable. Pueden
+utilizarse antes de la publicación en CRAN: no son un trámite previo
+obligatorio ni una certificación de aceptación. La cita de R incorpora
+el DOI de `0.5.0.9000` solo para esa versión. El desarrollo `0.5.0.9001`
+conserva su propia versión y la URL del repositorio. Los metadatos están
+en
+[`CITATION.cff`](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)
+y
+[`.zenodo.json`](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
+
+La [guía de
+Zenodo](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
+detalla autoría, archivos, hashes y futuras versiones. La [constancia de
+publicación](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
+identifica el ZIP realmente preservado; el paquete R complementario de
+GitHub tiene un hash distinto y se documenta por separado. Los nuevos
+cambios no modifican el archivo al que corresponde el DOI anterior.
+
+## Contribuir
 
 Para dudas de uso, participa en
 [Discussions](https://github.com/f-slg/fhirviews/discussions). Para
@@ -1849,73 +1893,12 @@ contribución](https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING
 y el [código de
 conducta](https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md).
 
-Para citar el paquete:
-
-``` r
-
-citation("fhirviews")
-toBibtex(citation("fhirviews"))
-```
-
-**Autor y mantenedor:** Ronald Fabricio Salas Guerrero, [ORCID
-0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522). El
-identificador figura en `Authors@R`, `inst/CITATION`,
-[`CITATION.cff`](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)
-y
-[`.zenodo.json`](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
-El archivo CFF habilita la cita del repositorio en GitHub; la cita de R
-incluye la versión instalada.
-
-**Zenodo: publicado y verificado.** El código de desarrollo
-**0.5.0.9000** está archivado desde el commit
-`565243ec06f4dad88e898761a98a4f23c9fe8f95`, con fecha de publicación 15
-de noviembre de 2026 (UTC).
-
-| Identificador | Uso |
-|----|----|
-| [10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726) | DOI de la versión archivada `0.5.0.9000`; úsalo para reproducir ese código. |
-| [10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725) | DOI de concepto que agrupa las versiones del proyecto. |
-| [0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522) | ORCID del autor; identifica a la persona. |
-
-Zenodo preserva el ZIP fuente generado por GitHub, con su propio
-checksum. El paquete R probado se ofrece como archivo complementario en
-la [prerelease
-`v0.5.0.9000`](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0.9000);
-su hash y sus comprobaciones se documentan por separado. El registro
-Zenodo no incluye automáticamente ese `tar.gz` ni los otros archivos
-adjuntos de GitHub. La [constancia de
-verificación](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
-conserva el commit, los DOI, la identidad del autor y los hashes del
-archivo real.
-
-**No hizo falta esperar a CRAN.** Este archivo de desarrollo es
-independiente del envío **`0.5.0`** a CRAN y no lo reemplaza. La
-integración se confirmó observando el registro publicado, su versión y
-ORCID, la integridad del ZIP, su contenido frente al commit fijado y la
-resolución del DOI.
-
-Para citar el archivo: Salas Guerrero, R. F. (2026). *fhirviews: FHIR
-desde R y vistas tabulares con SQL on FHIR* (0.5.0.9000, desarrollo).
-Zenodo. <https://doi.org/10.5281/zenodo.24238726>. La cita de R incluye
-este DOI solo para `0.5.0.9000`; otras versiones conservan su número y
-la URL del repositorio. El CFF y la cita actual se completaron después
-de emitir el DOI; el ZIP archivado conserva los metadatos previos a su
-emisión. El DOI de versión sigue identificando ese archivo inmutable.
-
-Para próximos lanzamientos, actualiza versión y metadatos, publica una
-nueva etiqueta y verifica el nuevo registro dentro de la misma familia
-de versiones. Zenodo utiliza `.zenodo.json` cuando coexiste con CFF.
-Consulta la [guía de
-archivo](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
-y la [documentación oficial](https://help.zenodo.org/docs/github/).
-Incluir un ORCID en los metadatos no vincula por sí solo la cuenta
-personal del mantenedor en Zenodo. La versión estable se decidirá
-después del piloto.
+## Licencia
 
 Licencia [MIT](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md).
 Las licencias y atribuciones del código y los datos incluidos se
 detallan en
-[`inst/COPYRIGHTS`](https://f-slg.github.io/fhirviews/inst/COPYRIGHTS).
+[`inst/COPYRIGHTS`](https://github.com/f-slg/fhirviews/blob/main/inst/COPYRIGHTS).
 
 fhirviews es un proyecto independiente. FHIR® y HL7® son marcas
 registradas de Health Level Seven International; su uso no implica

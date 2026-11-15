@@ -69,6 +69,15 @@ vista_ejecutar(caso, vista_plantilla("signos_vitales"))
 #> 5     Frecuencia cardíaca 102.00       latidos/min        /min
 #> 6     Superficie corporal   1.77                m2          m2
 
+alergias <- system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")
+vista_ejecutar(alergias, vista_plantilla("alergias"))[, c("id", "paciente", "reaccion")]
+#>   id paciente                 reaccion
+#> 1 a1       p1 Manifestación ficticia 1
+#> 2 a1       p1 Manifestación ficticia 2
+#> 3 a1       p1 Manifestación ficticia 3
+#> 4 a2       p2                     <NA>
+#> 5 a3       p3                     <NA>
+
 # Solo los casos de dengue hemorrágico (A91)
 dengue <- system.file("extdata", "dengue_2025.ndjson.gz",
                       package = "fhirviews")

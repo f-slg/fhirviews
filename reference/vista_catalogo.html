@@ -3,13 +3,13 @@
 comunes en vigilancia y salud pública: pacientes con su dirección de
 residencia, signos vitales, diagnósticos, enfermedades de notificación
 obligatoria, inmunizaciones, encuentros y prescripciones de
-medicamentos. Todas usan getResourceKey() para la columna id y
+medicamentos, alergias e intolerancias. Todas usan getResourceKey() para la columna id y
 getReferenceKey() para las claves de otros recursos (por ejemplo
 paciente), de modo que las tablas se pueden unir entre sí."><meta property="og:description" content="Lista los ViewDefinition que trae el paquete para las tablas más
 comunes en vigilancia y salud pública: pacientes con su dirección de
 residencia, signos vitales, diagnósticos, enfermedades de notificación
 obligatoria, inmunizaciones, encuentros y prescripciones de
-medicamentos. Todas usan getResourceKey() para la columna id y
+medicamentos, alergias e intolerancias. Todas usan getResourceKey() para la columna id y
 getReferenceKey() para las claves de otros recursos (por ejemplo
 paciente), de modo que las tablas se pueden unir entre sí."><meta property="og:image" content="https://f-slg.github.io/fhirviews/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -19,7 +19,7 @@ paciente), de modo que las tablas se pueden unir entre sí."><meta property="og:
 
     <a class="navbar-brand me-2" href="../index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ paciente), de modo que las tablas se pueden unir entre sí."><meta property="og:
 comunes en vigilancia y salud pública: pacientes con su dirección de
 residencia, signos vitales, diagnósticos, enfermedades de notificación
 obligatoria, inmunizaciones, encuentros y prescripciones de
-medicamentos. Todas usan <code>getResourceKey()</code> para la columna <code>id</code> y
+medicamentos, alergias e intolerancias. Todas usan <code>getResourceKey()</code> para la columna <code>id</code> y
 <code>getReferenceKey()</code> para las claves de otros recursos (por ejemplo
 <code>paciente</code>), de modo que las tablas se pueden unir entre sí.</p>
     </div>
@@ -81,7 +81,10 @@ y <code>descripcion</code>.</p>
     <p>Las vistas son JSON estándar de SQL on FHIR, guardados en la carpeta
 <code>vistas</code> del paquete (<code>system.file("vistas", package = "fhirviews")</code>), y
 dan los mismos resultados con <code><a href="vista_ejecutar.html">vista_ejecutar()</a></code> y con
-<code><a href="vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>.</p>
+<code><a href="vista_ejecutar_duckdb.html">vista_ejecutar_duckdb()</a></code>.
+La vista <code>alergias</code> produce una fila por manifestacion de cada reaccion,
+conservando una fila cuando no hay reacciones. Para contar alergias,
+cuenta los valores distintos de <code>id</code>; <code>categoria</code> es una columna de listas.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -91,22 +94,24 @@ dan los mismos resultados con <code><a href="vista_ejecutar.html">vista_ejecutar
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">vista_catalogo</span><span class="op">(</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nombre"</span>, <span class="st">"recurso"</span>, <span class="st">"titulo"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     nombre           recurso</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1             diagnosticos         Condition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2               encuentros         Encounter</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           inmunizaciones      Immunization</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4             medicamentos MedicationRequest</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 notificacion_obligatoria         Condition</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                pacientes           Patient</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7           signos_vitales       Observation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                     titulo</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                             Diagnósticos</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                               Encuentros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                           Inmunizaciones</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4           Prescripciones de medicamentos</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Enfermedades de notificación obligatoria</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                Pacientes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                           Signos vitales</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     nombre            recurso</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 alergias AllergyIntolerance</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             diagnosticos          Condition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3               encuentros          Encounter</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4           inmunizaciones       Immunization</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5             medicamentos  MedicationRequest</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 notificacion_obligatoria          Condition</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                pacientes            Patient</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8           signos_vitales        Observation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       titulo</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Alergias e intolerancias por manifestación</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                               Diagnósticos</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                 Encuentros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                             Inmunizaciones</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5             Prescripciones de medicamentos</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Enfermedades de notificación obligatoria</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                  Pacientes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                             Signos vitales</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

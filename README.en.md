@@ -13,7 +13,7 @@ through explicit mappings.**
 R4](https://img.shields.io/badge/FHIR-R4-0F2233.svg)](https://hl7.org/fhir/R4/)
 [![MIT
 license](https://img.shields.io/badge/license-MIT-blue.svg)](https://f-slg.github.io/fhirviews/LICENSE.md)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24238726.svg)](https://doi.org/10.5281/zenodo.24238726)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24238725.svg)](https://doi.org/10.5281/zenodo.24238725)
 
 > **About the language.** This is a translation of the Spanish README.
 > The package is aimed at users in Ecuador and Latin America: function
@@ -72,42 +72,50 @@ Immunization**, preserving the decimal scale available at the source. To
 construct resources from a projected table, prepare the rows and choose
 a mapping, with explicit decisions about omitted or aggregated columns.
 
-> **Version 0.5.0 · submitted to CRAN on 7 November 2026, under
-> review.** Block-wise processing, export recovery with content
-> validation and privacy improvements. The DuckDB SQL engine is still
-> **experimental**. Until CRAN publishes it, install it from GitHub.
+## Status and versions
 
-> **Development version 0.5.0.9000:** adds SQL → FHIR and 144/144
-> conformance tests in both engines. These changes belong to the
-> development code, not the 0.5.0 candidate previously submitted to
-> CRAN.
+| Version or component | Status and use |
+|----|----|
+| **Current development: `0.5.0.9001`** | GitHub source. SQL → FHIR for five R4 resources, eight catalogue views and the new allergy view. No version DOI assigned yet. |
+| **Archived `0.5.0.9000`** | Earlier source preserved in [Zenodo](https://doi.org/10.5281/zenodo.24238726). Its DOI identifies that specific archive. |
+| **`0.5.0`** | [GitHub release](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), submitted to CRAN on 7 November 2026. Does not include SQL → FHIR. Consult the [official CRAN catalogue](https://cran.r-project.org/web/packages/available_packages_by_name.html) for publication. |
+| **Rust** | Tested laboratory, separate from the installed package. [Results and limits](#performance). |
+| **Federation and R4/R6** | Planned work, currently unavailable. [Remaining work and priorities](#remaining-work-and-priorities). |
+
+The priority is to close R4 with the installed candidate and an external
+pilot. The reader and views can handle other R4 resources; construction
+from SQL remains limited to **Patient, Observation, Encounter, Condition
+and Immunization**. GitHub or Zenodo publication is independent of CRAN
+acceptance.
 
 ## Contents
 
-- [Glossary of function names](#glossary-of-function-names)
-- [What you can do](#what-you-can-do)
-- [Installation](#installation)
-- [Quick start: from FHIR to a table](#quick-start-from-fhir-to-a-table)
-- [Architecture and processing
-  sequence](#architecture-and-processing-sequence)
-- [Semantics of a view](#semantics-of-a-view)
-- [Choosing how to process the data](#choosing-how-to-process-the-data)
-- [Querying a FHIR server](#querying-a-fhir-server)
-- [Authentication and bulk export](#authentication-and-bulk-export)
-- [Processing files in blocks](#processing-files-in-blocks)
-- [Working with DuckDB](#working-with-duckdb)
-- [From SQL to FHIR](#from-sql-to-fhir)
-- [Public health views and
-  terminologies](#public-health-views-and-terminologies)
-- [Validation and privacy](#validation-and-privacy)
-- [Conformance and tests](#conformance-and-tests)
-- [Performance](#performance)
-- [Scope and limitations](#scope-and-limitations)
-- [Stabilising R4](#stabilising-r4)
-- [Pilot and local documentation](#pilot-and-local-documentation)
-- [Guides and reference](#guides-and-reference)
-- [Contributing, citation and
-  license](#contributing-citation-and-license)
+- **Get started:** [What you can do](#what-you-can-do) ·
+  [Installation](#installation) · [Quick
+  start](#quick-start-from-fhir-to-a-table) · [Function-name
+  glossary](#glossary-of-function-names).
+- **Extract and query:** [FHIR servers](#querying-a-fhir-server) ·
+  [Authentication and Bulk Data](#authentication-and-bulk-export) ·
+  [Files in blocks](#processing-files-in-blocks) ·
+  [DuckDB](#working-with-duckdb).
+- **Construct resources:** [SQL → FHIR](#from-sql-to-fhir) · [Mapping
+  rules](#mapping-rules) · [Supported
+  resources](#supported-resources-and-next-groups).
+- **Understand views:**
+  [Architecture](#architecture-and-processing-sequence) ·
+  [Semantics](#semantics-of-a-view) · [Choose the
+  engine](#choosing-how-to-process-the-data) · [Catalogue and
+  terminology](#public-health-views-and-terminologies).
+- **Check results:** [Validation and privacy](#validation-and-privacy) ·
+  [Conformance and tests](#conformance-and-tests) · [Performance and
+  Rust](#performance) · [Limitations](#scope-and-limitations).
+- **Follow development:** [R4 closure](#stabilising-r4) · [Remaining
+  work](#remaining-work-and-priorities) ·
+  [Pilot](#pilot-and-local-documentation) ·
+  [Guides](#guides-and-reference).
+- **Authorship and collaboration:** [Cite the
+  package](#citing-the-package) · [Contribute](#contributing) ·
+  [License](#license).
 
 ## Glossary of function names
 
@@ -1029,9 +1037,9 @@ such as Practitioner, even when this module does not yet construct them.
 
 ## Public health views and terminologies
 
-The catalogue includes seven views: patients, diagnoses, encounters,
-immunisations, medications, vital signs and notifiable diseases. You can
-inspect them and adapt their constants:
+The catalogue includes eight views: patients, diagnoses, encounters,
+immunisations, medications, vital signs, allergies and notifiable
+diseases. You can inspect them and adapt their constants:
 
 ``` r
 
@@ -1053,6 +1061,27 @@ calls `$validate-code`.
 [`vista_con_valueset()`](https://f-slg.github.io/fhirviews/reference/vista_con_valueset.md)
 embeds the expanded codes in the view so that running it later does not
 depend on the network.
+
+### R4 allergies and intolerances
+
+The `alergias` view retains each manifestation within its reaction, with
+its severity and date. Categories remain list columns. A record without
+reactions retains one row; `criticidad` and `gravedad_reaccion` are
+separate fields and are not filled or inferred from each other.
+
+``` r
+
+archivo <- system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")
+alergias <- vista_ejecutar(archivo, vista_plantilla("alergias"))
+alergias[, c("id", "paciente", "estado_clinico", "gravedad_reaccion", "reaccion_codigo")]
+length(unique(alergias$id))  # 3 allergy records; the table contains 5 rows
+```
+
+Data are fictitious. Multiple manifestations may repeat `id`; count
+distinct ids to count allergy records. Status codes are selected by
+canonical system. Substance or manifestation code, system and display
+come from the same first `Coding`. Inspect the definition with
+`vista_json(vista_plantilla("alergias"))`.
 
 ### Reproducible surveillance demo
 
@@ -1244,7 +1273,7 @@ against their canonical URLs.
 original SQL → FHIR checks, 20 Encounter/Condition checks, 38
 Immunization checks and 10 new candidate checks. The two expected skips
 (public-server reads and inline ValueSet validation) were recorded, and
-the container was removed. The [current integration
+the container was removed. The [0.5.0.9000 integration
 evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json)
 records each group, with logs and the R environment alongside it. The
 [previous 120-assertion
@@ -1384,22 +1413,12 @@ commit being delivered.
 
 ### Experimental Rust evaluation
 
-The package uses R, JavaScript/V8 and DuckDB. A **tested Rust
-prototype** for SQL → FHIR structural validation is now available in
-[`data-raw/experimento-rust`](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust).
-This laboratory is excluded from the R package; installing fhirviews
-keeps its current requirements. The public constructor continues to use
-R.
-
-Three complete pipelines were compared: current R, R with a prepared R4
-plan, and the same R primitive constructor with batch structural
-validation in a Rust executable. They share R4 metadata. Timing includes
-executable startup, plan parsing and temporary-file transport; the
-shared one-time preparation of **0.52 s** is reported separately.
-
-**Local results, 15 November 2026:** medians of three repeats per method
-and resource, **3,000 rows per batch**, installed byte-compiled package,
-Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 and Intel i7-10750H.
+The public constructor uses R. The [Rust
+laboratory](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust)
+is outside the installed package. Its baseline measurements use
+**0.5.0.9000**, Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 and Intel
+i7-10750H; they predate 0.5.0.9001. Medians for 3,000 rows, three
+repeats per method:
 
 | Resource     | Current R (s) | R with plan (s) | R + Rust (s) | Current R / Rust |
 |--------------|--------------:|----------------:|-------------:|-----------------:|
@@ -1409,44 +1428,21 @@ Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 and Intel i7-10750H.
 | Observation  |        10.904 |           5.891 |        2.553 |            4.27× |
 | Immunization |        11.799 |           7.173 |        3.052 |            3.87× |
 
-There are **90 measurements**: 300 and 3,000 rows, five resources, three
-methods and three repeats, with randomized method order and a fixed
-seed. Every batch produced identical JSON. Rust was **1.21–2.91 times**
-faster than R with the prepared plan on this machine. Setup and
-compilation are reported separately from per-batch timings.
+The 90 timing samples compare exact JSON for every batch and include
+Rust startup, plan parsing and temporary-file transport. Shared setup is
+0.52 s. Against the R plan, Rust was 1.21–2.91 times faster on this
+machine. In one separate 3,000-Immunization run, sampled summed RSS was
+170.2 MiB (current R), 184.1 MiB (R plan) and 192.6 MiB (Rust); shared
+pages can be counted twice. These Linux measurements do not establish
+memory savings.
 
-Functional checks passed **587 differential assertions** and **7 Rust
-tests**, covering JSON/NDJSON, SQL on FHIR output, false and missing
-values, Unicode, required fields, choices, references, error precedence
-and the same error class, row and field. Decimal spelling includes
-`0.50`, `0.5`, `72.00` and values beyond double precision, with FHIRPath
-boundary checks. Prototype error messages are abbreviated and still need
-public API alignment. CI adds functional parity on Windows, macOS and
-Linux.
+Seven Rust tests and 587 differential checks passed on Windows, macOS
+and Linux. CI also checks parity against later development versions.
+Native R integration, full errors, ABI/Rtools and CRAN distribution
+remain pending. See [results, hashes and
+reproduction](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md).
 
-In a separate run with 3,000 Immunization resources, sampled peak summed
-RSS for R and its children was **170.2 MiB** with current R, **184.1
-MiB** with the R plan and **192.6 MiB** with Rust. This is one run per
-method, sampled every 10 ms over the process lifetime; shared pages may
-be counted more than once. It does not establish memory savings.
-Performance measurements are Linux only.
-
-The speed improvement supports further batch-validation work. Enabling
-an optional engine still requires a native R interface, complete errors,
-dependency distribution and installation tests against CRAN
-requirements. The Windows CLI does not establish Rtools compatibility
-for a future Rust library. Keep an R alternative and remeasure the
-chosen interface. Rust here does not replace FHIRPath/V8, DuckDB or
-profile validation.
-
-The [results and
-hashes](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust/resultados-20261115)
-and [reproduction
-instructions](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md)
-describe the comparison’s limits. The Zenodo `0.5.0.9000` archive
-predates this experiment; the laboratory manifest identifies its own
-code commit. The opening diagram describes currently available package
-functions.
+Historical engine benchmarks and fhircrackr comparison
 
 ### Earlier V8 and DuckDB measurements
 
@@ -1573,7 +1569,7 @@ Issues](https://github.com/f-slg/fhirviews/issues).
 ## Stabilising R4
 
 The current priority is to consolidate **FHIR R4 4.0.1** before
-federation or R4/R6 conversion. Development remains at `0.5.0.9000`;
+federation or R4/R6 conversion. Development remains at `0.5.0.9001`;
 verifying a candidate does not publish a release, change its version or
 issue a DOI.
 
@@ -1611,12 +1607,30 @@ local trial marks profile validation as unevaluated, with HAPI evidence
 recorded separately.
 
 After addressing the pilot findings, select the stable version and
-artifact. The development candidate now has a verified Zenodo DOI and
-author ORCID; its archive is described in the citation section. Later
-work will address federation between R4 servers, followed by
-resource-specific R4/R6 adapters and export. Rust now has a measured
-prototype; integration depends on the native interface, distribution and
-installation checks.
+artifact. The earlier 0.5.0.9000 archive has a verified DOI and author
+ORCID; the current 0.5.0.9001 development has separate citation
+metadata. Later work will address federation between R4 servers,
+followed by resource-specific R4/R6 adapters and export. Rust now has a
+measured prototype; integration depends on the native interface,
+distribution and installation checks.
+
+## Remaining work and priorities
+
+Automated tests, the Zenodo archive and the Rust laboratory have
+recorded evidence. The following work remains:
+
+| Priority | Task | Completion criterion |
+|----|----|----|
+| 1 | **External R4 pilot** | An independent participant installs the identified candidate, repeats the tasks and records understanding, assistance and findings using the [R4 protocol](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). CI does not replace this assessment. |
+| 2 | **Stable R4 delivery** | Address findings, select the version and artifact, check that exact archive and verify its citation. The `0.5.0` CRAN submission has separate tracking. |
+| 3 | **Optional Rust engine** | Define a stable R interface, complete diagnostics and fallback, test installation/ABI with Rtools and prepare dependencies/licenses for CRAN. The [experimental CLI](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust) does not yet provide this. |
+| 4 | **More R4 constructors** | After closure, add `Specimen` and `DiagnosticReport`, then medication and actor resources as needed. Each group needs metadata, collections, references and a SQL → FHIR → profiles → tables round trip. |
+| 5 | **Federation across R4 servers** | Preserve origin and provenance, distinguish repeated ids across servers, review references and compare joint queries. |
+| 6 | **R4/R6 adapters** | Select resources and version-specific rules, preserve originals and document losses or unmapped fields before export. |
+
+The new `alergias` view extends **AllergyIntolerance** extraction; SQL →
+FHIR construction remains limited to five types. An allergy view does
+not enable another constructor or replace profile validation.
 
 ## Pilot and local documentation
 
@@ -1638,6 +1652,8 @@ both view engines. Each output folder must be new. The trial uses
 fictitious data and retains the JSON resources and summary locally.
 
 ### Previous participant kit: candidate 0.5.0
+
+Historical participant kit for 0.5.0
 
 **[Download the pilot kit
 (ZIP)](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip)**
@@ -1664,12 +1680,11 @@ You can also read the protocols in the repository:
 - [Kit instructions and
   files](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/LEEME.md).
 
-The ZIP contains the evaluation materials, not the R package. While the
-release is still a draft, the maintainer provides the candidate archive
-identified in the manifest, so that exactly the same version is
-evaluated. The v1 kit retains its historical reference to candidate
-0.5.0. Use the current R4 protocol above for the SQL → FHIR R4
-milestone.
+The ZIP contains the evaluation materials, not the R package. For a
+pilot, the maintainer provides the candidate archive identified in the
+manifest, so that exactly the same version is evaluated. The v1 kit
+retains its historical reference to candidate 0.5.0. Use the current R4
+protocol above for the SQL → FHIR R4 milestone.
 
 ### Install the candidate and run the trial
 
@@ -1679,7 +1694,7 @@ the source archive provided by the maintainer:
 ``` r
 
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9000.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9001.tar.gz", repos = NULL, type = "source")
 ```
 
 Restart R, choose a new folder and run:
@@ -1750,7 +1765,42 @@ shows the full path from FHIR data to rates and a map.
 [aprende-fhir](https://github.com/f-slg/aprende-fhir) provides teaching
 material with a fictitious clinical case.
 
-## Contributing, citation and license
+## Citing the package
+
+**Author and maintainer:** Ronald Fabricio Salas Guerrero, [ORCID
+0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522).
+
+``` r
+
+citation("fhirviews")
+toBibtex(citation("fhirviews"))
+```
+
+| What you used | How to identify it |
+|----|----|
+| Current development `0.5.0.9001` | Cite the installed version and keep the commit SHA. No version DOI assigned yet. |
+| Archived `0.5.0.9000` | [DOI 10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726), for source archived from `565243e`. |
+| The project and its versions | [Concept DOI 10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725). Also identify the specific version for reproducibility. |
+
+ORCID identifies the author; Zenodo preserves a citable archive. Both
+can be used before CRAN publication: they are not mandatory prior steps
+or evidence of CRAN acceptance. R’s citation includes the `0.5.0.9000`
+DOI only for that version. Development `0.5.0.9001` keeps its own
+version and repository URL. Metadata is recorded in
+[CITATION.cff](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)
+and
+[.zenodo.json](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
+
+The [Zenodo
+guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
+describes authorship, archives, hashes and later versions. The
+[publication
+receipt](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
+identifies the actual preserved ZIP; the supplementary GitHub R package
+has a different hash and separate evidence. New changes do not modify
+the archive identified by the earlier DOI.
+
+## Contributing
 
 For usage questions, join the
 [Discussions](https://github.com/f-slg/fhirviews/discussions). For bugs
@@ -1761,68 +1811,11 @@ in English are welcome. See the [contributing
 guide](https://f-slg.github.io/fhirviews/CONTRIBUTING.md) and the [code
 of conduct](https://f-slg.github.io/fhirviews/CODE_OF_CONDUCT.md).
 
-To cite the package:
-
-``` r
-
-citation("fhirviews")
-toBibtex(citation("fhirviews"))
-```
-
-**Author and maintainer:** Ronald Fabricio Salas Guerrero, [ORCID
-0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522). The
-identifier is recorded in <Authors@R>, inst/CITATION,
-[CITATION.cff](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)
-and
-[.zenodo.json](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).
-CFF enables GitHub repository citation; R’s citation includes the
-installed package version.
-
-**Zenodo: published and verified.** Development source **0.5.0.9000** is
-archived from commit `565243ec06f4dad88e898761a98a4f23c9fe8f95`,
-published on 15 November 2026 (UTC).
-
-| Identifier | Purpose |
-|----|----|
-| [10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726) | DOI for archived version `0.5.0.9000`; cite it to reproduce that source. |
-| [10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725) | Concept DOI grouping the project’s versions. |
-| [0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522) | Author ORCID; identifies the person. |
-
-Zenodo preserves the GitHub-generated source ZIP and its own checksum.
-The tested R package is a separate asset in the [`v0.5.0.9000`
-prerelease](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0.9000),
-with separate hashes and validation evidence. The Zenodo record does not
-automatically include this `tar.gz` or the other GitHub release assets.
-The [verification
-receipt](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
-records the commit, DOI identifiers, author identity and actual archive
-hashes.
-
-**CRAN publication was not required.** This development archive is
-independent of the **`0.5.0`** submission to CRAN. Verification covered
-the published record, version and ORCID, ZIP integrity, its contents
-against the fixed commit and DOI resolution.
-
-To cite the archive: Salas Guerrero, R. F. (2026). *fhirviews: FHIR
-desde R y vistas tabulares con SQL on FHIR* (0.5.0.9000, development).
-Zenodo. <https://doi.org/10.5281/zenodo.24238726>. R’s citation includes
-this DOI only for `0.5.0.9000`; other versions retain their version
-number and repository URL. Current CFF and R citation metadata were
-completed after DOI issuance; the archived ZIP retains the preceding
-metadata. The version DOI continues to identify that immutable archive.
-
-For later releases, update versions and metadata, publish a new tag and
-verify the new record in the same version family. Zenodo uses
-`.zenodo.json` when both metadata formats exist. See the [archive
-guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
-and [official documentation](https://help.zenodo.org/docs/github/).
-Including an ORCID in metadata does not link the maintainer’s personal
-ORCID account in Zenodo. A stable release will follow the external
-pilot.
+## License
 
 [MIT](https://f-slg.github.io/fhirviews/LICENSE.md) license. The
 licenses and attributions of the bundled code and data are detailed in
-[`inst/COPYRIGHTS`](https://f-slg.github.io/fhirviews/inst/COPYRIGHTS).
+[`inst/COPYRIGHTS`](https://github.com/f-slg/fhirviews/blob/main/inst/COPYRIGHTS).
 
 fhirviews is an independent project. FHIR® and HL7® are registered
 trademarks of Health Level Seven International; their use does not imply

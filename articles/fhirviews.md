@@ -309,22 +309,24 @@ que con el motor DuckDB.
 ``` r
 
 vista_catalogo()[, c("nombre", "recurso", "titulo")]
-#>                     nombre           recurso
-#> 1             diagnosticos         Condition
-#> 2               encuentros         Encounter
-#> 3           inmunizaciones      Immunization
-#> 4             medicamentos MedicationRequest
-#> 5 notificacion_obligatoria         Condition
-#> 6                pacientes           Patient
-#> 7           signos_vitales       Observation
-#>                                     titulo
-#> 1                             Diagnósticos
-#> 2                               Encuentros
-#> 3                           Inmunizaciones
-#> 4           Prescripciones de medicamentos
-#> 5 Enfermedades de notificación obligatoria
-#> 6                                Pacientes
-#> 7                           Signos vitales
+#>                     nombre            recurso
+#> 1                 alergias AllergyIntolerance
+#> 2             diagnosticos          Condition
+#> 3               encuentros          Encounter
+#> 4           inmunizaciones       Immunization
+#> 5             medicamentos  MedicationRequest
+#> 6 notificacion_obligatoria          Condition
+#> 7                pacientes            Patient
+#> 8           signos_vitales        Observation
+#>                                       titulo
+#> 1 Alergias e intolerancias por manifestación
+#> 2                               Diagnósticos
+#> 3                                 Encuentros
+#> 4                             Inmunizaciones
+#> 5             Prescripciones de medicamentos
+#> 6   Enfermedades de notificación obligatoria
+#> 7                                  Pacientes
+#> 8                             Signos vitales
 ```
 
 [`vista_plantilla()`](https://f-slg.github.io/fhirviews/reference/vista_plantilla.md)

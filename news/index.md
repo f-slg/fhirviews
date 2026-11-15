@@ -1,5 +1,16 @@
 # Changelog
 
+## fhirviews 0.5.0.9001
+
+- El catalogo incorpora `vista_plantilla("alergias")` para
+  AllergyIntolerance R4. Conserva categorias, estados por su sistema
+  canonico y la relacion entre cada reaccion y sus manifestaciones.
+  Incluye datos ficticios y comparacion V8/DuckDB; la construccion SQL a
+  FHIR mantiene sus cinco tipos.
+- Los README separan uso, estado de versiones, pendientes, cita y
+  experimentos. La version actual de desarrollo no hereda el DOI del
+  archivo 0.5.0.9000.
+
 ## fhirviews 0.5.0.9000
 
 - Se prioriza estabilizar el alcance R4 antes de federacion y conversion
@@ -8,8 +19,9 @@
   decimal conservada. El perfil completo usa SQL parametrizado y compara
   V8 con DuckDB; HAPI valida los seis JSON contra los perfiles base.
   Incluye protocolo externo R4. Los README sustituyen la imagen inicial
-  por Mermaid, actualizan arquitectura y aceptacion, y explican que la
-  evaluacion de Rust sigue pendiente.
+  por Mermaid, actualizan arquitectura y aceptacion. El laboratorio Rust
+  quedo separado del paquete y comparo los cinco tipos con R, con siete
+  tests y 587 controles en los tres sistemas.
 - El constructor rechaza separadores invalidos en code y espacios en
   uri, url y canonical, incluso en campos sin un binding cerrado. Los
   errores conservan fila y destino y no cambian los valores para
@@ -22,9 +34,10 @@
   sin modificar Quantity general. Date se admite tambien para dateTime
   con precision de fecha, conservando la ausencia de una hora conocida.
 - Se incorpora el ORCID del autor en DESCRIPTION, citation() y
-  CITATION.cff, con metadatos .zenodo.json preparados para el deposito.
-  El DOI se agregara cuando el registro de Zenodo este publicado y
-  verificado.
+  CITATION.cff. El archivo 0.5.0.9000 se publico en Zenodo con DOI
+  10.5281/zenodo.24238726; la familia de versiones tiene DOI
+  10.5281/zenodo.24238725. Las citas mantienen la asociacion con el
+  archivo exacto, independiente de la aceptacion por CRAN.
 - SQL a FHIR admite tambien Encounter y Condition. Los metadatos R4
   incluyen bindings, codigos requeridos enumerables y destinos de
   Reference; se comprueban pares system/code, traducciones y tipos de
