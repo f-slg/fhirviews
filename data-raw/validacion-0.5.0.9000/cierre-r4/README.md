@@ -16,7 +16,11 @@ directorio no contiene ni publica un lanzamiento.
   y completo. Ambos exigen el recorrido de cinco tipos y seis recursos.
 - Un candidato anterior con el mismo numero 0.5.0.9000, pero informe antiguo,
   fue rechazado por el protocolo actual. La version sola no identifica el archivo.
-- La pagina inicial y la referencia pkgdown se construyeron localmente.
+- La pagina inicial, la referencia y el articulo de arquitectura pkgdown se
+  construyeron localmente. Los 23 diagramas pasaron el parser Mermaid 10.9.1:
+  diez en cada README y tres en el articulo. El HTML inicial conserva los
+  diez diagramas y sustituye la imagen anterior. Se comprobaron los enlaces
+  externos al protocolo. No se atribuye una inspeccion visual de navegador.
 
 Para repetir la aceptacion desde el repositorio, con las dependencias presentes:
 

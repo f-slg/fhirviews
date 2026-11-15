@@ -1,5 +1,5 @@
 archivo=fhirviews_0.5.0.9000.tar.gz
-md5=e6d733267d2ed0e31c2df454156e3d52
-bytes=1187896
+md5=812402bf119d9cb63a2aa2ad4ac92942
+bytes=1188652
 perfil=completo
 dependencias=se reutilizan las ya instaladas; no se instalan automaticamente

@@ -4,7 +4,7 @@
     eventos_excluidos    94
             pacientes   755
  cantones_con_eventos    65
-Salida: /tmp/fhirviews-cierre-r4-final-completo/piloto/vigilancia
+Salida: /tmp/fhirviews-cierre-r4-entrega-completo/piloto/vigilancia
 Rollback verificado; dos cargas completas conservaron 5 filas sin acumular duplicados.
 Recorrido R4 aprobado con seis recursos ficticios y cinco tipos.
             prueba   estado advertencias codigo
@@ -13,4 +13,4 @@ Recorrido R4 aprobado con seis recursos ficticios y cinco tipos.
  contrato_estricto aprobado            0
       recuperacion aprobado            0
  r4_cinco_recursos aprobado            0
-Informe local del piloto: /tmp/fhirviews-cierre-r4-final-completo/piloto
+Informe local del piloto: /tmp/fhirviews-cierre-r4-entrega-completo/piloto

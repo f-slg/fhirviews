@@ -1,14 +1,14 @@
 {
-  "candidato": "r4-0.5.0.9000-8175b06",
+  "candidato": "r4-0.5.0.9000-4ff9034",
   "estado": "candidato_tecnico_de_desarrollo",
   "version_paquete": "0.5.0.9000",
-  "codigo_commit": "8175b062f621bc65f2f4166f71dc91aee68615ff",
-  "generado_utc": "2026-11-15T01:30:11.239045+00:00",
+  "codigo_commit": "4ff90347e0488b2cefe2e34031c53fab77695356",
+  "generado_utc": "2026-11-15T01:51:27.660044+00:00",
   "archivo": {
     "nombre": "fhirviews_0.5.0.9000.tar.gz",
-    "bytes": 1187896,
-    "sha256": "756a96a527d1233027cc579a412c9ee036d7369720ec4bf3fa2f3d966df73cf6",
-    "md5": "e6d733267d2ed0e31c2df454156e3d52"
+    "bytes": 1188652,
+    "sha256": "e6f1db79a80926d77305395da93ec3568717866b464c6e53e94e90a637a3fbbe",
+    "md5": "812402bf119d9cb63a2aa2ad4ac92942"
   },
   "fhir": {
     "version": "4.0.1",
@@ -53,7 +53,15 @@
       "esquema_informe": 2
     },
     "candidato_anterior_sin_protocolo_actual": "rechazado",
-    "documentacion_local": "home y referencia construidos"
+    "documentacion_local": "Pagina inicial, referencia y articulo de arquitectura construidos; enlaces del protocolo comprobados",
+    "mermaid": {
+      "version": "10.9.1",
+      "diagramas_validos": 23,
+      "README_espanol": 10,
+      "README_ingles": 10,
+      "arquitectura": 3,
+      "alcance": "Validacion de sintaxis y HTML generado"
+    }
   },
   "usuario_externo": "pendiente",
   "perfiles_propios": "pendientes_de_definir_y_evaluar",
@@ -68,5 +76,5 @@
   "publicacion_release": "no_realizada",
   "nuevo_envio_CRAN": "no_realizado",
   "codigo_integracion_hapi_y_dbi": "fdd2d3734decb9b8cbc92fc0d2c4e1a39be36564",
-  "cambios_desde_integracion": "Solo enlaces README y evidencia excluida del paquete; codigo R y ejemplos identicos"
+  "cambios_desde_integracion": "Documentacion README/NEWS, articulo web y evidencia; codigo R, esquema y ejemplos identicos"
 }
