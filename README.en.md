@@ -13,6 +13,7 @@ through explicit mappings.**
 R4](https://img.shields.io/badge/FHIR-R4-0F2233.svg)](https://hl7.org/fhir/R4/)
 [![MIT
 license](https://img.shields.io/badge/license-MIT-blue.svg)](https://f-slg.github.io/fhirviews/LICENSE.md)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24238726.svg)](https://doi.org/10.5281/zenodo.24238726)
 
 > **About the language.** This is a translation of the Spanish README.
 > The package is aimed at users in Ecuador and Latin America: function
@@ -1560,11 +1561,11 @@ local trial marks profile validation as unevaluated, with HAPI evidence
 recorded separately.
 
 After addressing the pilot findings, select the stable version and
-artifact. ORCID already identifies the author; Zenodo connection,
-deposit and verified DOI remain pending. Later work will address
-federation between R4 servers, followed by resource-specific R4/R6
-adapters and export. Rust will be evaluated against a measured,
-reproducible bottleneck.
+artifact. The development candidate now has a verified Zenodo DOI and
+author ORCID; its archive is described in the citation section. Later
+work will address federation between R4 servers, followed by
+resource-specific R4/R6 adapters and export. Rust will be evaluated
+against a measured, reproducible bottleneck.
 
 ## Pilot and local documentation
 
@@ -1726,42 +1727,47 @@ and
 CFF enables GitHub repository citation; R’s citation includes the
 installed package version.
 
-**Zenodo status:** metadata prepared; deposit and DOI await publication
-and verification. Version 0.5.0.9000 remains a development version.
-**CRAN publication is not a prerequisite:** software can be archived
-from GitHub or uploaded manually through the [official Zenodo software
-workflows](https://help.zenodo.org/docs/github/). The planned archive is
-the **0.5.0.9000 R4 development candidate**, separate from the **0.5.0**
-artifact submitted to CRAN. Later versions will be recorded as further
-versions of the same project, checking their DOI relationships before
-changing citations. Zenodo metadata explicitly declares the version.
+**Zenodo: published and verified.** Development source **0.5.0.9000** is
+archived from commit `565243ec06f4dad88e898761a98a4f23c9fe8f95`,
+published on 15 November 2026 (UTC).
 
-ORCID identifies the author; a version DOI identifies the archived
-software files, and a concept DOI groups its versions. Cite the version
-used and its version DOI when available.
+| Identifier | Purpose |
+|----|----|
+| [10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726) | DOI for archived version `0.5.0.9000`; cite it to reproduce that source. |
+| [10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725) | Concept DOI grouping the project’s versions. |
+| [0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522) | Author ORCID; identifies the person. |
 
-To complete the archive:
+Zenodo preserves the GitHub-generated source ZIP and its own checksum.
+The tested R package is a separate asset in the [`v0.5.0.9000`
+prerelease](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0.9000),
+with separate hashes and validation evidence. The Zenodo record does not
+automatically include this `tar.gz` or the other GitHub release assets.
+The [verification
+receipt](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
+records the commit, DOI identifiers, author identity and actual archive
+hashes.
 
-1.  Link GitHub and enable f-slg/fhirviews in
-    [Zenodo/GitHub](https://zenodo.org/account/settings/github/).
-2.  Review the author, ORCID, license, description and version. Zenodo
-    uses .zenodo.json when both files are present; keep CFF, DESCRIPTION
-    and the release tag consistent when publishing.
-3.  Archive the selected version and verify its record, files and DOI.
-    Then add the real DOI to these metadata files, inst/CITATION and
-    both README files. Prepared metadata alone is not a published
-    deposit.
+**CRAN publication was not required.** This development archive is
+independent of the **`0.5.0`** submission to CRAN. Verification covered
+the published record, version and ORCID, ZIP integrity, its contents
+against the fixed commit and DOI resolution.
 
-See the [official Zenodo guide](https://help.zenodo.org/docs/github/).
+To cite the archive: Salas Guerrero, R. F. (2026). *fhirviews: FHIR
+desde R y vistas tabulares con SQL on FHIR* (0.5.0.9000, development).
+Zenodo. <https://doi.org/10.5281/zenodo.24238726>. R’s citation includes
+this DOI only for `0.5.0.9000`; other versions retain their version
+number and repository URL. Current CFF and R citation metadata were
+completed after DOI issuance; the archived ZIP retains the preceding
+metadata. The version DOI continues to identify that immutable archive.
 
-The [archive preparation
+For later releases, update versions and metadata, publish a new tag and
+verify the new record in the same version family. Zenodo uses
+`.zenodo.json` when both metadata formats exist. See the [archive
 guide](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
-describes the files, hashes and verification steps. Its script uses a
-fixed commit and does not publish or transmit data. A GitHub draft or
-reserved DOI is not a published Zenodo record. Linking the maintainer’s
-ORCID account in Zenodo is separate from including that identifier in
-the software metadata. Stable releases and CRAN submission are managed
-explicitly.
+and [official documentation](https://help.zenodo.org/docs/github/).
+Including an ORCID in metadata does not link the maintainer’s personal
+ORCID account in Zenodo. A stable release will follow the external
+pilot.
 
 [MIT](https://f-slg.github.io/fhirviews/LICENSE.md) license. The
 licenses and attributions of the bundled code and data are detailed in

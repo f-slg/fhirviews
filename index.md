@@ -1647,11 +1647,11 @@ perfiles como no evaluada; HAPI aporta su evidencia independiente, y los
 perfiles propios requieren otra comprobación.
 
 Después del piloto y de corregir sus hallazgos se fijará la versión
-estable y su artefacto. ORCID ya identifica al autor; el DOI de Zenodo
-sigue pendiente de conexión, depósito y verificación. El orden posterior
-será federación entre servidores R4 y, después, adaptadores y
-exportación R4/R6 por recurso. Rust se evaluará con mediciones cuando
-exista un cuello de botella reproducible.
+estable y su artefacto. El candidato de desarrollo ya tiene un DOI
+Zenodo verificado y el ORCID del autor; su archivo se detalla en la
+sección de cita. El orden posterior será federación entre servidores R4
+y, después, adaptadores y exportación R4/R6 por recurso. Rust se
+evaluará con mediciones cuando exista un cuello de botella reproducible.
 
 ## Piloto y documentación local
 
@@ -1813,53 +1813,51 @@ y
 El archivo CFF habilita la cita del repositorio en GitHub; la cita de R
 incluye la versión instalada.
 
-**Estado de Zenodo:** metadatos preparados; depósito y DOI pendientes de
-publicación y verificación. La versión `0.5.0.9000` sigue siendo de
-desarrollo. **No hace falta esperar a CRAN:** Zenodo puede archivar una
-versión de software desde GitHub o mediante una carga manual. La
-publicación en CRAN y la emisión del DOI son procesos independientes,
-según las [opciones oficiales de archivo de
-software](https://help.zenodo.org/docs/github/).
+**Zenodo: publicado y verificado.** El código de desarrollo
+**0.5.0.9000** está archivado desde el commit
+`565243ec06f4dad88e898761a98a4f23c9fe8f95`, con fecha de publicación 15
+de noviembre de 2026 (UTC).
 
-El archivo previsto corresponde al **candidato R4 `0.5.0.9000`**,
-identificado como desarrollo y separado del envío **`0.5.0`** a CRAN.
-Una versión posterior se archivará como otra versión del mismo proyecto;
-se comprobará la relación entre sus DOI antes de actualizar las citas.
-Los metadatos de Zenodo declaran la versión explícitamente y conservan
-el ORCID del autor.
+| Identificador | Uso |
+|----|----|
+| [10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726) | DOI de la versión archivada `0.5.0.9000`; úsalo para reproducir ese código. |
+| [10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725) | DOI de concepto que agrupa las versiones del proyecto. |
+| [0000-0001-5077-1522](https://orcid.org/0000-0001-5077-1522) | ORCID del autor; identifica a la persona. |
 
-ORCID identifica al autor; un DOI de versión identifica el archivo
-concreto publicado en Zenodo, y el DOI de concepto agrupa sus versiones.
-Para reproducir un análisis, cita la versión utilizada y su DOI de
-versión cuando exista.
+Zenodo preserva el ZIP fuente generado por GitHub, con su propio
+checksum. El paquete R probado se ofrece como archivo complementario en
+la [prerelease
+`v0.5.0.9000`](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0.9000);
+su hash y sus comprobaciones se documentan por separado. El registro
+Zenodo no incluye automáticamente ese `tar.gz` ni los otros archivos
+adjuntos de GitHub. La [constancia de
+verificación](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json)
+conserva el commit, los DOI, la identidad del autor y los hashes del
+archivo real.
 
-Para completar el archivo en Zenodo:
+**No hizo falta esperar a CRAN.** Este archivo de desarrollo es
+independiente del envío **`0.5.0`** a CRAN y no lo reemplaza. La
+integración se confirmó observando el registro publicado, su versión y
+ORCID, la integridad del ZIP, su contenido frente al commit fijado y la
+resolución del DOI.
 
-1.  Vincula la cuenta de GitHub y activa `f-slg/fhirviews` en
-    [Zenodo/GitHub](https://zenodo.org/account/settings/github/).
-2.  Revisa autor, ORCID, licencia, descripción y versión que se
-    archivará. Zenodo utiliza `.zenodo.json` cuando están presentes
-    ambos formatos; al publicar una versión deben mantenerse coherentes
-    CFF, DESCRIPTION y etiqueta. El ORCID en los metadatos identifica al
-    autor. Vincular además la cuenta ORCID en Zenodo es una acción de la
-    cuenta del mantenedor; no queda hecha automáticamente por incluir el
-    identificador en el repositorio.
-3.  Archiva la versión seleccionada y verifica su registro, archivos y
-    DOI. Después incorpora el DOI real en estos metadatos, en
-    `inst/CITATION` y en los README. Los metadatos preparados no
-    equivalen a un depósito publicado.
+Para citar el archivo: Salas Guerrero, R. F. (2026). *fhirviews: FHIR
+desde R y vistas tabulares con SQL on FHIR* (0.5.0.9000, desarrollo).
+Zenodo. <https://doi.org/10.5281/zenodo.24238726>. La cita de R incluye
+este DOI solo para `0.5.0.9000`; otras versiones conservan su número y
+la URL del repositorio. El CFF y la cita actual se completaron después
+de emitir el DOI; el ZIP archivado conserva los metadatos previos a su
+emisión. El DOI de versión sigue identificando ese archivo inmutable.
 
-Consulta la [guía oficial de
-Zenodo](https://help.zenodo.org/docs/github/) para la conexión y el
-archivo de versiones. La publicación de una versión estable y el envío a
-CRAN se gestionan de forma expresa.
-
-La [guía de preparación del
+Para próximos lanzamientos, actualiza versión y metadatos, publica una
+nueva etiqueta y verifica el nuevo registro dentro de la misma familia
+de versiones. Zenodo utiliza `.zenodo.json` cuando coexiste con CFF.
+Consulta la [guía de
 archivo](https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md)
-describe los archivos, hashes y pasos de comprobación. El script de
-preparación trabaja sobre un commit fijo y no publica ni transmite
-datos. Un borrador de GitHub o un DOI reservado aún no equivalen a un
-registro Zenodo publicado.
+y la [documentación oficial](https://help.zenodo.org/docs/github/).
+Incluir un ORCID en los metadatos no vincula por sí solo la cuenta
+personal del mantenedor en Zenodo. La versión estable se decidirá
+después del piloto.
 
 Licencia [MIT](https://github.com/f-slg/fhirviews/blob/main/LICENSE.md).
 Las licencias y atribuciones del código y los datos incluidos se
