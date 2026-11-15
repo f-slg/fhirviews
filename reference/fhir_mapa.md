@@ -96,14 +96,16 @@ Los tipos y cardinalidades se comprueban con metadatos base de FHIR R4
 4.0.1. Se revisan campos obligatorios, elementos de eleccion, fechas,
 identificadores, tipos primitivos, destinos de referencias y bindings
 requeridos que pueden enumerarse con la terminologia R4 incluida. Para
-`Coding` y `CodeableConcept` se comprueba el par `system`/`code`. Se
-conserva la restriccion de `SimpleQuantity`: no admite `comparator`, por
-ejemplo en `Immunization.doseQuantity`. Una `Quantity` general puede
-admitirlo. El estado, la vacuna, el paciente y una variante de
-`occurrence[x]` son obligatorios en `Immunization`; si se construye
-`protocolApplied`, cada entrada exige una variante de `doseNumber[x]`.
-Esto no sustituye la validacion de invariantes, terminologias y perfiles
-con
+`Coding` y `CodeableConcept` se comprueba el par `system`/`code`. Los
+valores `code` admiten solo espacios simples internos; `uri`, `url` y
+`canonical` no admiten espacios ni otros caracteres de separacion. Estos
+controles lexicos no comprueban que una URL exista. Se conserva la
+restriccion de `SimpleQuantity`: no admite `comparator`, por ejemplo en
+`Immunization.doseQuantity`. Una `Quantity` general puede admitirlo. El
+estado, la vacuna, el paciente y una variante de `occurrence[x]` son
+obligatorios en `Immunization`; si se construye `protocolApplied`, cada
+entrada exige una variante de `doseNumber[x]`. Esto no sustituye la
+validacion de invariantes, terminologias y perfiles con
 [`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
 No se inventan codigos, unidades o estados.
 

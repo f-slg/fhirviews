@@ -2,6 +2,18 @@
 
 ## fhirviews 0.5.0.9000
 
+- Se prioriza estabilizar el alcance R4 antes de federacion y conversion
+  R6. La aceptacion instalada exige ahora cinco tipos y seis recursos
+  ficticios, con referencias, elecciones, falsos, ausentes y escala
+  decimal conservada. El perfil completo usa SQL parametrizado y compara
+  V8 con DuckDB; HAPI valida los seis JSON contra los perfiles base.
+  Incluye protocolo externo R4. Los README sustituyen la imagen inicial
+  por Mermaid, actualizan arquitectura y aceptacion, y explican que la
+  evaluacion de Rust sigue pendiente.
+- El constructor rechaza separadores invalidos en code y espacios en
+  uri, url y canonical, incluso en campos sin un binding cerrado. Los
+  errores conservan fila y destino y no cambian los valores para
+  hacerlos validos.
 - SQL a FHIR admite Immunization, con elecciones de fecha y numero de
   dosis, estado R4, paciente, vacuna y referencias. Incluye ejemplo
   SQLite y un grupo obligatorio de integracion con perfiles, cantidades

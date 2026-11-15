@@ -83,12 +83,30 @@
 <p>Está pensado para análisis clínico, investigación, vigilancia epidemiológica y docencia desde R. Incluye autenticación SMART on FHIR, vistas para salud pública y procesamiento NDJSON por bloques, sin instalar Java ni Spark.</p>
 <p>El flujo técnico combina un cliente HTTP basado en <code>httr2</code>, un evaluador FHIRPath con <code>fhirpath.js</code> en V8 y un traductor SQL opcional para DuckDB. La definición de extracción es independiente del origen: un mismo <code>ViewDefinition</code> puede aplicarse a recursos obtenidos por REST o a archivos locales. La compatibilidad del motor SQL se comprueba por separado.</p>
 <p><a href="https://f-slg.github.io/fhirviews/">Documentación</a> · <a href="https://f-slg.github.io/fhirviews/reference/">Referencia</a> · <a href="NEWS.html">Novedades de 0.5.0</a> · <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">Reportar un problema</a></p>
-<p><img src="reference/figures/README-json-tabla.png" width="100%" alt="Flujo de transformación: recurso Patient en JSON, columnas definidas en un ViewDefinition y tabla resultante en R"></p>
+<pre class="mermaid"><code>flowchart TB
+    accTitle: Recorridos de fhirviews con FHIR R4
+    accDescr: Una vista extrae tablas de recursos FHIR. Otro recorrido construye recursos R4 desde filas mediante un mapeo explicito, conserva decimales y permite validar perfiles.
+    subgraph LECTURA["FHIR → tablas"]
+        direction LR
+        FHIR["FHIR R4&lt;br/&gt;servidor o archivos"] --&gt; VIEW["ViewDefinition&lt;br/&gt;FHIRPath"]
+        VIEW --&gt; TABLE["Tablas&lt;br/&gt;R y SQL"]
+    end
+    subgraph CONSTRUCCION["Tablas → FHIR R4"]
+        direction LR
+        ROWS["Filas&lt;br/&gt;R o SQL DBI"] --&gt; MAP["Mapeo&lt;br/&gt;explícito"]
+        MAP --&gt; R4["Recursos&lt;br/&gt;FHIR R4"]
+        R4 --&gt; OUT["JSON / NDJSON"]
+        R4 --&gt; PROFILE["Validar perfiles&lt;br/&gt;con servidor"]
+    end</code></pre>
+<p>La lectura usa V8 o el traductor DuckDB experimental. La construcción admite <strong>Patient, Observation, Encounter, Condition e Immunization</strong> y conserva la escala decimal disponible en el origen. Para construir recursos desde una tabla extraída, prepara las filas y elige un mapa; las columnas omitidas o agregadas necesitan decisiones propias.</p>
 <blockquote>
 <p><strong>Versión 0.5.0 · enviada a CRAN el 7 de noviembre de 2026, en revisión.</strong> Procesamiento por bloques, recuperación de exportaciones con validación de contenido y mejoras de privacidad. El motor SQL de DuckDB sigue siendo <strong>experimental</strong>. Mientras CRAN la publica, instálala desde GitHub.</p>
 </blockquote>
 <blockquote>
 <p><strong>Desarrollo 0.5.0.9000:</strong> añade SQL → FHIR y conformidad 144/144 en ambos motores. Estas mejoras pertenecen al código de desarrollo, no al candidato 0.5.0 enviado previamente a CRAN.</p>
+</blockquote>
+<blockquote>
+<p><strong>Prioridad actual: estabilizar R4.</strong> El cierre se limita a los cinco recursos construidos actualmente y exige el ensayo instalado, la validación de perfiles base y un piloto externo. La federación y la conversión R4/R6 quedan para una etapa posterior. <a href="#estabilizaci%C3%B3n-de-r4">Alcance y criterios de cierre</a>.</p>
 </blockquote>
 <div class="section level2">
 <h2 id="contenido">Contenido<a class="anchor" aria-label="anchor" href="#contenido"></a>
@@ -110,6 +128,7 @@
 <li><a href="#conformidad-y-pruebas">Conformidad y pruebas</a></li>
 <li><a href="#rendimiento">Rendimiento</a></li>
 <li><a href="#alcance-y-l%C3%ADmites">Alcance y límites</a></li>
+<li><a href="#estabilizaci%C3%B3n-de-r4">Estabilización de R4</a></li>
 <li><a href="#piloto-y-documentaci%C3%B3n-local">Piloto y documentación local</a></li>
 <li><a href="#gu%C3%ADas-y-referencia">Guías y referencia</a></li>
 <li><a href="#contribuir-citar-y-licencia">Contribuir, citar y licencia</a></li>
@@ -198,16 +217,6 @@
 </tbody>
 </table>
 <p>Un <code>ViewDefinition</code> describe las columnas, filtros y colecciones que se quieren extraer mediante expresiones FHIRPath. Guardar esa definición junto al análisis hace explícitas las decisiones de transformación y facilita su revisión.</p>
-<pre class="mermaid"><code>flowchart LR
-    A["Archivos JSON / NDJSON / gzip"] --&gt; V["ViewDefinition + FHIRPath"]
-    B["Servidor FHIR R4"] --&gt; C["Cliente y exportación Bulk Data"]
-    C --&gt; V
-    V --&gt; D["data.frame en R"]
-    V --&gt; E["Una tabla por bloque"]
-    V --&gt; F["DuckDB SQL · experimental"]
-    D --&gt; G["Análisis, indicadores y tableros"]
-    E --&gt; G
-    F --&gt; G</code></pre>
 </div>
 <div class="section level2">
 <h2 id="instalación">Instalación<a class="anchor" aria-label="anchor" href="#instalaci%C3%B3n"></a>
@@ -301,7 +310,7 @@
 <div class="section level2">
 <h2 id="arquitectura-y-secuencia-de-procesamiento">Arquitectura y secuencia de procesamiento<a class="anchor" aria-label="anchor" href="#arquitectura-y-secuencia-de-procesamiento"></a>
 </h2>
-<p>Las responsabilidades se distribuyen en cuatro capas. El cliente obtiene recursos; la definición declara la extracción; los motores generan filas; el consumidor decide cómo guardar, resumir o consultar el resultado.</p>
+<p>La extracción se distribuye en cuatro capas. El cliente obtiene recursos; la definición declara la extracción; los motores generan filas; el consumidor decide cómo guardar, resumir o consultar el resultado. La <a href="#de-sql-a-fhir">construcción desde SQL</a> tiene un mapeo y controles propios.</p>
 <pre class="mermaid"><code>flowchart TB
     subgraph EN["1. Entrada"]
         REST["Servidor FHIR R4"]
@@ -323,6 +332,7 @@
         DF["data.frame completo"]
         CB["procesar(tabla, bloque)"]
         DB["Tabla DuckDB o consulta diferida"]
+        DBI["Tablas DBI en una transacción"]
     end
     REST --&gt; HTTP --&gt; RES
     FILE --&gt; RES --&gt; V8 --&gt; DF
@@ -336,7 +346,8 @@
     VALID --&gt; LOT
     VALID --&gt; SQL
     SQL --&gt; DF
-    SQL --&gt; DB</code></pre>
+    SQL --&gt; DB
+    V8 --&gt;|"vista_duckdb"| DBI</code></pre>
 <p>Para construir un análisis reproducible, sigue esta secuencia:</p>
 <ol style="list-style-type: decimal">
 <li>
@@ -717,8 +728,9 @@
 </h2>
 <p><code><a href="reference/fhir_mapa.html">fhir_desde_sql()</a></code> ejecuta una consulta mediante una conexión <strong>DBI</strong>, lee sus filas y construye recursos con un <code><a href="reference/fhir_mapa.html">fhir_mapa()</a></code>. <code><a href="reference/fhir_mapa.html">fhir_desde_tabla()</a></code> aplica el mismo mapeo a un <code>data.frame</code>. Admite <strong>Patient, Observation, Encounter, Condition e Immunization de FHIR R4 4.0.1</strong>.</p>
 <pre class="mermaid"><code>flowchart LR
-    DB["Consulta SQL / data.frame"] --&gt; M["Mapeo explícito de campos y tipos R4"]
-    M --&gt; R["Patient / Observation / Encounter / Condition / Immunization"]
+    DB["Consulta SQL DBI / data.frame"] --&gt; M["fhir_mapa: columnas, constantes y referencias"]
+    M --&gt; CHECK["Construir y comprobar estructura R4"]
+    CHECK --&gt; R["Patient, Observation, Encounter,&lt;br/&gt;Condition e Immunization"]
     R --&gt; J["JSON / NDJSON"]
     R --&gt; V["ViewDefinition → tabla"]
     R --&gt; C["Validación de perfiles con fhir_validar"]</code></pre>
@@ -830,6 +842,12 @@
 <tr>
 <td>Booleanos y enteros</td>
 <td>Se exigen valores lógicos o enteros dentro del rango FHIR; no se convierte <code>"false"</code> en booleano ni se trunca <code>1.7</code>.</td>
+</tr>
+<tr>
+<td>
+<code>code</code>, <code>uri</code>, <code>url</code>, <code>canonical</code>
+</td>
+<td>Un código permite solo espacios simples internos; las URI no permiten separadores, incluidos tabulaciones y espacios Unicode. El constructor rechaza el valor sin recortarlo ni modificarlo.</td>
 </tr>
 <tr>
 <td>Fechas</td>
@@ -1178,7 +1196,7 @@
 <li>Elimina los recursos de prueba; el script elimina además su contenedor.</li>
 </ol>
 <p>El resumen incluye fallos, errores, advertencias, comprobaciones y razones de omisión. La política de aceptación impide aprobar si falta este grupo. Esta validación cubre perfiles <strong>base R4</strong>; los perfiles clínicos o nacionales del proyecto deben comprobarse expresamente con su URL canónica.</p>
-<p><strong>Resultado local del 14 de noviembre de 2026:</strong> integración aprobada con HAPI 8.12.0-2 fijado por digest, 120 comprobaciones aprobadas y sin fallos, errores ni advertencias. Se ejecutaron las 16 comprobaciones originales de SQL → FHIR, las 20 del grupo Encounter/Condition y las 38 de Immunization; se registraron las dos omisiones previstas (lectura pública y ValueSet en línea). El contenedor se eliminó al finalizar. La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json" class="external-link">evidencia de integración</a> incluye el resultado de cada grupo; los registros y el entorno de R se conservan en la misma carpeta. Es una comprobación técnica con datos ficticios.</p>
+<p><strong>Ensayo local de cierre R4:</strong> integración aprobada con HAPI 8.12.0-2 fijado por digest, <strong>130 comprobaciones</strong> y sin fallos, errores ni advertencias. Incluye las 16 originales de SQL → FHIR, las 20 de Encounter/Condition, las 38 de Immunization y las 10 del nuevo grupo del candidato R4. Se registraron las dos omisiones previstas (lectura pública y ValueSet en línea), y el contenedor se eliminó al finalizar. La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json" class="external-link">evidencia actual de integración</a> incluye cada grupo, los registros y el entorno de R en la misma carpeta. La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json" class="external-link">ejecución anterior de 120 comprobaciones</a> se conserva como evidencia histórica. Ambas usan datos ficticios.</p>
 <p>El nuevo grupo obligatorio <code>Encounter y Condition desde SQL, perfiles R4 y referencias</code> construye Patient → Encounter → Condition con consultas DuckDB parametrizadas. Valida los perfiles base explícitos, guarda y lee los tres recursos y comprueba las referencias y las tablas en V8 y DuckDB. Sus controles negativos exigen que HAPI rechace un estado de Encounter y un código clínico de Condition inexistentes, además de un destino incorrecto con <code>Reference.type</code> explícito. En este servidor, la referencia literal incorrecta sin <code>Reference.type</code> no fue rechazada por <code>$validate</code>: por eso los ejemplos lo declaran y el mapeador comprueba además el tipo de la referencia literal.</p>
 <p>El grupo obligatorio <code>Immunization desde SQL, perfil R4, dosis y referencias</code> añade dos eventos ficticios, con <code>occurrenceDateTime</code> y <code>occurrenceString</code>, número de dosis entero o textual y una cantidad <code>0.50</code>. Comprueba los perfiles base, Patient y Encounter referenciados, persistencia, lectura que conserva escala, comparación de tablas y la vista de catálogo en V8 y DuckDB. Exige que el validador rechace estado inválido, destino de paciente incorrecto con tipo explícito, comparador en SimpleQuantity y una entrada de educación que incumpla <code>imm-1</code>. La política de aceptación impide omitir este grupo.</p>
 </div>
@@ -1208,26 +1226,41 @@
 <div class="section level3">
 <h3 id="secuencia-de-comprobación-del-candidato">Secuencia de comprobación del candidato<a class="anchor" aria-label="anchor" href="#secuencia-de-comprobaci%C3%B3n-del-candidato"></a>
 </h3>
-<p>La matriz de R-CMD-check prueba primero el paquete y después instala el archivo fuente construido en una biblioteca nueva. La aceptación se ejecuta en otro proceso R y comprueba la ruta de carga, la ayuda, las viñetas y el informe del perfil solicitado. El perfil completo añade rollback y reintento transaccional.</p>
+<p>La matriz de R-CMD-check prueba primero el paquete y después instala el archivo fuente construido en una biblioteca nueva. La aceptación se ejecuta en otro proceso R y comprueba la ruta de carga, la ayuda, las viñetas y el informe del perfil solicitado. Ambos perfiles exigen el recorrido de cinco tipos R4; el completo añade SQL parametrizado, comparación V8/DuckDB y recuperación transaccional.</p>
 <pre class="mermaid"><code>flowchart TD
     A["Commit en GitHub"] --&gt; B["R CMD build con viñetas"]
     B --&gt; C["R CMD check y pruebas del paquete"]
     C --&gt; D["Instalar el mismo tar.gz en una biblioteca nueva"]
     D --&gt; E["Proceso R independiente: verificar paquete y documentación"]
-    E --&gt; F["Piloto básico o completo según la matriz"]
+    E --&gt; F["Cinco tipos R4 y perfil básico o completo"]
     F --&gt; G{"Resultado técnico"}
     G --&gt;|"Sin errores ni advertencias"| H["Aprobado para ese perfil"]
     G --&gt;|"Advertencias"| I["Requiere revisión y salida distinta de cero"]
     G --&gt;|"Error"| J["No aprobado y salida distinta de cero"]
     A --&gt; K["Workflow HAPI: integración aislada"]
-    A --&gt; L["Workflow pkgdown: construir documentación"]
-    H --&gt; M["Evaluación con usuarios todavía pendiente"]</code></pre>
+    A --&gt; L["Integración PostgreSQL y SQL Server"]
+    A --&gt; P["pkgdown local; Pages en main"]
+    H --&gt; T["Revisar todos los controles del mismo commit"]
+    K --&gt; T
+    L --&gt; T
+    P --&gt; T
+    T --&gt; M["Piloto externo con protocolo R4"]
+    M --&gt; N["Resolver hallazgos y elegir versión estable"]</code></pre>
 <p>Los informes de aceptación se guardan como artefactos <code>piloto-*</code> durante 14 días. Una aprobación de un perfil básico no evalúa la recuperación con DuckDB; ese control queda como <code>no_evaluado</code>. Los workflows verifican el alcance declarado, y su resultado debe consultarse para el commit específico que se vaya a entregar.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="rendimiento">Rendimiento<a class="anchor" aria-label="anchor" href="#rendimiento"></a>
 </h2>
+<div class="section level3">
+<h3 id="estado-de-la-evaluación-de-rust">Estado de la evaluación de Rust<a class="anchor" aria-label="anchor" href="#estado-de-la-evaluaci%C3%B3n-de-rust"></a>
+</h3>
+<p>El paquete actual utiliza R, JavaScript/V8 y el motor nativo de DuckDB. <strong>Rust todavía no está implementado ni se ha comparado con R.</strong> El perfilado exploratorio de SQL → FHIR señaló la validación y las referencias como zonas que conviene medir; no demuestra una ganancia que pueda atribuirse a Rust.</p>
+<p>La evaluación posterior al cierre R4 comparará tres opciones sobre los mismos datos: R actual, un plan de validación preparado una sola vez por mapa y un prototipo por lotes en Rust. Se exigirán tiempos repetidos y memoria, los cinco tipos R4, iguales errores con fila/campo y los mismos resultados JSON, incluida la distinción entre <code>0.50</code>, <code>0.5</code> y <code>72.00</code>. La decisión incluirá instalación, compatibilidad Windows/macOS/Linux y mantenimiento. Esta evaluación queda pendiente; el flujo inicial muestra las funciones disponibles actualmente.</p>
+</div>
+<div class="section level3">
+<h3 id="mediciones-anteriores-de-v8-y-duckdb">Mediciones anteriores de V8 y DuckDB<a class="anchor" aria-label="anchor" href="#mediciones-anteriores-de-v8-y-duckdb"></a>
+</h3>
 <p>Las mediciones de esta sección son anteriores a los cambios de precisión de 0.5.0.9000; no se han vuelto a medir con esta versión de desarrollo.</p>
 <p>La siguiente medición compara ambos motores con pacientes sintéticos y una vista que incluye <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code>.</p>
 <p><img src="reference/figures/README-rendimiento.png" width="90%" alt="Tiempos medidos para convertir NDJSON en tablas: comparación de V8 y DuckDB según el número de pacientes"></p>
@@ -1279,6 +1312,7 @@
 </table>
 <p>Tiempo de punta a punta, desde el archivo NDJSON hasta el <code>data.frame</code>, con pacientes sintéticos y una vista con <code>where</code>, cuatro columnas y <code>forEach</code> sobre <code>name</code> (<code>data-raw/motor-duckdb.R</code>; Linux, 8 núcleos, R 4.5.2, duckdb 1.5.6).</p>
 <p>Son resultados de ese equipo y esa vista, no una garantía de rendimiento. La expansión de colecciones, el tamaño del resultado, el disco y la memoria pueden cambiar el comportamiento. El script reproducible está en <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/motor-duckdb.R" class="external-link"><code>data-raw/motor-duckdb.R</code></a>.</p>
+</div>
 <div class="section level3">
 <h3 id="comparación-con-fhircrackr">Comparación con fhircrackr<a class="anchor" aria-label="anchor" href="#comparaci%C3%B3n-con-fhircrackr"></a>
 </h3>
@@ -1421,13 +1455,78 @@
 <li>
 <strong>Capacidades del servidor.</strong> SMART, <code>$validate</code>, terminología y <code>$export</code> dependen de la configuración y los permisos del servidor conectado.</li>
 </ul>
-<p>Las prioridades de desarrollo incluyen estabilizar el motor DuckDB, mejorar la precisión decimal y ampliar las operaciones de búsqueda y terminología. Las propuestas y su seguimiento están en <a href="https://github.com/f-slg/fhirviews/issues" class="external-link">GitHub Issues</a>.</p>
+<p>Las propuestas y su seguimiento están en <a href="https://github.com/f-slg/fhirviews/issues" class="external-link">GitHub Issues</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="estabilización-de-r4">Estabilización de R4<a class="anchor" aria-label="anchor" href="#estabilizaci%C3%B3n-de-r4"></a>
+</h2>
+<p>La próxima entrega consolidará <strong>FHIR R4 4.0.1</strong> con un alcance explícito. La versión de desarrollo sigue siendo <code>0.5.0.9000</code>; preparar y comprobar un candidato no cambia su versión, publica un lanzamiento ni emite un DOI.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Componente</th>
+<th>Alcance del cierre R4</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Cliente y vistas V8</td>
+<td>Recursos R4, paginación, autenticación y operaciones según las capacidades del servidor.</td>
+</tr>
+<tr>
+<td>Construcción desde tablas o DBI</td>
+<td>
+<code>Patient</code>, <code>Observation</code>, <code>Encounter</code>, <code>Condition</code> e <code>Immunization</code>; una fila por recurso y mapeos explícitos.</td>
+</tr>
+<tr>
+<td>Validación local</td>
+<td>Tipos, cardinalidades, elecciones, fechas, destinos y bindings requeridos enumerables. Los controles léxicos de <code>code</code> y URI siguen las <a href="https://hl7.org/fhir/R4/datatypes.html#primitive" class="external-link">reglas de primitivos R4</a>.</td>
+</tr>
+<tr>
+<td>Perfiles y terminología</td>
+<td>HAPI comprueba perfiles base; perfiles del proyecto, invariantes y terminología externa se contrastan con su entorno acordado.</td>
+</tr>
+<tr>
+<td>Motor DuckDB</td>
+<td>Conserva la etiqueta experimental y el subconjunto FHIRPath documentado; se compara con V8.</td>
+</tr>
+<tr>
+<td>Otros recursos desde SQL</td>
+<td>Se incorporarán por grupos después de este cierre. La lectura y las vistas pueden trabajar con otros recursos R4.</td>
+</tr>
+<tr>
+<td>Federación y otras versiones</td>
+<td>Consultas conjuntas entre servidores y conversión R4/R6 pendientes; no hay una API multiversión habilitada.</td>
+</tr>
+</tbody>
+</table>
+<p>El cierre técnico exige que el <strong>mismo archivo fuente</strong> se instale y apruebe en una biblioteca nueva, con ayuda, viñetas y ejemplos incluidos. El control <code>r4_cinco_recursos</code> construye seis recursos ficticios: un Patient, un Encounter, un Condition, un Observation y dos Immunization. En ambos perfiles comprueba:</p>
+<ul>
+<li>Referencias a Patient y Encounter, booleanos falsos y ausencia completa de los objetos opcionales cuando faltan sus datos.</li>
+<li>Fecha válida de nacimiento, las dos variantes de <code>occurrence[x]</code> y las dos de <code>doseNumber[x]</code>, sin rellenar las variantes ausentes.</li>
+<li>Literales <code>72.00</code> y <code>0.50</code> en JSON y NDJSON, límites inferiores <code>71.995</code> y <code>0.495</code>, y regreso a las cinco tablas con V8.</li>
+<li>Rechazo de cinco casos: sujeto obligatorio ausente, ids duplicados, estado inválido, paciente ausente y comparador prohibido en SimpleQuantity.</li>
+</ul>
+<p>El perfil <code>completo</code> construye los recursos mediante consultas parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL. El grupo obligatorio HAPI valida los seis textos JSON contra sus perfiles base y exige que un Patient alterado sea rechazado. Las integraciones PostgreSQL y SQL Server se mantienen como comprobaciones adicionales de sus controladores y tipos nativos.</p>
+<p>La <strong>evaluación externa</strong> requiere que otra persona instale el candidato, explique los resultados, modifique una vista, contraste el NDJSON y repita las tareas. El protocolo <a href="https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md" class="external-link">PILOTO-R4.md</a> incluye tareas, referencias y criterios de cierre. Los informes automáticos dejan <code>validacion_usuario_externo = pendiente</code> hasta documentar esa evaluación aparte. El ensayo local marca la validación de perfiles como no evaluada; HAPI aporta su evidencia independiente, y los perfiles propios requieren otra comprobación.</p>
+<p>Después del piloto y de corregir sus hallazgos se fijará la versión estable y su artefacto. ORCID ya identifica al autor; el DOI de Zenodo sigue pendiente de conexión, depósito y verificación. El orden posterior será federación entre servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust se evaluará con mediciones cuando exista un cuello de botella reproducible.</p>
 </div>
 <div class="section level2">
 <h2 id="piloto-y-documentación-local">Piloto y documentación local<a class="anchor" aria-label="anchor" href="#piloto-y-documentaci%C3%B3n-local"></a>
 </h2>
 <div class="section level3">
-<h3 id="descargar-el-kit-para-participantes">Descargar el kit para participantes<a class="anchor" aria-label="anchor" href="#descargar-el-kit-para-participantes"></a>
+<h3 id="protocolo-actual-para-el-cierre-r4">Protocolo actual para el cierre R4<a class="anchor" aria-label="anchor" href="#protocolo-actual-para-el-cierre-r4"></a>
+</h3>
+<p>La <a href="https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md" class="external-link">guía del participante R4</a> se distribuye con el paquete en <code>examples/PILOTO-R4.md</code>. Usa el candidato que indique su manifiesto y el ensayo instalado de esta sección. Para ejecutar solamente el recorrido de seis recursos, sin todo el kit de vigilancia:</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span>FHIRVIEWS_R4_SALIDA <span class="op">=</span> <span class="st">"r4-basico-01"</span>, FHIRVIEWS_R4_SQL <span class="op">=</span> <span class="st">"false"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"r4-estabilidad.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Con <code>FHIRVIEWS_R4_SQL = "true"</code> requiere DBI/DuckDB y compara ambos motores. Cada carpeta debe ser nueva. Este ejemplo local utiliza datos ficticios y conserva los JSON de salida y su resumen.</p>
+</div>
+<div class="section level3">
+<h3 id="kit-anterior-de-participantes-candidato-050">Kit anterior de participantes: candidato 0.5.0<a class="anchor" aria-label="anchor" href="#kit-anterior-de-participantes-candidato-050"></a>
 </h3>
 <p><strong><a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip" class="external-link">Descargar el kit del piloto ZIP</a></strong></p>
 <ol style="list-style-type: decimal">
@@ -1446,30 +1545,30 @@
 <li>
 <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-participantes-v1/LEEME.md" class="external-link">Instrucciones y archivos del kit</a>.</li>
 </ul>
-<p>El ZIP contiene los materiales de evaluación, no el paquete R. Mientras el lanzamiento siga en borrador, el mantenedor entrega el archivo candidato identificado en el manifiesto para evaluar exactamente la misma versión.</p>
+<p>El ZIP contiene los materiales de evaluación, no el paquete R. Mientras el lanzamiento siga en borrador, el mantenedor entrega el archivo candidato identificado en el manifiesto para evaluar exactamente la misma versión. Este kit v1 mantiene la referencia histórica al candidato 0.5.0; para el cierre actual de SQL → FHIR R4 usa el protocolo R4 anterior.</p>
 </div>
 <div class="section level3">
 <h3 id="instalar-el-candidato-y-ejecutar-el-ensayo">Instalar el candidato y ejecutar el ensayo<a class="anchor" aria-label="anchor" href="#instalar-el-candidato-y-ejecutar-el-ensayo"></a>
 </h3>
 <p>El piloto usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
-<p>Reinicia R, elige una carpeta nueva y ejecuta:</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.9000.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<p>Reinicia R, elige una carpeta nueva y ejecuta:</p>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
 <span>  FHIRVIEWS_PILOTO_SALIDA <span class="op">=</span> <span class="st">"piloto-basico-01"</span>,</span>
 <span>  FHIRVIEWS_PILOTO_PERFIL <span class="op">=</span> <span class="st">"basico"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"examples"</span>, <span class="st">"piloto.R"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Abre <code>piloto-basico-01/aceptacion.csv</code> para ver los controles y <code>aceptacion.json</code> para sus diagnósticos. Los estados son <code>aprobado</code>, <code>fallo</code>, <code>requiere_revision</code>, <code>pendiente</code> y <code>no_evaluado</code>. Cualquier advertencia requiere revisión y evita la aprobación automática; el informe registra códigos seguros sin copiar los mensajes originales.</p>
-<p>El perfil <code>basico</code> comprueba la API, los resultados de vigilancia y el rechazo estricto de un bloque incompatible. Para comprobar también rollback y reintentos, instala <code>DBI</code> y <code>duckdb</code>, cambia el perfil a <code>completo</code> y usa otra carpeta nueva. Los archivos permanecen locales; completa <code>experiencia-usuario.txt</code> con los obstáculos, la ayuda necesaria y tu evaluación. La aprobación técnica deja pendiente esa evaluación humana y no valida un servidor ni datos propios.</p>
+<p>El informe actual usa <code>esquema_informe = 2</code>. El perfil <code>basico</code> comprueba la API, los resultados de vigilancia, el rechazo estricto de un bloque incompatible y el recorrido R4 de cinco tipos desde tablas. Para comprobar también rollback, consultas SQL parametrizadas y ambas implementaciones de las cinco vistas, instala <code>DBI</code> y <code>duckdb</code>, cambia el perfil a <code>completo</code> y usa otra carpeta nueva. Los archivos permanecen locales; completa <code>experiencia-usuario.txt</code> con los obstáculos, la ayuda necesaria y tu evaluación. La aprobación técnica deja pendiente esa evaluación humana y no valida un servidor ni datos propios.</p>
 <p>La ayuda y las viñetas están disponibles en la instalación:</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span>package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/help.html" class="external-link">help</a></span><span class="op">(</span><span class="st">"vista_ejecutar_lotes"</span>, package <span class="op">=</span> <span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span></code></pre></div>
-<p>La <a href="inst/examples/PILOTO-MANTENEDOR.html">guía del mantenedor</a> describe cómo construir y verificar el candidato, interpretar los códigos y cerrar el piloto. También se distribuye dentro del paquete, en <code>examples/PILOTO-MANTENEDOR.md</code>.</p>
+<p>La <a href="https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-MANTENEDOR.md" class="external-link">guía del mantenedor</a> describe cómo construir y verificar el candidato, interpretar los códigos y cerrar el piloto. También se distribuye dentro del paquete, en <code>examples/PILOTO-MANTENEDOR.md</code>.</p>
 </div>
 </div>
 <div class="section level2">
@@ -1519,7 +1618,7 @@
 </h2>
 <p>Para dudas de uso, participa en <a href="https://github.com/f-slg/fhirviews/discussions" class="external-link">Discussions</a>. Para errores o propuestas, abre un <a href="https://github.com/f-slg/fhirviews/issues/new/choose" class="external-link">issue</a> con un ejemplo mínimo reproducible y datos ficticios. Consulta la <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CONTRIBUTING.md" class="external-link">guía de contribución</a> y el <a href="https://github.com/f-slg/fhirviews/blob/main/.github/CODE_OF_CONDUCT.md" class="external-link">código de conducta</a>.</p>
 <p>Para citar el paquete:</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/toLatex.html" class="external-link">toBibtex</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><strong>Autor y mantenedor:</strong> Ronald Fabricio Salas Guerrero, <a href="https://orcid.org/0000-0001-5077-1522" class="external-link">ORCID 0000-0001-5077-1522</a>. El identificador figura en <code>Authors@R</code>, <code>inst/CITATION</code>, <a href="https://github.com/f-slg/fhirviews/blob/main/CITATION.cff" class="external-link"><code>CITATION.cff</code></a> y <a href="https://github.com/f-slg/fhirviews/blob/main/.zenodo.json" class="external-link"><code>.zenodo.json</code></a>. El archivo CFF habilita la cita del repositorio en GitHub; la cita de R incluye la versión instalada.</p>

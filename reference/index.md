@@ -97,7 +97,8 @@ Convertir recursos FHIR en tablas con un ViewDefinition.
 
 ## De SQL a FHIR
 
-Construir Patient y Observation con mapeos explicitos desde R o DBI.
+Construir Patient, Observation, Encounter, Condition e Immunization
+desde R o DBI.
 
 - [`fhir_mapa()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)
   [`fhir_desde_tabla()`](https://f-slg.github.io/fhirviews/reference/fhir_mapa.md)

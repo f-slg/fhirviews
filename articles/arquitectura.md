@@ -24,6 +24,7 @@ flowchart LR
         VA["Validador<br/>R/validar.R"]
         MV["Motor de vistas<br/>R/vista.R"]
         MO["Interfaz de motores<br/>R/motor.R"]
+        MP["Mapeo SQL a FHIR R4<br/>R/fhir-desde-sql.R"]
     end
     subgraph V8["V8 (JavaScript)"]
         GL["Capa propia<br/>inst/js/fhirviews.js"]
@@ -36,7 +37,21 @@ flowchart LR
     MV --> MO
     MO <-->|"JSON"| GL
     GL --> FP
+    DB["Consulta SQL DBI / data.frame"] --> MP
+    MP --> RE
+    MP --> OUT["JSON / NDJSON con escala conservada"]
+    MP -->|"fhir_validar"| CL
+    RE --> DUCK["Traductor SQL DuckDB<br/>experimental, R/sql.R"]
+    DUCK --> TABLE["Tablas o consulta diferida"]
 ```
+
+El mapeo SQL a FHIR admite Patient, Observation, Encounter, Condition e
+Immunization de R4 4.0.1. Los controles locales revisan la estructura;
+la validación de perfiles usa el servidor mediante
+[`fhir_validar()`](https://f-slg.github.io/fhirviews/reference/fhir_validar.md).
+El traductor DuckDB es una alternativa al motor V8 para las vistas
+admitidas. La federación, la conversión R4/R6 y un prototipo Rust
+permanecen pendientes.
 
 El paquete separa las siguientes responsabilidades:
 
@@ -293,7 +308,7 @@ vista <- vista_crear("Patient", c(sistema = "system", valor = "value"),
                      por_cada = "telecom")
 system.time(vista_ejecutar(caso, vista))
 #>    user  system elapsed 
-#>   0.011   0.000   0.010
+#>   0.013   0.000   0.011
 ```
 
 ### Orden de columnas y de filas

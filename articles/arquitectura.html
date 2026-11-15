@@ -100,6 +100,7 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
         VA["Validador&lt;br/&gt;R/validar.R"]
         MV["Motor de vistas&lt;br/&gt;R/vista.R"]
         MO["Interfaz de motores&lt;br/&gt;R/motor.R"]
+        MP["Mapeo SQL a FHIR R4&lt;br/&gt;R/fhir-desde-sql.R"]
     end
     subgraph V8["V8 (JavaScript)"]
         GL["Capa propia&lt;br/&gt;inst/js/fhirviews.js"]
@@ -111,7 +112,19 @@ contribuir al código. Para empezar a usarlo, mejor la viñeta <a href="../fhirv
     VA --&gt; MV
     MV --&gt; MO
     MO &lt;--&gt;|"JSON"| GL
-    GL --&gt; FP</code></pre>
+    GL --&gt; FP
+    DB["Consulta SQL DBI / data.frame"] --&gt; MP
+    MP --&gt; RE
+    MP --&gt; OUT["JSON / NDJSON con escala conservada"]
+    MP --&gt;|"fhir_validar"| CL
+    RE --&gt; DUCK["Traductor SQL DuckDB&lt;br/&gt;experimental, R/sql.R"]
+    DUCK --&gt; TABLE["Tablas o consulta diferida"]</code></pre>
+<p>El mapeo SQL a FHIR admite Patient, Observation, Encounter, Condition
+e Immunization de R4 4.0.1. Los controles locales revisan la estructura;
+la validación de perfiles usa el servidor mediante
+<code><a href="../reference/fhir_validar.html">fhir_validar()</a></code>. El traductor DuckDB es una alternativa al
+motor V8 para las vistas admitidas. La federación, la conversión R4/R6 y
+un prototipo Rust permanecen pendientes.</p>
 <p>El paquete separa las siguientes responsabilidades:</p>
 <table class="table">
 <colgroup>
@@ -482,7 +495,7 @@ del número de recursos:</p>
 <span>                     por_cada <span class="op">=</span> <span class="st">"telecom"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html" class="external-link">system.time</a></span><span class="op">(</span><span class="fu"><a href="../reference/vista_ejecutar.html">vista_ejecutar</a></span><span class="op">(</span><span class="va">caso</span>, <span class="va">vista</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   0.011   0.000   0.010</span></span></code></pre></div>
+<span><span class="co">#&gt;   0.013   0.000   0.011</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="orden-de-columnas-y-de-filas">Orden de columnas y de filas<a class="anchor" aria-label="anchor" href="#orden-de-columnas-y-de-filas"></a>

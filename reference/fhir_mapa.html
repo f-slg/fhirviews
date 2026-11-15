@@ -145,6 +145,9 @@ R4 4.0.1. Se revisan campos obligatorios, elementos de eleccion, fechas,
 identificadores, tipos primitivos, destinos de referencias y bindings
 requeridos que pueden enumerarse con la terminologia R4 incluida. Para
 <code>Coding</code> y <code>CodeableConcept</code> se comprueba el par <code>system</code>/<code>code</code>.
+Los valores <code>code</code> admiten solo espacios simples internos; <code>uri</code>, <code>url</code>
+y <code>canonical</code> no admiten espacios ni otros caracteres de separacion.
+Estos controles lexicos no comprueban que una URL exista.
 Se conserva la restriccion de <code>SimpleQuantity</code>: no admite <code>comparator</code>,
 por ejemplo en <code>Immunization.doseQuantity</code>. Una <code>Quantity</code> general puede
 admitirlo. El estado, la vacuna, el paciente y una variante de
