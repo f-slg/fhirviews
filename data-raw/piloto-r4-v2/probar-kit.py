@@ -47,7 +47,19 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
            '--kit-dir',str(kit)]
     copia=temp/'reconstruido.zip'
     subprocess.run(comun+['--salida',str(copia)],check=True,stdout=subprocess.DEVNULL)
-    assert copia.read_bytes()==archivo.read_bytes(),'ZIP no reproducible'
+    if copia.read_bytes()!=archivo.read_bytes():
+        with zipfile.ZipFile(copia) as original, zipfile.ZipFile(archivo) as entregado:
+            nombres_o, nombres_e = original.namelist(), entregado.namelist()
+            distintos = [n for n in nombres_o if n in nombres_e and
+                         original.read(n)!=entregado.read(n)]
+            metadata = [n for n in nombres_o if n in nombres_e and
+                        original.getinfo(n).header_offset!=entregado.getinfo(n).header_offset]
+            detalle = ('nombres_iguales='+str(nombres_o==nombres_e)+
+                       '; contenido_distinto='+repr(distintos[:5])+
+                       '; offsets_distintos='+repr(metadata[:5])+
+                       '; bytes_reconstruido='+str(copia.stat().st_size)+
+                       '; bytes_entregado='+str(archivo.stat().st_size))
+        raise AssertionError('ZIP no reproducible: '+detalle)
     sentinel=temp/'existente.zip'; sentinel.write_bytes(b'CONSERVAR ARCHIVO EXISTENTE')
     r=subprocess.run(comun+['--salida',str(sentinel)],capture_output=True)
     assert r.returncode!=0 and sentinel.read_bytes()==b'CONSERVAR ARCHIVO EXISTENTE'

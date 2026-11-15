@@ -89,7 +89,7 @@ def construir(paquete, salida, ref='HEAD', kit_dir=None):
     archivos['FORMULARIO-PILOTO.html'] = html.encode()
     hashes = {n: hashlib.sha256(v).hexdigest() for n, v in sorted(archivos.items())}
     manifiesto = dict(esquema='fhirviews-kit-r4-v2', version_candidato=candidato['version'],
-        fuente_kit_commit=commit, fuente_candidato_commit=candidato['fuente_commit'],
+        fuente_kit_commit=fuente_kit_commit, fuente_candidato_commit=candidato['fuente_commit'],
         paquete_sha256=sha, protocolo_sha256=protocolo_sha,
         evaluacion_externa='pendiente', participantes='sin_asignar',
         archivos_sha256=dict(hashes),
