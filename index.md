@@ -1392,9 +1392,14 @@ entre macOS 26 Intel y macOS 15 Intel para reintentar problemas de
 disponibilidad. El selector no garantiza capacidad del proveedor: macOS
 continúa siendo una comprobación obligatoria. En R 4.1 y R-devel se
 comprueban el cliente y V8. Los tres sistemas con R release incluyen
-DuckDB y sus pruebas SQL. Las pruebas HTTP usan respuestas simuladas. La
-integración de escritura se habilita por separado contra un **servidor
-de pruebas propio**:
+DuckDB y sus pruebas SQL. La prueba de privacidad de Bulk Data usa una
+credencial ficticia completa y una carpeta que contiene `abc`: comprueba
+que se muestra la ruta y se oculta el token, sin confundir coincidencias
+de la ruta con una credencial expuesta. También exige el valor exacto de
+la cabecera de autorización de descarga.
+
+Las pruebas HTTP usan respuestas simuladas. La integración de escritura
+se habilita por separado contra un **servidor de pruebas propio**:
 
 ``` sh
 FHIRVIEWS_SERVIDOR_ESCRITURA=http://localhost:8080/fhir \
