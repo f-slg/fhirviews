@@ -1,3 +1,11 @@
+# El DOI de version pertenece al codigo archivado 0.5.0.9000 (565243e).
+# No se atribuye automaticamente a versiones anteriores o posteriores.
+doi_zenodo <- if (identical(meta$Version, "0.5.0.9000")) {
+  "10.5281/zenodo.24238726"
+} else NULL
+url_cita <- if (is.null(doi_zenodo)) "https://github.com/f-slg/fhirviews" else {
+  paste0("https://doi.org/", doi_zenodo)
+}
 bibentry(
   bibtype = "Manual",
   key = "fhirviews",
@@ -7,10 +15,11 @@ bibentry(
                   comment = c(ORCID = "0000-0001-5077-1522")),
   year = "2026",
   note = paste("Paquete de R versión", meta$Version),
-  url = "https://github.com/f-slg/fhirviews",
+  doi = doi_zenodo,
+  url = url_cita,
   textVersion = paste0(
     "Salas Guerrero, R. F. (2026). fhirviews: FHIR desde R y vistas ",
     "tabulares con SQL on FHIR. Paquete de R versión ", meta$Version,
-    ". https://github.com/f-slg/fhirviews"
+    ". ", url_cita
   )
 )
