@@ -66,7 +66,7 @@ decisiones propias.
 | Versión o componente | Estado y uso |
 |----|----|
 | **Desarrollo actual: `0.5.0.9002`** | Código de GitHub. SQL → FHIR para siete recursos R4, colecciones de referencias y API para un componente Rust externo opcional; ocho vistas de catálogo. Todavía sin DOI de versión propio. |
-| **Candidato de piloto `0.5.0.9001`** | El kit publicado conserva el paquete comprobado con cinco constructores. No incorpora los dos nuevos constructores ni la API del componente Rust. |
+| **Candidato de piloto `0.5.0.9002`** | El kit actualizado incluye los siete constructores R4 y una tarea opcional del ejemplo Specimen → Observation → DiagnosticReport. No requiere Rust. |
 | **Archivo `0.5.0.9000`** | Código anterior preservado en [Zenodo](https://doi.org/10.5281/zenodo.24238726). Su DOI identifica ese archivo concreto. |
 | **`0.5.0`** | [Lanzamiento de GitHub](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), enviado a CRAN el 7 de noviembre de 2026. No incluye SQL → FHIR. Consulta el [catálogo oficial de CRAN](https://cran.r-project.org/web/packages/available_packages_by_name.html) para su publicación. |
 | **Rust** | Componente CLI opcional, seleccionado por el usuario; R sigue siendo la ruta predeterminada. ZIP independientes para Linux x86_64, Windows x64 y macOS Intel/Apple Silicon, con SHA-256 y procedencia. [Uso](#validaci%C3%B3n-con-el-componente-rust-opcional) · [Resultados y límites](#rendimiento). |
@@ -1883,11 +1883,11 @@ Issues](https://github.com/f-slg/fhirviews/issues).
 ## Estabilización de R4
 
 La próxima entrega consolidará **FHIR R4 4.0.1** con un alcance
-explícito. La versión de desarrollo actual es `0.5.0.9002`. El kit del
-piloto conserva `0.5.0.9001`, con cinco constructores; la ampliación a
-siete tipos y el componente Rust necesitan su propia evidencia y
-evaluación. Preparar un candidato no publica un lanzamiento ni emite un
-DOI.
+explícito. La versión de desarrollo actual es `0.5.0.9002`; el kit
+actualizado entrega ese mismo archivo y prueba por separado el ejemplo
+de laboratorio. El archivo Zenodo de `0.5.0.9000` tiene un DOI propio,
+que no se transfiere a esta versión. Preparar el candidato no publica un
+lanzamiento ni emite otro DOI.
 
 | Componente | Alcance del cierre R4 |
 |----|----|
@@ -1902,7 +1902,7 @@ DOI.
 
 El cierre técnico exige que el **mismo archivo fuente** se instale y
 apruebe en una biblioteca nueva, con ayuda, viñetas y ejemplos
-incluidos. El control del candidato de piloto 0.5.0.9001
+incluidos. El control instalado `r4_cinco_recursos` del candidato
 `r4_cinco_recursos` construye seis recursos ficticios: un Patient, un
 Encounter, un Condition, un Observation y dos Immunization. En ambos
 perfiles comprueba:
@@ -1917,17 +1917,19 @@ perfiles comprueba:
   estado inválido, paciente ausente y comparador prohibido en
   SimpleQuantity.
 
-El perfil `completo` construye los recursos mediante consultas
-parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL.
-El grupo obligatorio HAPI valida los seis textos JSON contra sus
-perfiles base y exige que un Patient alterado sea rechazado. Las
-integraciones PostgreSQL y SQL Server se mantienen como comprobaciones
-adicionales de sus controladores y tipos nativos.
+El perfil `completo` construye los recursos del control mediante
+consultas parametrizadas DBI/DuckDB y compara las cinco vistas con el
+motor SQL. La nueva tarea opcional R09 ejecuta
+`examples/laboratorio-r4.R`, que construye Specimen y DiagnosticReport
+con referencias repetibles y compara V8/DuckDB. El grupo obligatorio
+HAPI valida los recursos del control contra perfiles base; las
+integraciones PostgreSQL y SQL Server comprueban sus controladores y
+tipos.
 
 La **evaluación externa** requiere que otra persona instale el
 candidato, explique los resultados, modifique una vista, contraste el
 NDJSON y repita las tareas. El protocolo
-[PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md)
+[PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md)
 incluye tareas, referencias y criterios de cierre. Los informes
 automáticos dejan `validacion_usuario_externo = pendiente` hasta
 documentar esa evaluación aparte. El ensayo local marca la validación de
@@ -1950,7 +1952,7 @@ tienen evidencia. Las siguientes tareas requieren trabajo adicional:
 
 | Prioridad | Pendiente | Criterio para cerrarlo |
 |----|----|----|
-| 1 | **Piloto externo R4** | Una persona ajena al desarrollo instala el candidato identificado, repite las tareas y registra comprensión, ayuda y hallazgos con el [protocolo R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). La CI no sustituye esa evaluación. |
+| 1 | **Piloto externo R4** | Una persona ajena al desarrollo instala el candidato identificado, repite las tareas y registra comprensión, ayuda y hallazgos con el [protocolo R4](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md). La CI no sustituye esa evaluación. |
 | 2 | **Entrega estable del alcance R4** | Resolver los hallazgos, elegir versión y artefacto, comprobar ese mismo archivo y verificar su cita. El envío `0.5.0` a CRAN conserva su seguimiento independiente. |
 | 3 | **Evaluación adicional de Rust** | La API, el respaldo R y los ZIP para cuatro plataformas disponen de pruebas separadas. Falta evaluar otras cargas, equipos y memoria. Las mediciones existentes usaron el binario GNU Linux; no acreditan el rendimiento de los nuevos ZIP. Un enlace nativo dentro del paquete exigiría revisar ABI, toolchains, vendoring y licencias para CRAN. |
 | 4 | **Más constructores R4** | `Specimen` y `DiagnosticReport` ya están incorporados. Siguen medicamentos y actores según las fuentes; cada grupo necesita metadatos, colecciones, referencias y retorno SQL → FHIR → perfiles → tablas. |
@@ -1971,7 +1973,7 @@ ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-k
 · [SHA-256 del
 ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256)
 
-El kit incluye el **paquete comprobado 0.5.0.9001**, su identidad, un
+El kit incluye el **paquete comprobado 0.5.0.9002**, su identidad, un
 lanzador, protocolos R/FHIR y un formulario local. Extrae todo el ZIP y
 abre R desde esa carpeta. Instala las dependencias indicadas en
 `LEEME.md` y ejecuta:
@@ -1994,11 +1996,10 @@ explican cómo acordar las sesiones y repetir sin sobrescribir los
 intentos.
 
 La [guía del participante
-R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md)
-se distribuye con el paquete en `examples/PILOTO-R4.md`. Usa el
-candidato que indique su manifiesto y el ensayo instalado de esta
-sección. Para ejecutar solamente el recorrido de seis recursos, sin todo
-el kit de vigilancia:
+R4](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md)
+se incluye en el kit. Usa el candidato que indique su manifiesto y el
+ensayo instalado de esta sección. Para ejecutar solamente el recorrido
+de seis recursos, sin todo el kit de vigilancia:
 
 ``` r
 
@@ -2053,7 +2054,7 @@ el archivo fuente que te entregue el mantenedor:
 ``` r
 
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9001.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9002.tar.gz", repos = NULL, type = "source")
 ```
 
 Reinicia R, elige una carpeta nueva y ejecuta:
