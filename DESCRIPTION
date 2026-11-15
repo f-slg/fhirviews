@@ -1,7 +1,7 @@
 Package: fhirviews
 Type: Package
 Title: 'HL7 FHIR' Client and 'SQL on FHIR' View Engine
-Version: 0.5.0.9001
+Version: 0.5.0.9002
 Authors@R:
     c(
       person("Ronald Fabricio", "Salas Guerrero",
@@ -40,7 +40,7 @@ Description: A client for 'HL7 FHIR' R4 servers (search with automatic
     resources from 'NDJSON' or 'Parquet' files. Includes the official 'SQL on
     FHIR' conformance test suite, explicit mappings from database query
     results to FHIR R4 Patient, Observation, Encounter, Condition and
-    Immunization resources,
+    Immunization, Specimen and DiagnosticReport resources,
     export of views to 'DuckDB', and
     integration with the 'RStudio' Connections pane and addins.
     Documentation is in Spanish.

@@ -1,0 +1,114 @@
+
+R version 4.5.2 (2025-10-31) -- "[Not] Part in a Rumble"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(testthat)
+> library(fhirviews)
+> 
+> test_check("fhirviews")
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f71b87fb9/vigilancia 
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f71b87fb9 
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f7571f7adb/vigilancia 
+Recorrido R4 aprobado con seis recursos ficticios y cinco tipos.
+            prueba            estado advertencias
+     api_instalada          aprobado            0
+        vigilancia requiere_revision            2
+ contrato_estricto          aprobado            0
+      recuperacion       no_evaluado            0
+ r4_cinco_recursos requiere_revision           15
+                          codigo
+                                
+ advertencias_requieren_revision
+                                
+                                
+ advertencias_requieren_revision
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f7571f7adb 
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f722403145/vigilancia 
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f722403145 
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f7267682b7/vigilancia 
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f7267682b7 
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f719d9fce8/vigilancia 
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f719d9fce8 
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f76e23d692/vigilancia 
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f76e23d692 
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f77fec5836/vigilancia 
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f77fec5836 
+              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f721bfeef2/vigilancia 
+Informe local del piloto: /tmp/RtmpkqAW6X/working_dir/RtmppYy8HB/piloto-test-2f721bfeef2 
+[ FAIL 0 | WARN 0 | SKIP 19 | PASS 1626 ]
+
+══ Skipped tests (19) ══════════════════════════════════════════════════════════
+• On CRAN (19): 'test-bulk.R:286:3', 'test-catalogo-alergias.R:46:3',
+  'test-catalogo.R:107:1', 'test-conformidad.R:56:3', 'test-servidor.R:12:3',
+  'test-servidor.R:48:3', 'test-servidor.R:78:3', 'test-servidor.R:152:3',
+  'test-servidor.R:235:3', 'test-servidor.R:328:3', 'test-servidor.R:382:3',
+  'test-servidor.R:451:3', 'test-servidor.R:544:3', 'test-servidor.R:560:3',
+  'test-servidor.R:581:3', 'test-sql-limites.R:1:1', 'test-sql.R:66:1',
+  'test-terminologia.R:329:3', 'test-terminologia.R:353:3'
+
+[ FAIL 0 | WARN 0 | SKIP 19 | PASS 1626 ]
+> 
+> proc.time()
+   user  system elapsed 
+ 60.822   2.404  64.693 

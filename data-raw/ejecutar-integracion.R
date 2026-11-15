@@ -8,6 +8,7 @@ comprobar_integracion <- function(tabla) {
     "SQL a FHIR, perfiles R4, referencias y retorno a tablas",
     "Encounter y Condition desde SQL, perfiles R4 y referencias",
     "Immunization desde SQL, perfil R4, dosis y referencias",
+    "Specimen y DiagnosticReport desde SQL, perfiles R4 y retorno a tablas",
     "Candidato R4 con cinco recursos y perfiles base"
   )
   if (!all(requeridas %in% tabla$test) || anyDuplicated(tabla$test)) {

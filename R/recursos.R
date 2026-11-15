@@ -223,6 +223,10 @@ print.fhir_recursos <- function(x, ...) {
 #' @export
 c.fhir_recursos <- function(...) {
   partes <- lapply(list(...), fhir_recursos)
+  # Un acumulador vacio no aporta datos y no debe descartar la fuente
+  # decimal de las partes que si contienen recursos.
+  partes <- Filter(function(p) length(p) > 0L, partes)
+  if (!length(partes)) return(fhir_recursos(NULL))
   fuentes <- lapply(partes, attr, "fuente")
   fuente <- if (all(!vapply(fuentes, is.null, logical(1)))) unlist(fuentes)
   alineada <- all(vapply(partes, function(p) isTRUE(attr(p, "fuente_alineada")),

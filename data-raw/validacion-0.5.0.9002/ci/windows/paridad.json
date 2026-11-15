@@ -1,0 +1,276 @@
+{
+  "estado": "aprobado",
+  "comprobaciones": 251,
+  "escenarios_validos": 20,
+  "escenarios_errores": 33,
+  "tipos": ["Patient", "Encounter", "Condition", "Observation", "Immunization"],
+  "nodos": 68,
+  "tipos_recurso_modelo_r4": 148,
+  "errores": [
+    {
+      "caso": "binding primitivo",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "gender"
+      }
+    },
+    {
+      "caso": "code separador unicode",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "gender"
+      }
+    },
+    {
+      "caso": "booleano primitivo",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "active"
+      }
+    },
+    {
+      "caso": "id vacio",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": null,
+        "campo": "id"
+      }
+    },
+    {
+      "caso": "status obligatorio",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "status"
+      }
+    },
+    {
+      "caso": "destino reference",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "subject"
+      }
+    },
+    {
+      "caso": "reference contenida",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "subject.reference"
+      }
+    },
+    {
+      "caso": "reference relativa invalida",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "subject.reference"
+      }
+    },
+    {
+      "caso": "reference id demasiado largo",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "subject.reference"
+      }
+    },
+    {
+      "caso": "choice doble",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "onset[x]"
+      }
+    },
+    {
+      "caso": "decimal no JSON",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "valueQuantity.value"
+      }
+    },
+    {
+      "caso": "component obligatorio",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "component.code"
+      }
+    },
+    {
+      "caso": "estado desconocido",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "status"
+      }
+    },
+    {
+      "caso": "paciente obligatorio",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 2,
+        "campo": "patient"
+      }
+    },
+    {
+      "caso": "ocurrencia obligatoria",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "occurrence[x]"
+      }
+    },
+    {
+      "caso": "ocurrencia doble",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "occurrence[x]"
+      }
+    },
+    {
+      "caso": "positiveInt cero",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "protocolApplied[0].doseNumberPositiveInt"
+      }
+    },
+    {
+      "caso": "Patient id duplicado",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": null,
+        "campo": "id"
+      }
+    },
+    {
+      "caso": "Encounter id duplicado",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": null,
+        "campo": "id"
+      }
+    },
+    {
+      "caso": "Condition id duplicado",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": null,
+        "campo": "id"
+      }
+    },
+    {
+      "caso": "Observation id duplicado",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": null,
+        "campo": "id"
+      }
+    },
+    {
+      "caso": "Immunization id duplicado",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": null,
+        "campo": "id"
+      }
+    },
+    {
+      "caso": "Observation faltan requeridos",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "status"
+      }
+    },
+    {
+      "caso": "Encounter faltan requeridos",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "status"
+      }
+    },
+    {
+      "caso": "Condition faltan requeridos",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "subject"
+      }
+    },
+    {
+      "caso": "Immunization faltan requeridos",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "status"
+      }
+    },
+    {
+      "caso": "type solo",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "subject"
+      }
+    },
+    {
+      "caso": "type distinto",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "subject"
+      }
+    },
+    {
+      "caso": "type no recurso",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "subject"
+      }
+    },
+    {
+      "caso": "precedencia estructural antes de primitivo",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "gender"
+      }
+    },
+    {
+      "caso": "validacion antes de ids duplicados",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 3,
+        "campo": "gender"
+      }
+    },
+    {
+      "caso": "CodeableConcept requerido sin Coding",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "clinicalStatus"
+      }
+    },
+    {
+      "caso": "binding CodeableConcept sistema incorrecto",
+      "resultado": {
+        "clase": "fhirviews_error_mapeo",
+        "fila": 1,
+        "campo": "clinicalStatus"
+      }
+    }
+  ],
+  "alcance": "Paridad del constructor con entradas tipadas por R; no valida perfiles clinicos"
+}

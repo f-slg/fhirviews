@@ -23,7 +23,8 @@
 as a `ViewDefinition` and reuse it on local files, server responses or
 population-level exports.
 
-It also builds **Patient, Observation, Encounter, Condition and Immunization** from a `data.frame`
+It also builds **Patient, Observation, Encounter, Condition, Immunization,
+Specimen and DiagnosticReport** from a `data.frame`
 or a SQL query through DBI, with explicit column, constant and reference
 mappings. JSON and NDJSON output preserve decimal scale.
 
@@ -54,14 +55,16 @@ flowchart TB
     subgraph BUILD["Tables → FHIR R4"]
         direction LR
         ROWS["Rows<br/>R or DBI SQL"] --> MAP["Explicit<br/>mapping"]
-        MAP --> R4["Resources<br/>FHIR R4"]
+        MAP --> BUILD["Type conversion and<br/>construction in R"]
+        BUILD --> CHECK["Structural checks<br/>R or optional Rust component"]
+        CHECK --> R4["Resources<br/>FHIR R4"]
         R4 --> OUT["JSON / NDJSON"]
         R4 --> PROFILE["Server profile<br/>validation"]
     end
 ```
 
 Reading uses V8 or the experimental DuckDB translator. Construction supports
-**Patient, Observation, Encounter, Condition and Immunization**, preserving
+**Patient, Observation, Encounter, Condition, Immunization, Specimen and DiagnosticReport**, preserving
 the decimal scale available at the source. To construct resources from a
 projected table, prepare the rows and choose a mapping, with explicit decisions
 about omitted or aggregated columns.
@@ -70,15 +73,16 @@ about omitted or aggregated columns.
 
 | Version or component | Status and use |
 |---|---|
-| **Current development: `0.5.0.9001`** | GitHub source. SQL → FHIR for five R4 resources, eight catalogue views and the new allergy view. No version DOI assigned yet. |
+| **Current development: `0.5.0.9002`** | GitHub source. SQL → FHIR for seven R4 resources, variable reference collections and an API for an optional external Rust component; eight catalogue views. No version DOI assigned yet. |
+| **Pilot candidate `0.5.0.9001`** | The published kit retains its checked package with five constructors. It does not include the two new constructors or Rust component API. |
 | **Archived `0.5.0.9000`** | Earlier source preserved in [Zenodo](https://doi.org/10.5281/zenodo.24238726). Its DOI identifies that specific archive. |
 | **`0.5.0`** | [GitHub release](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), submitted to CRAN on 7 November 2026. Does not include SQL → FHIR. Consult the [official CRAN catalogue](https://cran.r-project.org/web/packages/available_packages_by_name.html) for publication. |
-| **Rust** | Tested laboratory, separate from the installed package. [Results and limits](#performance). |
+| **Rust** | Optional CLI component, compiled and selected by the user; R remains the default. The executable is distributed separately. [Usage](#validation-with-the-optional-rust-component) · [Results and limits](#performance). |
 | **Federation and R4/R6** | Planned work, currently unavailable. [Remaining work and priorities](#remaining-work-and-priorities). |
 
 The priority is to close R4 with the installed candidate and an external pilot.
 The reader and views can handle other R4 resources; construction from SQL remains
-limited to **Patient, Observation, Encounter, Condition and Immunization**.
+available for the seven types listed above; project profiles require additional validation.
 GitHub or Zenodo publication is independent of CRAN acceptance.
 
 ## Contents
@@ -120,7 +124,8 @@ GitHub or Zenodo publication is independent of CRAN acceptance.
 | Read NDJSON and gzip without holding the whole output in memory | `vista_ejecutar_lotes()` |
 | Run a SQL-translatable view on NDJSON or Parquet | `vista_ejecutar_duckdb()` — experimental |
 | Query several tables with SQL | `vista_duckdb()` — views evaluated with V8 and stored in one transaction |
-| Build Patient, Observation, Encounter, Condition and Immunization from SQL queries or tables | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
+| Build seven R4 resource types from SQL queries or tables | `fhir_mapa()`, `fhir_desde_tabla()`, `fhir_desde_sql()` |
+| Select the optional external Rust structural validator | `fhir_componente_rust()` and the `componente` argument |
 | Save resources preserving original JSON decimals | `fhir_escribir()` — JSON or NDJSON |
 | Start from public health views | `vista_catalogo()`, `vista_plantilla()` |
 | Define cohorts with the codes of a ValueSet | `tx_expandir()`, `vista_con_valueset()` |
@@ -653,14 +658,14 @@ create when you are done; lazy results depend on their connection staying open.
 
 `fhir_desde_sql()` runs a query through an open **DBI** connection and builds
 resources according to a `fhir_mapa()`. `fhir_desde_tabla()` applies the same
-mapping to a `data.frame`. Supports **Patient, Observation, Encounter, Condition and
-Immunization from FHIR R4 4.0.1**.
+mapping to a `data.frame`. Supports **Patient, Observation, Encounter, Condition,
+Immunization, Specimen and DiagnosticReport from FHIR R4 4.0.1**.
 
 ```mermaid
 flowchart LR
     DB["DBI SQL query / data.frame"] --> M["fhir_mapa: columns, constants and references"]
     M --> CHECK["Construct and check R4 structure"]
-    CHECK --> R["Patient, Observation, Encounter,<br/>Condition and Immunization"]
+    CHECK --> R["Patient, Observation, Encounter, Condition,<br/>Immunization, Specimen and DiagnosticReport"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → table"]
     R --> C["Profile validation with fhir_validar"]
@@ -746,7 +751,8 @@ codes and units for your actual data and profiles.
 | `constantes` | Named list of fixed values. Destinations cannot overlap with `campos`. |
 | `referencias` | `.reference` destination → target resource type; the key `p1` becomes `Patient/p1`. Supply keys, not URLs or prefixed references. |
 | `name[0].family` | Zero-based indices. Repeating elements require an index. |
-| `name[0].given[]` | Primitive collection from a list-column. `[]` is allowed only at the end. |
+| `name[0].given[]` | Primitive collection from a list-column. |
+| `result[].reference` | Reference collection from a list-column. Preserves order and duplicates and omits missing values; supports `referencias = c("result[].reference" = "Observation")`. Cannot share fields or indices under the same array. |
 | Choice elements | Use concrete JSON names such as `valueQuantity.value` and `deceasedBoolean`; mappings do not evaluate FHIRPath. |
 | `NA`, `NULL`, `""`, empty collections | Omitted. Empty objects and positions are compacted; indices identify construction positions, not persistent `null` gaps. |
 | `id` | Must be mapped, valid and unique in the result. Safe integers are converted to text. |
@@ -905,18 +911,123 @@ canonical profile. Invariants and clinical terminology need this validation;
 for example, education entries must include documentType or reference under
 R4 invariant imm-1.
 
+### Specimens and diagnostic reports
+
+`Specimen` supports clinical and environmental samples. In base R4, `status`
+and `subject` are optional; when status is supplied its ValueSet is checked,
+and the source may be Patient, Group, Device, Substance or Location. The
+mapper also checks `collection.collected[x]` choices and the targets of
+`parent`, `request`, `collection.collector` and additives. The constructor
+contract still requires an `id`.
+
+`DiagnosticReport` requires `status` and `code`. Its `subject` is optional
+in base R4; `result` references Observation and `specimen` references
+Specimen. The alternatives of `effective[x]` are mutually exclusive,
+`issued` requires an instant with a timezone, and each `media` entry needs
+`link`. Project profiles can require additional fields. Invariants and
+external terminology require `fhir_validar()`.
+
+Each report row can hold a variable number of references:
+
+```r
+informes <- data.frame(id = c("d1", "d2"))
+informes$resultados <- list(c("o1", "o2"), "o3")
+informes$muestras <- list("s1", c("s2", "s3"))
+mapa <- fhir_mapa("DiagnosticReport", c(
+  id = "id", "result[].reference" = "resultados", "specimen[].reference" = "muestras"
+), constantes = list(status = "final", "code.text" = "Fictitious report"),
+referencias = c("result[].reference" = "Observation", "specimen[].reference" = "Specimen"))
+recursos <- fhir_desde_tabla(informes, mapa)
+recursos[[1]]$result
+# list(list(reference = "Observation/o1"), list(reference = "Observation/o2"))
+```
+
+The map creates references; linked resources are constructed separately.
+Do not combine `result[].reference` with `result[0].display` or another
+destination under the same array. Other repeated complex objects still
+require explicit indices, such as `presentedForm[0].contentType` and
+`presentedForm[0].data`. Rows are not automatically grouped, and relationships
+between independent lists are not inferred. Reference collections preserve
+order and duplicates and omit missing values.
+
+The installed [laboratorio-r4.R example](https://github.com/f-slg/fhirviews/blob/main/inst/examples/laboratorio-r4.R)
+creates fictitious DuckDB tables, constructs Patient, Specimen, two Observation
+resources and DiagnosticReport through SQL queries, and compares three views
+between V8 and DuckDB. Result and specimen lists come from SQL `list()`
+aggregations:
+
+```r
+source(system.file("examples", "laboratorio-r4.R", package = "fhirviews"))
+ejemplo <- laboratorio_r4()
+ejemplo$tablas$resultados  # two rows, one for each referenced Observation
+fhir_escribir(ejemplo$recursos, tempfile(fileext = ".ndjson"))
+```
+
+The HAPI integration requires base-profile validation, persistence, retrieval,
+and matching references and tables. It also requires rejection of invalid
+statuses, targets, required fields and `media` entries. Literals `5.00`,
+`72.00` and `13.50` retain their scale in output and boundary calculations.
+
+### Validation with the optional Rust component
+
+`fhir_componente_rust()` is available from **0.5.0.9002**. Build the executable
+in [componentes/rust](https://github.com/f-slg/fhirviews/tree/main/componentes/rust)
+separately with Cargo and rustc >= 1.75:
+
+```sh
+cargo build --release --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
+cargo test --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
+```
+
+```r
+componente <- fhir_componente_rust(
+  "componentes/rust/target/release/fhirviews-rust-validator",
+  fallback = FALSE, tiempo = 60L) # add .exe on Windows
+ejemplo_rust <- laboratorio_r4(componente = componente)
+stopifnot(identical(ejemplo$recursos, ejemplo_rust$recursos))
+# Also: fhir_desde_tabla(datos, mapa, componente = componente)
+#       fhir_desde_sql(db, sql, mapa, parametros, componente = componente)
+```
+
+Without `componente`, structural validation remains in R. Rust checks
+resources already constructed and primitive-typed by R: required fields,
+choices, cardinalities, enumerable bindings and reference targets. R retains
+type conversion, serialization and decimal handling. The component does not
+evaluate SQL on FHIR or FHIRPath, convert R4/R6 or replace profile validation.
+
+The CLI contract `fhirviews-r4-validator/1` checks capabilities, FHIR version,
+schema identity and resource counts. R prepares the plan once per session;
+each Rust process reads it. For invalid data, R reproduces the first error
+with its complete message, class, row and field. With `fallback = TRUE`, a
+missing executable, process failure, timeout or incompatible response causes
+a warning and validation in R. `FALSE` requires the component and raises
+`fhirviews_error_componente` for those failures.
+
+Communication uses local temporary files removed on completion; the
+component does not use the network. DBI results and constructed resources
+still reside entirely in R memory. Installing fhirviews does not download
+Rust or executables. The CLI avoids linking to R's ABI; native integration
+and its distribution would be additional work. Select a trusted executable.
+
+The [Helios review](https://github.com/f-slg/fhirviews/blob/main/data-raw/revision-helios-20261115.md)
+identifies useful design improvements: component interfaces, fixed schemas,
+incremental processing and version-specific capabilities. This development
+implements the optional interface and reference collections. Chunked DBI
+cursors, direct Arrow output and version adapters remain future work. The
+review compares documentation and code, without benchmarking against Helios.
+
 ### Supported resources and next groups
 
 The reader and view engine already work with other FHIR resource types.
 Construction from SQL or tables supports **Patient, Observation, Encounter,
-Condition and Immunization**. Further resources are added in verified groups.
+Condition, Immunization, Specimen and DiagnosticReport**. Further resources are added in verified groups.
 
 | Status | Resources | Workflow |
 |---|---|---|
 | Supported | `Patient`, `Observation` | Patients and results with preserved decimal scale. |
 | Supported | `Encounter`, `Condition` | Patient → encounter → diagnosis, with references between them. |
 | Supported | `Immunization` | Patient → vaccination event, with an explicit vaccine, status and date. |
-| Pending | `Specimen`, `DiagnosticReport` | Specimen → observations → report, with several result references. |
+| Supported from 0.5.0.9002 | `Specimen`, `DiagnosticReport` | Specimen → observations → report, with variable reference collections. |
 | Pending | `MedicationRequest`, `MedicationDispense` | Prescribing and dispensing, with explicit medication and dosage data. |
 | Pending, as needed | `Organization`, `Practitioner` | Institutions and professionals referenced by these resources. |
 
@@ -930,10 +1041,9 @@ The path, type, cardinality and choice-field engine already uses canonical
    terminology and project profiles need server validation.
 3. Testing required fields and choices. Immunization, for example, requires
    status, vaccineCode, patient and one occurrence[x] variant.
-4. Designing collections of objects before offering variable-length groups.
-   Fixed paths such as `result[0].reference` can be built; terminal `[]`
-   currently constructs primitive collections, rather than variable-length
-   lists of Reference or dosageInstruction objects.
+4. Designing object collections. Primitive lists and `[].reference` are
+   supported; other objects such as `dosageInstruction` need explicit
+   indices and rules relating their columns.
 5. Requiring valid and invalid cases and a reproducible SQL → FHIR →
    base-profile $validate → persist and read → V8/DuckDB table round trip.
    Add project profiles by canonical URL when available, and update examples
@@ -1278,9 +1388,60 @@ their result should be checked for the specific commit being delivered.
 
 ## Performance
 
+### Measuring the Rust API in 0.5.0.9002
+
+The [verification report](https://github.com/f-slg/fhirviews/tree/main/data-raw/validacion-0.5.0.9002)
+uses the package installed with R bytecode from commit `8d6a122`, Ubuntu
+26.04.1, Intel i7-10750H, R 4.5.2 and Rust 1.75.0. It compares the seven
+fictitious mappings in `tests/testthat/helper-constructor-r4.R`: **126 samples**,
+300 and 3,000 rows, three repetitions and randomized order. Every call
+produced exactly the same JSON as the R path.
+
+Medians for **3,000 rows**, in seconds:
+
+| Resource | R (s) | R with plan (s) | Rust component (s) | R / Rust |
+|---|---:|---:|---:|---:|
+| Condition | 6.983 | 6.703 | 2.307 | 3.03× |
+| DiagnosticReport | 19.695 | 15.755 | 6.352 | 3.10× |
+| Encounter | 8.666 | 5.500 | 2.642 | 3.28× |
+| Immunization | 9.317 | 5.837 | 3.116 | 2.99× |
+| Observation | 10.098 | 6.043 | 2.986 | 3.38× |
+| Patient | 3.362 | 1.855 | 1.538 | 2.19× |
+| Specimen | 9.564 | 6.382 | 3.447 | 2.77× |
+
+For these maps and this machine, the component was **2.19–3.38 times** faster
+than public R and **1.21–2.91 times** faster than the experimental prepared R
+plan. The mappings have different structures; these numbers do not compare
+resource complexity or establish that R optimization has been exhausted.
+
+**Small batches can favor R.** For 300 Patient rows, R took 0.341 s, prepared
+R 0.166 s and the component 0.437 s. Prepared R also outperformed Rust on some
+other 300-row batches. Selection is therefore explicit and R remains the
+default; no automatic activation threshold has been validated for other loads.
+
+Experimental R plan preparation took 0.692 s, and the component's first call
+with three Patient resources took 0.437 s; these are recorded separately.
+Per-batch times include executable checks, startup, temporary-file transport
+and plan parsing. Compilation, installation, input/map creation, result
+comparison and prior GC are excluded. Individual samples are retained and
+show variation; three repetitions do not constitute a general performance
+study. This measurement does not cover memory, performance on other systems,
+clinical profiles, SQL on FHIR queries or Helios.
+
+The checked source archive passed `R CMD check --as-cran --no-manual` with
+**0 errors, 0 warnings and 1 note for the development version numbering**.
+All ten code CI checks passed: five R configurations, the Rust component on
+three platforms, HAPI and SQL DBI. Each platform ran 286 targeted checks and
+the 587 laboratory checks; the Rust core has 12 native tests. Results and
+SHA-256 hashes are retained with the [measurement script](https://github.com/f-slg/fhirviews/blob/main/data-raw/medir-componente-rust.R).
+
+<details>
+<summary>Historical Rust laboratory for 0.5.0.9000</summary>
+
 ### Experimental Rust evaluation
 
-The public constructor uses R. The [Rust laboratory](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust)
+The public constructor uses R by default; from 0.5.0.9002 it can select the
+CLI component described above. The [Rust laboratory](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust)
 is outside the installed package. Its baseline measurements use **0.5.0.9000**,
 Ubuntu 26.04.1, R 4.5.2, Rust 1.75.0 and Intel i7-10750H; they predate 0.5.0.9001.
 Medians for 3,000 rows, three repeats per method:
@@ -1301,9 +1462,13 @@ In one separate 3,000-Immunization run, sampled summed RSS was 170.2 MiB
 twice. These Linux measurements do not establish memory savings.
 
 Seven Rust tests and 587 differential checks passed on Windows, macOS and
-Linux. CI also checks parity against later development versions. Native R
-integration, full errors, ABI/Rtools and CRAN distribution remain pending.
+Linux. CI also checks parity against later development versions. The
+0.5.0.9002 CLI API retains complete R diagnostics and explicit fallback;
+native linking, its ABI/toolchain and distribution inside the R package
+would require additional work.
 See [results, hashes and reproduction](https://github.com/f-slg/fhirviews/blob/main/data-raw/experimento-rust/README.md).
+
+</details>
 
 <details>
 <summary>Historical engine benchmarks and fhircrackr comparison</summary>
@@ -1337,8 +1502,8 @@ The reproducible script is in
 
 ### Comparison with fhircrackr
 
-[fhircrackr](https://CRAN.R-project.org/package=fhircrackr) is the most widely
-used CRAN package for flattening FHIR resources in R. It describes columns with
+[fhircrackr](https://CRAN.R-project.org/package=fhircrackr) is a
+CRAN package for flattening FHIR resources in R. It describes columns with
 XPath over XML Bundles and expands collections with `fhir_melt()`. The
 comparison produces **the same table** with both packages: a date filter, four
 columns per patient and one row per name. Before timing, the script checks that
@@ -1425,19 +1590,22 @@ Proposals and their tracking are in
 ## Stabilising R4
 
 The current priority is to consolidate **FHIR R4 4.0.1** before federation or
-R4/R6 conversion. Development remains at `0.5.0.9001`; verifying a candidate
+R4/R6 conversion. Current development is `0.5.0.9002`; the published pilot
+kit remains at `0.5.0.9001` with five constructors. The two new constructors
+and Rust API need their own evidence and user evaluation. Verifying a candidate
 does not publish a release, change its version or issue a DOI.
 
 | Component | Scope of the R4 milestone |
 |---|---|
 | Client and V8 views | R4 resources and operations supported by the connected server. |
-| Construction from tables or DBI | Patient, Observation, Encounter, Condition and Immunization; one row per resource, explicit mappings. |
+| Construction from tables or DBI | Seven types: Patient, Observation, Encounter, Condition, Immunization, Specimen and DiagnosticReport; one row per resource, explicit mappings. |
 | Local validation | Types, cardinalities, choices, dates, Reference targets and enumerable required bindings. Code permits only single internal spaces; URI, URL and canonical reject whitespace, including Unicode separators, following the [R4 primitive rules](https://hl7.org/fhir/R4/datatypes.html#primitive). Values are rejected rather than altered. |
 | Profiles and terminology | HAPI checks base profiles; project profiles, invariants and external terminology require the agreed environment. |
 | DuckDB engine | Remains experimental, with the documented FHIRPath subset and comparison against V8. |
-| Additional resources and versions | Further SQL construction resources, server federation and R4/R6 conversion remain pending. No multiversion API is enabled. |
+| Rust component | Optional external CLI, with explicit R fallback. Executable distribution and native linking remain separate from the R package. |
+| Additional resources and versions | Medication and actor constructors, server federation and R4/R6 conversion remain pending. No multiversion API is enabled. |
 
-Both acceptance profiles require `r4_cinco_recursos`: six fictitious resources
+Both acceptance profiles of the 0.5.0.9001 pilot require `r4_cinco_recursos`: six fictitious resources
 of five types, including two Immunization records. It checks references,
 false booleans, missing optional objects, date and dose choices, JSON/NDJSON
 round trips and the five V8 views. Decimal literals `72.00` and `0.50` retain
@@ -1459,10 +1627,11 @@ validation as unevaluated, with HAPI evidence recorded separately.
 
 After addressing the pilot findings, select the stable version and artifact.
 The earlier 0.5.0.9000 archive has a verified DOI and author ORCID;
-the current 0.5.0.9001 development has separate citation metadata. Later work will address
+the current 0.5.0.9002 development has separate citation metadata. Later work will address
 federation between R4 servers, followed by resource-specific R4/R6 adapters
-and export. Rust now has a measured prototype; integration depends on the
-native interface, distribution and installation checks.
+and export. Rust has an optional CLI interface; native integration and
+executable distribution remain separate work. Historical timings belong to
+their frozen laboratory commit and do not measure the current public API.
 
 ## Remaining work and priorities
 
@@ -1473,13 +1642,13 @@ evidence. The following work remains:
 |---|---|---|
 | 1 | **External R4 pilot** | An independent participant installs the identified candidate, repeats the tasks and records understanding, assistance and findings using the [R4 protocol](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). CI does not replace this assessment. |
 | 2 | **Stable R4 delivery** | Address findings, select the version and artifact, check that exact archive and verify its citation. The `0.5.0` CRAN submission has separate tracking. |
-| 3 | **Optional Rust engine** | Define a stable R interface, complete diagnostics and fallback, test installation/ABI with Rtools and prepare dependencies/licenses for CRAN. The [experimental CLI](https://github.com/f-slg/fhirviews/tree/main/data-raw/experimento-rust) does not yet provide this. |
-| 4 | **More R4 constructors** | After closure, add `Specimen` and `DiagnosticReport`, then medication and actor resources as needed. Each group needs metadata, collections, references and a SQL → FHIR → profiles → tables round trip. |
+| 3 | **Rust component distribution** | The CLI API and R fallback are present in 0.5.0.9002. The current API is measured; choose how to distribute executables per platform and evaluate other loads. Native linking and inclusion in the R package would require separate ABI, toolchain, vendoring and licence work. |
+| 4 | **More R4 constructors** | `Specimen` and `DiagnosticReport` are included. Medication and actor resources follow as needed; each group needs metadata, collections, references and a SQL → FHIR → profiles → tables round trip. |
 | 5 | **Federation across R4 servers** | Preserve origin and provenance, distinguish repeated ids across servers, review references and compare joint queries. |
 | 6 | **R4/R6 adapters** | Select resources and version-specific rules, preserve originals and document losses or unmapped fields before export. |
 
 The new `alergias` view extends **AllergyIntolerance** extraction; SQL → FHIR
-construction remains limited to five types. An allergy view does not enable
+construction supports seven types. An allergy view does not enable
 another constructor or replace profile validation.
 
 ## Pilot and local documentation
@@ -1636,14 +1805,14 @@ toBibtex(citation("fhirviews"))
 
 | What you used | How to identify it |
 |---|---|
-| Current development `0.5.0.9001` | Cite the installed version and keep the commit SHA. No version DOI assigned yet. |
+| Current development `0.5.0.9002` | Cite the installed version and keep the commit SHA. No version DOI assigned yet. |
 | Archived `0.5.0.9000` | [DOI 10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726), for source archived from `565243e`. |
 | The project and its versions | [Concept DOI 10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725). Also identify the specific version for reproducibility. |
 
 ORCID identifies the author; Zenodo preserves a citable archive. Both can be
 used before CRAN publication: they are not mandatory prior steps or evidence
 of CRAN acceptance. R's citation includes the `0.5.0.9000` DOI only for that
-version. Development `0.5.0.9001` keeps its own version and repository URL.
+version. Development `0.5.0.9002` keeps its own version and repository URL.
 Metadata is recorded in
 [CITATION.cff](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff) and
 [.zenodo.json](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).

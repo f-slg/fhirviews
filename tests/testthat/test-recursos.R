@@ -1,6 +1,18 @@
 paciente <- list(resourceType = "Patient", id = "p1")
 observacion <- list(resourceType = "Observation", id = "o1", status = "final")
 
+test_that("concatenar acumuladores vacios conserva los literales decimales", {
+  texto <- '{"resourceType":"Observation","id":"o1","status":"final","code":{"text":"Ficticio"},"valueQuantity":{"value":72.00}}'
+  r <- fhir_recursos(texto)
+  unido <- c(fhir_recursos(NULL), r, fhir_recursos(NULL))
+  expect_identical(attr(unido, "fuente"), attr(r, "fuente"))
+  expect_equal(vista_fhirpath(unido, "valueQuantity.value.lowBoundary()"), 71.995)
+  archivo <- withr_tempfile()
+  fhir_escribir(unido, archivo)
+  expect_match(readLines(archivo), '"value":72.00', fixed = TRUE)
+  expect_identical(c(fhir_recursos(NULL), fhir_recursos(NULL)), fhir_recursos(NULL))
+})
+
 test_that("acepta un recurso, una lista y un Bundle", {
   r <- fhir_recursos(paciente)
   expect_s3_class(r, "fhir_recursos")

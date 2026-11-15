@@ -1,0 +1,86 @@
+{
+  "commit_fuente": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+  "pr": "https://github.com/f-slg/fhirviews/pull/26",
+  "comprobaciones": [
+    {
+      "nombre": "windows-latest (release)",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379048/job/132833902265",
+      "inicio": "2026-11-15T13:53:43Z",
+      "fin": "2026-11-15T13:58:39Z"
+    },
+    {
+      "nombre": "ubuntu-22.04 (4.1)",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379048/job/132833902256",
+      "inicio": "2026-11-15T13:53:43Z",
+      "fin": "2026-11-15T13:58:45Z"
+    },
+    {
+      "nombre": "macos-26-intel (release)",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379048/job/132833902182",
+      "inicio": "2026-11-15T13:53:45Z",
+      "fin": "2026-11-15T14:00:12Z"
+    },
+    {
+      "nombre": "rust-macos-26-intel",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379088/job/132833902122",
+      "inicio": "2026-11-15T13:53:44Z",
+      "fin": "2026-11-15T14:02:04Z"
+    },
+    {
+      "nombre": "ubuntu-latest (release)",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379048/job/132833902111",
+      "inicio": "2026-11-15T13:53:44Z",
+      "fin": "2026-11-15T13:57:39Z"
+    },
+    {
+      "nombre": "rust-ubuntu-latest",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379088/job/132833902050",
+      "inicio": "2026-11-15T13:53:44Z",
+      "fin": "2026-11-15T13:56:54Z"
+    },
+    {
+      "nombre": "ubuntu-latest (devel)",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379048/job/132833902044",
+      "inicio": "2026-11-15T13:53:43Z",
+      "fin": "2026-11-15T13:59:11Z"
+    },
+    {
+      "nombre": "hapi",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379105/job/132833901912",
+      "inicio": "2026-11-15T13:53:43Z",
+      "fin": "2026-11-15T13:58:31Z"
+    },
+    {
+      "nombre": "sql-dbi",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379112/job/132833901893",
+      "inicio": "2026-11-15T13:53:43Z",
+      "fin": "2026-11-15T13:55:36Z"
+    },
+    {
+      "nombre": "rust-windows-latest",
+      "estado": "completed",
+      "resultado": "success",
+      "url": "https://github.com/f-slg/fhirviews/actions/runs/43721379088/job/132833901815",
+      "inicio": "2026-11-15T13:53:43Z",
+      "fin": "2026-11-15T13:58:37Z"
+    }
+  ]
+}

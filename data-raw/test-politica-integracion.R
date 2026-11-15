@@ -9,6 +9,7 @@ nombres <- c(
   "SQL a FHIR, perfiles R4, referencias y retorno a tablas",
   "Encounter y Condition desde SQL, perfiles R4 y referencias",
   "Immunization desde SQL, perfil R4, dosis y referencias",
+  "Specimen y DiagnosticReport desde SQL, perfiles R4 y retorno a tablas",
   "Candidato R4 con cinco recursos y perfiles base",
   "terminologia con ValueSet en linea"
 )
@@ -33,7 +34,7 @@ for (columna in c("failed", "error", "warning", "skipped")) {
   stopifnot(falla(malo))
 }
 stopifnot(falla(bien[-1L, ]), falla(rbind(bien, bien[1L, ])))
-for (i in 5L:8L) { # Los recorridos SQL -> FHIR y el candidato deben ejecutarse.
+for (i in 5L:n_obligatorias) { # Los recorridos SQL -> FHIR y el candidato deben ejecutarse.
   stopifnot(falla(bien[-i, ]))
   malo <- bien; malo$skipped[i] <- TRUE; stopifnot(falla(malo))
   malo <- bien; malo$passed[i] <- 0L; stopifnot(falla(malo))

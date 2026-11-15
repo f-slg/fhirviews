@@ -1,11 +1,13 @@
-# Laboratorio fuera del paquete R. No instala Rust al instalar fhirviews.
-name: Experimento Rust
+# Componente CLI opcional y laboratorio; la instalacion R no instala Rust.
+name: Componente Rust
 
 on:
   pull_request:
     paths:
       - '.github/workflows/rust-experimento.yaml'
       - 'data-raw/experimento-rust/**'
+      - 'componentes/rust/**'
+      - 'tests/**'
       - 'R/**'
       - 'inst/**'
       - 'DESCRIPTION'
@@ -14,6 +16,8 @@ on:
     paths:
       - '.github/workflows/rust-experimento.yaml'
       - 'data-raw/experimento-rust/**'
+      - 'componentes/rust/**'
+      - 'tests/**'
       - 'R/**'
       - 'inst/**'
       - 'DESCRIPTION'
@@ -47,6 +51,12 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
+          extra-packages: |
+            any::testthat
+            any::pkgload
+            any::DBI
+            any::duckdb
+            any::RSQLite
       - name: Instalar el paquete R con bytecode
         shell: Rscript {0}
         run: |
@@ -54,12 +64,27 @@ jobs:
             if (.Platform$OS.type == "windows") "R.exe" else "R")
           estado <- system2(ejecutable, c("CMD", "INSTALL", "--no-multiarch", "."))
           stopifnot(estado == 0L)
-      - name: Preparar el compilador del laboratorio
+      - name: Preparar el compilador del componente
         run: rustup toolchain install 1.75.0 --profile minimal --no-self-update
-      - name: Compilar el nucleo con dependencias fijadas
+      - name: Compilar el componente con dependencias fijadas
+        run: cargo +1.75.0 build --release --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
+      - name: Probar el nucleo y el protocolo CLI
+        run: cargo +1.75.0 test --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
+      - name: Contrastar la API publica R con el componente para siete recursos
+        shell: Rscript {0}
+        run: |
+          binario <- normalizePath(file.path("componentes", "rust", "target", "release",
+            paste0("fhirviews-rust-validator", if (.Platform$OS.type == "windows") ".exe" else "")))
+          Sys.setenv(FHIRVIEWS_RUST_BIN = binario)
+          r <- testthat::test_local(filter = "componente-rust|mapeo-laboratorio", reporter = "summary")
+          tabla <- as.data.frame(r)
+          stopifnot(!any(tabla$failed > 0 | tabla$error | tabla$warning > 0 | tabla$skipped))
+          tabla$result <- NULL
+          jsonlite::write_json(list(estado = "aprobado", comprobaciones = sum(tabla$passed),
+            grupos = tabla), file.path(Sys.getenv("RUNNER_TEMP"), "rust-componente.json"),
+            auto_unbox = TRUE, pretty = TRUE)
+      - name: Compilar la CLI historica con el mismo nucleo
         run: cargo +1.75.0 build --release --locked --jobs 2 --manifest-path data-raw/experimento-rust/Cargo.toml
-      - name: Probar el nucleo Rust
-        run: cargo +1.75.0 test --locked --jobs 2 --manifest-path data-raw/experimento-rust/Cargo.toml
       - name: Comparar los tres constructores y sus referencias
         shell: Rscript {0}
         run: |
@@ -78,6 +103,7 @@ jobs:
         with:
           name: rust-paridad-${{ matrix.os }}
           path: |
+            ${{ runner.temp }}/rust-componente.json
             ${{ runner.temp }}/rust-comprobar/paridad.json
             ${{ runner.temp }}/rust-aristas/aristas.json
           if-no-files-found: ignore

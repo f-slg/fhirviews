@@ -13,7 +13,8 @@ import zipfile
 from pathlib import Path
 
 url = 'https://hl7.org/fhir/R4/definitions.json.zip'
-recursos = ['Patient', 'Observation', 'Encounter', 'Condition', 'Immunization']
+recursos = ['Patient', 'Observation', 'Encounter', 'Condition', 'Immunization',
+            'Specimen', 'DiagnosticReport']
 archivo = Path(sys.argv[1] if len(sys.argv) > 1 else '/tmp/fhirviews-r4-definitions.zip')
 if not archivo.exists():
     urllib.request.urlretrieve(url, archivo)
@@ -124,6 +125,9 @@ with zipfile.ZipFile(archivo) as z:
         esquemas[nombre] = elementos
     salida = dict(version='4.0.1', fuente=url,
                   sha256=hashlib.sha256(archivo.read_bytes()).hexdigest(), recursos=recursos,
+                  # Resource es abstracto y su SD no declara kind=resource,
+                  # pero forma parte del contrato de referencias del modelo R4.
+                  recursos_r4=sorted({n for n, sd in defs.items() if sd.get('kind') == 'resource'} | {'Resource'}),
                   esquemas=dict(sorted(esquemas.items())))
     destino = Path(__file__).resolve().parents[1] / 'inst/schema/mapeo-r4.json'
     destino.parent.mkdir(parents=True, exist_ok=True)
