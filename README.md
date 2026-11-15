@@ -72,7 +72,7 @@ necesitan decisiones propias.
 | **Candidato de piloto `0.5.0.9001`** | El kit publicado conserva el paquete comprobado con cinco constructores. No incorpora los dos nuevos constructores ni la API del componente Rust. |
 | **Archivo `0.5.0.9000`** | Código anterior preservado en [Zenodo](https://doi.org/10.5281/zenodo.24238726). Su DOI identifica ese archivo concreto. |
 | **`0.5.0`** | [Lanzamiento de GitHub](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), enviado a CRAN el 7 de noviembre de 2026. No incluye SQL → FHIR. Consulta el [catálogo oficial de CRAN](https://cran.r-project.org/web/packages/available_packages_by_name.html) para su publicación. |
-| **Rust** | Componente CLI opcional, compilado y seleccionado por el usuario; R sigue siendo la ruta predeterminada. El ejecutable se distribuye aparte. [Uso](#validación-con-el-componente-rust-opcional) · [Resultados y límites](#rendimiento). |
+| **Rust** | Componente CLI opcional, seleccionado por el usuario; R sigue siendo la ruta predeterminada. ZIP independientes para Linux x86_64, Windows x64 y macOS Intel/Apple Silicon, con SHA-256 y procedencia. [Uso](#validación-con-el-componente-rust-opcional) · [Resultados y límites](#rendimiento). |
 | **Federación y R4/R6** | Trabajo previsto; todavía no disponible. [Pendientes y orden de trabajo](#pendientes-y-orden-de-trabajo). |
 
 La prioridad es cerrar R4 con el candidato instalado y un piloto externo.
@@ -999,9 +999,53 @@ campos obligatorios y entradas `media` inválidos. Los literales `5.00`,
 
 ### Validación con el componente Rust opcional
 
-`fhir_componente_rust()` está disponible desde **0.5.0.9002**. El ejecutable
-[componentes/rust](https://github.com/f-slg/fhirviews/tree/main/componentes/rust)
-se compila aparte con Cargo y rustc >= 1.75:
+`fhir_componente_rust()` está disponible desde **0.5.0.9002**. Puedes usar
+un ZIP precompilado del [catálogo HTTPS](https://f-slg.github.io/fhirviews/componentes/rust/catalogo.json)
+sin instalar Cargo, rustc ni Rtools. Estos archivos contienen el componente;
+el paquete R se instala por separado. El catálogo identifica el commit fuente,
+protocolo, tamaño y SHA-256 de cada ZIP y enlaza un manifiesto inmutable.
+
+| Clave del catálogo | Binario | Plataforma de la prueba de consumo |
+|---|---|---|
+| `linux-x86_64` | Linux x86_64, musl estático; no depende de glibc | Ubuntu 22.04 |
+| `windows-x86_64` | Windows x64, runtime C enlazado estáticamente | Windows del runner de GitHub |
+| `macos-intel` | macOS Intel, mínimo 15.0 | macOS 15 Intel |
+| `macos-apple-silicon` | macOS ARM64, mínimo 15.0 | macOS 15 Apple Silicon |
+
+Ejemplo de descarga explícita y comprobación **antes de descomprimir o
+ejecutar**. Elige la clave que corresponda a tu sistema y arquitectura:
+
+```r
+catalogo <- jsonlite::fromJSON(
+  "https://f-slg.github.io/fhirviews/componentes/rust/catalogo.json",
+  simplifyVector = FALSE)
+plataforma <- "linux-x86_64" # o windows-x86_64, macos-intel, macos-apple-silicon
+p <- catalogo$plataformas[[plataforma]]
+stopifnot(!is.null(p), catalogo$contrato == "fhirviews-r4-validator/1")
+archivo <- tempfile(fileext = ".zip")
+utils::download.file(p$url, archivo, mode = "wb")
+conexion <- file(archivo, "rb")
+huella <- unclass(as.character(openssl::sha256(conexion)))
+close(conexion)
+stopifnot(identical(huella, p$sha256))
+destino <- tempfile("fhirviews-componente-")
+dir.create(destino)
+utils::unzip(archivo, exdir = destino)
+binario <- file.path(destino, p$directorio, p$ejecutable)
+Sys.chmod(binario, "0755")
+componente <- fhir_componente_rust(binario, fallback = FALSE)
+```
+
+El ejemplo usa una carpeta temporal; elige una carpeta persistente nueva
+si quieres conservar el ejecutable entre sesiones. Los ZIP incluyen
+`MANIFIESTO.json`, `SHA256SUMS`, `Cargo.lock`, licencias y atribuciones.
+El SHA-256 comprueba integridad respecto del catálogo; los binarios no están
+firmados ni notarizados. En macOS se aplican las políticas de seguridad del
+equipo; no se desactiva Gatekeeper ni se elimina cuarentena automáticamente.
+Consulta la [guía de distribución y reproducción](https://github.com/f-slg/fhirviews/tree/main/data-raw/distribucion-rust).
+
+También puedes compilar [el código del componente](https://github.com/f-slg/fhirviews/tree/main/componentes/rust)
+con Cargo y rustc >= 1.75 y el enlazador de tu plataforma:
 
 ```sh
 cargo build --release --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
@@ -1035,8 +1079,11 @@ y produce `fhirviews_error_componente` ante esos fallos.
 La comunicación usa archivos temporales locales que se eliminan al terminar;
 el componente no usa la red. La consulta DBI y los recursos siguen completos
 en memoria R. La instalación del paquete no descarga Rust ni ejecutables.
-La CLI evita enlazar con la ABI de R; una integración nativa y su distribución
-serían trabajos adicionales. Usa un ejecutable de confianza.
+La CLI evita enlazar con la ABI de R. Los ZIP se prueban en trabajos separados
+desde el paquete R instalado con sus pruebas, usando el ejecutable extraído
+y bloqueando Cargo/rustc/rustup. La publicación exige que pasen las cuatro
+plataformas; conserva rutas por versión y commit sin reemplazar sus bytes.
+La integración nativa dentro del paquete R sigue pendiente.
 
 La [revisión de Helios](https://github.com/f-slg/fhirviews/blob/main/data-raw/revision-helios-20261115.md)
 identifica mejoras aplicables: interfaces entre componentes, esquema fijo,
@@ -1688,8 +1735,8 @@ su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y el ORCID del auto
 el desarrollo actual 0.5.0.9002 mantiene metadatos de cita separados. El orden
 posterior será federación entre servidores R4 y, después, adaptadores y
 exportación R4/R6 por recurso. Rust dispone de una interfaz CLI opcional;
-la integración nativa, los binarios distribuidos y las pruebas de instalación
-de esos artefactos siguen siendo trabajos separados.
+los ZIP por plataforma tienen su propia compilación y prueba de consumo.
+La integración nativa dentro del paquete R sigue siendo un trabajo separado.
 
 ## Pendientes y orden de trabajo
 
@@ -1700,7 +1747,7 @@ evidencia. Las siguientes tareas requieren trabajo adicional:
 |---|---|---|
 | 1 | **Piloto externo R4** | Una persona ajena al desarrollo instala el candidato identificado, repite las tareas y registra comprensión, ayuda y hallazgos con el [protocolo R4](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). La CI no sustituye esa evaluación. |
 | 2 | **Entrega estable del alcance R4** | Resolver los hallazgos, elegir versión y artefacto, comprobar ese mismo archivo y verificar su cita. El envío `0.5.0` a CRAN conserva su seguimiento independiente. |
-| 3 | **Distribución del componente Rust** | La API CLI y el respaldo R ya existen en 0.5.0.9002. La API actual ya está medida; falta decidir distribución de ejecutables por plataforma y evaluar otras cargas; un enlace nativo y su incorporación al paquete exigirían revisar ABI, toolchains, vendoring y licencias para CRAN. |
+| 3 | **Evaluación adicional de Rust** | La API, el respaldo R y los ZIP para cuatro plataformas disponen de pruebas separadas. Falta evaluar otras cargas, equipos y memoria. Las mediciones existentes usaron el binario GNU Linux; no acreditan el rendimiento de los nuevos ZIP. Un enlace nativo dentro del paquete exigiría revisar ABI, toolchains, vendoring y licencias para CRAN. |
 | 4 | **Más constructores R4** | `Specimen` y `DiagnosticReport` ya están incorporados. Siguen medicamentos y actores según las fuentes; cada grupo necesita metadatos, colecciones, referencias y retorno SQL → FHIR → perfiles → tablas. |
 | 5 | **Federación entre servidores R4** | Conservar origen y procedencia, distinguir ids repetidos entre servidores, revisar referencias y contrastar las consultas conjuntas. |
 | 6 | **Adaptadores R4/R6** | Elegir recursos y reglas por versión, conservar el original y documentar pérdidas o campos sin equivalencia antes de exportar. |

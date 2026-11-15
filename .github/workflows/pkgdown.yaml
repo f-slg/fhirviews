@@ -14,7 +14,8 @@ jobs:
   pkgdown:
     runs-on: ubuntu-latest
     concurrency:
-      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+      group: fhirviews-gh-pages
+      cancel-in-progress: false
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     permissions:

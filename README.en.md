@@ -77,7 +77,7 @@ about omitted or aggregated columns.
 | **Pilot candidate `0.5.0.9001`** | The published kit retains its checked package with five constructors. It does not include the two new constructors or Rust component API. |
 | **Archived `0.5.0.9000`** | Earlier source preserved in [Zenodo](https://doi.org/10.5281/zenodo.24238726). Its DOI identifies that specific archive. |
 | **`0.5.0`** | [GitHub release](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), submitted to CRAN on 7 November 2026. Does not include SQL → FHIR. Consult the [official CRAN catalogue](https://cran.r-project.org/web/packages/available_packages_by_name.html) for publication. |
-| **Rust** | Optional CLI component, compiled and selected by the user; R remains the default. The executable is distributed separately. [Usage](#validation-with-the-optional-rust-component) · [Results and limits](#performance). |
+| **Rust** | Optional CLI component selected by the user; R remains the default. Separate ZIPs for Linux x86_64, Windows x64 and macOS Intel/Apple Silicon, with SHA-256 and provenance. [Usage](#validation-with-the-optional-rust-component) · [Results and limits](#performance). |
 | **Federation and R4/R6** | Planned work, currently unavailable. [Remaining work and priorities](#remaining-work-and-priorities). |
 
 The priority is to close R4 with the installed candidate and an external pilot.
@@ -970,9 +970,52 @@ statuses, targets, required fields and `media` entries. Literals `5.00`,
 
 ### Validation with the optional Rust component
 
-`fhir_componente_rust()` is available from **0.5.0.9002**. Build the executable
-in [componentes/rust](https://github.com/f-slg/fhirviews/tree/main/componentes/rust)
-separately with Cargo and rustc >= 1.75:
+`fhir_componente_rust()` is available from **0.5.0.9002**. Prebuilt ZIPs are
+listed in the [HTTPS catalogue](https://f-slg.github.io/fhirviews/componentes/rust/catalogo.json).
+Consuming them needs no Cargo, rustc or Rtools. The ZIP contains the component;
+install the R package separately. The catalogue records the source commit,
+protocol, size and SHA-256 for each ZIP and links an immutable manifest.
+
+| Catalogue key | Executable | Consumer test platform |
+|---|---|---|
+| `linux-x86_64` | Linux x86_64, static musl; no glibc dependency | Ubuntu 22.04 |
+| `windows-x86_64` | Windows x64, statically linked C runtime | GitHub's Windows runner |
+| `macos-intel` | macOS Intel, minimum 15.0 | macOS 15 Intel |
+| `macos-apple-silicon` | macOS ARM64, minimum 15.0 | macOS 15 Apple Silicon |
+
+Download explicitly and check integrity **before extraction or execution**.
+Choose the key matching your operating system and architecture:
+
+```r
+catalogo <- jsonlite::fromJSON(
+  "https://f-slg.github.io/fhirviews/componentes/rust/catalogo.json",
+  simplifyVector = FALSE)
+plataforma <- "linux-x86_64" # or windows-x86_64, macos-intel, macos-apple-silicon
+p <- catalogo$plataformas[[plataforma]]
+stopifnot(!is.null(p), catalogo$contrato == "fhirviews-r4-validator/1")
+archivo <- tempfile(fileext = ".zip")
+utils::download.file(p$url, archivo, mode = "wb")
+conexion <- file(archivo, "rb")
+huella <- unclass(as.character(openssl::sha256(conexion)))
+close(conexion)
+stopifnot(identical(huella, p$sha256))
+destino <- tempfile("fhirviews-componente-")
+dir.create(destino)
+utils::unzip(archivo, exdir = destino)
+binario <- file.path(destino, p$directorio, p$ejecutable)
+Sys.chmod(binario, "0755")
+componente <- fhir_componente_rust(binario, fallback = FALSE)
+```
+
+This example uses a temporary directory; select a new persistent directory to
+keep the executable across sessions. ZIPs include `MANIFIESTO.json`,
+`SHA256SUMS`, `Cargo.lock`, licences and notices. SHA-256 checks integrity
+against the catalogue; executables are unsigned and not notarized. macOS
+security policies still apply; no automatic Gatekeeper or quarantine changes
+are made. See the [distribution and reproduction guide](https://github.com/f-slg/fhirviews/tree/main/data-raw/distribucion-rust).
+
+Alternatively, build [the component source](https://github.com/f-slg/fhirviews/tree/main/componentes/rust)
+with Cargo and rustc >= 1.75 and your platform's linker:
 
 ```sh
 cargo build --release --locked --jobs 2 --manifest-path componentes/rust/Cargo.toml
@@ -1006,8 +1049,11 @@ a warning and validation in R. `FALSE` requires the component and raises
 Communication uses local temporary files removed on completion; the
 component does not use the network. DBI results and constructed resources
 still reside entirely in R memory. Installing fhirviews does not download
-Rust or executables. The CLI avoids linking to R's ABI; native integration
-and its distribution would be additional work. Select a trusted executable.
+Rust or executables. The CLI avoids linking to R's ABI. Separate consumer
+jobs use the extracted executable and an installed R package with its tests,
+while blocking Cargo/rustc/rustup. Publication requires all four platforms
+to pass and preserves version-and-commit paths without replacing their bytes.
+Native integration within the R package remains future work.
 
 The [Helios review](https://github.com/f-slg/fhirviews/blob/main/data-raw/revision-helios-20261115.md)
 identifies useful design improvements: component interfaces, fixed schemas,
@@ -1636,9 +1682,10 @@ After addressing the pilot findings, select the stable version and artifact.
 The earlier 0.5.0.9000 archive has a verified DOI and author ORCID;
 the current 0.5.0.9002 development has separate citation metadata. Later work will address
 federation between R4 servers, followed by resource-specific R4/R6 adapters
-and export. Rust has an optional CLI interface; native integration and
-executable distribution remain separate work. Historical timings belong to
-their frozen laboratory commit and do not measure the current public API.
+and export. Rust has an optional CLI interface and separately built and
+consumer-tested platform ZIPs. Native integration within the R package
+remains separate work. Historical timings belong to their frozen laboratory
+commit; the current public API has its own measurement report.
 
 ## Remaining work and priorities
 
@@ -1649,7 +1696,7 @@ evidence. The following work remains:
 |---|---|---|
 | 1 | **External R4 pilot** | An independent participant installs the identified candidate, repeats the tasks and records understanding, assistance and findings using the [R4 protocol](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md). CI does not replace this assessment. |
 | 2 | **Stable R4 delivery** | Address findings, select the version and artifact, check that exact archive and verify its citation. The `0.5.0` CRAN submission has separate tracking. |
-| 3 | **Rust component distribution** | The CLI API and R fallback are present in 0.5.0.9002. The current API is measured; choose how to distribute executables per platform and evaluate other loads. Native linking and inclusion in the R package would require separate ABI, toolchain, vendoring and licence work. |
+| 3 | **Further Rust evaluation** | The API, R fallback and ZIPs for four platforms have separate tests. Evaluate other loads, machines and memory. Existing API timings used the GNU Linux executable and do not measure the new ZIPs. Native linking within the R package would require separate ABI, toolchain, vendoring and licence work. |
 | 4 | **More R4 constructors** | `Specimen` and `DiagnosticReport` are included. Medication and actor resources follow as needed; each group needs metadata, collections, references and a SQL → FHIR → profiles → tables round trip. |
 | 5 | **Federation across R4 servers** | Preserve origin and provenance, distinguish repeated ids across servers, review references and compare joint queries. |
 | 6 | **R4/R6 adapters** | Select resources and version-specific rules, preserve originals and document losses or unmapped fields before export. |

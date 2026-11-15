@@ -5,7 +5,30 @@ R conserva la conversion de columnas, los decimales, el orden de construccion,
 la serializacion y los diagnosticos de datos. El componente no evalua FHIRPath,
 no valida perfiles clinicos ni convierte versiones FHIR.
 
-## Compilar y utilizar
+## Descargar y utilizar
+
+El [catalogo HTTPS](https://f-slg.github.io/fhirviews/componentes/rust/catalogo.json)
+ofrece ZIP independientes para Linux x86_64 (musl estatico), Windows x64
+(CRT estatico), macOS 15 Intel y macOS 15 Apple Silicon. Consumir un ZIP no
+requiere Cargo, rustc ni Rtools. Instala fhirviews >= 0.5.0.9002 por separado.
+El [README principal](../../README.md#validación-con-el-componente-rust-opcional)
+incluye descarga R, SHA-256 antes de descomprimir y seleccion explicita.
+
+Cada paquete incluye ejecutable, SHA256SUMS, manifiesto, Cargo.lock y
+licencias/atribuciones de las dependencias, Rust y musl cuando corresponde.
+Las rutas publicas fijan version y commit; repetir una ejecucion conserva los
+bytes ya publicados. El catalogo apunta al conjunto verificado. Los binarios
+no estan firmados ni notarizados; en macOS siguen aplicandose las politicas
+del equipo, sin quitar cuarentena ni modificar Gatekeeper automaticamente.
+
+La CI de distribucion separa cuatro compilaciones nativas de cuatro trabajos
+de consumo. Estos ultimos verifican y extraen el ZIP, instalan el paquete R
+con sus pruebas y ejercitan los siete recursos bloqueando Cargo/rustc/rustup.
+No son una prueba de rendimiento de los nuevos binarios. La [guia de
+reproduccion](../../data-raw/distribucion-rust/README.md) explica licencias,
+integridad, limites, publicacion y la evidencia que debe revisarse.
+
+## Compilar desde las fuentes
 
 Requiere Cargo y rustc >= 1.75, instalados por el usuario. Desde la raiz del
 repositorio:
@@ -102,6 +125,6 @@ a Rust en algunos lotes pequenos. Estos resultados no miden memoria,
 FHIRPath ni otros proyectos y no establecen un umbral automatico de uso.
 
 Licencia del codigo del proyecto: [MIT](LICENSE). Las dependencias conservan
-sus respectivas licencias; no se distribuyen sus fuentes ni binarios dentro
-del paquete R. Una futura integracion nativa en el paquete exigiria revisar
+sus respectivas licencias; sus avisos se incluyen en los ZIP del componente.
+El paquete R no incorpora estos binarios ni sus fuentes Rust. Una futura integracion nativa en el paquete exigiria revisar
 vendoring, licencias y las [reglas de CRAN para Rust](https://cran.r-project.org/web/packages/using_rust.html).
