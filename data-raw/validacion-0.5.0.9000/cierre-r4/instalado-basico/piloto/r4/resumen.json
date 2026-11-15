@@ -1,0 +1,11 @@
+{
+  "version_fhir": "4.0.1",
+  "recursos": 6,
+  "tipos": ["Patient", "Encounter", "Condition", "Observation", "Immunization"],
+  "origen": "data.frame",
+  "motores": "V8",
+  "negativos_rechazados": 5,
+  "escala_conservada": ["72.00", "0.50"],
+  "validacion_perfiles": "no_evaluada_sin_servidor",
+  "validacion_usuario_externo": "pendiente"
+}

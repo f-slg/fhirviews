@@ -1,0 +1,124 @@
+auditoria: .........................................................
+autenticacion: ..................................................................
+bulk: ....................................................................................................................
+catalogo: ..............................................................................
+cliente: ....................................................................................................................................................
+conformidad: ......................................................................................................................................................
+demo-vigilancia: ...............
+duckdb: ............
+fhir-desde-sql: ..............................................................................................
+fhirpath: .........................................
+limites: .........................
+lotes: .................................................................................................
+mapeo-immunization: ......................................
+mapeo-lexico: .......................................................
+piloto: ..................              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-23f38bf0e/vigilancia
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-23f38bf0e
+..........              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-27d38c21c/vigilancia
+Recorrido R4 aprobado con seis recursos ficticios y cinco tipos.
+            prueba            estado advertencias
+     api_instalada          aprobado            0
+        vigilancia requiere_revision            2
+ contrato_estricto          aprobado            0
+      recuperacion       no_evaluado            0
+ r4_cinco_recursos requiere_revision           15
+                          codigo
+
+ advertencias_requieren_revision
+
+
+ advertencias_requieren_revision
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-27d38c21c
+.......              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-25ea2a3ac/vigilancia
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-25ea2a3ac
+.....              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-21ebe0133/vigilancia
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-21ebe0133
+...              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-24f887823/vigilancia
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-24f887823
+...              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-27a9abf2a/vigilancia
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-27a9abf2a
+......              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-219736b02/vigilancia
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-219736b02
+......              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpOSkkO8/piloto-test-2766b2d06/vigilancia
+Informe local del piloto: /tmp/RtmpOSkkO8/piloto-test-2766b2d06
+....
+recursos: ..............................
+rstudio: ..........................................
+servidor: SSSSSSSSSS
+sql-limites: .........
+sql: ..................................................................................................................................................................................................................................................................................................................................................................
+terminologia: ..................................................................................................
+vista: ............................................................................
+
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. lectura y paginacion en el servidor publico ('test-servidor.R:13:3') - Reason: Servidor publico excluido de la integracion aislada
+
+2. Candidato R4 con cinco recursos y perfiles base ('test-servidor.R:48:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+3. SQL a FHIR, perfiles R4, referencias y retorno a tablas ('test-servidor.R:78:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+4. Encounter y Condition desde SQL, perfiles R4 y referencias ('test-servidor.R:152:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+5. Immunization desde SQL, perfil R4, dosis y referencias ('test-servidor.R:235:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+6. ciclo completo de escritura en un servidor de pruebas ('test-servidor.R:328:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+7. transaccion, vistas con V8 y DuckDB y fhir_tabla con datos reales ('test-servidor.R:397:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+8. terminologia del servidor: $expand y $validate-code en lote ('test-servidor.R:490:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+9. terminologia con ValueSet en linea ('test-servidor.R:506:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+10. exportacion masiva ($export) de punta a punta ('test-servidor.R:527:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+RESUMEN: 1663 aprobadas; 0 fallos; 0 errores; 0 advertencias; 10 grupos omitidos

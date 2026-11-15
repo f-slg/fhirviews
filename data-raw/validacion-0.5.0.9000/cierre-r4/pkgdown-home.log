@@ -1,0 +1,10 @@
+── Building home ───────────────────────────────────────────────────────────────
+Reading README.en.md
+Missing images in 'README.en.md': 'reference/figures/README-tasas.png' and
+'reference/figures/README-rendimiento.png'
+ℹ pkgdown can only use images in 'man/figures' and 'vignettes'
+Reading .github/CODE_OF_CONDUCT.md
+Reading .github/CONTRIBUTING.md
+Reading LICENSE.md
+Reading README.md
+Writing `404.html`

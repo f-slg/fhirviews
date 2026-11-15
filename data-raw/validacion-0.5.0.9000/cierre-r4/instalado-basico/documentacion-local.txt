@@ -1,0 +1,2 @@
+ayuda=vista_ejecutar_lotes
+vinetas=fhirviews,servidores-y-volumen,vistas

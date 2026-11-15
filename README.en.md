@@ -41,7 +41,29 @@ files. Compatibility of the SQL engine is tested separately.
 [What's new in 0.5.0](NEWS.md) ·
 [Report a problem](https://github.com/f-slg/fhirviews/issues/new/choose)
 
-<img src="man/figures/README-json-tabla.png" width="100%" alt="Transformation pipeline: a Patient resource in JSON, columns defined in a ViewDefinition and the resulting table in R" />
+```mermaid
+flowchart TB
+    accTitle: fhirviews workflows with FHIR R4
+    accDescr: A view projects FHIR resources into tables. A separate explicit mapping builds R4 resources from rows, preserves decimal scale and supports server profile validation.
+    subgraph READ["FHIR → tables"]
+        direction LR
+        FHIR["FHIR R4<br/>server or files"] --> VIEW["ViewDefinition<br/>FHIRPath"]
+        VIEW --> TABLE["Tables<br/>R and SQL"]
+    end
+    subgraph BUILD["Tables → FHIR R4"]
+        direction LR
+        ROWS["Rows<br/>R or DBI SQL"] --> MAP["Explicit<br/>mapping"]
+        MAP --> R4["Resources<br/>FHIR R4"]
+        R4 --> OUT["JSON / NDJSON"]
+        R4 --> PROFILE["Server profile<br/>validation"]
+    end
+```
+
+Reading uses V8 or the experimental DuckDB translator. Construction supports
+**Patient, Observation, Encounter, Condition and Immunization**, preserving
+the decimal scale available at the source. To construct resources from a
+projected table, prepare the rows and choose a mapping, with explicit decisions
+about omitted or aggregated columns.
 
 > **Version 0.5.0 · submitted to CRAN on 7 November 2026, under review.**
 > Block-wise processing, export recovery with content validation and privacy
@@ -71,6 +93,7 @@ files. Compatibility of the SQL engine is tested separately.
 - [Conformance and tests](#conformance-and-tests)
 - [Performance](#performance)
 - [Scope and limitations](#scope-and-limitations)
+- [Stabilising R4](#stabilising-r4)
 - [Pilot and local documentation](#pilot-and-local-documentation)
 - [Guides and reference](#guides-and-reference)
 - [Contributing, citation and license](#contributing-citation-and-license)
@@ -113,19 +136,6 @@ files. Compatibility of the SQL engine is tested separately.
 A `ViewDefinition` describes the columns, filters and collections to extract,
 using FHIRPath expressions. Keeping that definition next to the analysis makes
 the transformation decisions explicit and easier to review.
-
-```mermaid
-flowchart LR
-    A["JSON / NDJSON / gzip files"] --> V["ViewDefinition + FHIRPath"]
-    B["FHIR R4 server"] --> C["Client and Bulk Data export"]
-    C --> V
-    V --> D["data.frame in R"]
-    V --> E["One table per block"]
-    V --> F["DuckDB SQL · experimental"]
-    D --> G["Analysis, indicators and dashboards"]
-    E --> G
-    F --> G
-```
 
 ## Installation
 
@@ -214,9 +224,10 @@ vista_reutilizable <- vista_leer("signos-vitales.json")
 
 ## Architecture and processing sequence
 
-Responsibilities are split into four layers. The client fetches resources; the
+Extraction is split into four layers. The client fetches resources; the
 definition declares the extraction; the engines produce rows; the consumer
 decides how to store, summarise or query the result.
+[Construction from SQL](#from-sql-to-fhir) has its own mapping and checks.
 
 ```mermaid
 flowchart TB
@@ -240,6 +251,7 @@ flowchart TB
         DF["Complete data.frame"]
         CB["procesar(tabla, bloque)"]
         DB["DuckDB table or lazy query"]
+        DBI["DBI tables in one transaction"]
     end
     REST --> HTTP --> RES
     FILE --> RES --> V8 --> DF
@@ -254,6 +266,7 @@ flowchart TB
     VALID --> SQL
     SQL --> DF
     SQL --> DB
+    V8 -->|"vista_duckdb"| DBI
 ```
 
 To build a reproducible analysis, follow this sequence:
@@ -652,8 +665,9 @@ Immunization from FHIR R4 4.0.1**.
 
 ```mermaid
 flowchart LR
-    DB["SQL query / data.frame"] --> M["Explicit fields and R4 types"]
-    M --> R["Patient / Observation / Encounter / Condition / Immunization"]
+    DB["DBI SQL query / data.frame"] --> M["fhir_mapa: columns, constants and references"]
+    M --> CHECK["Construct and check R4 structure"]
+    CHECK --> R["Patient, Observation, Encounter,<br/>Condition and Immunization"]
     R --> J["JSON / NDJSON"]
     R --> V["ViewDefinition → table"]
     R --> C["Profile validation with fhir_validar"]
@@ -1122,15 +1136,15 @@ Acceptance fails if this required group is missing. This covers **base R4
 profiles**; clinical or national profiles need explicit checks against their
 canonical URLs.
 
-**Local result on 14 November 2026:** integration passed with digest-pinned
-HAPI 8.12.0-2, 120 passing assertions and no failures, errors or warnings.
-All 16 original SQL → FHIR assertions, the 20 Encounter/Condition checks
-and the 38 Immunization checks
-ran. The two expected skips (public-server
-reads and inline ValueSet validation) were recorded, and the container was
-removed. The [integration evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
-records each group; logs and the R environment are kept alongside it.
-This is a technical check with fictional data.
+**Local R4 milestone run:** integration passed with digest-pinned HAPI 8.12.0-2,
+**130 assertions** and no failures, errors or warnings: the 16 original
+SQL → FHIR checks, 20 Encounter/Condition checks, 38 Immunization checks and
+10 new candidate checks. The two expected skips (public-server reads and
+inline ValueSet validation) were recorded, and the container was removed.
+The [current integration evidence](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/cierre-r4/hapi/resumen.json)
+records each group, with logs and the R environment alongside it. The
+[previous 120-assertion run](https://github.com/f-slg/fhirviews/blob/main/data-raw/validacion-0.5.0.9000/immunization-hapi/resumen.json)
+is retained as historical evidence. Both use fictional data.
 
 The required `Encounter y Condition desde SQL, perfiles R4 y referencias`
 group builds Patient → Encounter → Condition from bound DuckDB queries.
@@ -1220,7 +1234,8 @@ to confirm its R coverage on Windows, macOS and Linux as well.
 The R-CMD-check matrix first tests the package and then installs the built
 source archive in a new library. Acceptance runs in a separate R process and
 checks the load path, the help, the vignettes and the report for the requested
-profile. The full profile adds rollback and transactional retry.
+profile. Both profiles require the five R4 types; the complete profile adds
+parameterised SQL, V8/DuckDB comparison and transactional recovery.
 
 ```mermaid
 flowchart TD
@@ -1228,14 +1243,20 @@ flowchart TD
     B --> C["R CMD check and package tests"]
     C --> D["Install the same tar.gz in a new library"]
     D --> E["Separate R process: check package and documentation"]
-    E --> F["Basic or full pilot depending on the matrix"]
+    E --> F["Five R4 types and basic or complete profile"]
     F --> G{"Technical result"}
     G -->|"No errors or warnings"| H["Approved for that profile"]
     G -->|"Warnings"| I["Needs review, non-zero exit"]
     G -->|"Error"| J["Not approved, non-zero exit"]
     A --> K["HAPI workflow: isolated integration"]
-    A --> L["pkgdown workflow: build documentation"]
-    H --> M["User evaluation still pending"]
+    A --> L["PostgreSQL and SQL Server integration"]
+    A --> P["Local pkgdown; Pages on main"]
+    H --> T["Review all checks for the same commit"]
+    K --> T
+    L --> T
+    P --> T
+    T --> M["External pilot with the R4 protocol"]
+    M --> N["Address findings and select a stable version"]
 ```
 
 Acceptance reports are stored as `piloto-*` artifacts for 14 days. Approval of
@@ -1244,6 +1265,22 @@ as `no_evaluado` (not evaluated). The workflows verify the declared scope, and
 their result should be checked for the specific commit being delivered.
 
 ## Performance
+
+### Rust evaluation status
+
+The current package uses R, JavaScript/V8 and DuckDB's native engine.
+**Rust is not implemented and has not been benchmarked against R.** Exploratory
+SQL → FHIR profiling identified validation and references as candidates for
+measurement; this does not establish a speed improvement attributable to Rust.
+
+After the R4 milestone, compare current R, a validation plan prepared once per
+mapping and a batch Rust prototype on identical inputs. Require repeated timing
+and memory measurements, all five R4 types, identical row/field errors and JSON
+results that retain the distinction between `0.50`, `0.5` and `72.00`. Assess
+Windows/macOS/Linux installation and maintenance as part of the decision.
+This evaluation remains pending; the opening diagram shows available features.
+
+### Earlier V8 and DuckDB measurements
 
 The measurements below predate the precision changes in 0.5.0.9000 and have
 not been repeated with this development version.
@@ -1352,13 +1389,67 @@ Script: [`data-raw/benchmark-fhircrackr-observation.R`](data-raw/benchmark-fhirc
 - **Server capabilities.** SMART, `$validate`, terminology and `$export` depend
   on the configuration and permissions of the connected server.
 
-Development priorities include stabilising the DuckDB engine, improving decimal
-precision and extending the search and terminology operations. Proposals and
-their tracking are in [GitHub Issues](https://github.com/f-slg/fhirviews/issues).
+Proposals and their tracking are in
+[GitHub Issues](https://github.com/f-slg/fhirviews/issues).
+
+## Stabilising R4
+
+The current priority is to consolidate **FHIR R4 4.0.1** before federation or
+R4/R6 conversion. Development remains at `0.5.0.9000`; verifying a candidate
+does not publish a release, change its version or issue a DOI.
+
+| Component | Scope of the R4 milestone |
+|---|---|
+| Client and V8 views | R4 resources and operations supported by the connected server. |
+| Construction from tables or DBI | Patient, Observation, Encounter, Condition and Immunization; one row per resource, explicit mappings. |
+| Local validation | Types, cardinalities, choices, dates, Reference targets and enumerable required bindings. Code permits only single internal spaces; URI, URL and canonical reject whitespace, including Unicode separators, following the [R4 primitive rules](https://hl7.org/fhir/R4/datatypes.html#primitive). Values are rejected rather than altered. |
+| Profiles and terminology | HAPI checks base profiles; project profiles, invariants and external terminology require the agreed environment. |
+| DuckDB engine | Remains experimental, with the documented FHIRPath subset and comparison against V8. |
+| Additional resources and versions | Further SQL construction resources, server federation and R4/R6 conversion remain pending. No multiversion API is enabled. |
+
+Both acceptance profiles require `r4_cinco_recursos`: six fictitious resources
+of five types, including two Immunization records. It checks references,
+false booleans, missing optional objects, date and dose choices, JSON/NDJSON
+round trips and the five V8 views. Decimal literals `72.00` and `0.50` retain
+their lower boundaries `71.995` and `0.495`. Five invalid cases must be rejected:
+missing required subject, duplicate ids, invalid status, missing patient and a
+prohibited SimpleQuantity comparator.
+
+The complete profile builds through parameterised DBI/DuckDB queries and checks
+all five views with the SQL engine. A mandatory HAPI group validates the exact
+six JSON resources against their base profiles and rejects an altered Patient.
+PostgreSQL and SQL Server integration continues to check native database types.
+
+An external participant must install the exact tested candidate, interpret the
+results, change a view, compare it with NDJSON and repeat the agreed tasks.
+[PILOTO-R4.md](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md), distributed with the package, provides
+the protocol in Spanish. Automated reports retain
+`validacion_usuario_externo = pendiente`; the local trial marks profile
+validation as unevaluated, with HAPI evidence recorded separately.
+
+After addressing the pilot findings, select the stable version and artifact.
+ORCID already identifies the author; Zenodo connection, deposit and verified DOI
+remain pending. Later work will address federation between R4 servers, followed
+by resource-specific R4/R6 adapters and export. Rust will be evaluated against a
+measured, reproducible bottleneck.
 
 ## Pilot and local documentation
 
-### Download the participant kit
+### Current R4 protocol
+
+The [R4 participant guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-R4.md) is installed as
+`examples/PILOTO-R4.md`. To run only the six-resource R4 round trip:
+
+```r
+Sys.setenv(FHIRVIEWS_R4_SALIDA = "r4-basico-01", FHIRVIEWS_R4_SQL = "false")
+source(system.file("examples", "r4-estabilidad.R", package = "fhirviews"))
+```
+
+Use `FHIRVIEWS_R4_SQL = "true"` for parameterised DBI/DuckDB queries and both
+view engines. Each output folder must be new. The trial uses fictitious data
+and retains the JSON resources and summary locally.
+
+### Previous participant kit: candidate 0.5.0
 
 **[Download the pilot kit (ZIP)](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-v1.zip)**
 
@@ -1382,6 +1473,8 @@ You can also read the protocols in the repository:
 The ZIP contains the evaluation materials, not the R package. While the release
 is still a draft, the maintainer provides the candidate archive identified in the
 manifest, so that exactly the same version is evaluated.
+The v1 kit retains its historical reference to candidate 0.5.0. Use the current
+R4 protocol above for the SQL → FHIR R4 milestone.
 
 ### Install the candidate and run the trial
 
@@ -1390,7 +1483,7 @@ source archive provided by the maintainer:
 
 ```r
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9000.tar.gz", repos = NULL, type = "source")
 ```
 
 Restart R, choose a new folder and run:
@@ -1410,9 +1503,11 @@ review, pending and not evaluated). Any warning requires review and prevents
 automatic approval; the report records safe codes without copying the original
 messages.
 
-The `basico` profile checks the API, the surveillance results and the strict
-rejection of an incompatible block. To also check rollback and retries, install
-`DBI` and `duckdb`, change the profile to `completo` and use another new folder.
+Reports now use `esquema_informe = 2`. The `basico` profile checks the API,
+surveillance results, strict rejection of an incompatible block and the five
+R4 types constructed from tables. To also check rollback, parameterised SQL
+and both implementations of the five views, install `DBI` and `duckdb`, change
+the profile to `completo` and use another new folder.
 The files stay local; fill in `experiencia-usuario.txt` with the obstacles, the
 help you needed and your assessment. Technical approval leaves that human
 evaluation pending and does not validate a server or your own data.
@@ -1425,7 +1520,7 @@ help("vista_ejecutar_lotes", package = "fhirviews")
 browseVignettes("fhirviews")
 ```
 
-The [maintainer's guide](inst/examples/PILOTO-MANTENEDOR.md) (in Spanish)
+The [maintainer's guide](https://github.com/f-slg/fhirviews/blob/main/inst/examples/PILOTO-MANTENEDOR.md) (in Spanish)
 describes how to build and verify the candidate, interpret the codes and close
 the pilot. It is also distributed with the package, in
 `examples/PILOTO-MANTENEDOR.md`.

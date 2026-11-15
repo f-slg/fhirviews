@@ -1,0 +1,8 @@
+* checking for file ‘/tmp/fhirviews-cierre-r4-entrega/fhirviews/DESCRIPTION’ ... OK
+* preparing ‘fhirviews’:
+* checking DESCRIPTION meta-information ... OK
+* installing the package to build vignettes
+* creating vignettes ... OK
+* checking for LF line-endings in source and make files and shell scripts
+* checking for empty or unneeded directories
+* building ‘fhirviews_0.5.0.9000.tar.gz’
