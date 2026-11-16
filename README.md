@@ -69,7 +69,7 @@ necesitan decisiones propias.
 | Versión o componente | Estado y uso |
 |---|---|
 | **Desarrollo actual: `0.5.0.9002`** | Código de GitHub. SQL → FHIR para siete recursos R4, colecciones de referencias y API para un componente Rust externo opcional; ocho vistas de catálogo. Todavía sin DOI de versión propio. |
-| **Candidato de piloto `0.5.0.9002`** | El kit actualizado incluye los siete constructores R4 y una tarea opcional del ejemplo Specimen → Observation → DiagnosticReport. No requiere Rust. |
+| **Candidato de piloto `0.5.0.9002`** | El kit actualizado incluye los siete constructores R4 y evaluación bilingüe por alcance; siete tipos exige la tarea Specimen → Observation → DiagnosticReport. No requiere Rust. |
 | **Archivo `0.5.0.9000`** | Código anterior preservado en [Zenodo](https://doi.org/10.5281/zenodo.24238726). Su DOI identifica ese archivo concreto. |
 | **`0.5.0`** | [Lanzamiento de GitHub](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), enviado a CRAN el 7 de noviembre de 2026. No incluye SQL → FHIR. Consulta el [catálogo oficial de CRAN](https://cran.r-project.org/web/packages/available_packages_by_name.html) para su publicación. |
 | **Rust** | Componente CLI opcional, seleccionado por el usuario; R sigue siendo la ruta predeterminada. ZIP independientes para Linux x86_64, Windows x64 y macOS Intel/Apple Silicon, con SHA-256 y procedencia. [Uso](#validación-con-el-componente-rust-opcional) · [Resultados y límites](#rendimiento). |
@@ -1721,8 +1721,7 @@ un Condition, un Observation y dos Immunization. En ambos perfiles comprueba:
   estado inválido, paciente ausente y comparador prohibido en SimpleQuantity.
 
 El perfil `completo` construye los recursos del control mediante consultas
-parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL. La nueva
-tarea opcional R09 ejecuta `examples/laboratorio-r4.R`, que construye Specimen
+parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL. La tarea R09/F09, obligatoria en alcance siete y excluida con motivo en núcleo, ejecuta `examples/laboratorio-r4.R`, que construye Specimen
 y DiagnosticReport con referencias repetibles y compara V8/DuckDB. El grupo
 obligatorio HAPI valida los recursos del control contra perfiles base; las
 integraciones PostgreSQL y SQL Server comprueban sus controladores y tipos.
@@ -1769,8 +1768,17 @@ no acredita un nuevo conversor ni sustituye la validación de perfiles.
 · [SHA-256 del ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256)
 
 El kit incluye el **paquete comprobado 0.5.0.9002**, su identidad, un lanzador,
-protocolos R/FHIR y un formulario local. Extrae todo el ZIP y abre R desde esa
-carpeta. Instala las dependencias indicadas en `LEEME.md` y ejecuta:
+protocolos R/FHIR y un formulario local en **español e inglés**. El protocolo
+**2.1** distingue perfil de persona, nivel técnico y alcance núcleo/siete.
+Cada perfil tiene nueve tareas diferentes, preguntas de comprensión, criterios
+observables, evidencia, ayuda, tiempos activos/esperas y repetición por tarea.
+El alcance siete exige completo y laboratorio R09/F09; núcleo lo excluye
+expresamente. La autonomía se limita a tareas repetidas sin ayuda y con evidencia.
+[Evaluación detallada](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.md)
+· [English](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.en.md).
+Conserva las fichas 2.0 con su kit y hash: no se importan en 2.1.
+
+Extrae todo el ZIP y abre R desde esa carpeta. Instala las dependencias indicadas en `LEEME.md` y ejecuta:
 
 ```r
 source("INICIAR.R")

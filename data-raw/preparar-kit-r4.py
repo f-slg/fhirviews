@@ -14,14 +14,17 @@ KIT = 'data-raw/piloto-r4-v2'
 EVIDENCIA = 'data-raw/validacion-0.5.0.9002/MANIFIESTO.json'
 ARCHIVOS = ('INICIAR.R', 'LEEME.md', 'ANEXO-OBSERVADOR.md',
             'PROTOCOLO-PERFIL-R.md', 'PROTOCOLO-PERFIL-FHIR.md',
-            'PILOTO-R4.md', 'tareas.json', 'formulario.template.html')
+            'PILOTO-R4.md', 'EVALUACION-PILOTO.md', 'tareas.json',
+            'LEEME.en.md', 'ANEXO-OBSERVADOR.en.md', 'PROTOCOLO-PERFIL-R.en.md',
+            'PROTOCOLO-PERFIL-FHIR.en.md', 'PILOTO-R4.en.md',
+            'EVALUACION-PILOTO.en.md', 'tareas.en.json', 'formulario.template.html')
 
 
 def git(ref, archivo):
     return subprocess.check_output(['git', 'show', ref + ':' + archivo], cwd=ROOT)
 
 
-def construir(paquete, salida, ref='HEAD', kit_dir=None):
+def construir(paquete, salida, ref='HEAD', kit_dir=None, fuentes_trabajo=False):
     paquete, salida = Path(paquete), Path(salida)
     if salida.exists():
         raise ValueError('La salida ya existe; elige un ZIP nuevo.')
@@ -29,22 +32,35 @@ def construir(paquete, salida, ref='HEAD', kit_dir=None):
                                    cwd=ROOT, text=True).strip()
     evidencia = json.loads(git(commit, EVIDENCIA))
     kit_root = Path(kit_dir).resolve() if kit_dir else None
+    if kit_root and fuentes_trabajo:
+        raise ValueError('Elige reconstruccion desde kit o materiales de trabajo, no ambos.')
     if kit_root:
         procedencia = json.loads((kit_root / 'MANIFIESTO-KIT.json').read_text(encoding='utf-8'))
         if procedencia.get('esquema') != 'fhirviews-kit-r4-v2':
             raise ValueError('El directorio fuente no contiene un manifiesto de kit reconocido.')
         fuente_kit_commit = procedencia['fuente_kit_commit']
+        fuente_kit_estado = procedencia.get('fuente_kit_estado', 'commit_git')
         def archivo_fuente(nombre):
             ruta = kit_root / nombre
             if ruta.is_symlink() or not ruta.is_file():
                 raise ValueError('Falta un archivo regular del kit: ' + nombre)
-            return ruta.read_bytes()
+            datos = ruta.read_bytes()
+            if hashlib.sha256(datos).hexdigest() != procedencia['archivos_sha256'].get(nombre):
+                raise ValueError('El material del kit fue alterado: ' + nombre)
+            return datos
     else:
         fuente_kit_commit = commit
+        fuente_kit_estado = 'archivos_de_trabajo_sobre_commit' if fuentes_trabajo else 'commit_git'
         rutas_fuente = {'PROBAR-CANDIDATO.R': 'data-raw/probar-candidato.R',
                         'LICENSE.md': 'LICENSE.md'}
-        archivo_fuente = lambda nombre: git(commit,
-            rutas_fuente.get(nombre, KIT + '/' + nombre))
+        def archivo_fuente(nombre):
+            ruta = rutas_fuente.get(nombre, KIT + '/' + nombre)
+            if fuentes_trabajo:
+                local = ROOT / ruta
+                if local.is_symlink() or not local.is_file():
+                    raise ValueError('Falta un archivo regular de trabajo: ' + nombre)
+                return local.read_bytes()
+            return git(commit, ruta)
     contenido = paquete.read_bytes()
     sha = hashlib.sha256(contenido).hexdigest()
     esperado = evidencia['paquete']
@@ -63,7 +79,8 @@ def construir(paquete, salida, ref='HEAD', kit_dir=None):
         version=evidencia['version'], commit=fuente_commit,
         doi_version=evidencia.get('doi_version'))
     candidato = dict(version=evidencia['version'], fuente_commit=fuente_commit,
-        paquete=esperado, evaluacion_externa='pendiente', participantes='sin_asignar',
+        paquete={k: v for k, v in esperado.items() if k != 'alcance'},
+        evaluacion_externa='pendiente', participantes='sin_asignar',
         resultado_previo='comprobacion_tecnica_del_mantenedor',
         aceptacion=aceptacion, citacion=citacion)
     archivos = {nombre: archivo_fuente(nombre) for nombre in ARCHIVOS}
@@ -76,12 +93,26 @@ def construir(paquete, salida, ref='HEAD', kit_dir=None):
         if (len(tareas[perfil]) != 9 or len({x['id'] for x in tareas[perfil]}) != 9 or
                 not all(x['id'].startswith(prefijo) for x in tareas[perfil])):
             raise ValueError('Las tareas del protocolo estan incompletas.')
-    protocolo_sha = hashlib.sha256(json.dumps(tareas,ensure_ascii=False,
+        for tarea in tareas[perfil]:
+            if (not tarea.get('questions') or not tarea.get('checks') or
+                    not tarea.get('evidence') or not tarea.get('expected')):
+                raise ValueError('Faltan preguntas, criterios o evidencia de ' + tarea['id'])
+        if tareas[perfil][-1].get('required_scope') != 'siete':
+            raise ValueError('El laboratorio debe ser obligatorio en alcance siete.')
+    tareas_en = json.loads(archivos['tareas.en.json'])
+    for perfil in ('r', 'fhir'):
+        for es, en in zip(tareas[perfil], tareas_en[perfil], strict=True):
+            if any(es[k] != en[k] for k in ('id', 'required', 'required_scope', 'code')):
+                raise ValueError('La identidad o alcance difiere entre idiomas: ' + es['id'])
+            if any(len(es[k]) != len(en[k]) for k in ('steps', 'checks', 'questions')):
+                raise ValueError('Contenido incompleto entre idiomas: ' + es['id'])
+    protocolo_sha = hashlib.sha256(json.dumps(dict(es=tareas,en=tareas_en),ensure_ascii=False,
         sort_keys=True,separators=(',',':')).encode()).hexdigest()
     referencia = dict(version=candidato['version'], commit=candidato['fuente_commit'],
                      sha256=sha, tareas_sha256=protocolo_sha)
     html = archivo_fuente('formulario.template.html').decode()
-    for marcador, valor in (('__TAREAS__', tareas), ('__CANDIDATO__', referencia)):
+    for marcador, valor in (('__TAREAS__', tareas), ('__TAREAS_EN__', tareas_en),
+                           ('__CANDIDATO__', referencia)):
         if html.count(marcador) != 1:
             raise ValueError('Plantilla HTML incompatible.')
         texto = json.dumps(valor, ensure_ascii=False).replace('<', '\\u003c').replace('&', '\\u0026')
@@ -90,6 +121,7 @@ def construir(paquete, salida, ref='HEAD', kit_dir=None):
     hashes = {n: hashlib.sha256(v).hexdigest() for n, v in sorted(archivos.items())}
     manifiesto = dict(esquema='fhirviews-kit-r4-v2', version_candidato=candidato['version'],
         fuente_kit_commit=fuente_kit_commit, fuente_candidato_commit=candidato['fuente_commit'],
+        fuente_kit_estado=fuente_kit_estado, revision_protocolo='2.1', idiomas=['es', 'en'],
         paquete_sha256=sha, protocolo_sha256=protocolo_sha,
         evaluacion_externa='pendiente', participantes='sin_asignar',
         archivos_sha256=dict(hashes),
@@ -128,9 +160,11 @@ if __name__ == '__main__':
     parser.add_argument('--salida', required=True)
     parser.add_argument('--ref', default='HEAD')
     parser.add_argument('--kit-dir', help='Usa los materiales del kit desempaquetado para una reconstruccion reproducible.')
+    parser.add_argument('--fuentes-trabajo', action='store_true',
+        help='Lee solo los materiales explicitos del arbol de trabajo; registra el commit base y los hashes, sin afirmar que estan en ese commit.')
     args = parser.parse_args()
     try:
-        construir(args.paquete, args.salida, args.ref, args.kit_dir)
+        construir(args.paquete, args.salida, args.ref, args.kit_dir, args.fuentes_trabajo)
     except (ValueError, FileNotFoundError) as exc:
         parser.exit(1, str(exc) + '\n')
     print('Kit preparado:', args.salida)

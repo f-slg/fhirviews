@@ -6,58 +6,489 @@
 @media(max-width:600px){section,article.card{padding:16px}main{padding:15px 12px}button{font-size:14px;padding:8px 11px}}
 @media print{header,main{display:none!important}#printReport{display:block;white-space:pre-wrap;font:11pt/1.5 sans-serif;color:black}body{background:white;margin:1cm} @page{margin:1.5cm}}
 </style></head><body>
-<header><div class="tag">Evaluación externa R4 · protocolo 2.0</div><h1>fhirviews: registro del piloto</h1><p>Candidato 0.5.0.9002. Una ficha por perfil; registra lo observado y conserva evidencia del alcance acordado.</p><p class="small" style="color:#d7e8f3">Datos ficticios incluidos. Sin envíos automáticos. Una aprobación técnica no completa la evaluación humana.</p></header>
-<main id="app">
+<header><div class="tag">Evaluación externa R4 · protocolo 2.1</div><h1>fhirviews: registro del piloto</h1><p>Candidato 0.5.0.9002. Una ficha por perfil; registra lo observado y conserva evidencia del alcance acordado.</p><p class="small" style="color:#d7e8f3">Datos ficticios incluidos. Sin envíos automáticos. Una aprobación técnica no completa la evaluación humana.</p></header>
+<main id="app"><label class="field" for="language">Español / English<select id="language"><option value="es">Español</option><option value="en">English</option></select></label>
 <div class="toolbar" aria-label="Perfil de participante"><button id="profileR" type="button">Perfil R · analista</button><button id="profileFhir" type="button">Perfil FHIR · interoperabilidad</button></div>
-<div class="notice"><strong>Cómo usarlo:</strong> selecciona el perfil, registra el candidato y completa las tareas por orden. Exporta JSON para conservar ambas fichas y retomarlas. Puedes consultar <a href="PROTOCOLO-PERFIL-R.md">el protocolo R</a> o <a href="PROTOCOLO-PERFIL-FHIR.md">el protocolo FHIR</a>. Los fragmentos de código se ejecutan en R, no en este formulario.</div>
+<div class="notice"><strong>Cómo usarlo:</strong> selecciona el perfil, acuerda nivel y alcance, registra el candidato y sigue el orden del protocolo. Exporta JSON para conservar ambas fichas y retomarlas. Lee <a href="EVALUACION-PILOTO.md">la evaluación detallada</a> y consulta <a href="PROTOCOLO-PERFIL-R.md">el protocolo R</a> o <a href="PROTOCOLO-PERFIL-FHIR.md">el protocolo FHIR</a>. Los fragmentos de código se ejecutan en R, no en este formulario.</div>
 <p id="storageStatus" class="small" role="status"></p><div id="feedback" class="live" role="status" aria-live="polite"></div>
 <section><h2 id="profileTitle"></h2><p id="profileScope"></p><div class="grid" id="metadata"></div><div id="identityChecks"></div></section>
-<section aria-label="Resumen"><h2>Avance y pendientes</h2><div id="counters"></div><div class="progress"><div id="progressBar" class="bar"></div></div><p id="progressText" class="small"></p><p class="small">Una tarea con casillas marcadas sigue pendiente hasta que registres su estado. «Con ayuda» no acredita autonomía. No evaluado no significa aprobado.</p></section>
+<section aria-label="Resumen"><h2>Avance y pendientes</h2><div id="counters"></div><div class="progress"><div id="progressBar" class="bar"></div></div><p id="progressText" class="small"></p><p class="small">Cada tarea necesita estado, explicación y evidencia revisada. La autonomía se limita a las tareas repetidas sin ayuda. El laboratorio es obligatorio en alcance siete.</p></section>
 <div id="tasks"></div>
 <section><h2>Incidencias y seguimiento</h2><p>Una incidencia por problema. Ante un problema crítico, detén la aprobación de la sesión, conserva evidencia y prepara un aviso manual al mantenedor. Usa ejemplos ficticios y revisa los adjuntos antes de compartirlos. Crítico: resultado incorrecto aceptado o pérdida de integridad. Alto: bloquea una tarea esencial. Medio: permite continuar con ayuda. Bajo: claridad o presentación.</p><button type="button" id="addIssue">Añadir incidencia</button><div id="issues"></div></section>
-<section><h2>Conclusión y revisión humana</h2><div class="grid" id="closingFields"></div><div id="closingChecks"></div><div id="gate" class="notice warning" role="status"></div><p class="small">El formulario revisa la integridad de la ficha; no ejecuta R ni valida tus datos. El resultado técnico es el que declara el evaluador tras leer aceptacion.json. La decisión humana debe revisarse con el mantenedor.</p></section>
+<section><h2>Conclusión y revisión humana</h2><p>Responde: ¿qué tarea propia resolverías?, ¿qué paso fue confuso?, ¿qué resultado costó interpretar?, ¿qué repetirías sin ayuda?, ¿qué tres mejoras priorizarías?, ¿qué comprobarías antes de recomendarlo?</p><div class="grid" id="closingFields"></div><div id="closingChecks"></div><div id="gate" class="notice warning" role="status"></div><p class="small">El formulario revisa la integridad de la ficha; no ejecuta R ni valida tus datos. El resultado técnico es el que declara el evaluador tras leer aceptacion.json. La decisión humana debe revisarse con el mantenedor.</p></section>
 <section><h2>Notificación manual</h2><p>Prepara un resumen para revisar, descargar y enviar por el canal acordado. Este documento no envía correo ni crea issues.</p><div id="notificationFields" class="grid"></div><button type="button" id="prepareNotice">Preparar o actualizar aviso</button><label class="field" for="notificationText">Texto del aviso<textarea id="notificationText" readonly placeholder="Pulsa Preparar aviso para generar el resumen de la ficha actual."></textarea></label><div class="actions"><button type="button" id="copyNotice">Copiar aviso</button><button type="button" id="downloadNotice">Descargar aviso TXT</button></div><p class="small">Marcar «enviado» registra una acción que tú realizaste fuera del formulario. No verifica entrega ni acuse.</p></section>
 <section><h2>Guardar, compartir o imprimir</h2><div class="actions"><button class="primary" type="button" id="exportJson">Exportar ambas fichas JSON</button><button type="button" id="exportCsv">Exportar resumen del perfil CSV</button><button type="button" id="exportText">Exportar informe del perfil TXT</button><button type="button" id="print">Imprimir perfil / guardar PDF</button></div><label class="field" for="importFile">Retomar un JSON exportado por este formulario<input type="file" id="importFile" accept="application/json,.json"><small>Importar sustituye ambas fichas después de confirmarlo. Los informes aceptacion.json del paquete no tienen este formato.</small></label><button type="button" id="reset">Nueva ficha del perfil seleccionado</button><p class="foot">El guardado local depende de tu navegador, de sus permisos y de la ubicación del archivo. No reemplaza una exportación. Conserva tus informes y borra la ficha del navegador al terminar si usas un equipo compartido.</p></section>
 </main><div id="printReport"></div>
 <script>
 'use strict';
-const TASKS=__TAREAS__;
+const TASKS_ES=__TAREAS__;
+const TASKS_EN=__TAREAS_EN__;
+let language='es',TASKS=TASKS_ES;
+const I18N={
+ "Pendiente": "Pending",
+ "Completada sin ayuda": "Completed without assistance",
+ "Completada con ayuda": "Completed with assistance",
+ "Bloqueada": "Blocked",
+ "Falló": "Failed",
+ "No evaluada": "Not evaluated",
+ "Pendiente de observar": "Not yet assessed",
+ "Correcta": "Correct",
+ "Parcial · requiere revisión": "Partial · review required",
+ "Incorrecta · requiere revisión": "Incorrect · review required",
+ "No realizada": "Not performed",
+ "Repetida sin ayuda": "Repeated without assistance",
+ "Repetida con ayuda": "Repeated with assistance",
+ "La repetición falló": "Repeat failed",
+ "Sin respuesta": "No response",
+ "1 · Muy difícil": "1 · Very difficult",
+ "2 · Difícil": "2 · Difficult",
+ "3 · Intermedia": "3 · Intermediate",
+ "4 · Fácil": "4 · Easy",
+ "5 · Muy fácil": "5 · Very easy",
+ "Sesión / intento": "Session / attempt",
+ "Participante · ID o seudónimo": "Participant · ID or pseudonym",
+ "Observador / mantenedor": "Observer / maintainer",
+ "Fecha de la sesión": "Session date",
+ "Sistema operativo y arquitectura": "Operating system and architecture",
+ "Versión de R": "R version",
+ "Versión de fhirviews": "fhirviews version",
+ "Commit del candidato": "Candidate commit",
+ "SHA-256 del paquete": "Package SHA-256",
+ "Experiencia en R, SQL y FHIR; exposición previa al material": "R, SQL and FHIR experience; previous exposure to materials",
+ "Dependencias presentes, nuevas y preparación realizada por terceros": "Existing/new dependencies and preparation performed by others",
+ "Nivel técnico acordado": "Agreed technical level",
+ "Por acordar": "To be agreed",
+ "Básico": "Basic",
+ "Completo · DBI/DuckDB": "Full · DBI/DuckDB",
+ "Alcance humano acordado": "Agreed human-evaluation scope",
+ "Núcleo · cinco tipos": "Core · five types",
+ "Siete constructores · exige laboratorio": "Seven constructors · laboratory required",
+ "Necesidad de uso, ampliaciones y exclusiones acordadas": "Use need, agreed extensions and exclusions",
+ "Validación de perfiles externos realizada en esta sesión": "External profile validation performed in this session",
+ "Por registrar": "Not yet recorded",
+ "No evaluada · ensayo local o plan": "Not evaluated · local trial or plan",
+ "Ejecutada · revisar resultados aparte": "Executed · review results separately",
+ "Indeterminada · requiere investigación": "Indeterminate · investigate",
+ "Plan y/o evidencia de perfiles; indicar cuáles y resultados": "Profile plan/evidence; identify profiles and outcomes",
+ "Resultado técnico leído en aceptacion.json · declarado por el evaluador": "Technical result read from aceptacion.json · reported by evaluator",
+ "Aprobado": "Passed",
+ "Requiere revisión": "Review required",
+ "No aprobado": "Not passed",
+ "No ejecutado": "Not executed",
+ "Archivo / referencia del informe técnico": "Technical-report file/reference",
+ "Conclusión del participante: utilidad, dificultades y límites": "Participant conclusion: usefulness, difficulties and limits",
+ "Conclusión del mantenedor para el alcance observado": "Maintainer conclusion for observed scope",
+ "Hasta tres mejoras prioritarias y su motivo": "Up to three priority improvements and their rationale",
+ "Responsables, siguiente prueba y revisión": "Owners, next test and review",
+ "Decisión humana declarada": "Declared human decision",
+ "Repetir tras correcciones": "Repeat after corrections",
+ "Aceptada para el alcance": "Accepted for the stated scope",
+ "Aceptada con pendientes explícitos": "Accepted with explicit follow-up",
+ "Canal acordado": "Agreed channel",
+ "Sin acordar": "Not agreed",
+ "Correo": "Email",
+ "Otro": "Other",
+ "Destinatario · rol o ID": "Recipient · role or ID",
+ "Estado de la comunicación": "Communication state",
+ "Preparado": "Prepared",
+ "Revisado": "Reviewed",
+ "Enviado manualmente": "Sent manually",
+ "Acuse recibido": "Acknowledged",
+ "Seguimiento cerrado": "Follow-up closed",
+ "Fecha del envío": "Date sent",
+ "Referencia del correo o issue · opcional": "Email/issue reference · optional",
+ "Crítico": "Critical",
+ "Alto": "High",
+ "Medio": "Medium",
+ "Bajo": "Low",
+ "Abierta": "Open",
+ "En revisión": "Under review",
+ "Corregida": "Corrected",
+ "Pendiente de repetir": "Awaiting retest",
+ "Cerrada tras verificación": "Closed after verification",
+ "Resumen": "Summary",
+ "Tipo": "Type",
+ "Instalación": "Installation",
+ "Funcional": "Functional",
+ "Documentación": "Documentation",
+ "Usabilidad": "Usability",
+ "Entorno": "Environment",
+ "Impacto": "Impact",
+ "Estado": "State",
+ "¿Se reproduce?": "Reproducible?",
+ "Sí": "Yes",
+ "No": "No",
+ "Pasos para reproducir · con datos ficticios": "Reproduction steps · fictional data",
+ "Resultado esperado": "Expected result",
+ "Resultado observado": "Observed result",
+ "Archivo / evidencia revisada": "File / reviewed evidence",
+ "Responsable del seguimiento": "Follow-up owner",
+ "Fecha objetivo acordada": "Agreed target date",
+ "Resultado de repetición y quién verificó": "Retest outcome and reviewer",
+ "Guardado local activo. Exporte JSON antes de cerrar o cambiar de equipo.": "Local storage active. Export JSON before closing or changing computers.",
+ "El navegador no permite guardar localmente. Exporte JSON para conservar su trabajo.": "Browser storage is unavailable. Export JSON to retain your work.",
+ "Obligatoria para este alcance": "Required for this scope",
+ "Obligatoria en siete; excluible en núcleo": "Required for seven; exclude for core",
+ "Opcional": "Optional",
+ "Preguntas de comprensión": "Understanding questions",
+ "Criterios observables": "Observable criteria",
+ "Preparación operativa en R": "Operational preparation in R",
+ "Contraste del observador · abrir después del primer intento": "Observer reference · open after the first attempt",
+ "Estado de la tarea": "Task state",
+ "Minutos activos": "Active minutes",
+ "Minutos de espera / pausas": "Waiting / break minutes",
+ "Intervenciones del observador": "Observer interventions",
+ "Comprensión observada · juicio del observador": "Observed understanding · observer assessment",
+ "Facilidad declarada · opcional": "Reported ease · optional",
+ "Respuestas propias y justificación de la comprensión; conservar respuesta inicial y corrección": "Own answers and assessment rationale; retain initial answer and correction",
+ "Documentación consultada por iniciativa propia": "Independently consulted documentation",
+ "Ayuda: tipo y contenido; obstáculos o motivo de exclusión": "Assistance: type/content; obstacles or exclusion reason",
+ "Archivo o referencia de evidencia revisada": "Reviewed evidence file/reference",
+ "Registrar repetición manual de esta tarea": "Record manual repetition of this task",
+ "Resultado de repetición": "Repeat outcome",
+ "Intervenciones durante la repetición": "Interventions during repetition",
+ "Nuevo intento y archivos que permiten contrastarlo": "New attempt and supporting files",
+ "Qué se repitió, qué cambió y ayuda recibida": "What was repeated, what changed and assistance",
+ "Perfil R · análisis, autonomía y utilidad": "R profile · analysis, independence and usefulness",
+ "Perfil FHIR · semántica e interoperabilidad": "FHIR profile · semantics and interoperability",
+ "Evaluar preparación, construcción, interpretación de tablas, vistas y repetición. Elegir nivel técnico y alcance antes de comenzar.": "Evaluate preparation, construction, table interpretation, views and repetition. Agree technical level and scope before starting.",
+ "Auditar mapas, tipos, referencias, Coding, proyecciones y plan de validación. La ayuda para usar R se registra por separado en las notas.": "Audit maps, types, references, Coding, projections and validation plan. Record R assistance separately in notes.",
+ "Contrasté la identidad del archivo con el manifiesto. Los valores precargados no la verifican automáticamente.": "I checked file identity against the manifest. Prefilled values do not verify it automatically.",
+ "Participante y observador acordaron nivel, alcance, registro y canal de entrega antes de las tareas.": "Participant and observer agreed level, scope, recording and delivery before the tasks.",
+ "El participante revisó la conclusión y las incidencias.": "The participant reviewed conclusions and issues.",
+ "El mantenedor abrió y contrastó la evidencia y revisó la decisión para este alcance.": "The maintainer opened and checked evidence and reviewed the decision for this scope.",
+ "Declarar autonomía solo para las tareas identificadas como repetidas sin ayuda y con evidencia.": "Claim independence only for identified tasks repeated without assistance and supported by evidence.",
+ "No hay incidencias registradas. Confírmelo al cerrar; una ficha vacía no prueba ausencia de problemas.": "No issues recorded. Confirm at closure; an empty record does not prove absence of problems.",
+ "Tarea relacionada": "Related task",
+ "Contrastar la identidad del candidato.": "Check candidate identity.",
+ "Acordar el alcance con el participante.": "Agree scope with the participant.",
+ "El resultado técnico declarado no está aprobado.": "The reported technical result is not passed.",
+ "Elegir nivel técnico.": "Choose technical level.",
+ "Elegir alcance humano.": "Choose human-evaluation scope.",
+ "Evaluar siete constructores exige nivel completo y laboratorio.": "Evaluating seven constructors requires full level and laboratory work.",
+ "Registrar qué ocurrió con la validación de perfiles externos.": "Record the external profile validation state.",
+ "Investigar la validación de perfiles indeterminada antes de cerrar.": "Investigate indeterminate profile validation before closure.",
+ "Conservar perfiles, servidor y resultados de la validación ejecutada.": "Retain profiles, server and outcomes for the performed validation.",
+ "Referenciar el plan de validación F07 y sus exclusiones.": "Reference the F07 validation plan and exclusions.",
+ "tarea obligatoria del alcance sin completar.": "required in-scope task incomplete.",
+ "exclúyala con motivo en núcleo o acuerde alcance siete antes de ejecutarla.": "exclude with a reason for core, or agree seven-type scope before execution.",
+ "faltan comprobaciones.": "missing checks.",
+ "falta evidencia.": "missing evidence.",
+ "faltan respuestas y justificación.": "missing answers and rationale.",
+ "registrar minutos activos y espera válidos (cero si no hubo).": "record valid active/wait minutes (zero when none).",
+ "intervenciones incoherentes con el estado.": "interventions inconsistent with state.",
+ "describir la ayuda recibida.": "describe the assistance received.",
+ "justificar la no evaluación.": "justify exclusion from evaluation.",
+ "documentar qué se repitió y sus archivos.": "document what was repeated and its files.",
+ "registrar ayuda coherente en la repetición.": "record consistent repeat assistance.",
+ "la repetición falló; investigar y repetir tras corregir.": "repeat failed; investigate and retest after corrections.",
+ "falta repetición manual identificada para el cierre.": "identified manual repetition is missing for closure.",
+ "La autonomía necesita al menos una tarea repetida sin ayuda con evidencia; su alcance es esa lista de tareas.": "Independence needs at least one evidenced unassisted repeat and is limited to that task list.",
+ "seleccionar una tarea válida.": "choose a valid task.",
+ "ficha de incidencia incompleta.": "incomplete issue record.",
+ "falta repetición/cierre comprobado.": "missing verified retest/closure.",
+ "incidencia crítica/alta sin cierre verificado.": "critical/high issue lacks verified closure.",
+ "registrar la decisión con pendientes explícitos.": "record the decision with explicit follow-up.",
+ "Falta revisión del participante o del mantenedor.": "Participant or maintainer review is missing.",
+ "Registrar la fecha del envío manual.": "Record the manual sending date.",
+ "Ficha completa para la decisión humana.": "Record complete for human decision.",
+ "Consulte todos los pendientes en el informe exportado.": "See all outstanding items in the exported report.",
+ "El candidato o protocolo no corresponde a esta ronda. Conserve el informe anterior por separado.": "Candidate or protocol does not match this round. Retain the previous report separately.",
+ "Falta una ficha de perfil.": "A profile record is missing.",
+ "Aviso preparado. Revíselo y envíelo manualmente por el canal acordado.": "Notice prepared. Review and send manually through the agreed channel.",
+ "Aviso copiado.": "Notice copied.",
+ "Seleccione y copie el aviso manualmente.": "Select and copy the notice manually.",
+ "Exporte JSON antes de continuar. Se reiniciará SOLO la ficha seleccionada. ¿Continuar?": "Export JSON first. ONLY the selected profile record will be reset. Continue?",
+ "Nueva ficha preparada. El otro perfil se conserva.": "New record prepared. The other profile is retained.",
+ "La ficha contiene una incidencia no válida.": "The record contains an invalid issue.",
+ "Importar sustituirá ambas fichas. Exporte primero los cambios actuales. ¿Continuar?": "Import replaces both profile records. Export current changes first. Continue?",
+ "Fichas importadas. Revise identidad y contenido.": "Records imported. Review identity and content.",
+ "JSON inválido.": "Invalid JSON.",
+ "Evaluación externa R4 · protocolo 2.1": "External R4 evaluation · protocol 2.1",
+ "fhirviews: registro del piloto": "fhirviews: pilot evaluation record",
+ "Candidato 0.5.0.9002. Una ficha por perfil; registra lo observado y conserva evidencia del alcance acordado.": "Candidate 0.5.0.9002. One record per profile; record observations and retain evidence for the agreed scope.",
+ "Datos ficticios incluidos. Sin envíos automáticos. Una aprobación técnica no completa la evaluación humana.": "Fictional data included. No automatic delivery. A technical pass does not complete human evaluation.",
+ "Perfil R · analista": "R profile · analyst",
+ "Perfil FHIR · interoperabilidad": "FHIR profile · interoperability",
+ "Cómo usarlo:": "How to use:",
+ "selecciona el perfil, acuerda nivel y alcance, registra el candidato y sigue el orden del protocolo. Exporta JSON para conservar ambas fichas y retomarlas. Lee": "select the profile, agree level/scope, record the candidate and follow protocol order. Export JSON to retain both records and resume later. Read",
+ "y consulta": "and consult",
+ "la evaluación detallada": "the detailed evaluation",
+ "el protocolo R": "the R protocol",
+ "o": "or",
+ "el protocolo FHIR": "the FHIR protocol",
+ ". Los fragmentos de código se ejecutan en R, no en este formulario.": ". Run code in R, not in this form.",
+ "Avance y pendientes": "Progress and outstanding items",
+ "Cada tarea necesita estado, explicación y evidencia revisada. La autonomía se limita a las tareas repetidas sin ayuda. El laboratorio es obligatorio en alcance siete.": "Each task needs a state, explanation and reviewed evidence. Independence is limited to tasks repeated without assistance. Laboratory work is required for seven-type scope.",
+ "Incidencias y seguimiento": "Issues and follow-up",
+ "Una incidencia por problema. Ante un problema crítico, detén la aprobación de la sesión, conserva evidencia y prepara un aviso manual al mantenedor. Usa ejemplos ficticios y revisa los adjuntos antes de compartirlos. Crítico: resultado incorrecto aceptado o pérdida de integridad. Alto: bloquea una tarea esencial. Medio: permite continuar con ayuda. Bajo: claridad o presentación.": "One issue per problem. For critical issues suspend favorable closure, retain evidence and prepare a manual notice. Use fictional data and review attachments before sharing. Critical: incorrect output accepted or integrity lost. High: essential task blocked. Medium: assistance permits continuation. Low: clarity/presentation.",
+ "Añadir incidencia": "Add issue",
+ "Conclusión y revisión humana": "Conclusion and human review",
+ "Responde: ¿qué tarea propia resolverías?, ¿qué paso fue confuso?, ¿qué resultado costó interpretar?, ¿qué repetirías sin ayuda?, ¿qué tres mejoras priorizarías?, ¿qué comprobarías antes de recomendarlo?": "Answer: which own task would you solve, which step was confusing, which result was hard to interpret, what would you repeat independently, which three changes would you prioritize, and what would you check before recommending it?",
+ "El formulario revisa la integridad de la ficha; no ejecuta R ni valida tus datos. El resultado técnico es el que declara el evaluador tras leer aceptacion.json. La decisión humana debe revisarse con el mantenedor.": "The form checks record completeness, not R execution or data validity. The evaluator reports technical results after reading aceptacion.json. Review the human decision with the maintainer.",
+ "Notificación manual": "Manual notification",
+ "Prepara un resumen para revisar, descargar y enviar por el canal acordado. Este documento no envía correo ni crea issues.": "Prepare a summary to review, download and send through the agreed channel. This form does not send email or create issues.",
+ "Preparar o actualizar aviso": "Prepare or update notice",
+ "Texto del aviso": "Notice text",
+ "Copiar aviso": "Copy notice",
+ "Descargar aviso TXT": "Download notice TXT",
+ "Marcar «enviado» registra una acción que tú realizaste fuera del formulario. No verifica entrega ni acuse.": "Marking sent records your action outside the form. It does not verify delivery or acknowledgment.",
+ "Guardar, compartir o imprimir": "Save, share or print",
+ "Exportar ambas fichas JSON": "Export both profile records as JSON",
+ "Exportar resumen del perfil CSV": "Export profile summary as CSV",
+ "Exportar informe del perfil TXT": "Export profile report as TXT",
+ "Imprimir perfil / guardar PDF": "Print profile / save PDF",
+ "Retomar un JSON exportado por este formulario": "Resume a JSON exported by this form",
+ "Importar sustituye ambas fichas después de confirmarlo. Los informes aceptacion.json del paquete no tienen este formato.": "Import replaces both records after confirmation. The package’s aceptacion.json reports use a different format.",
+ "Nueva ficha del perfil seleccionado": "New record for selected profile",
+ "El guardado local depende de tu navegador, de sus permisos y de la ubicación del archivo. No reemplaza una exportación. Conserva tus informes y borra la ficha del navegador al terminar si usas un equipo compartido.": "Local storage depends on browser, permissions and file location. It does not replace export. Retain reports and clear the browser record after using a shared computer.",
+ "Pulsa Preparar aviso para generar el resumen de la ficha actual.": "Choose Prepare notice to create a summary of the current record.",
+ "Perfil de participante": "Participant profile",
+ "fhirviews · Protocolo y registro del piloto": "fhirviews · Pilot protocol and evaluation record",
+ "Evidencia a conservar: ": "Evidence to retain: ",
+ "Errores a detectar: ": "Errors to detect: "
+};
+function tr(value){
+ const text=String(value);if(language==='es')return text;
+ if(Object.hasOwn(I18N,text))return I18N[text];
+ const trimmed=text.trim();if(Object.hasOwn(I18N,trimmed))return text.replace(trimmed,I18N[trimmed]);
+ const task=text.match(/^((?:R|F)\d{2}|INC-\d{3}): (.*)$/s);if(task)return task[1]+': '+tr(task[2]);
+ if(text.startsWith('Completar '))return 'Complete '+tr(text.slice(10).replace(/\.$/,''))+'.';
+ if(text.startsWith('revisar comprensión '))return 'review understanding: '+({pendiente:'pending',correcta:'correct',parcial:'partial',incorrecta:'incorrect'}[text.slice(20).replace(/\.$/,'')]||text.slice(20));
+ if(text.startsWith('La identidad no coincide: '))return 'Identity mismatch: '+({versión:'version',commit:'commit','SHA-256':'SHA-256'}[text.slice('La identidad no coincide: '.length).replace(/\.$/,'')]||text.slice('La identidad no coincide: '.length));
+ const count=text.match(/^(.*): (\d+)$/);if(count&&Object.hasOwn(I18N,count[1]))return tr(count[1])+': '+count[2];
+ if(text.startsWith('Evidencia a conservar: '))return 'Evidence to retain: '+text.slice(22);
+ if(text.startsWith('Errores a detectar: '))return 'Errors to detect: '+text.slice(19);
+ const total=text.match(/^(\d+) de 9 tareas declaradas completadas\./);if(total)return total[1]+' of 9 tasks declared complete. Scope, understanding and evidence are reviewed below.';
+ const pending=text.match(/^La ficha requiere revisión \((\d+) pendientes\)\./);if(pending)return 'Record requires review ('+pending[1]+' outstanding items).';
+ if(text.startsWith('Decisión declarada: '))return 'Declared decision: '+text.slice(20).replace('. Autonomía limitada a tareas con repetición documentada.','. Independence is limited to tasks with documented repetition.');
+ if(text.startsWith('Archivo preparado: '))return 'File prepared: '+text.slice(19).replace('. Conserve una copia.','. Keep a copy.');
+ if(text.startsWith('No se pudo importar: '))return 'Import failed: '+tr(text.slice(21));
+ return text;
+}
+const staticTexts=[];const staticAttrs=[];
+{
+ const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+ let item;while((item=walker.nextNode()))if(!item.parentElement.closest('script,style,textarea,pre,select'))staticTexts.push([item,item.textContent]);
+ for(const element of document.querySelectorAll('[placeholder],[aria-label],a[href],title')){
+  for(const name of ['placeholder','aria-label','href'])if(element.hasAttribute(name))staticAttrs.push([element,name,element.getAttribute(name)]);
+ }
+}
+function applyLanguage(){
+ document.documentElement.lang=language;document.title=tr('fhirviews · Protocolo y registro del piloto');
+ for(const [element,text] of staticTexts)element.textContent=tr(text);
+ for(const [element,name,text] of staticAttrs)element.setAttribute(name,name==='href'&&language==='en'&&text.endsWith('.md')?text.replace(/\.md$/,'.en.md'):tr(text));
+ el('language').value=language;
+}
+function setLanguage(value){language=value==='en'?'en':'es';state.language=language;TASKS=language==='en'?TASKS_EN:TASKS_ES;render();}
+
 const REF=__CANDIDATO__;
-const SCHEMA='fhirviews-piloto-r4-v2', KEY=SCHEMA+'-'+REF.sha256+'-'+REF.tareas_sha256;
+const SCHEMA='fhirviews-piloto-r4-v2', PROTOCOL='2.1';
+const KEY=SCHEMA+'-'+REF.sha256+'-'+REF.tareas_sha256;
 const STATUS={pendiente:'Pendiente',sin_ayuda:'Completada sin ayuda',con_ayuda:'Completada con ayuda',bloqueada:'Bloqueada',fallo:'Falló',no_evaluada:'No evaluada'};
+const UNDERSTANDING={pendiente:'Pendiente de observar',correcta:'Correcta',parcial:'Parcial · requiere revisión',incorrecta:'Incorrecta · requiere revisión'};
+const REPEAT={no_realizada:'No realizada',sin_ayuda:'Repetida sin ayuda',con_ayuda:'Repetida con ayuda',fallo:'La repetición falló'};
+const EASE={'':'Sin respuesta','1':'1 · Muy difícil','2':'2 · Difícil','3':'3 · Intermedia','4':'4 · Fácil','5':'5 · Muy fácil'};
 const META=[
- ['session','Sesión / intento','text'],['participant','Participante · ID o seudónimo','text'],['observer','Observador / mantenedor','text'],['date','Fecha de la sesión','date'],['system','Sistema operativo y arquitectura','text'],['rVersion','Versión de R','text'],['version','Versión de fhirviews','text'],['commit','Commit del candidato','text'],['checksum','SHA-256 del archivo','text'],['experience','Experiencia previa en R y FHIR','textarea'],['dependencies','Dependencias ya presentes y nuevas','textarea'],['scope','Alcance y ampliaciones acordados','textarea'],
- ['technical','Resultado técnico según aceptacion.json · declarado por el evaluador',{pendiente:'Pendiente',aprobado:'Aprobado',requiere_revision:'Requiere revisión',no_aprobado:'No aprobado',no_ejecutado:'No ejecutado'}],['technicalEvidence','Archivo / referencia del informe técnico','text']
+ ['session','Sesión / intento','text'],['participant','Participante · ID o seudónimo','text'],
+ ['observer','Observador / mantenedor','text'],['date','Fecha de la sesión','date'],
+ ['system','Sistema operativo y arquitectura','text'],['rVersion','Versión de R','text'],
+ ['version','Versión de fhirviews','text'],['commit','Commit del candidato','text'],['checksum','SHA-256 del paquete','text'],
+ ['experience','Experiencia en R, SQL y FHIR; exposición previa al material','textarea'],
+ ['dependencies','Dependencias presentes, nuevas y preparación realizada por terceros','textarea'],
+ ['technicalLevel','Nivel técnico acordado',{pendiente:'Por acordar',basico:'Básico',completo:'Completo · DBI/DuckDB'}],
+ ['scopeLevel','Alcance humano acordado',{pendiente:'Por acordar',nucleo:'Núcleo · cinco tipos',siete:'Siete constructores · exige laboratorio'}],
+ ['scope','Necesidad de uso, ampliaciones y exclusiones acordadas','textarea'],
+ ['profileValidation','Validación de perfiles externos realizada en esta sesión',{pendiente:'Por registrar',no_evaluada:'No evaluada · ensayo local o plan',ejecutada:'Ejecutada · revisar resultados aparte',indeterminada:'Indeterminada · requiere investigación'}],
+ ['profileEvidence','Plan y/o evidencia de perfiles; indicar cuáles y resultados','textarea'],
+ ['technical','Resultado técnico leído en aceptacion.json · declarado por el evaluador',{pendiente:'Pendiente',aprobado:'Aprobado',requiere_revision:'Requiere revisión',no_aprobado:'No aprobado',no_ejecutado:'No ejecutado'}],
+ ['technicalEvidence','Archivo / referencia del informe técnico','text']
 ];
-const CLOSE=[['conclusion','Conclusión del participante','textarea'],['maintainerConclusion','Conclusión del mantenedor','textarea'],['priorities','Hasta tres mejoras prioritarias','textarea'],['followup','Responsables y próxima revisión','textarea'],['decision','Decisión humana declarada',{pendiente:'Pendiente',repetir:'Repetir tras correcciones',aceptada:'Aceptada para el alcance',aceptada_pendientes:'Aceptada con pendientes explícitos'}]];
+const CLOSE=[
+ ['conclusion','Conclusión del participante: utilidad, dificultades y límites','textarea'],
+ ['maintainerConclusion','Conclusión del mantenedor para el alcance observado','textarea'],
+ ['priorities','Hasta tres mejoras prioritarias y su motivo','textarea'],
+ ['followup','Responsables, siguiente prueba y revisión','textarea'],
+ ['decision','Decisión humana declarada',{pendiente:'Pendiente',repetir:'Repetir tras correcciones',aceptada:'Aceptada para el alcance',aceptada_pendientes:'Aceptada con pendientes explícitos'}]
+];
 const NOTICE=[['channel','Canal acordado',{pendiente:'Sin acordar',correo:'Correo',issue:'Issue de GitHub',otro:'Otro'}],['recipient','Destinatario · rol o ID','text'],['noticeStatus','Estado de la comunicación',{pendiente:'Pendiente',preparado:'Preparado',revisado:'Revisado',enviado:'Enviado manualmente',acuse:'Acuse recibido',cerrado:'Seguimiento cerrado'}],['sentAt','Fecha del envío','date'],['noticeReference','Referencia del correo o issue · opcional','text']];
-function fresh(){const f={};for(const [k,,t] of [...META,...CLOSE,...NOTICE])f[k]=typeof t==='object'?Object.keys(t)[0]:'';Object.assign(f,{version:REF.version,commit:REF.commit,checksum:REF.sha256});return{fields:f,identity:false,agreed:false,participantReviewed:false,maintainerReviewed:false,autonomy:false,tasks:{},issues:[]};}
-function initial(){return{schema:SCHEMA,candidato:REF.sha256,protocolo:REF.tareas_sha256,selected:'r',profiles:{r:fresh(),fhir:fresh()}};}
-let state=initial(), storageAvailable=true;
-const el=id=>document.getElementById(id), current=()=>state.profiles[state.selected];
-function str(x,max=10000){return typeof x==='string'?x.slice(0,max):'';}
 const severity={critico:'Crítico',alto:'Alto',medio:'Medio',bajo:'Bajo'};
 const issueStatus={abierta:'Abierta',revision:'En revisión',corregida:'Corregida',repetir:'Pendiente de repetir',cerrada:'Cerrada tras verificación'};
 const ISSUE_FIELDS=[['summary','Resumen','text'],['type','Tipo',{instalacion:'Instalación',funcional:'Funcional',documentacion:'Documentación',usabilidad:'Usabilidad',entorno:'Entorno'}],['severity','Impacto',severity],['status','Estado',issueStatus],['reproducibility','¿Se reproduce?',{pendiente:'Pendiente',si:'Sí',no:'No'}],['steps','Pasos para reproducir · con datos ficticios','textarea'],['expected','Resultado esperado','textarea'],['observed','Resultado observado','textarea'],['evidence','Archivo / evidencia revisada','text'],['owner','Responsable del seguimiento','text'],['due','Fecha objetivo acordada','date'],['retest','Resultado de repetición y quién verificó','textarea']];
-function normalize(raw){if(!raw||raw.schema!==SCHEMA||raw.candidato!==REF.sha256||raw.protocolo!==REF.tareas_sha256||!raw.profiles)throw Error('Formato de informe no reconocido.');const s=initial();s.selected=raw.selected==='fhir'?'fhir':'r';for(const key of ['r','fhir']){const a=raw.profiles[key];if(!a||typeof a!=='object')throw Error('Falta una ficha de perfil.');const p=s.profiles[key];for(const [k,,t] of [...META,...CLOSE,...NOTICE]){const v=str(a.fields?.[k]);p.fields[k]=typeof t==='object'?(Object.hasOwn(t,v)?v:Object.keys(t)[0]):v;}for(const k of ['identity','agreed','participantReviewed','maintainerReviewed','autonomy'])p[k]=a[k]===true;for(const t of TASKS[key]){const x=a.tasks?.[t.id]||{};p.tasks[t.id]={status:Object.hasOwn(STATUS,x.status)?x.status:'pendiente',checks:t.checks.map((_,i)=>x.checks?.[i]===true),minutes:str(x.minutes,20),interventions:str(x.interventions,20),notes:str(x.notes),evidence:str(x.evidence)};}p.issues=(Array.isArray(a.issues)?a.issues:[]).slice(0,200).map((x,i)=>{const z={id:'INC-'+String(i+1).padStart(3,'0'),task:str(x.task,20)};for(const [k,,t] of ISSUE_FIELDS){const v=str(x[k]);z[k]=typeof t==='object'?(Object.hasOwn(t,v)?v:Object.keys(t)[0]):v;}return z;});}return s;}
-try{const saved=localStorage.getItem(KEY);if(saved)state=normalize(JSON.parse(saved));}catch(e){storageAvailable=false;}
-function feedback(text){el('feedback').textContent=text;}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));storageAvailable=true;}catch(e){storageAvailable=false;}el('storageStatus').textContent=storageAvailable?'Guardado local activo. Exporta JSON antes de cerrar o cambiar de equipo.':'El navegador no permite guardar localmente. Exporta JSON para conservar tu trabajo.';update();}
-function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
-function field(parent,label,type,value,onChange,id){const l=node('label',undefined,'field');const title=node('span',label);l.append(title);let input;if(typeof type==='object'){input=node('select');for(const [v,name] of Object.entries(type)){const o=node('option',name);o.value=v;input.append(o);}}else input=node(type==='textarea'?'textarea':'input');if(typeof type==='string'&&type!=='textarea')input.type=type;if(type==='number'){input.min='0';input.step='any';}input.id=id;input.value=value??'';l.htmlFor=id;input.addEventListener('input',()=>{onChange(input.value);save();});l.append(input);parent.append(l);return input;}
-function check(parent,label,value,change,id){const l=node('label',undefined,'check');const input=node('input');input.type='checkbox';input.id=id;input.checked=!!value;l.htmlFor=id;input.addEventListener('change',()=>{change(input.checked);save();});l.append(input,node('span',label));parent.append(l);}
-function taskData(t){const p=current();if(!p.tasks[t.id])p.tasks[t.id]={status:'pendiente',checks:t.checks.map(()=>false),minutes:'',interventions:'',notes:'',evidence:''};return p.tasks[t.id];}
-function render(){const profile=state.selected;el('profileR').setAttribute('aria-pressed',String(profile==='r'));el('profileFhir').setAttribute('aria-pressed',String(profile==='fhir'));el('profileTitle').textContent=profile==='r'?'Perfil R · analista, investigador o epidemiólogo':'Perfil FHIR · interoperabilidad e informática sanitaria';el('profileScope').textContent=profile==='r'?'Control histórico: cinco tipos construidos, más la tarea opcional Specimen/DiagnosticReport en completo. AllergyIntolerance se lee con una vista.':'Alcance R4 local: semántica, referencias y cardinalidades. El control histórico cubre cinco tipos; completo añade la tarea opcional Specimen/DiagnosticReport con DBI/DuckDB. No se evalúa un servidor propio.';const p=current();el('metadata').replaceChildren();for(const [k,label,t] of META)field(el('metadata'),label,t,p.fields[k],v=>p.fields[k]=v,'meta-'+k);el('identityChecks').replaceChildren();check(el('identityChecks'),'He contrastado la identidad del archivo con el manifiesto entregado; los valores de referencia precargados no son una verificación automática.',p.identity,v=>p.identity=v,'identity');check(el('identityChecks'),'Participante y observador acordaron alcance, registro de la sesión y canal de contacto.',p.agreed,v=>p.agreed=v,'agreed');el('tasks').replaceChildren();for(const t of TASKS[profile]){const d=taskData(t),card=node('article',undefined,'card');card.id='task-'+t.id;const head=node('div',undefined,'taskhead');head.append(node('h3',t.id+' · '+t.title),node('span',t.required?'Obligatoria':'Opcional','pill'));card.append(head,node('p',t.goal));const list=node('ol');t.steps.forEach(x=>list.append(node('li',x)));card.append(list);const checks=node('div');t.checks.forEach((x,i)=>check(checks,x,d.checks[i],v=>d.checks[i]=v,t.id+'-check-'+i));card.append(checks,node('p','Esperado: '+t.expected,'expected'),node('p','Evidencia sugerida: '+t.evidence,'small'));if(t.code){const details=node('details');details.append(node('summary','Ver instrucciones y código R'),node('pre',t.code));card.append(details);}if(!t.code&&['R05','F05'].includes(t.id))card.append(node('p','Construye la vista con la documentación antes de pedir la solución al observador.','small'));const row=node('div',undefined,'grid');field(row,'Estado de la tarea',STATUS,d.status,v=>d.status=v,t.id+'-status');field(row,'Minutos reales · separar pausas','number',d.minutes,v=>d.minutes=v,t.id+'-minutes');field(row,'Intervenciones del observador','number',d.interventions,v=>d.interventions=v,t.id+'-interventions');card.append(row);field(card,'Ayuda, obstáculos o razón de no evaluación','textarea',d.notes,v=>d.notes=v,t.id+'-notes');field(card,'Archivo o referencia de evidencia','text',d.evidence,v=>d.evidence=v,t.id+'-evidence');el('tasks').append(card);}renderIssues();el('closingFields').replaceChildren();for(const [k,label,t] of CLOSE)field(el('closingFields'),label,t,p.fields[k],v=>p.fields[k]=v,'close-'+k);el('closingChecks').replaceChildren();check(el('closingChecks'),'El participante revisó la conclusión y las incidencias.',p.participantReviewed,v=>p.participantReviewed=v,'participantReviewed');check(el('closingChecks'),'El mantenedor revisó la evidencia y la decisión para este alcance.',p.maintainerReviewed,v=>p.maintainerReviewed=v,'maintainerReviewed');check(el('closingChecks'),'Se desea acreditar ejecución autónoma (exige tareas obligatorias sin ayuda).',p.autonomy,v=>p.autonomy=v,'autonomy');el('notificationFields').replaceChildren();for(const [k,label,t] of NOTICE)field(el('notificationFields'),label,t,p.fields[k],v=>p.fields[k]=v,'notice-'+k);el('notificationText').value='';save();}
-function renderIssues(){const parent=el('issues');parent.replaceChildren();const p=current();if(!p.issues.length)parent.append(node('p','No hay incidencias registradas. Confirmarlo en la conclusión; la ausencia de fichas no prueba ausencia de problemas.','small'));p.issues.forEach(x=>{const div=node('article',undefined,'issue');div.append(node('h3',x.id));const g=node('div',undefined,'grid');field(g,'Tarea relacionada',Object.fromEntries(TASKS[state.selected].map(t=>[t.id,t.id+' · '+t.title])),x.task,v=>x.task=v,x.id+'-task');for(const [k,label,t] of ISSUE_FIELDS)field(g,label,t,x[k],v=>x[k]=v,x.id+'-'+k);div.append(g);parent.append(div);});}
-function blockers(){const p=current(),f=p.fields,b=[];if(f.version.trim()!==REF.version)b.push('La version no coincide con este candidato.');if(f.commit.trim().toLowerCase()!==REF.commit)b.push('El commit no coincide con este candidato.');if(f.checksum.trim().toLowerCase()!==REF.sha256)b.push('El SHA-256 no coincide con este candidato.');for(const [k,label] of META.filter(x=>['session','participant','observer','date','system','rVersion','version','commit','checksum','technicalEvidence'].includes(x[0])))if(!f[k].trim())b.push('Completar '+label+'.');if(!/^[a-f0-9]{40}$/i.test(f.commit))b.push('El commit debe tener 40 caracteres hexadecimales.');if(!/^[a-f0-9]{64}$/i.test(f.checksum))b.push('El SHA-256 debe tener 64 caracteres hexadecimales.');if(!p.identity)b.push('Contrastar la identidad del candidato.');if(!p.agreed)b.push('Acordar el alcance con el participante.');if(f.technical!=='aprobado')b.push('El resultado técnico declarado no está aprobado.');for(const t of TASKS[state.selected]){const x=taskData(t),done=['sin_ayuda','con_ayuda'].includes(x.status);if(t.required&&!done)b.push(t.id+': tarea obligatoria sin completar.');if(!t.required&&x.status==='pendiente')b.push(t.id+': decidir si se evalúa o justificar su exclusión.');if(done){if(!x.checks.every(Boolean))b.push(t.id+': faltan comprobaciones.');if(!x.evidence.trim())b.push(t.id+': falta evidencia.');if(x.minutes.trim()===''||!Number.isFinite(Number(x.minutes))||Number(x.minutes)<0)b.push(t.id+': registrar minutos válidos.');const n=Number(x.interventions);if(x.interventions.trim()===''||!Number.isInteger(n)||n<0||(x.status==='sin_ayuda'&&n!==0)||(x.status==='con_ayuda'&&n===0))b.push(t.id+': registrar intervenciones coherentes con el estado.');if(p.autonomy&&t.required&&x.status!=='sin_ayuda')b.push(t.id+': falta repetición sin ayuda para acreditar autonomía.');}if(x.status==='no_evaluada'&&!x.notes.trim())b.push(t.id+': justificar la no evaluación.');}for(const x of p.issues){if(!TASKS[state.selected].some(t=>t.id===x.task))b.push(x.id+': seleccionar una tarea válida.');if(!x.summary.trim()||!x.steps.trim()||!x.expected.trim()||!x.observed.trim()||!x.owner.trim())b.push(x.id+': ficha de incidencia incompleta.');if(x.status==='cerrada'&&!x.retest.trim())b.push(x.id+': falta evidencia de repetición/cierre.');if(['critico','alto'].includes(x.severity)&&(x.status!=='cerrada'||!x.retest.trim()))b.push(x.id+': incidencia crítica/alta sin cierre verificado.');}for(const k of ['conclusion','maintainerConclusion','followup'])if(!f[k].trim())b.push('Completar '+CLOSE.find(x=>x[0]===k)[1]+'.');if(!p.participantReviewed||!p.maintainerReviewed)b.push('Falta revisión del participante o del mantenedor.');if(f.noticeStatus==='enviado'&&!f.sentAt)b.push('Registrar la fecha del envío manual.');return b;}
-function update(){const p=current(),counts=Object.fromEntries(Object.keys(STATUS).map(k=>[k,0]));let complete=0;for(const t of TASKS[state.selected]){const s=taskData(t).status;counts[s]++;if(['sin_ayuda','con_ayuda'].includes(s))complete++;}el('counters').replaceChildren();for(const [k,v] of Object.entries(counts))el('counters').append(node('span',STATUS[k]+': '+v,'pill'));el('progressBar').style.width=100*complete/TASKS[state.selected].length+'%';el('progressText').textContent=complete+' de '+TASKS[state.selected].length+' tareas declaradas completadas. La integridad de la ficha se revisa abajo.';const b=blockers(),gate=el('gate');gate.replaceChildren(node('strong',b.length?'La ficha aún requiere revisión ('+b.length+' pendientes).':'La ficha está completa para la revisión humana.'));if(b.length){const ul=node('ul');b.slice(0,12).forEach(x=>ul.append(node('li',x)));gate.append(ul);if(b.length>12)gate.append(node('p','Consulta todos los pendientes en el informe exportado.'));}else gate.append(node('p','Decisión declarada: '+p.fields.decision+'. No se acepta automáticamente.'));if(['aceptada','aceptada_pendientes'].includes(p.fields.decision)&&b.length)gate.append(node('p','La decisión seleccionada no puede cerrarse como aceptada mientras existan estos pendientes.','decision'));}
-function report(){const p=current(),b=blockers();return{perfil_persona:state.selected,campos:p.fields,identidad_contrastada:p.identity,alcance_acordado:p.agreed,revision_participante:p.participantReviewed,revision_mantenedor:p.maintainerReviewed,autonomia_solicitada:p.autonomy,tareas:TASKS[state.selected].map(t=>({id:t.id,titulo:t.title,obligatoria:t.required,...taskData(t)})),incidencias:p.issues,pendientes:b,decision_humana_declarada:p.fields.decision,decision_efectiva:['aceptada','aceptada_pendientes'].includes(p.fields.decision)&&b.length?'requiere_revision':p.fields.decision};}
-function textReport(){const r=report(),f=r.campos;let s='FHIRVIEWS · INFORME DE PILOTO\nPerfil de persona: '+r.perfil_persona+'\n';for(const [k,label] of [...META,...CLOSE,...NOTICE])s+=label+': '+f[k]+'\n';s+='\nDECISIÓN EFECTIVA DE LA FICHA: '+r.decision_efectiva+'\n';s+='Esta ficha declara observaciones humanas. No ejecuta controles R ni acredita validación clínica.\n';for(const t of r.tareas){s+='\n'+t.id+' · '+t.titulo+'\nEstado: '+STATUS[t.status]+'\nMinutos: '+t.minutes+' / Intervenciones: '+t.interventions+'\n';const def=TASKS[state.selected].find(x=>x.id===t.id);def.checks.forEach((c,i)=>s+=(t.checks[i]?'[x] ':'[ ] ')+c+'\n');s+='Notas: '+t.notes+'\nEvidencia: '+t.evidence+'\n';}for(const x of r.incidencias){s+='\n'+x.id+' · '+x.task+'\n';for(const [k,label] of ISSUE_FIELDS)s+=label+': '+x[k]+'\n';}s+='\nPENDIENTES PARA CERRAR LA FICHA\n'+(r.pendientes.length?r.pendientes.map(x=>'- '+x).join('\n'):'Sin pendientes de integridad detectados; requiere decisión humana.')+'\n';return s;}
-function notice(){const r=report(),f=r.campos;let s='Asunto: [fhirviews piloto] '+(f.session||'<sesión>')+' / perfil '+state.selected+'\n\nParticipante (ID): '+f.participant+'\nDestinatario acordado: '+f.recipient+'\nCandidato: '+f.version+' / '+f.commit+'\nSHA-256: '+f.checksum+'\nResultado técnico declarado: '+f.technical+'\nDecisión humana declarada: '+f.decision+'\nDecisión efectiva de la ficha: '+r.decision_efectiva+'\n\nTareas:\n';for(const t of r.tareas)s+=t.id+': '+STATUS[t.status]+'; minutos='+t.minutes+'; ayuda='+t.interventions+'\n';s+='\nIncidencias:\n';for(const x of r.incidencias)s+=x.id+' ['+severity[x.severity]+'] '+x.summary+'\nPasos: '+x.steps+'\nEsperado: '+x.expected+'\nObservado: '+x.observed+'\nEvidencia: '+x.evidence+'\nResponsable: '+x.owner+' / fecha: '+x.due+'\n\n';if(!r.incidencias.length)s+='No se registraron incidencias; confirmar con el participante.\n';s+='\nConclusión: '+f.conclusion+'\nSeguimiento solicitado: '+f.followup+'\n\nRevisar y adjuntar informe de tareas, experiencia-usuario.txt y controles técnicos acordados. Compartir solo datos ficticios y archivos revisados.\nEste texto se preparó localmente; no fue enviado automáticamente.\n';return s;}
-function filename(suffix){return'fhirviews-'+state.selected+'-'+(current().fields.session||'borrador').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,70)+suffix;}
-function download(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=node('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);feedback('Archivo preparado para descargar: '+name+'. Conserva una copia.');}
-function cell(v){let s=String(v??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return'"'+s.replaceAll('"','""')+'"';}
-function csv(){const r=report(),f=r.campos;const rows=[['tipo','sesion','participante','perfil','id','titulo','estado','minutos','intervenciones','impacto','notas_o_pasos','esperado','observado','evidencia','responsable','fecha','repeticion']];for(const t of r.tareas)rows.push(['tarea',f.session,f.participant,state.selected,t.id,t.titulo,STATUS[t.status],t.minutes,t.interventions,'',t.notes,'','',t.evidence,'','','']);for(const x of r.incidencias)rows.push(['incidencia',f.session,f.participant,state.selected,x.id,x.summary,issueStatus[x.status],'','',severity[x.severity],x.steps,x.expected,x.observed,x.evidence,x.owner,x.due,x.retest]);rows.push(['decision',f.session,f.participant,state.selected,'',f.conclusion,r.decision_efectiva,'','','',r.pendientes.join(' | '),'','','',f.observer,f.date,'']);return'\ufeff'+rows.map(x=>x.map(cell).join(',')).join('\r\n');}
-el('profileR').onclick=()=>{state.selected='r';render();};el('profileFhir').onclick=()=>{state.selected='fhir';render();};el('addIssue').onclick=()=>{const p=current();const x={id:'INC-'+String(p.issues.length+1).padStart(3,'0'),task:TASKS[state.selected][0].id};for(const [k,,t] of ISSUE_FIELDS)x[k]=typeof t==='object'?Object.keys(t)[0]:'';p.issues.push(x);renderIssues();save();};el('prepareNotice').onclick=()=>{el('notificationText').value=notice();feedback('Aviso preparado. Revísalo y envíalo manualmente por el canal acordado.');};el('copyNotice').onclick=async()=>{const t=notice();el('notificationText').value=t;try{await navigator.clipboard.writeText(t);feedback('Aviso copiado. No se ha enviado.');}catch(e){el('notificationText').focus();el('notificationText').select();feedback('Seleccioné el aviso; cópialo manualmente. No se ha enviado.');}};el('downloadNotice').onclick=()=>download(filename('-aviso.txt'),notice(),'text/plain;charset=utf-8');el('exportJson').onclick=()=>{const prev=state.selected;const summaries={};for(const p of ['r','fhir']){state.selected=p;summaries[p]=report();}state.selected=prev;download('fhirviews-fichas-piloto-r4-v2.json',JSON.stringify({...state,exportado:new Date().toISOString(),origen:'Formulario local; no ejecuta controles técnicos',informes:summaries},null,2),'application/json');};el('exportCsv').onclick=()=>download(filename('.csv'),csv(),'text/csv;charset=utf-8');el('exportText').onclick=()=>download(filename('-informe.txt'),textReport(),'text/plain;charset=utf-8');el('print').onclick=()=>{el('printReport').textContent=textReport();window.print();};window.addEventListener('beforeprint',()=>el('printReport').textContent=textReport());el('reset').onclick=()=>{if(!confirm('Exporta JSON antes de continuar. Se reiniciará SOLO la ficha del perfil seleccionado. ¿Continuar?'))return;state.profiles[state.selected]=fresh();render();feedback('Nueva ficha preparada. El otro perfil se conserva.');};el('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>4000000)throw Error('El archivo supera el tamaño permitido.');const next=normalize(JSON.parse(await file.text()));if(!confirm('Importar sustituirá ambas fichas. Exporta primero los cambios que quieras conservar. ¿Continuar?'))return;state=next;render();feedback('Fichas importadas. Revisa su identidad y contenido antes de continuar.');}catch(error){feedback('No se pudo importar: '+(error instanceof SyntaxError?'JSON inválido.':error.message));}finally{e.target.value='';}};
+const TASK_TEXT=['minutes','waiting','interventions','notes','evidence','answers','docs','repeatEvidence','repeatInterventions','repeatNotes'];
+function blankTask(t){return {status:'pendiente',checks:t.checks.map(()=>false),...Object.fromEntries(TASK_TEXT.map(k=>[k,''])),understanding:'pendiente',ease:'',repeatStatus:'no_realizada'};}
+function fresh(profile){const fields={};for(const [k,,t] of [...META,...CLOSE,...NOTICE])fields[k]=typeof t==='object'?Object.keys(t)[0]:'';Object.assign(fields,{version:REF.version,commit:REF.commit,checksum:REF.sha256});return {fields,identity:false,agreed:false,participantReviewed:false,maintainerReviewed:false,autonomy:false,tasks:Object.fromEntries(TASKS_ES[profile].map(t=>[t.id,blankTask(t)])),issues:[]};}
+function initial(){return {schema:SCHEMA,revision_protocolo:PROTOCOL,language,candidato:REF.sha256,protocolo:REF.tareas_sha256,selected:'r',profiles:{r:fresh('r'),fhir:fresh('fhir')}};}
+let state=initial(),storageAvailable=true;
+const el=id=>document.getElementById(id),current=()=>state.profiles[state.selected];
+function str(x){return typeof x==='string'?x:'';}
+function choice(x,options){return Object.hasOwn(options,x)?x:Object.keys(options)[0];}
+function required(t){return t.required||current().fields.scopeLevel===t.required_scope;}
+function orderedTasks(){const ts=TASKS[state.selected],last=ts.find(t=>t.id.endsWith('09'));return state.selected==='r'?[...ts.slice(0,6),last,...ts.slice(6,8)]:[...ts.slice(0,7),last,ts[7]];}
+function normalize(raw){
+ if(!raw||raw.schema!==SCHEMA||raw.candidato!==REF.sha256||raw.protocolo!==REF.tareas_sha256||raw.revision_protocolo!==PROTOCOL||!raw.profiles)throw Error('El candidato o protocolo no corresponde a esta ronda. Conserve el informe anterior por separado.');
+ const s=initial();s.language=raw.language==='en'?'en':'es';s.selected=raw.selected==='fhir'?'fhir':'r';
+ for(const key of ['r','fhir']){
+  const a=raw.profiles[key];if(!a||typeof a!=='object')throw Error('Falta una ficha de perfil.');const p=s.profiles[key];
+  for(const [k,,t] of [...META,...CLOSE,...NOTICE]){const v=str(a.fields?.[k]);p.fields[k]=typeof t==='object'?choice(v,t):v;}
+  for(const k of ['identity','agreed','participantReviewed','maintainerReviewed','autonomy'])p[k]=a[k]===true;
+  for(const t of TASKS_ES[key]){const x=a.tasks?.[t.id]||{},d=blankTask(t);for(const k of TASK_TEXT)d[k]=str(x[k]);Object.assign(d,{status:choice(x.status,STATUS),understanding:choice(x.understanding,UNDERSTANDING),ease:Object.hasOwn(EASE,x.ease)?x.ease:'',repeatStatus:choice(x.repeatStatus,REPEAT),checks:t.checks.map((_,i)=>x.checks?.[i]===true)});p.tasks[t.id]=d;}
+  p.issues=(Array.isArray(a.issues)?a.issues:[]).map((x,i)=>{if(!x||typeof x!=='object'||Array.isArray(x))throw Error('La ficha contiene una incidencia no válida.');const z={id:'INC-'+String(i+1).padStart(3,'0'),task:str(x.task)};for(const [k,,t] of ISSUE_FIELDS){const v=str(x[k]);z[k]=typeof t==='object'?choice(v,t):v;}return z;});
+ }
+ return s;
+}
+try{const saved=localStorage.getItem(KEY);if(saved)state=normalize(JSON.parse(saved));}catch{storageAvailable=false;}
+function feedback(text){el('feedback').textContent=tr(text);}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));storageAvailable=true;}catch{storageAvailable=false;}el('storageStatus').textContent=tr(storageAvailable?'Guardado local activo. Exporte JSON antes de cerrar o cambiar de equipo.':'El navegador no permite guardar localmente. Exporte JSON para conservar su trabajo.');update();}
+function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=tr(text);if(cls)n.className=cls;return n;}
+function field(parent,label,type,value,onChange,id){const l=node('label',undefined,'field');l.append(node('span',label));let input;if(typeof type==='object'){input=node('select');for(const [v,name] of Object.entries(type)){const o=node('option',name);o.value=v;input.append(o);}}else input=node(type==='textarea'?'textarea':'input');if(typeof type==='string'&&type!=='textarea')input.type=type;if(type==='number'){input.min='0';input.step='any';}input.id=id;input.value=value??'';l.htmlFor=id;input.addEventListener('input',()=>{onChange(input.value);save();});l.append(input);parent.append(l);return input;}
+function check(parent,label,value,change,id){const l=node('label',undefined,'check'),input=node('input');input.type='checkbox';input.id=id;input.checked=!!value;l.htmlFor=id;input.addEventListener('change',()=>{change(input.checked);save();});l.append(input,node('span',label));parent.append(l);}
+function taskData(t){const p=current();if(!p.tasks[t.id])p.tasks[t.id]=blankTask(t);return p.tasks[t.id];}
+function renderTasks(){
+ el('tasks').replaceChildren();
+ for(const t of orderedTasks()){
+  const d=taskData(t),card=node('article',undefined,'card');card.id='task-'+t.id;
+  const head=node('div',undefined,'taskhead');head.append(node('h3',t.id+' · '+t.title),node('span',required(t)?'Obligatoria para este alcance':t.required_scope?'Obligatoria en siete; excluible en núcleo':'Opcional','pill'));card.append(head,node('p',t.goal));
+  const list=node('ol');t.steps.forEach(x=>list.append(node('li',x)));card.append(list,node('h4','Preguntas de comprensión'));
+  const qs=node('ul');t.questions.forEach(x=>qs.append(node('li',x)));card.append(qs);
+  card.append(node('h4','Criterios observables'));t.checks.forEach((x,i)=>check(card,x,d.checks[i],v=>d.checks[i]=v,t.id+'-check-'+i));card.append(node('p','Evidencia a conservar: '+t.evidence,'small'));
+  if(t.code){const operational=node('details');operational.append(node('summary','Preparación operativa en R'),node('pre',t.code));card.append(operational);}
+  const contrast=node('details');contrast.className='observer-only';contrast.append(node('summary','Contraste del observador · abrir después del primer intento'),node('p',t.expected,'expected'),node('p','Errores a detectar: '+t.mistakes));card.append(contrast);
+  const row=node('div',undefined,'grid');
+  for(const [k,label,type] of [['status','Estado de la tarea',STATUS],['minutes','Minutos activos','number'],['waiting','Minutos de espera / pausas','number'],['interventions','Intervenciones del observador','number'],['understanding','Comprensión observada · juicio del observador',UNDERSTANDING],['ease','Facilidad declarada · opcional',EASE]])field(row,label,type,d[k],v=>d[k]=v,t.id+'-'+k);
+  card.append(row);field(card,'Respuestas propias y justificación de la comprensión; conservar respuesta inicial y corrección','textarea',d.answers,v=>d.answers=v,t.id+'-answers');
+  field(card,'Documentación consultada por iniciativa propia','textarea',d.docs,v=>d.docs=v,t.id+'-docs');
+  field(card,'Ayuda: tipo y contenido; obstáculos o motivo de exclusión','textarea',d.notes,v=>d.notes=v,t.id+'-notes');
+  field(card,'Archivo o referencia de evidencia revisada','text',d.evidence,v=>d.evidence=v,t.id+'-evidence');
+  const rep=node('details');rep.append(node('summary','Registrar repetición manual de esta tarea'));
+  for(const [k,label,type] of [['repeatStatus','Resultado de repetición',REPEAT],['repeatInterventions','Intervenciones durante la repetición','number'],['repeatEvidence','Nuevo intento y archivos que permiten contrastarlo','text'],['repeatNotes','Qué se repitió, qué cambió y ayuda recibida','textarea']])field(rep,label,type,d[k],v=>d[k]=v,t.id+'-'+k);
+  card.append(rep);el('tasks').append(card);
+ }
+}
+function render(){
+ const profile=state.selected,p=current();el('profileR').setAttribute('aria-pressed',String(profile==='r'));el('profileFhir').setAttribute('aria-pressed',String(profile==='fhir'));
+ el('profileTitle').textContent=tr(profile==='r'?'Perfil R · análisis, autonomía y utilidad':'Perfil FHIR · semántica e interoperabilidad');
+ el('profileScope').textContent=tr(profile==='r'?'Evaluar preparación, construcción, interpretación de tablas, vistas y repetición. Elegir nivel técnico y alcance antes de comenzar.':'Auditar mapas, tipos, referencias, Coding, proyecciones y plan de validación. La ayuda para usar R se registra por separado en las notas.');
+ el('metadata').replaceChildren();for(const [k,label,t] of META)field(el('metadata'),label,t,p.fields[k],v=>{p.fields[k]=v;if(k==='scopeLevel')renderTasks();},'meta-'+k);
+ el('identityChecks').replaceChildren();check(el('identityChecks'),'Contrasté la identidad del archivo con el manifiesto. Los valores precargados no la verifican automáticamente.',p.identity,v=>p.identity=v,'identity');check(el('identityChecks'),'Participante y observador acordaron nivel, alcance, registro y canal de entrega antes de las tareas.',p.agreed,v=>p.agreed=v,'agreed');
+ renderTasks();renderIssues();el('closingFields').replaceChildren();for(const [k,label,t] of CLOSE)field(el('closingFields'),label,t,p.fields[k],v=>p.fields[k]=v,'close-'+k);
+ el('closingChecks').replaceChildren();check(el('closingChecks'),'El participante revisó la conclusión y las incidencias.',p.participantReviewed,v=>p.participantReviewed=v,'participantReviewed');check(el('closingChecks'),'El mantenedor abrió y contrastó la evidencia y revisó la decisión para este alcance.',p.maintainerReviewed,v=>p.maintainerReviewed=v,'maintainerReviewed');check(el('closingChecks'),'Declarar autonomía solo para las tareas identificadas como repetidas sin ayuda y con evidencia.',p.autonomy,v=>p.autonomy=v,'autonomy');
+ el('notificationFields').replaceChildren();for(const [k,label,t] of NOTICE)field(el('notificationFields'),label,t,p.fields[k],v=>p.fields[k]=v,'notice-'+k);el('notificationText').value='';applyLanguage();save();
+}
+function renderIssues(){const parent=el('issues');parent.replaceChildren();if(!current().issues.length)parent.append(node('p','No hay incidencias registradas. Confírmelo al cerrar; una ficha vacía no prueba ausencia de problemas.','small'));for(const x of current().issues){const div=node('article',undefined,'issue');div.append(node('h3',x.id));const g=node('div',undefined,'grid');field(g,'Tarea relacionada',Object.fromEntries(TASKS[state.selected].map(t=>[t.id,t.id+' · '+t.title])),x.task,v=>x.task=v,x.id+'-task');for(const [k,label,t] of ISSUE_FIELDS)field(g,label,t,x[k],v=>x[k]=v,x.id+'-'+k);div.append(g);parent.append(div);}}
+function validNumber(v,integer=false){return v.trim()!==''&&Number.isFinite(Number(v))&&Number(v)>=0&&(!integer||Number.isInteger(Number(v)));}
+function independentTasks(){
+ return TASKS[state.selected].filter(t=>{
+  const x=taskData(t),n=Number(x.interventions);
+  const firstAttempt=required(t)&&['sin_ayuda','con_ayuda'].includes(x.status)&&
+   x.checks.length===t.checks.length&&x.checks.every(Boolean)&&x.understanding==='correcta'&&
+   x.evidence.trim()&&x.answers.trim()&&validNumber(x.minutes)&&validNumber(x.waiting)&&
+   validNumber(x.interventions,true)&&(x.status==='sin_ayuda'?n===0:n>0&&x.notes.trim());
+  const repeated=x.repeatStatus==='sin_ayuda'&&validNumber(x.repeatInterventions,true)&&
+   Number(x.repeatInterventions)===0&&x.repeatEvidence.trim()&&x.repeatNotes.trim();
+  const openIssue=current().issues.some(issue=>issue.task===t.id&&['critico','alto'].includes(issue.severity)&&
+   (issue.status!=='cerrada'||!issue.retest.trim()));
+  return firstAttempt&&repeated&&!openIssue;
+ }).map(t=>t.id);
+}
+function blockers(){
+ const p=current(),f=p.fields,b=[];
+ for(const [key,expected,label] of [['version',REF.version,'versión'],['commit',REF.commit,'commit'],['checksum',REF.sha256,'SHA-256']])if(f[key].trim().toLowerCase()!==expected.toLowerCase())b.push('La identidad no coincide: '+label+'.');
+ const needed=['session','participant','observer','date','system','rVersion','experience','dependencies','scope','technicalEvidence'];for(const [k,label] of META.filter(x=>needed.includes(x[0])))if(!f[k].trim())b.push('Completar '+label+'.');
+ if(!p.identity)b.push('Contrastar la identidad del candidato.');if(!p.agreed)b.push('Acordar el alcance con el participante.');if(f.technical!=='aprobado')b.push('El resultado técnico declarado no está aprobado.');
+ if(!['basico','completo'].includes(f.technicalLevel))b.push('Elegir nivel técnico.');if(!['nucleo','siete'].includes(f.scopeLevel))b.push('Elegir alcance humano.');if(f.scopeLevel==='siete'&&f.technicalLevel!=='completo')b.push('Evaluar siete constructores exige nivel completo y laboratorio.');
+ if(f.profileValidation==='pendiente')b.push('Registrar qué ocurrió con la validación de perfiles externos.');if(f.profileValidation==='indeterminada')b.push('Investigar la validación de perfiles indeterminada antes de cerrar.');if(f.profileValidation==='ejecutada'&&!f.profileEvidence.trim())b.push('Conservar perfiles, servidor y resultados de la validación ejecutada.');if(state.selected==='fhir'&&!f.profileEvidence.trim())b.push('Referenciar el plan de validación F07 y sus exclusiones.');
+ for(const t of TASKS[state.selected]){
+  const x=taskData(t),done=['sin_ayuda','con_ayuda'].includes(x.status);
+  if(required(t)&&!done)b.push(t.id+': tarea obligatoria del alcance sin completar.');if(!required(t)&&x.status!=='no_evaluada')b.push(t.id+': exclúyala con motivo en núcleo o acuerde alcance siete antes de ejecutarla.');
+  if(done){
+   if(!x.checks.every(Boolean))b.push(t.id+': faltan comprobaciones.');if(!x.evidence.trim())b.push(t.id+': falta evidencia.');if(!x.answers.trim())b.push(t.id+': faltan respuestas y justificación.');if(x.understanding!=='correcta')b.push(t.id+': revisar comprensión '+x.understanding+'.');
+   if(!validNumber(x.minutes)||!validNumber(x.waiting))b.push(t.id+': registrar minutos activos y espera válidos (cero si no hubo).');
+   const n=Number(x.interventions);if(!validNumber(x.interventions,true)||(x.status==='sin_ayuda'&&n!==0)||(x.status==='con_ayuda'&&n===0))b.push(t.id+': intervenciones incoherentes con el estado.');if(x.status==='con_ayuda'&&!x.notes.trim())b.push(t.id+': describir la ayuda recibida.');
+  }
+  if(x.status==='no_evaluada'&&!x.notes.trim())b.push(t.id+': justificar la no evaluación.');
+  if(x.repeatStatus!=='no_realizada'){
+   if(!x.repeatEvidence.trim()||!x.repeatNotes.trim())b.push(t.id+': documentar qué se repitió y sus archivos.');const n=Number(x.repeatInterventions);if(!validNumber(x.repeatInterventions,true)||(x.repeatStatus==='sin_ayuda'&&n!==0)||(x.repeatStatus==='con_ayuda'&&n===0))b.push(t.id+': registrar ayuda coherente en la repetición.');if(x.repeatStatus==='fallo')b.push(t.id+': la repetición falló; investigar y repetir tras corregir.');
+  }
+ }
+ const repeated=state.selected==='r'?['R05','R06']:['F03','F04','F05'];for(const id of repeated){const x=taskData(TASKS[state.selected].find(t=>t.id===id));if(!['sin_ayuda','con_ayuda'].includes(x.repeatStatus))b.push(id+': falta repetición manual identificada para el cierre.');}
+ if(p.autonomy&&!independentTasks().length)b.push('La autonomía necesita al menos una tarea repetida sin ayuda con evidencia; su alcance es esa lista de tareas.');
+ for(const x of p.issues){if(!TASKS[state.selected].some(t=>t.id===x.task))b.push(x.id+': seleccionar una tarea válida.');if(!x.summary.trim()||!x.steps.trim()||!x.expected.trim()||!x.observed.trim()||!x.evidence.trim()||!x.owner.trim())b.push(x.id+': ficha de incidencia incompleta.');if(x.status==='cerrada'&&!x.retest.trim())b.push(x.id+': falta repetición/cierre comprobado.');if(['critico','alto'].includes(x.severity)&&(x.status!=='cerrada'||!x.retest.trim()))b.push(x.id+': incidencia crítica/alta sin cierre verificado.');if(x.status!=='cerrada'&&f.decision==='aceptada')b.push(x.id+': registrar la decisión con pendientes explícitos.');}
+ for(const [k,label] of CLOSE.filter(x=>x[0]!=='decision'))if(!f[k].trim())b.push('Completar '+label+'.');if(!p.participantReviewed||!p.maintainerReviewed)b.push('Falta revisión del participante o del mantenedor.');if(['enviado','acuse','cerrado'].includes(f.noticeStatus)&&!f.sentAt)b.push('Registrar la fecha del envío manual.');return b.map(tr);
+}
+function report(){const p=current(),b=blockers();return {revision_protocolo:PROTOCOL,idioma:language,perfil_persona:state.selected,campos:p.fields,identidad_contrastada:p.identity,alcance_acordado:p.agreed,revision_participante:p.participantReviewed,revision_mantenedor:p.maintainerReviewed,autonomia_solicitada:p.autonomy,autonomia_documentada_tareas:p.autonomy?independentTasks():[],tareas:orderedTasks().map(t=>({id:t.id,titulo:t.title,obligatoria:required(t),preguntas:t.questions,...taskData(t)})),incidencias:p.issues,pendientes:b,decision_humana_declarada:p.fields.decision,decision_efectiva:['aceptada','aceptada_pendientes'].includes(p.fields.decision)&&b.length?'requiere_revision':p.fields.decision};}
+function update(){let complete=0;const counts=Object.fromEntries(Object.keys(STATUS).map(k=>[k,0]));for(const t of TASKS[state.selected]){const s=taskData(t).status;counts[s]++;if(['sin_ayuda','con_ayuda'].includes(s))complete++;}el('counters').replaceChildren();for(const [k,v] of Object.entries(counts))el('counters').append(node('span',STATUS[k]+': '+v,'pill'));el('progressBar').style.width=100*complete/TASKS[state.selected].length+'%';el('progressText').textContent=tr(complete+' de 9 tareas declaradas completadas. El alcance, comprensión y evidencia se revisan abajo.');const b=blockers(),gate=el('gate');gate.replaceChildren(node('strong',b.length?'La ficha requiere revisión ('+b.length+' pendientes).':'Ficha completa para la decisión humana.'));if(b.length){const list=node('ul');b.slice(0,12).forEach(x=>list.append(node('li',x)));gate.append(list);if(b.length>12)gate.append(node('p','Consulte todos los pendientes en el informe exportado.'));}else gate.append(node('p',L('Decisión declarada: ','Declared decision: ')+displayField('decision',current().fields.decision)+L('. Autonomía limitada a tareas con repetición documentada.','. Independence is limited to tasks with documented repetition.')));}
+function L(es,en){return language==='en'?en:es;}
+function displayField(key,value){if(key==='decision'&&value==='requiere_revision')return tr('Requiere revisión');const descriptor=[...META,...CLOSE,...NOTICE].find(x=>x[0]===key);return descriptor&&typeof descriptor[2]==='object'?tr(descriptor[2][value]??value):value;}
+function textReport(){
+ const r=report();let s='FHIRVIEWS · '+L('INFORME DE PILOTO · PROTOCOLO ','PILOT REPORT · PROTOCOL ')+PROTOCOL+'\n'+L('Perfil de persona: ','Participant profile: ')+r.perfil_persona+'\n';
+ for(const [key,label] of [...META,...CLOSE,...NOTICE])s+=tr(label)+': '+displayField(key,r.campos[key])+'\n';
+ s+='\n'+L('DECISIÓN EFECTIVA: ','EFFECTIVE DECISION: ')+displayField('decision',r.decision_efectiva)+'\n'+L('Autonomía declarada solo para: ','Independence claimed only for: ')+(r.autonomia_documentada_tareas.join(', ')||L('ninguna tarea','no tasks'))+'\n'+L('La ficha registra observaciones humanas. No ejecuta R ni valida perfiles.','This record contains human observations. It does not run R or validate profiles.')+'\n';
+ for(const t of r.tareas){
+  s+='\n'+t.id+' · '+t.titulo+'\n'+L('Obligatoria para el alcance: ','Required for scope: ')+(t.obligatoria?L('sí','yes'):L('no','no'))+'\n'+L('Estado: ','State: ')+tr(STATUS[t.status])+'\n'+L('Minutos activos: ','Active minutes: ')+t.minutes+L(' / espera: ',' / waiting: ')+t.waiting+L(' / intervenciones: ',' / interventions: ')+t.interventions+'\n'+L('Comprensión: ','Understanding: ')+tr(UNDERSTANDING[t.understanding])+L(' / facilidad opcional: ',' / optional ease: ')+(t.ease||L('sin respuesta','no response'))+'\n';
+  t.preguntas.forEach(q=>s+=L('Pregunta: ','Question: ')+q+'\n');
+  s+=L('Respuestas y justificación: ','Answers and rationale: ')+t.answers+'\n'+L('Documentación consultada: ','Documentation consulted: ')+t.docs+'\n';
+  const def=TASKS[state.selected].find(x=>x.id===t.id);def.checks.forEach((c,i)=>s+=(t.checks[i]?'[x] ':'[ ] ')+c+'\n');
+  s+=L('Ayuda / obstáculos / exclusión: ','Assistance / obstacles / exclusion: ')+t.notes+'\n'+L('Evidencia: ','Evidence: ')+t.evidence+'\n'+L('Repetición: ','Repeat: ')+tr(REPEAT[t.repeatStatus])+L(' / intervenciones: ',' / interventions: ')+t.repeatInterventions+'\n'+L('Intento y archivos: ','Attempt and files: ')+t.repeatEvidence+'\n'+L('Qué se repitió: ','What was repeated: ')+t.repeatNotes+'\n';
+ }
+ for(const x of r.incidencias){s+='\n'+x.id+' · '+x.task+'\n';for(const [key,label,type] of ISSUE_FIELDS)s+=tr(label)+': '+(typeof type==='object'?tr(type[x[key]]??x[key]):x[key])+'\n';}
+ return s+'\n'+L('PENDIENTES','OUTSTANDING ITEMS')+'\n'+(r.pendientes.length?r.pendientes.map(x=>'- '+x).join('\n'):L('Sin pendientes de integridad; requiere decisión humana.','No completeness issues; a human decision is required.'))+'\n';
+}
+function notice(){
+ const r=report(),f=r.campos;let s=L('Asunto: [fhirviews piloto] ','Subject: [fhirviews pilot] ')+(f.session||'<session>')+' / '+L('perfil ','profile ')+state.selected+'\n\n';
+ const fields=[['Protocolo','Protocol',PROTOCOL],['Participante (ID)','Participant (ID)',f.participant],['Destinatario acordado','Agreed recipient',f.recipient],['Candidato','Candidate',f.version+' / '+f.commit],['SHA-256','SHA-256',f.checksum],['Nivel','Level',displayField('technicalLevel',f.technicalLevel)],['Alcance','Scope',displayField('scopeLevel',f.scopeLevel)],['Perfiles externos','External profiles',displayField('profileValidation',f.profileValidation)],['Resultado técnico declarado','Reported technical result',displayField('technical',f.technical)],['Decisión efectiva','Effective decision',displayField('decision',r.decision_efectiva)],['Autonomía documentada solo en','Independence documented only for',r.autonomia_documentada_tareas.join(', ')||L('ninguna tarea','no tasks')]];
+ for(const [es,en,value] of fields)s+=L(es,en)+': '+value+'\n';
+ s+='\n'+L('Tareas:','Tasks:')+'\n';for(const t of r.tareas)s+=t.id+': '+tr(STATUS[t.status])+'; '+tr(UNDERSTANDING[t.understanding])+'; '+L('activo=','active=')+t.minutes+'; '+L('espera=','waiting=')+t.waiting+'; '+L('ayuda=','interventions=')+t.interventions+'\n';
+ s+='\n'+L('Incidencias:','Issues:')+'\n';for(const x of r.incidencias)s+=x.id+' ['+tr(severity[x.severity])+'] '+x.summary+'\n'+L('Esperado: ','Expected: ')+x.expected+'\n'+L('Observado: ','Observed: ')+x.observed+'\n'+L('Evidencia: ','Evidence: ')+x.evidence+'\n'+L('Responsable: ','Owner: ')+x.owner+'\n';
+ if(!r.incidencias.length)s+=L('No se registraron incidencias; confirmar con el participante.','No issues were recorded; confirm with the participant.')+'\n';
+ return s+'\n'+L('Conclusión: ','Conclusion: ')+f.conclusion+'\n'+L('Seguimiento: ','Follow-up: ')+f.followup+'\n'+L('Adjuntar solo evidencia acordada y revisada con datos ficticios.','Attach only agreed, reviewed evidence with fictional data.')+'\n'+L('Este texto se preparó localmente; no fue enviado automáticamente.','This text was prepared locally; it was not sent automatically.')+'\n';
+}
+function filename(suffix){return 'fhirviews-'+state.selected+'-'+(current().fields.session||'borrador').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,70)+suffix;}
+function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=node('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);feedback('Archivo preparado: '+name+'. Conserve una copia.');}
+function cell(v){let s=String(v??'');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';}
+function csv(){
+ const r=report(),f=r.campos;
+ const columns=[
+  ['tipo','record_type'],['sesion','session'],['participante','participant'],['perfil','profile'],['protocolo','protocol'],
+  ['nivel','level'],['nivel_codigo','level_code'],['alcance','scope'],['alcance_codigo','scope_code'],['id','id'],
+  ['titulo','title'],['obligatoria','required'],['estado','state'],['estado_codigo','state_code'],
+  ['minutos_activos','active_minutes'],['minutos_espera','waiting_minutes'],['intervenciones','interventions'],
+  ['comprension','understanding'],['comprension_codigo','understanding_code'],['facilidad','ease'],
+  ['respuestas','answers'],['documentacion','documentation'],['notas','notes'],['evidencia','evidence'],
+  ['repeticion','repeat'],['repeticion_codigo','repeat_code'],['intervenciones_repeticion','repeat_interventions'],
+  ['evidencia_repeticion','repeat_evidence'],['notas_repeticion','repeat_notes'],
+  ['impacto','impact'],['impacto_codigo','impact_code'],['esperado','expected'],['observado','observed'],
+  ['responsable','owner'],['fecha','date']
+ ];
+ const context={sesion:f.session,participante:f.participant,perfil:state.selected,protocolo:PROTOCOL,
+  nivel:displayField('technicalLevel',f.technicalLevel),nivel_codigo:f.technicalLevel,
+  alcance:displayField('scopeLevel',f.scopeLevel),alcance_codigo:f.scopeLevel};
+ const rows=[];
+ for(const t of r.tareas)rows.push({...context,tipo:L('tarea','task'),id:t.id,titulo:t.titulo,
+  obligatoria:t.obligatoria,estado:tr(STATUS[t.status]),estado_codigo:t.status,
+  minutos_activos:t.minutes,minutos_espera:t.waiting,intervenciones:t.interventions,
+  comprension:tr(UNDERSTANDING[t.understanding]),comprension_codigo:t.understanding,facilidad:t.ease,
+  respuestas:t.answers,documentacion:t.docs,notas:t.notes,evidencia:t.evidence,
+  repeticion:tr(REPEAT[t.repeatStatus]),repeticion_codigo:t.repeatStatus,
+  intervenciones_repeticion:t.repeatInterventions,evidencia_repeticion:t.repeatEvidence,notas_repeticion:t.repeatNotes});
+ for(const x of r.incidencias)rows.push({...context,tipo:L('incidencia','issue'),id:x.id,titulo:x.summary,
+  estado:tr(issueStatus[x.status]),estado_codigo:x.status,impacto:tr(severity[x.severity]),impacto_codigo:x.severity,
+  notas:x.steps,esperado:x.expected,observado:x.observed,evidencia:x.evidence,
+  responsable:x.owner,fecha:x.due,evidencia_repeticion:x.retest});
+ rows.push({...context,tipo:L('decision','decision'),titulo:f.conclusion,
+  estado:displayField('decision',r.decision_efectiva),estado_codigo:r.decision_efectiva,
+  notas:r.pendientes.join(' | '),evidencia:r.autonomia_documentada_tareas.join(', '),responsable:f.observer,fecha:f.date});
+ return '\ufeff'+[columns.map(c=>c[language==='en'?1:0]),...rows.map(row=>columns.map(c=>row[c[0]]??''))]
+  .map(row=>row.map(cell).join(',')).join('\r\n');
+}
+el('profileR').onclick=()=>{state.selected='r';render();};el('profileFhir').onclick=()=>{state.selected='fhir';render();};
+el('addIssue').onclick=()=>{const p=current(),x={id:'INC-'+String(p.issues.length+1).padStart(3,'0'),task:TASKS[state.selected][0].id};for(const [k,,t] of ISSUE_FIELDS)x[k]=typeof t==='object'?Object.keys(t)[0]:'';p.issues.push(x);renderIssues();save();};
+el('prepareNotice').onclick=()=>{el('notificationText').value=notice();feedback('Aviso preparado. Revíselo y envíelo manualmente por el canal acordado.');};el('copyNotice').onclick=async()=>{el('notificationText').value=notice();try{await navigator.clipboard.writeText(notice());feedback('Aviso copiado.');}catch{el('notificationText').focus();el('notificationText').select();feedback('Seleccione y copie el aviso manualmente.');}};el('downloadNotice').onclick=()=>download(filename('-aviso.txt'),notice(),'text/plain;charset=utf-8');
+el('exportJson').onclick=()=>{const prev=state.selected,summaries={};for(const profile of ['r','fhir']){state.selected=profile;summaries[profile]=report();}state.selected=prev;download('fhirviews-fichas-piloto-r4-protocolo-2.1.json',JSON.stringify({...state,exportado:new Date().toISOString(),origen:L('Formulario local; observaciones declaradas, sin ejecutar controles técnicos','Local form; reported observations, without running technical checks'),informes:summaries},null,2),'application/json');};
+el('exportCsv').onclick=()=>download(filename('.csv'),csv(),'text/csv;charset=utf-8');el('exportText').onclick=()=>download(filename('-informe.txt'),textReport(),'text/plain;charset=utf-8');el('print').onclick=()=>{el('printReport').textContent=textReport();window.print();};window.addEventListener('beforeprint',()=>el('printReport').textContent=textReport());
+el('reset').onclick=()=>{if(!confirm(tr('Exporte JSON antes de continuar. Se reiniciará SOLO la ficha seleccionada. ¿Continuar?')))return;state.profiles[state.selected]=fresh(state.selected);render();feedback('Nueva ficha preparada. El otro perfil se conserva.');};
+el('importFile').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{const next=normalize(JSON.parse(await file.text()));if(!confirm(tr('Importar sustituirá ambas fichas. Exporte primero los cambios actuales. ¿Continuar?')))return;state=next;language=state.language;TASKS=language==='en'?TASKS_EN:TASKS_ES;render();feedback('Fichas importadas. Revise identidad y contenido.');}catch(error){feedback('No se pudo importar: '+(error instanceof SyntaxError?'JSON inválido.':error.message));}finally{event.target.value='';}};
+el('language').onchange=event=>setLanguage(event.target.value);
+language=state.language;TASKS=language==='en'?TASKS_EN:TASKS_ES;
 render();
 </script></body></html>

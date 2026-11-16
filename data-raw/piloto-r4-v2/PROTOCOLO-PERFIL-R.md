@@ -1,21 +1,52 @@
-# Perfil R: analisis y uso del paquete
+# Perfil R: análisis, autonomía y utilidad
 
-Candidato 0.5.0.9002; datos ficticios. Abre el formulario y registra lo observado.
-El perfil de persona y el perfil tecnico basico/completo son decisiones distintas.
-Acuerda el alcance antes de empezar; consulta LEEME.md para preparar R.
+**Español** · [English](PROTOCOLO-PERFIL-R.en.md)
 
-## R01. Identificar e instalar el candidato
+Protocolo **2.1**, candidato **0.5.0.9002**, datos ficticios.
 
-Instalar la copia comprobada y abrir su ayuda sin usar otra instalacion.
+Lea [la evaluación](EVALUACION-PILOTO.md) y
+[la preparación técnica](LEEME.md). Registre perfil de persona, nivel
+básico/completo y alcance núcleo/siete como tres elecciones distintas.
 
-1. Acordar perfil basico o completo, identificador, sistema y registro de la sesion.
-2. Contrastar CANDIDATO.json y el archivo incluido. Anotar dependencias y ayuda recibida.
-3. Ejecutar el lanzador desde la carpeta del kit; el ejemplo usa el perfil sugerido y se adapta al acordado.
-4. Abrir la sesion aislada para las tareas manuales; si habia otra copia cargada, reiniciar R.
+Las tareas 01–08 son obligatorias. La 09 es obligatoria en alcance
+**siete** y requiere completo; en núcleo se excluye expresamente.
+Realice 09 antes del cierre 08. Responda con sus palabras;
+consultar documentación por iniciativa propia está permitido.
 
-**Contraste:** fhirviews 0.5.0.9002; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.
+El observador registra estado, tiempo activo/esperas, intervenciones,
+comprensión, respuestas, documentos consultados, evidencia y repetición.
+No consulte soluciones antes del primer intento. No se exige memorizar comandos.
 
-**Evidencia:** SESION.json, candidato.txt, ruta de la biblioteca y ayuda consultada.
+## R01. Preparar el entorno e identificar la instalación
+
+**Objetivo:** Comprobar que otra persona puede preparar y abrir el candidato entregado siguiendo la documentación.
+
+**Alcance:** Obligatoria en núcleo y siete.
+
+### Consigna y pasos
+
+1. Acordar perfil R, nivel básico/completo y alcance núcleo de cinco tipos o siete constructores. Registrar experiencia previa en R, SQL y FHIR, dependencias presentes y ayudas previstas.
+2. Verificar el ZIP y CANDIDATO.json. Registrar versión, commit y SHA-256 del paquete, sistema, arquitectura y R. Separar tiempo de dependencias del tiempo de instalación del candidato.
+3. Ejecutar INICIAR.R en una carpeta nueva y abrir_sesion() en una sesión R limpia. Contrastar packageVersion(), find.package(), ayuda y viñetas.
+4. Conservar SESION.json y el registro original; describir cada bloqueo y la documentación usada.
+
+### Preguntas de comprensión
+
+- ¿Cómo comprobarías que R está usando este candidato y no otra copia instalada?
+- ¿Qué pasos necesitan red y cuáles deberían funcionar después de preparar las dependencias?
+
+### Criterios observables
+
+- La identidad entregada y la instalación cargada se contrastaron.
+- Se registraron entorno, nivel técnico y alcance antes de ejecutar tareas.
+- La ayuda y las viñetas se pudieron localizar, o se documentó el bloqueo.
+- Los tiempos de preparación y las intervenciones quedaron separados.
+
+**Evidencia a conservar:** SESION.json, candidato.txt, ruta revisada de biblioteca, versiones y registro de preparación.
+
+### Preparación operativa
+
+Adapte identificador, carpeta y nivel al acuerdo. Los ejemplos no sustituyen su explicación.
 
 ```r
 source("INICIAR.R")
@@ -27,18 +58,39 @@ help("fhir_mapa", package = "fhirviews")
 browseVignettes("fhirviews")
 ```
 
-## R02. Leer los cinco controles y su alcance
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
 
-Interpretar el resultado tecnico, las omisiones y la evaluacion humana pendiente.
+## R02. Interpretar controles e indicadores de vigilancia
 
-1. Abrir piloto/aceptacion.json y aceptacion.csv dentro de la sesion.
-2. Contrastar version 0.5.0.9002, MD5 y esquema_informe = 2.
-3. Explicar api_instalada, vigilancia, contrato_estricto, recuperacion y r4_cinco_recursos.
-4. Registrar advertencias o fallos sin convertirlos en aprobaciones.
+**Objetivo:** Explicar qué mide el ensayo y detectar una interpretación epidemiológica incorrecta.
 
-**Contraste:** Basico: cuatro aprobados y recuperacion no_evaluado. Completo: cinco aprobados. Una advertencia requiere revision.
+**Alcance:** Obligatoria en núcleo y siete.
 
-**Evidencia:** Informe tecnico y explicacion del participante.
+### Consigna y pasos
+
+1. Abrir aceptacion.json y aceptacion.csv. Localizar identidad, esquema, controles, advertencias y hallazgos sin modificar los informes.
+2. Explicar qué acredita cada control y qué queda sin evaluar en el nivel elegido. Contrastar los totales y la exclusión de eventos con los archivos ficticios.
+3. Seguir den-c0001 hasta su paciente y residencia; comprobar que den-c0002 no integra los confirmados. Revisar al menos un conteo territorial y uno mensual en los archivos del ejemplo.
+4. Describir la unidad de análisis y qué información adicional haría falta para contar personas únicas o calcular una tasa poblacional.
+
+### Preguntas de comprensión
+
+- ¿Puede interpretarse cada fila de la salida como una persona distinta? ¿Por qué?
+- ¿Un aprobado automático acredita que otra persona usó el paquete sin ayuda o que se validó un perfil nacional?
+
+### Criterios observables
+
+- Los cinco controles se interpretaron con sus omisiones y advertencias.
+- Se contrastaron totales, un evento incluido y uno excluido con evidencia.
+- Se revisó una agregación territorial y otra mensual.
+- Se distinguieron eventos, personas y tasas; las limitaciones quedaron escritas.
+
+**Evidencia a conservar:** Informe original y nota de interpretación con filas o campos contrastados.
+
+### Preparación operativa
+
+Adapte identificador, carpeta y nivel al acuerdo. Los ejemplos no sustituyen su explicación.
 
 ```r
 informe <- jsonlite::read_json("sesion-P01-intento01/piloto/aceptacion.json")
@@ -46,59 +98,138 @@ informe[c("version_fhirviews", "candidato_md5", "esquema_informe", "resultado_te
 read.csv("sesion-P01-intento01/piloto/aceptacion.csv")
 ```
 
-## R03. Contrastar cinco tipos R4 y sus referencias
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
 
-Relacionar las seis lineas NDJSON con los recursos y tablas originales.
+## R03. Reconstruir la procedencia de una tabla R4
 
-1. Abrir piloto/r4/recursos-r4.ndjson y localizar los seis recursos.
-2. Seguir las referencias al Patient/p1 y los enlaces de Condition/c1 e Immunization/i1 a Encounter/e1.
-3. Identificar active=false y los objetos opcionales ausentes en la segunda inmunizacion.
+**Objetivo:** Relacionar las tablas con sus recursos y explicar claves, ausencias y precisión.
 
-**Contraste:** Patient, Encounter, Condition, Observation y dos Immunization; una fila de entrada por recurso construido.
+**Alcance:** Obligatoria en núcleo y siete.
 
-**Evidencia:** Lineas y campos contrastados; explicacion antes de recibir la referencia.
+### Consigna y pasos
+
+1. Abrir los seis recursos de piloto/r4/recursos-r4.ndjson y elaborar una tabla local tipo/id/referencias relevantes.
+2. Seguir Patient, Encounter, Condition, Observation e Immunization; contrastar al menos una fila tabular con su línea NDJSON.
+3. Comparar false, campo ausente y NA; localizar las variantes de fecha y número de dosis de ambas inmunizaciones.
+4. Revisar los literales decimales en el archivo y explicar qué se pierde si la fuente SQL los entrega como double.
+
+### Preguntas de comprensión
+
+- ¿Por qué una tabla que imprime 72 no demuestra que se conservó el literal 72.00?
+- ¿Qué riesgo tiene completar una fecha desconocida o unir tablas solo por el orden de las filas?
+
+### Criterios observables
+
+- Se distinguieron número de tipos, número de recursos y filas de salida.
+- Las claves y referencias de la fila elegida se siguieron hasta la fuente.
+- FALSE, ausencia y NA se explicaron sin rellenar datos.
+- La escala se contrastó en el JSON, además de la tabla R.
+
+**Evidencia a conservar:** Tabla local de procedencia, referencias y fragmentos de JSON ficticio revisados.
+
+### Preparación operativa
+
+Adapte identificador, carpeta y nivel al acuerdo. Los ejemplos no sustituyen su explicación.
 
 ```r
 recursos <- fhir_recursos("sesion-P01-intento01/piloto/r4/recursos-r4.ndjson")
 print(recursos)
 ```
 
-## R04. Explicar escala y elecciones de fecha y dosis
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
 
-Distinguir texto JSON conservado, valores numericos y variantes FHIR ausentes.
+## R04. Construir recursos nuevos y entender los errores
 
-1. Localizar 72.00 y 0.50 en los archivos, sin confiar solo en la impresion numerica de R.
-2. Contrastar los limites inferiores y las dos variantes de occurrence[x] y doseNumber[x].
-3. Explicar por que la segunda inmunizacion conserva texto y no recibe una fecha inventada.
+**Objetivo:** Crear un mapeo pequeño con datos ficticios y resolver un fallo usando la ayuda.
 
-**Contraste:** La escala del JSON original importa; ver 72 o 0.5 en R no acredita su precision original.
+**Alcance:** Obligatoria en núcleo y siete.
 
-**Evidencia:** Literales revisados, tabla contrastada y explicacion del participante.
+### Consigna y pasos
 
-## R05. Crear y modificar una vista de inmunizaciones
+1. Crear en un script dos Patient ficticios nuevos: id distintos, gender válido, birthDate y active lógico, incluyendo FALSE. Consultar fhir_mapa(), fhir_desde_tabla() y fhir_escribir().
+2. Construir los recursos con un mapa explícito; escribir NDJSON y volver a leerlo. Contrastar ambos registros y conservar script, mapa y salida.
+3. En copias separadas de los datos, repetir un id y usar un gender inválido. Capturar cada rechazo y explicar cómo corregir el origen sin ocultar el error.
+4. En nivel completo, repetir el caso válido con una tabla DuckDB y una consulta parametrizada que seleccione un id. Comparar la salida y cerrar la conexión. En básico, anotar que DBI no se evaluó.
 
-Resolver una tarea nueva usando la documentacion y registrar la ayuda.
+### Preguntas de comprensión
 
-1. Crear un ViewDefinition para Immunization con id, estado, paciente y fecha.
-2. Guardar el JSON; anadir las dos variantes de occurrence y guardar otra version.
-3. Contrastar las dos inmunizaciones y explicar los NA. Pedir la referencia solo despues del primer intento.
+- ¿Qué significa una fila de entrada en este constructor y cómo prepararías dos filas con el mismo id?
+- ¿Cuándo usarías parámetros SQL y qué harías si un identificador grande llega redondeado?
 
-**Contraste:** El participante conserva el JSON y contrasta la tabla con el recurso original; usar la solucion cuenta como ayuda.
+### Criterios observables
 
-**Evidencia:** Dos archivos ViewDefinition, tabla y registro del observador.
+- El caso válido se construyó, guardó y releyó con sus valores explícitos.
+- Las dos entradas inválidas se rechazaron y se conservó el diagnóstico.
+- La corrección se hizo en una copia nueva del origen y quedó explicada.
+- El recorrido DBI se comprobó en completo o quedó excluido explícitamente en básico.
 
-## R06. Leer alergias sin confundir registros y filas
+**Evidencia a conservar:** Script propio, NDJSON válido, diagnóstico de cada caso negativo y comparación DBI si corresponde.
 
-Explicar la relacion entre alergia, reaccion, manifestacion y categorias.
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
 
-1. Abrir el ejemplo de alergias instalado y ejecutar la vista del catalogo.
-2. Explicar por que tres registros producen cinco filas y como contar ids distintos.
-3. Contrastar categorias como listas, gravedad por reaccion, criticidad y valores ausentes.
-4. Revisar que los estados se seleccionan por sistema y no se mezclan dos Coding.
+## R05. Diseñar, modificar y reutilizar una vista
 
-**Contraste:** a1 aporta tres filas; a2 y a3 una cada uno. AllergyIntolerance se extrae mediante una vista; no es un constructor SQL → FHIR.
+**Objetivo:** Resolver una extracción nueva con la documentación y verificar su significado.
 
-**Evidencia:** Conteo de ids, filas y campos contrastados con los recursos ficticios.
+**Alcance:** Obligatoria en núcleo y siete.
+
+### Consigna y pasos
+
+1. Crear una vista Immunization con estado, paciente y fecha a partir del NDJSON del ensayo; conservar la definición antes de ampliarla.
+2. Añadir columnas para ambas variantes de occurrence y guardar una segunda definición JSON. Ejecutarla y explicar cada NA con el recurso original.
+3. Leer la definición guardada con vista_leer() y repetir la extracción; comprobar claves, valores, tipos y conteo, sin exigir orden salvo que se haya acordado.
+4. Describir una modificación para una necesidad de análisis propia usando solo los datos ficticios. Registrar documentos consultados y cualquier solución proporcionada.
+
+### Preguntas de comprensión
+
+- ¿Qué debes guardar para que otra persona pueda reproducir esta extracción?
+- ¿Qué información del recurso original deja fuera tu vista y podría necesitar otro análisis?
+
+### Criterios observables
+
+- Se conservaron dos versiones JSON y se reutilizó la segunda.
+- Las dos inmunizaciones permanecieron identificadas correctamente.
+- Las variantes ausentes y tipos se contrastaron con NDJSON.
+- La persona explicó su vista y la ayuda necesaria, además de ejecutarla.
+
+**Evidencia a conservar:** vista-inmunizaciones-01.json, vista-inmunizaciones-02.json, tablas y explicación propia.
+
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
+
+## R06. Analizar alergias conservando la unidad de conteo
+
+**Objetivo:** Evitar sobrecontar registros al desplegar reacciones y manifestaciones.
+
+**Alcance:** Obligatoria en núcleo y siete.
+
+### Consigna y pasos
+
+1. Localizar el NDJSON de alergias y ejecutar la vista de catálogo. Comparar nrow() con el número de ids distintos.
+2. Agrupar las filas por id y reconstruir la relación alergia→reacción→manifestación para un registro con más de una fila.
+3. Contrastar una alergia sin reacción y sus ausencias. Identificar categorías múltiples y diferenciar criticidad de gravedad por reacción.
+4. Explicar qué conteo usarías para informar alergias registradas y cómo cambiaría si el objetivo fueran manifestaciones. Conservar el código y la justificación.
+
+### Preguntas de comprensión
+
+- ¿Qué error produciría usar nrow(tabla) como número de alergias?
+- ¿Una alergia sin reacción documentada significa que no hubo reacción?
+
+### Criterios observables
+
+- Los conteos de filas e ids se calcularon por separado.
+- Las manifestaciones conservaron su reacción y gravedad.
+- Las alergias sin reacción no desaparecieron del análisis.
+- Se justificó la unidad contada y el tratamiento de ausencias y listas.
+
+**Evidencia a conservar:** Script de conteo, tabla por id y explicación de unidad de análisis.
+
+### Preparación operativa
+
+Adapte identificador, carpeta y nivel al acuerdo. Los ejemplos no sustituyen su explicación.
 
 ```r
 archivo <- system.file("extdata", "alergias_r4.ndjson", package = "fhirviews")
@@ -107,17 +238,39 @@ alergias[, c("id", "estado_clinico", "gravedad_reaccion", "reaccion_codigo")]
 length(unique(alergias$id))
 ```
 
-## R07. Repetir el ensayo conservando ambos intentos
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
 
-Comprobar repetibilidad sin sobrescribir evidencia ni exigir tiempos iguales.
+## R07. Repetir el análisis y comprobar recuperación
 
-1. Ejecutar el perfil acordado en una carpeta nueva de intento02.
-2. Comparar hallazgos y estados, no rutas, sesiones ni duraciones.
-3. Registrar cualquier ayuda y conservar ambas salidas; reiniciar R antes de abrir otra biblioteca si hace falta.
+**Objetivo:** Comprobar repetibilidad y documentar qué tareas pueden repetirse sin intervención.
 
-**Contraste:** Los hallazgos de datos ficticios coinciden; cada intento conserva su propio entorno y tiempos.
+**Alcance:** Obligatoria en núcleo y siete.
 
-**Evidencia:** Dos informes, comparacion de hallazgos y registro de ayuda.
+### Consigna y pasos
+
+1. Ejecutar de nuevo el nivel acordado en otra carpeta, conservando ambos informes y el mismo candidato.
+2. Comparar hallazgos y estados; separar diferencias de rutas y tiempos de diferencias de datos o tipos.
+3. Repetir la creación/reutilización de la vista y el conteo de alergias sin pistas del observador. Registrar exactamente qué tareas y archivos respaldan la repetición.
+4. En completo, revisar el control de recuperación y explicar rollback/reintento sin duplicados. En básico, conservar no_evaluado y limitar la conclusión.
+
+### Preguntas de comprensión
+
+- ¿Por qué repetir solo el comando automático no demuestra que sabes modificar una vista?
+- ¿Qué comprobarías antes de reintentar una carga que falló a mitad?
+
+### Criterios observables
+
+- Los dos intentos y el candidato utilizado quedaron identificados.
+- Se compararon datos, estados y tipos, con diferencias explicadas.
+- La repetición manual registró alcance, resultado e intervenciones.
+- La recuperación se interpretó según el nivel técnico.
+
+**Evidencia a conservar:** Dos informes, comparación escrita y archivos de repetición manual; si hubo ayuda, describirla.
+
+### Preparación operativa
+
+Adapte identificador, carpeta y nivel al acuerdo. Los ejemplos no sustituyen su explicación.
 
 ```r
 iniciar_piloto("basico", "sesion-P01-intento02")
@@ -126,28 +279,65 @@ b <- jsonlite::read_json("sesion-P01-intento02/piloto/aceptacion.json")
 identical(a$hallazgos, b$hallazgos)
 ```
 
-## R08. Revisar hallazgos y registrar la decision humana
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
 
-Entregar evidencia revisable y un cierre acordado, separado del resultado tecnico.
+## R08. Valorar utilidad y acordar el cierre
 
-1. Completar experiencia-usuario.txt y registrar incidencias, pasos, esperado y observado.
-2. Revisar con el mantenedor los datos ficticios y archivos que se compartiran.
-3. Registrar conclusion, responsables y pruebas no evaluadas; exportar las fichas JSON.
-4. Preparar el aviso si se acordo. El envio se realiza fuera del formulario.
+**Objetivo:** Decidir qué uso quedó demostrado y qué mejoras necesitan seguimiento.
 
-**Contraste:** Una decision humana explicita; tareas obligatorias incompletas o incidencias altas/criticas abiertas requieren revision.
+**Alcance:** Obligatoria en núcleo y siete.
 
-**Evidencia:** Ficha exportada, experiencia-usuario.txt y acuerdos de seguimiento.
+### Consigna y pasos
 
-## R09. Construir Specimen y DiagnosticReport desde SQL (opcional)
+1. Revisar las tareas R01–R07 y R09 si corresponde; registrar los bloqueos y errores de interpretación como incidencias con esperado, observado y evidencia.
+2. Responder la entrevista de cierre: utilidad para una tarea propia, paso más confuso, confianza en interpretar las salidas y hasta tres mejoras prioritarias. Distinguir opinión de medición.
+3. Revisar participante y mantenedor la decisión para el alcance exacto, las tareas no evaluadas, responsables y siguiente comprobación. Incidencias críticas/altas requieren corrección y repetición.
+4. Exportar JSON, CSV y texto; comprobar que se pueden reabrir las fichas y que los adjuntos acordados son legibles y no contienen datos personales.
 
-Ampliar el recorrido del perfil completo con los constructores del candidato.
+### Preguntas de comprensión
 
-1. Revisar y ejecutar `examples/laboratorio-r4.R` desde la instalacion aislada; usar solo datos ficticios.
-2. Identificar Patient, Specimen, dos Observation y DiagnosticReport; seguir `result[].reference` y `specimen[].reference`.
-3. Comparar las tablas de resultados y muestras entre V8 y DuckDB; registrar ayuda y cualquier diferencia.
-4. Si no se evalua, marcar no_evaluada y justificar la exclusion; requiere DBI y DuckDB.
+- ¿Qué tarea real intentarías después con esta herramienta y qué te impide hacerlo hoy?
+- ¿Qué necesitarías comprobar antes de recomendarla a un colega?
 
-**Contraste:** El ejemplo genera una muestra, dos observaciones y un informe que conserva referencias variables. Esta tarea opcional no altera los cinco controles de aceptacion.
+### Criterios observables
 
-**Evidencia:** Salida del ejemplo, tablas comparadas y explicacion, o razon documentada de exclusion.
+- La utilidad se vinculó a una tarea concreta y sus límites.
+- Incidencias y prioridades tienen evidencia y responsable.
+- La decisión humana y los alcances no evaluados quedaron explícitos.
+- Se revisaron y conservaron las exportaciones y anexos acordados.
+
+**Evidencia a conservar:** Ficha exportada y revisada, experiencia-usuario.txt, incidencias y plan de seguimiento.
+
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.
+
+## R09. Evaluar el recorrido de laboratorio de siete constructores
+
+**Objetivo:** Completar SQL→laboratorio R4→tablas cuando se evalúe el alcance de siete tipos.
+
+**Alcance:** Obligatoria en siete; excluida con justificación en núcleo.
+
+### Consigna y pasos
+
+1. Confirmar alcance siete y nivel completo; abrir el ejemplo laboratorio-r4.R instalado, leer entradas, mapas y consultas antes de ejecutarlo.
+2. Ejecutar laboratorio_r4() y escribir sus recursos en un NDJSON nuevo. Identificar tipos, ids y enlaces entre paciente, muestra, observaciones e informe.
+3. Guardar las tres vistas y comparar tablas V8/DuckDB por claves, valores y tipos. Revisar escala de volumen y resultados en el NDJSON.
+4. Explicar cómo obtendrías una fila por resultado y cómo evitarías contar un informe dos veces. En alcance núcleo, marcar no_evaluada y justificar la exclusión; no afirmar evaluación de los siete tipos.
+
+### Preguntas de comprensión
+
+- ¿Por qué la tabla de referencias del informe tiene más filas que informes?
+- ¿Qué partes de este caso necesitarían decisiones nuevas para adaptarlo a otra fuente SQL?
+
+### Criterios observables
+
+- Se ejecutó desde la instalación comprobada con DBI/DuckDB.
+- Las referencias y literales de muestra, resultados e informe se contrastaron.
+- Las tres vistas se guardaron y las tablas se compararon en ambos motores.
+- La interpretación distingue muestra, observación, informe y filas de la vista.
+
+**Evidencia a conservar:** NDJSON de laboratorio, tres definiciones JSON, tablas comparadas y explicación propia.
+
+**Registro:** estado; minutos activos/espera; intervenciones y ayuda;
+comprensión; respuestas; documentación; evidencia; resultado/archivos de repetición si se realizó.

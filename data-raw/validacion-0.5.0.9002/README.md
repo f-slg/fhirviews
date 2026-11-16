@@ -97,11 +97,14 @@ FHIRVIEWS_RUST_LIB=/ruta/biblioteca-R Rscript --vanilla \
 ## Limites de entrega
 
 La CLI `fhirviews-r4-validator/1` revisa estructuras tipificadas por R; no
-enlaza a su ABI ni es un validador FHIR general. La distribucion de binarios,
-otras cargas, memoria y posibles mejoras del coste fijo requieren trabajo
-adicional. R mantiene la consulta y el lote completo en memoria.
+enlaza a su ABI ni es un validador FHIR general. La distribución de binarios se completó después de este ensayo; véase
+[distribución actual](../distribucion-rust/README.md). Otras cargas, memoria
+y posibles mejoras del coste fijo requieren trabajo adicional. R mantiene la consulta y el lote completo en memoria.
 
-El kit publicado sigue siendo **0.5.0.9001**, con cinco constructores. Las
-nuevas funciones necesitan evaluacion externa propia; no hay participantes
-asignados ni evaluacion humana completada. 0.5.0.9002 no tiene DOI de version.
+Al realizar este ensayo, el kit disponible era **0.5.0.9001**. El
+[kit actual](../piloto-r4-v2/LEEME.md) entrega el mismo candidato **0.5.0.9002**
+y el [protocolo bilingüe 2.1](../piloto-r4-v2/EVALUACION-PILOTO.md), con
+laboratorio obligatorio para evaluar siete tipos. La actualización de los
+materiales no modifica las mediciones históricas ni acredita participación
+humana; las fichas distribuidas comienzan pendientes. 0.5.0.9002 no tiene DOI de versión.
 El DOI de 0.5.0.9000 conserva su identidad.
