@@ -1,4 +1,8 @@
 inst/js/fhirpath/*.js -text -diff
+# Materiales del kit: conservar los bytes del ZIP tambien con autocrlf en Windows.
+data-raw/piloto-r4-v2/* text eol=lf
+data-raw/probar-candidato.R text eol=lf
+LICENSE.md text eol=lf
 # Informes originales: conservar CRLF y espacios para verificar sus SHA-256.
 data-raw/validacion-0.5.0.9002/ci/** -text -whitespace
 data-raw/validacion-0.5.0.9002/rendimiento/sessionInfo.txt -text -whitespace
