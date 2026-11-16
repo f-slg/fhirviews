@@ -1,5 +1,16 @@
 # fhirviews 0.5.0.9002
 
+* El formulario del piloto conserva respuestas largas y todas las incidencias
+  al exportar/retomar JSON. El CSV traduce rótulos y valores y conserva códigos
+  para análisis entre idiomas; la autonomía requiere comprobaciones y evidencia
+  completas. La CI contrasta los materiales del ZIP con los archivos del repositorio.
+
+* Evaluación externa R4, protocolo 2.1: guías equivalentes en español e inglés,
+  tareas distintas para perfiles R/FHIR y formulario bilingüe. Se registran
+  comprensión, respuestas, evidencia, ayuda y repetición por tarea. El alcance
+  de siete constructores exige laboratorio y nivel completo; se conserva el
+  mismo candidato comprobado y se separan las fichas de rondas anteriores.
+
 * Distribucion independiente del componente Rust en ZIP para Linux x86_64
   con musl estatico, Windows x64 con CRT estatico y macOS 15 Intel/Apple
   Silicon. Incluye SHA-256, fuente, manifiestos y licencias; cada plataforma

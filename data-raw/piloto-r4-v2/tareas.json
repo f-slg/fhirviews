@@ -2,366 +2,490 @@
   "r": [
     {
       "id": "R01",
-      "title": "Identificar e instalar el candidato",
+      "title": "Preparar el entorno e identificar la instalación",
       "required": true,
-      "goal": "Instalar la copia comprobada y abrir su ayuda sin usar otra instalacion.",
+      "required_scope": null,
+      "goal": "Comprobar que otra persona puede preparar y abrir el candidato entregado siguiendo la documentación.",
       "steps": [
-        "Acordar perfil basico o completo, identificador, sistema y registro de la sesion.",
-        "Contrastar CANDIDATO.json y el archivo incluido. Anotar dependencias y ayuda recibida.",
-        "Ejecutar el lanzador desde la carpeta del kit; el ejemplo usa el perfil sugerido y se adapta al acordado.",
-        "Abrir la sesion aislada para las tareas manuales; si habia otra copia cargada, reiniciar R."
+        "Acordar perfil R, nivel básico/completo y alcance núcleo de cinco tipos o siete constructores. Registrar experiencia previa en R, SQL y FHIR, dependencias presentes y ayudas previstas.",
+        "Verificar el ZIP y CANDIDATO.json. Registrar versión, commit y SHA-256 del paquete, sistema, arquitectura y R. Separar tiempo de dependencias del tiempo de instalación del candidato.",
+        "Ejecutar INICIAR.R en una carpeta nueva y abrir_sesion() en una sesión R limpia. Contrastar packageVersion(), find.package(), ayuda y viñetas.",
+        "Conservar SESION.json y el registro original; describir cada bloqueo y la documentación usada."
       ],
       "checks": [
-        "Version, commit y SHA-256 contrastados.",
-        "Se cargo la biblioteca de esta sesion.",
-        "Ayuda y vinetas disponibles; asistencia registrada."
+        "La identidad entregada y la instalación cargada se contrastaron.",
+        "Se registraron entorno, nivel técnico y alcance antes de ejecutar tareas.",
+        "La ayuda y las viñetas se pudieron localizar, o se documentó el bloqueo.",
+        "Los tiempos de preparación y las intervenciones quedaron separados."
       ],
-      "expected": "fhirviews 0.5.0.9002; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.",
-      "evidence": "SESION.json, candidato.txt, ruta de la biblioteca y ayuda consultada.",
+      "questions": [
+        "¿Cómo comprobarías que R está usando este candidato y no otra copia instalada?",
+        "¿Qué pasos necesitan red y cuáles deberían funcionar después de preparar las dependencias?"
+      ],
+      "expected": "Versión 0.5.0.9002, commit y hash del candidato entregado; biblioteca de la sesión. El nivel completo necesita DBI/DuckDB y R ≥ 4.2; el básico R ≥ 4.1. Encontrar por cuenta propia la ayuda no cuenta como intervención del observador.",
+      "evidence": "SESION.json, candidato.txt, ruta revisada de biblioteca, versiones y registro de preparación.",
+      "mistakes": "Confundir versión con identidad del archivo; cargar otra biblioteca; sumar esperas de red al tiempo de análisis.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"basico\", \"sesion-P01-intento01\")\nabrir_sesion(\"sesion-P01-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
     },
     {
       "id": "R02",
-      "title": "Leer los cinco controles y su alcance",
+      "title": "Interpretar controles e indicadores de vigilancia",
       "required": true,
-      "goal": "Interpretar el resultado tecnico, las omisiones y la evaluacion humana pendiente.",
+      "required_scope": null,
+      "goal": "Explicar qué mide el ensayo y detectar una interpretación epidemiológica incorrecta.",
       "steps": [
-        "Abrir piloto/aceptacion.json y aceptacion.csv dentro de la sesion.",
-        "Contrastar version 0.5.0.9002, MD5 y esquema_informe = 2.",
-        "Explicar api_instalada, vigilancia, contrato_estricto, recuperacion y r4_cinco_recursos.",
-        "Registrar advertencias o fallos sin convertirlos en aprobaciones."
+        "Abrir aceptacion.json y aceptacion.csv. Localizar identidad, esquema, controles, advertencias y hallazgos sin modificar los informes.",
+        "Explicar qué acredita cada control y qué queda sin evaluar en el nivel elegido. Contrastar los totales y la exclusión de eventos con los archivos ficticios.",
+        "Seguir den-c0001 hasta su paciente y residencia; comprobar que den-c0002 no integra los confirmados. Revisar al menos un conteo territorial y uno mensual en los archivos del ejemplo.",
+        "Describir la unidad de análisis y qué información adicional haría falta para contar personas únicas o calcular una tasa poblacional."
       ],
       "checks": [
-        "Version, checksum y esquema coinciden con el candidato.",
-        "Los cinco controles se interpretaron; recuperacion no_evaluado en basico no significa aprobado.",
-        "Se explican 755 eventos, 661 confirmados, 94 excluidos y 65 cantones como datos ficticios.",
-        "validacion_usuario_externo sigue pendiente; se separan eventos, pacientes y tasas."
+        "Los cinco controles se interpretaron con sus omisiones y advertencias.",
+        "Se contrastaron totales, un evento incluido y uno excluido con evidencia.",
+        "Se revisó una agregación territorial y otra mensual.",
+        "Se distinguieron eventos, personas y tasas; las limitaciones quedaron escritas."
       ],
-      "expected": "Basico: cuatro aprobados y recuperacion no_evaluado. Completo: cinco aprobados. Una advertencia requiere revision.",
-      "evidence": "Informe tecnico y explicacion del participante.",
+      "questions": [
+        "¿Puede interpretarse cada fila de la salida como una persona distinta? ¿Por qué?",
+        "¿Un aprobado automático acredita que otra persona usó el paquete sin ayuda o que se validó un perfil nacional?"
+      ],
+      "expected": "755 eventos de entrada, 661 confirmados, 94 excluidos y 65 cantones. den-c0001→den-p0001, residencia 0701, inicio 2025-02-27; den-c0002 excluido. Cantón 0701: 55 eventos; febrero: 73. Son conteos ficticios de eventos; una tasa necesita denominador y periodo compatibles. Básico: recuperación no_evaluado; completo: cinco controles aprobados.",
+      "evidence": "Informe original y nota de interpretación con filas o campos contrastados.",
+      "mistakes": "Convertir conteos en tasas; contar eventos como pacientes; tratar no_evaluado como aprobado.",
       "code": "informe <- jsonlite::read_json(\"sesion-P01-intento01/piloto/aceptacion.json\")\ninforme[c(\"version_fhirviews\", \"candidato_md5\", \"esquema_informe\", \"resultado_tecnico\")]\nread.csv(\"sesion-P01-intento01/piloto/aceptacion.csv\")"
     },
     {
       "id": "R03",
-      "title": "Contrastar cinco tipos R4 y sus referencias",
+      "title": "Reconstruir la procedencia de una tabla R4",
       "required": true,
-      "goal": "Relacionar las seis lineas NDJSON con los recursos y tablas originales.",
+      "required_scope": null,
+      "goal": "Relacionar las tablas con sus recursos y explicar claves, ausencias y precisión.",
       "steps": [
-        "Abrir piloto/r4/recursos-r4.ndjson y localizar los seis recursos.",
-        "Seguir las referencias al Patient/p1 y los enlaces de Condition/c1 e Immunization/i1 a Encounter/e1.",
-        "Identificar active=false y los objetos opcionales ausentes en la segunda inmunizacion."
+        "Abrir los seis recursos de piloto/r4/recursos-r4.ndjson y elaborar una tabla local tipo/id/referencias relevantes.",
+        "Seguir Patient, Encounter, Condition, Observation e Immunization; contrastar al menos una fila tabular con su línea NDJSON.",
+        "Comparar false, campo ausente y NA; localizar las variantes de fecha y número de dosis de ambas inmunizaciones.",
+        "Revisar los literales decimales en el archivo y explicar qué se pierde si la fuente SQL los entrega como double."
       ],
       "checks": [
-        "Se distinguen cinco tipos de seis recursos.",
-        "Se contrastaron referencias y claves con el NDJSON.",
-        "FALSE no se confundio con ausente y no se inventaron objetos opcionales."
+        "Se distinguieron número de tipos, número de recursos y filas de salida.",
+        "Las claves y referencias de la fila elegida se siguieron hasta la fuente.",
+        "FALSE, ausencia y NA se explicaron sin rellenar datos.",
+        "La escala se contrastó en el JSON, además de la tabla R."
       ],
-      "expected": "Patient, Encounter, Condition, Observation y dos Immunization; una fila de entrada por recurso construido.",
-      "evidence": "Lineas y campos contrastados; explicacion antes de recibir la referencia.",
+      "questions": [
+        "¿Por qué una tabla que imprime 72 no demuestra que se conservó el literal 72.00?",
+        "¿Qué riesgo tiene completar una fecha desconocida o unir tablas solo por el orden de las filas?"
+      ],
+      "expected": "Cinco tipos y seis recursos: p1/e1/c1/o1/i1/i2. Condition/c1 e Immunization/i1 apuntan a Encounter/e1; ambos eventos de vacunación apuntan a Patient/p1. active=false es información presente. i2 carece de encuentro y cantidad; conserva fecha y dosis textuales. 72.00 y 0.50 tienen límites inferiores 71.995 y 0.495.",
+      "evidence": "Tabla local de procedencia, referencias y fragmentos de JSON ficticio revisados.",
+      "mistakes": "Confundir false con ausente; perder ceros finales antes del mapeo; fabricar fecha, cantidad o paciente.",
       "code": "recursos <- fhir_recursos(\"sesion-P01-intento01/piloto/r4/recursos-r4.ndjson\")\nprint(recursos)"
     },
     {
       "id": "R04",
-      "title": "Explicar escala y elecciones de fecha y dosis",
+      "title": "Construir recursos nuevos y entender los errores",
       "required": true,
-      "goal": "Distinguir texto JSON conservado, valores numericos y variantes FHIR ausentes.",
+      "required_scope": null,
+      "goal": "Crear un mapeo pequeño con datos ficticios y resolver un fallo usando la ayuda.",
       "steps": [
-        "Localizar 72.00 y 0.50 en los archivos, sin confiar solo en la impresion numerica de R.",
-        "Contrastar los limites inferiores y las dos variantes de occurrence[x] y doseNumber[x].",
-        "Explicar por que la segunda inmunizacion conserva texto y no recibe una fecha inventada."
+        "Crear en un script dos Patient ficticios nuevos: id distintos, gender válido, birthDate y active lógico, incluyendo FALSE. Consultar fhir_mapa(), fhir_desde_tabla() y fhir_escribir().",
+        "Construir los recursos con un mapa explícito; escribir NDJSON y volver a leerlo. Contrastar ambos registros y conservar script, mapa y salida.",
+        "En copias separadas de los datos, repetir un id y usar un gender inválido. Capturar cada rechazo y explicar cómo corregir el origen sin ocultar el error.",
+        "En nivel completo, repetir el caso válido con una tabla DuckDB y una consulta parametrizada que seleccione un id. Comparar la salida y cerrar la conexión. En básico, anotar que DBI no se evaluó."
       ],
       "checks": [
-        "Se verificaron literales 72.00 y 0.50.",
-        "Se explicaron limites 71.995 y 0.495.",
-        "Se distinguieron fecha/hora de texto y ordinal numerico de texto.",
-        "Las variantes ausentes permanecen ausentes o NA en la tabla."
+        "El caso válido se construyó, guardó y releyó con sus valores explícitos.",
+        "Las dos entradas inválidas se rechazaron y se conservó el diagnóstico.",
+        "La corrección se hizo en una copia nueva del origen y quedó explicada.",
+        "El recorrido DBI se comprobó en completo o quedó excluido explícitamente en básico."
       ],
-      "expected": "La escala del JSON original importa; ver 72 o 0.5 en R no acredita su precision original.",
-      "evidence": "Literales revisados, tabla contrastada y explicacion del participante.",
+      "questions": [
+        "¿Qué significa una fila de entrada en este constructor y cómo prepararías dos filas con el mismo id?",
+        "¿Cuándo usarías parámetros SQL y qué harías si un identificador grande llega redondeado?"
+      ],
+      "expected": "Dos Patient válidos conservan sus ids y active=FALSE. Los ids duplicados y gender fuera del binding requerido producen fhirviews_error_mapeo. No se agrupan ni sobrescriben ids. En DBI se usa WHERE id = ? con parametros=list(...), y CAST a texto cuando la precisión del origen lo requiera. El constructor local no acredita validación de perfiles.",
+      "evidence": "Script propio, NDJSON válido, diagnóstico de cada caso negativo y comparación DBI si corresponde.",
+      "mistakes": "Usar texto \"false\" como lógico; borrar filas para forzar aprobado sin explicar; interpolar valores en SQL.",
       "code": ""
     },
     {
       "id": "R05",
-      "title": "Crear y modificar una vista de inmunizaciones",
+      "title": "Diseñar, modificar y reutilizar una vista",
       "required": true,
-      "goal": "Resolver una tarea nueva usando la documentacion y registrar la ayuda.",
+      "required_scope": null,
+      "goal": "Resolver una extracción nueva con la documentación y verificar su significado.",
       "steps": [
-        "Crear un ViewDefinition para Immunization con id, estado, paciente y fecha.",
-        "Guardar el JSON; anadir las dos variantes de occurrence y guardar otra version.",
-        "Contrastar las dos inmunizaciones y explicar los NA. Pedir la referencia solo despues del primer intento."
+        "Crear una vista Immunization con estado, paciente y fecha a partir del NDJSON del ensayo; conservar la definición antes de ampliarla.",
+        "Añadir columnas para ambas variantes de occurrence y guardar una segunda definición JSON. Ejecutarla y explicar cada NA con el recurso original.",
+        "Leer la definición guardada con vista_leer() y repetir la extracción; comprobar claves, valores, tipos y conteo, sin exigir orden salvo que se haya acordado.",
+        "Describir una modificación para una necesidad de análisis propia usando solo los datos ficticios. Registrar documentos consultados y cualquier solución proporcionada."
       ],
       "checks": [
-        "Se guardaron las vistas antes y despues de modificarlas.",
-        "Ambas inmunizaciones aparecen con claves correctas.",
-        "Se explicaron NA y variantes; se registraron consultas y ayuda."
+        "Se conservaron dos versiones JSON y se reutilizó la segunda.",
+        "Las dos inmunizaciones permanecieron identificadas correctamente.",
+        "Las variantes ausentes y tipos se contrastaron con NDJSON.",
+        "La persona explicó su vista y la ayuda necesaria, además de ejecutarla."
       ],
-      "expected": "El participante conserva el JSON y contrasta la tabla con el recurso original; usar la solucion cuenta como ayuda.",
-      "evidence": "Dos archivos ViewDefinition, tabla y registro del observador.",
+      "questions": [
+        "¿Qué debes guardar para que otra persona pueda reproducir esta extracción?",
+        "¿Qué información del recurso original deja fuera tu vista y podría necesitar otro análisis?"
+      ],
+      "expected": "Dos filas i1/i2, con clave de paciente p1. occurrence.ofType(dateTime) y occurrence.ofType(string) deben proyectarse por separado; las ausencias quedan NA. La definición releída produce la misma tabla con sus tipos. Un ViewDefinition puede omitir información y no basta para reconstruir todo el recurso.",
+      "evidence": "vista-inmunizaciones-01.json, vista-inmunizaciones-02.json, tablas y explicación propia.",
+      "mistakes": "Copiar la solución y declarar autonomía; reemplazar NA; suponer que una proyección es reversible.",
       "code": ""
     },
     {
       "id": "R06",
-      "title": "Leer alergias sin confundir registros y filas",
+      "title": "Analizar alergias conservando la unidad de conteo",
       "required": true,
-      "goal": "Explicar la relacion entre alergia, reaccion, manifestacion y categorias.",
+      "required_scope": null,
+      "goal": "Evitar sobrecontar registros al desplegar reacciones y manifestaciones.",
       "steps": [
-        "Abrir el ejemplo de alergias instalado y ejecutar la vista del catalogo.",
-        "Explicar por que tres registros producen cinco filas y como contar ids distintos.",
-        "Contrastar categorias como listas, gravedad por reaccion, criticidad y valores ausentes.",
-        "Revisar que los estados se seleccionan por sistema y no se mezclan dos Coding."
+        "Localizar el NDJSON de alergias y ejecutar la vista de catálogo. Comparar nrow() con el número de ids distintos.",
+        "Agrupar las filas por id y reconstruir la relación alergia→reacción→manifestación para un registro con más de una fila.",
+        "Contrastar una alergia sin reacción y sus ausencias. Identificar categorías múltiples y diferenciar criticidad de gravedad por reacción.",
+        "Explicar qué conteo usarías para informar alergias registradas y cómo cambiaría si el objetivo fueran manifestaciones. Conservar el código y la justificación."
       ],
       "checks": [
-        "Se identificaron tres registros y cinco filas.",
-        "Las manifestaciones permanecen asociadas a su reaccion.",
-        "Se distinguen categoria, criticidad y gravedad; no se infieren ausentes.",
-        "La vista no se confundio con un sexto constructor SQL a FHIR."
+        "Los conteos de filas e ids se calcularon por separado.",
+        "Las manifestaciones conservaron su reacción y gravedad.",
+        "Las alergias sin reacción no desaparecieron del análisis.",
+        "Se justificó la unidad contada y el tratamiento de ausencias y listas."
       ],
-      "expected": "a1 aporta tres filas; a2 y a3 una cada uno. AllergyIntolerance se extrae mediante una vista; no es un constructor SQL → FHIR.",
-      "evidence": "Conteo de ids, filas y campos contrastados con los recursos ficticios.",
+      "questions": [
+        "¿Qué error produciría usar nrow(tabla) como número de alergias?",
+        "¿Una alergia sin reacción documentada significa que no hubo reacción?"
+      ],
+      "expected": "Tres ids y cinco filas: a1 aporta tres manifestaciones en dos reacciones; a2 y a3 una fila cada uno sin reacción. No inferir ausencia clínica de una ausencia documental. Categorías se conservan como listas. criticality y reaction.severity tienen significados distintos.",
+      "evidence": "Script de conteo, tabla por id y explicación de unidad de análisis.",
+      "mistakes": "Sumar filas como registros; descartar alergias sin reacción; asignar la misma gravedad a todas las manifestaciones.",
       "code": "archivo <- system.file(\"extdata\", \"alergias_r4.ndjson\", package = \"fhirviews\")\nalergias <- vista_ejecutar(archivo, vista_plantilla(\"alergias\"))\nalergias[, c(\"id\", \"estado_clinico\", \"gravedad_reaccion\", \"reaccion_codigo\")]\nlength(unique(alergias$id))"
     },
     {
       "id": "R07",
-      "title": "Repetir el ensayo conservando ambos intentos",
+      "title": "Repetir el análisis y comprobar recuperación",
       "required": true,
-      "goal": "Comprobar repetibilidad sin sobrescribir evidencia ni exigir tiempos iguales.",
+      "required_scope": null,
+      "goal": "Comprobar repetibilidad y documentar qué tareas pueden repetirse sin intervención.",
       "steps": [
-        "Ejecutar el perfil acordado en una carpeta nueva de intento02.",
-        "Comparar hallazgos y estados, no rutas, sesiones ni duraciones.",
-        "Registrar cualquier ayuda y conservar ambas salidas; reiniciar R antes de abrir otra biblioteca si hace falta."
+        "Ejecutar de nuevo el nivel acordado en otra carpeta, conservando ambos informes y el mismo candidato.",
+        "Comparar hallazgos y estados; separar diferencias de rutas y tiempos de diferencias de datos o tipos.",
+        "Repetir la creación/reutilización de la vista y el conteo de alergias sin pistas del observador. Registrar exactamente qué tareas y archivos respaldan la repetición.",
+        "En completo, revisar el control de recuperación y explicar rollback/reintento sin duplicados. En básico, conservar no_evaluado y limitar la conclusión."
       ],
       "checks": [
-        "Ambas carpetas y sus informes se conservaron.",
-        "Los hallazgos esperados coinciden.",
-        "Cambios, advertencias y ayuda quedaron registrados; no se afirmo autonomia sin repetir sin ayuda."
+        "Los dos intentos y el candidato utilizado quedaron identificados.",
+        "Se compararon datos, estados y tipos, con diferencias explicadas.",
+        "La repetición manual registró alcance, resultado e intervenciones.",
+        "La recuperación se interpretó según el nivel técnico."
       ],
-      "expected": "Los hallazgos de datos ficticios coinciden; cada intento conserva su propio entorno y tiempos.",
-      "evidence": "Dos informes, comparacion de hallazgos y registro de ayuda.",
+      "questions": [
+        "¿Por qué repetir solo el comando automático no demuestra que sabes modificar una vista?",
+        "¿Qué comprobarías antes de reintentar una carga que falló a mitad?"
+      ],
+      "expected": "Los hallazgos coinciden; las rutas y duraciones no tienen que ser iguales. El reintento completo sustituye la carga tras rollback y no acumula duplicados. La autonomía se limita a las tareas manuales realmente repetidas sin ayuda y conserva evidencia del segundo intento.",
+      "evidence": "Dos informes, comparación escrita y archivos de repetición manual; si hubo ayuda, describirla.",
+      "mistakes": "Sobrescribir el primer intento; comparar solo totales; declarar autonomía por un script automático.",
       "code": "iniciar_piloto(\"basico\", \"sesion-P01-intento02\")\na <- jsonlite::read_json(\"sesion-P01-intento01/piloto/aceptacion.json\")\nb <- jsonlite::read_json(\"sesion-P01-intento02/piloto/aceptacion.json\")\nidentical(a$hallazgos, b$hallazgos)"
     },
     {
       "id": "R08",
-      "title": "Revisar hallazgos y registrar la decision humana",
+      "title": "Valorar utilidad y acordar el cierre",
       "required": true,
-      "goal": "Entregar evidencia revisable y un cierre acordado, separado del resultado tecnico.",
+      "required_scope": null,
+      "goal": "Decidir qué uso quedó demostrado y qué mejoras necesitan seguimiento.",
       "steps": [
-        "Completar experiencia-usuario.txt y registrar incidencias, pasos, esperado y observado.",
-        "Revisar con el mantenedor los datos ficticios y archivos que se compartiran.",
-        "Registrar conclusion, responsables y pruebas no evaluadas; exportar las fichas JSON.",
-        "Preparar el aviso si se acordo. El envio se realiza fuera del formulario."
+        "Revisar las tareas R01–R07 y R09 si corresponde; registrar los bloqueos y errores de interpretación como incidencias con esperado, observado y evidencia.",
+        "Responder la entrevista de cierre: utilidad para una tarea propia, paso más confuso, confianza en interpretar las salidas y hasta tres mejoras prioritarias. Distinguir opinión de medición.",
+        "Revisar participante y mantenedor la decisión para el alcance exacto, las tareas no evaluadas, responsables y siguiente comprobación. Incidencias críticas/altas requieren corrección y repetición.",
+        "Exportar JSON, CSV y texto; comprobar que se pueden reabrir las fichas y que los adjuntos acordados son legibles y no contienen datos personales."
       ],
       "checks": [
-        "Experiencia e incidencias revisadas con el participante.",
-        "Se guardo la exportacion y se revisaron los adjuntos.",
-        "Se registraron decision y seguimiento o su estado pendiente.",
-        "No se afirmo validacion clinica, de servidores propios ni de otros motores."
+        "La utilidad se vinculó a una tarea concreta y sus límites.",
+        "Incidencias y prioridades tienen evidencia y responsable.",
+        "La decisión humana y los alcances no evaluados quedaron explícitos.",
+        "Se revisaron y conservaron las exportaciones y anexos acordados."
       ],
-      "expected": "Una decision humana explicita; tareas obligatorias incompletas o incidencias altas/criticas abiertas requieren revision.",
-      "evidence": "Ficha exportada, experiencia-usuario.txt y acuerdos de seguimiento.",
+      "questions": [
+        "¿Qué tarea real intentarías después con esta herramienta y qué te impide hacerlo hoy?",
+        "¿Qué necesitarías comprobar antes de recomendarla a un colega?"
+      ],
+      "expected": "La conclusión puede ser repetir tras correcciones, aceptar para el alcance o aceptar con pendientes menores explícitos. No se cierra favorablemente con tareas obligatorias incompletas, comprensión incorrecta o incidencias altas/críticas sin cierre verificado. Se evita convertir esta sesión en aceptación clínica o institucional.",
+      "evidence": "Ficha exportada y revisada, experiencia-usuario.txt, incidencias y plan de seguimiento.",
+      "mistakes": "Confundir satisfacción con exactitud; cerrar una incidencia solo porque se cambió código; omitir limitaciones.",
       "code": ""
     },
     {
       "id": "R09",
-      "title": "Probar Specimen y DiagnosticReport desde SQL (opcional)",
+      "title": "Evaluar el recorrido de laboratorio de siete constructores",
       "required": false,
-      "goal": "Explorar el ejemplo de laboratorio del candidato actual y sus referencias variables.",
+      "required_scope": "siete",
+      "goal": "Completar SQL→laboratorio R4→tablas cuando se evalúe el alcance de siete tipos.",
       "steps": [
-        "Si se acordo el perfil completo, revisar examples/laboratorio-r4.R en la instalacion aislada.",
-        "Ejecutar laboratorio_r4() con datos ficticios; identificar Patient, Specimen, dos Observation y DiagnosticReport.",
-        "Seguir las referencias result[].reference y specimen[].reference; comparar las tablas V8/DuckDB.",
-        "Si no se evalua, registrar no_evaluada y el motivo. Esta tarea requiere DBI/DuckDB; Rust es opcional."
+        "Confirmar alcance siete y nivel completo; abrir el ejemplo laboratorio-r4.R instalado, leer entradas, mapas y consultas antes de ejecutarlo.",
+        "Ejecutar laboratorio_r4() y escribir sus recursos en un NDJSON nuevo. Identificar tipos, ids y enlaces entre paciente, muestra, observaciones e informe.",
+        "Guardar las tres vistas y comparar tablas V8/DuckDB por claves, valores y tipos. Revisar escala de volumen y resultados en el NDJSON.",
+        "Explicar cómo obtendrías una fila por resultado y cómo evitarías contar un informe dos veces. En alcance núcleo, marcar no_evaluada y justificar la exclusión; no afirmar evaluación de los siete tipos."
       ],
       "checks": [
-        "Se registraron perfil y entorno con DBI/DuckDB.",
-        "El informe contiene referencias a los resultados y la muestra.",
-        "Las vistas V8 y DuckDB coinciden o se documento el hallazgo.",
-        "La no evaluacion no se presento como aprobacion."
+        "Se ejecutó desde la instalación comprobada con DBI/DuckDB.",
+        "Las referencias y literales de muestra, resultados e informe se contrastaron.",
+        "Las tres vistas se guardaron y las tablas se compararon en ambos motores.",
+        "La interpretación distingue muestra, observación, informe y filas de la vista."
       ],
-      "expected": "En el perfil completo, una muestra, dos observaciones y un informe; basico no evalua esta tarea.",
-      "evidence": "Salida ficticia local, tablas comparadas y registro de ayuda; no compartir rutas sin revisarlas.",
+      "questions": [
+        "¿Por qué la tabla de referencias del informe tiene más filas que informes?",
+        "¿Qué partes de este caso necesitarían decisiones nuevas para adaptarlo a otra fuente SQL?"
+      ],
+      "expected": "El ejemplo produce cinco recursos de cuatro tipos: Patient, Specimen, dos Observation y DiagnosticReport. Junto al núcleo cubre siete tipos constructores; no son siete recursos en un mismo archivo. Hay una muestra y un informe, dos observaciones y dos filas de resultados. Literales 5.00/72.00/13.50; límites inferiores 4.995/71.995/13.495. Comparar muestras, observaciones y resultados en ambos motores.",
+      "evidence": "NDJSON de laboratorio, tres definiciones JSON, tablas comparadas y explicación propia.",
+      "mistakes": "Confundir siete tipos cubiertos entre casos con siete recursos del laboratorio; omitir una vista; suponer perfil validado.",
       "code": ""
     }
   ],
   "fhir": [
     {
       "id": "F01",
-      "title": "Identificar e instalar el candidato",
+      "title": "Fijar el alcance de interoperabilidad y el candidato",
       "required": true,
-      "goal": "Instalar la copia comprobada y abrir su ayuda sin usar otra instalacion.",
+      "required_scope": null,
+      "goal": "Delimitar qué afirmaciones puede respaldar la sesión y preparar un entorno reproducible.",
       "steps": [
-        "Acordar perfil basico o completo, identificador, sistema y registro de la sesion.",
-        "Contrastar CANDIDATO.json y el archivo incluido. Anotar dependencias y ayuda recibida.",
-        "Ejecutar el lanzador desde la carpeta del kit; el ejemplo usa el perfil sugerido y se adapta al acordado.",
-        "Abrir la sesion aislada para las tareas manuales; si habia otra copia cargada, reiniciar R."
+        "Acordar perfil FHIR, nivel técnico, alcance núcleo/siete y preguntas de interoperabilidad. Registrar experiencia en FHIR, R, SQL, perfiles y terminología por separado.",
+        "Contrastar identidad del candidato y abrir la biblioteca aislada siguiendo LEEME.md; registrar la ayuda de R necesaria sin confundirla con un fallo de semántica.",
+        "Leer los cinco controles y separar construcción local, comparación de tablas, validación de perfiles y evaluación humana. Anotar DBI/recuperación no evaluados en básico.",
+        "Identificar qué perfiles base y evidencia HAPI se proporcionan como antecedentes y qué validaciones del entorno propio quedan fuera de esta sesión."
       ],
       "checks": [
-        "Version, commit y SHA-256 contrastados.",
-        "Se cargo la biblioteca de esta sesion.",
-        "Ayuda y vinetas disponibles; asistencia registrada."
+        "Identidad, entorno, nivel y alcance acordados quedaron registrados.",
+        "La instalación se verificó y la ayuda recibida quedó descrita.",
+        "Se distinguieron las capas de comprobación y sus evidencias.",
+        "Los perfiles y servidores no evaluados se declararon explícitamente."
       ],
-      "expected": "fhirviews 0.5.0.9002; el instalador verifica SHA-256 antes de instalar. Esto no completa la evaluacion humana.",
-      "evidence": "SESION.json, candidato.txt, ruta de la biblioteca y ayuda consultada.",
+      "questions": [
+        "¿Qué acredita aquí el constructor local y qué requiere un validador de perfiles o terminología?",
+        "¿Qué evidencias pedirías para afirmar interoperabilidad con un sistema específico?"
+      ],
+      "expected": "R4 4.0.1, candidato 0.5.0.9002 identificado por commit y SHA-256. La CI HAPI es antecedente técnico del mantenedor; no una ejecución del participante. Un aprobado local o 144/144 del banco de vistas no acredita perfiles nacionales, terminología ni existencia de referencias.",
+      "evidence": "Identidad y entorno, informes consultados y matriz escrita de validado/no evaluado.",
+      "mistakes": "Usar conformidad de vistas como certificado general FHIR; declarar que el participante ejecutó HAPI al leer un informe.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"completo\", \"sesion-P02-intento01\")\nabrir_sesion(\"sesion-P02-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
     },
     {
       "id": "F02",
-      "title": "Leer los cinco controles y su alcance",
+      "title": "Revisar mapeos, cardinalidades y decisiones semánticas",
       "required": true,
-      "goal": "Interpretar el resultado tecnico, las omisiones y la evaluacion humana pendiente.",
+      "required_scope": null,
+      "goal": "Distinguir reglas del modelo base, contrato del constructor y decisiones de la fuente.",
       "steps": [
-        "Abrir piloto/aceptacion.json y aceptacion.csv dentro de la sesion.",
-        "Contrastar version 0.5.0.9002, MD5 y esquema_informe = 2.",
-        "Explicar api_instalada, vigilancia, contrato_estricto, recuperacion y r4_cinco_recursos.",
-        "Registrar advertencias o fallos sin convertirlos en aprobaciones."
+        "Revisar los mapas del ejemplo r4-estabilidad.R y sus recursos producidos. Relacionar columnas, constantes y referencias con destinos JSON concretos.",
+        "Elaborar para Patient, Encounter, Condition, Observation e Immunization una matriz: campo, origen/constante, obligatoriedad base o del constructor y decisión pendiente del proyecto.",
+        "Contrastar al menos status/class de Encounter, subject de Condition, status/code de Observation y patient/vaccineCode/occurrence de Immunization usando la ayuda y el modelo R4 acordado.",
+        "Explicar una constante que no se podría trasladar automáticamente a otra fuente y por qué un ViewDefinition no constituye un mapa inverso completo."
       ],
       "checks": [
-        "Version, checksum y esquema coinciden con el candidato.",
-        "Los cinco controles se interpretaron; recuperacion no_evaluado en basico no significa aprobado.",
-        "Se explican 755 eventos, 661 confirmados, 94 excluidos y 65 cantones como datos ficticios.",
-        "validacion_usuario_externo sigue pendiente; se separan eventos, pacientes y tasas."
+        "La matriz distingue columna, constante y referencia.",
+        "Se separaron requisitos base, invariantes/perfiles y contrato local.",
+        "Se identificaron decisiones semánticas que requieren acuerdo del proyecto.",
+        "La limitación de reconstruir desde una proyección tabular quedó explicada."
       ],
-      "expected": "Basico: cuatro aprobados y recuperacion no_evaluado. Completo: cinco aprobados. Una advertencia requiere revision.",
-      "evidence": "Informe tecnico y explicacion del participante.",
-      "code": "informe <- jsonlite::read_json(\"sesion-P02-intento01/piloto/aceptacion.json\")\ninforme[c(\"version_fhirviews\", \"candidato_md5\", \"esquema_informe\", \"resultado_tecnico\")]\nread.csv(\"sesion-P02-intento01/piloto/aceptacion.csv\")"
+      "questions": [
+        "¿Por qué exigir id para construir no significa que todos los recursos FHIR deban traerlo antes de crearse?",
+        "¿Es válido asumir status=final para toda fuente solo porque el ejemplo lo usa?"
+      ],
+      "expected": "El constructor exige id único por fila por contrato. Encounter requiere status/class; Condition requiere subject en la base; Observation status/code; Immunization status/vaccineCode/patient/una variante de occurrence. Invariantes y perfiles pueden exigir más. Las constantes del ejemplo son decisiones explícitas; no inferencias clínicas. Se usan rutas JSON como valueQuantity.value, no FHIRPath en el mapa.",
+      "evidence": "Matriz por recurso con fuente documental/versionada y justificación de decisiones.",
+      "mistakes": "Confundir contrato de id con cardinalidad base; inventar códigos o estados; considerar un snapshot como todo un perfil.",
+      "code": ""
     },
     {
       "id": "F03",
-      "title": "Contrastar cinco tipos R4 y sus referencias",
+      "title": "Auditar tipos, elecciones, fechas y precisión",
       "required": true,
-      "goal": "Relacionar las seis lineas NDJSON con los recursos y tablas originales.",
+      "required_scope": null,
+      "goal": "Comprobar que la transformación conserva significado y rechaza alternativas incompatibles.",
       "steps": [
-        "Abrir piloto/r4/recursos-r4.ndjson y localizar los seis recursos.",
-        "Seguir las referencias al Patient/p1 y los enlaces de Condition/c1 e Immunization/i1 a Encounter/e1.",
-        "Identificar active=false y los objetos opcionales ausentes en la segunda inmunizacion."
+        "Contrastar FALSE, ausencia y textos de i1/i2 con el NDJSON y las vistas. Identificar occurrence[x] y doseNumber[x] por sus nombres JSON y tipos.",
+        "Revisar 72.00 y 0.50 como literales JSON y los límites calculados; explicar el riesgo de DECIMAL SQL→double antes de mapear.",
+        "En un script ficticio separado, intentar Patient.active=\"false\", fecha imposible y una Immunization que incluya las dos variantes de occurrence. Registrar rechazos con clase y campo cuando se conozca.",
+        "Explicar el tratamiento de fecha parcial/Date frente a instante con zona y por qué no deben completarse horas, cantidades o campos ausentes por conveniencia."
       ],
       "checks": [
-        "Se distinguen cinco tipos de seis recursos.",
-        "Se contrastaron referencias y claves con el NDJSON.",
-        "FALSE no se confundio con ausente y no se inventaron objetos opcionales."
+        "Se contrastaron valores presentes y ausencias sin conversiones inventadas.",
+        "Las alternativas de elección y la escala se verificaron en la fuente exacta.",
+        "Los tres casos inválidos se rechazaron y sus diagnósticos se conservaron.",
+        "La persona explicó fechas y precisión con sus límites."
       ],
-      "expected": "Patient, Encounter, Condition, Observation y dos Immunization; una fila de entrada por recurso construido.",
-      "evidence": "Lineas y campos contrastados; explicacion antes de recibir la referencia.",
-      "code": "recursos <- fhir_recursos(\"sesion-P02-intento01/piloto/r4/recursos-r4.ndjson\")\nprint(recursos)"
+      "questions": [
+        "¿Tienen la misma evidencia de precisión los literales 72 y 72.00?",
+        "¿Qué daño semántico podría producir convertir una fecha desconocida en una fecha inventada?"
+      ],
+      "expected": "active=\"false\" no es booleano; 2025-02-29 es inválida; occurrenceDateTime y occurrenceString simultáneos son excluyentes. Se esperan fhirviews_error_mapeo. FALSE permanece presente, las variantes ausentes se omiten/NA y 72.00/0.50 conservan límites 71.995/0.495. Una fecha sin hora no es un instante; issued exige instante con zona.",
+      "evidence": "Matriz de variantes, fragmentos NDJSON, script y diagnósticos de casos negativos.",
+      "mistakes": "Validar precisión solo con impresión R; transformar automáticamente texto en booleano; inventar zona u hora.",
+      "code": ""
     },
     {
       "id": "F04",
-      "title": "Explicar escala y elecciones de fecha y dosis",
+      "title": "Comprobar referencias e integridad del grafo",
       "required": true,
-      "goal": "Distinguir texto JSON conservado, valores numericos y variantes FHIR ausentes.",
+      "required_scope": null,
+      "goal": "Diferenciar destino permitido, clave construida y existencia del recurso referenciado.",
       "steps": [
-        "Localizar 72.00 y 0.50 en los archivos, sin confiar solo en la impresion numerica de R.",
-        "Contrastar los limites inferiores y las dos variantes de occurrence[x] y doseNumber[x].",
-        "Explicar por que la segunda inmunizacion conserva texto y no recibe una fecha inventada."
+        "Dibujar o tabular los enlaces de los seis recursos del control. Identificar tipo/id, referencia al paciente y relaciones con el encuentro.",
+        "Comprobar que cada referencia local del caso resuelve al recurso esperado, por tipo e id; registrar enlaces opcionales ausentes.",
+        "Construir un caso negativo con destino Group para Immunization.patient y otro con id de paciente sintácticamente válido pero inexistente en el conjunto. Comparar el comportamiento.",
+        "Explicar cómo tratarías ids repetidos entre servidores, referencias absolutas, URN y dependencias al guardar; señalar qué no comprueba el constructor local."
       ],
       "checks": [
-        "Se verificaron literales 72.00 y 0.50.",
-        "Se explicaron limites 71.995 y 0.495.",
-        "Se distinguieron fecha/hora de texto y ordinal numerico de texto.",
-        "Las variantes ausentes permanecen ausentes o NA en la tabla."
+        "Los enlaces del caso se verificaron por tipo e id.",
+        "Las ausencias opcionales se conservaron y explicaron.",
+        "Se contrastaron rechazo de destino incompatible y referencia no resuelta.",
+        "Se distinguieron validación estructural y existencia/resolución."
       ],
-      "expected": "La escala del JSON original importa; ver 72 o 0.5 en R no acredita su precision original.",
-      "evidence": "Literales revisados, tabla contrastada y explicacion del participante.",
+      "questions": [
+        "¿Una referencia Patient/inexistente puede pasar el constructor? ¿Qué falta comprobar?",
+        "¿Basta el id p1 para unir recursos obtenidos de dos servidores distintos?"
+      ],
+      "expected": "Destino Group para Immunization.patient se rechaza. Patient/no-existe puede ser estructuralmente admisible sin existir en el conjunto; el chequeo de existencia es adicional. Condition/c1 e Immunization/i1 enlazan Encounter/e1; i2 no tiene encounter. La procedencia del servidor evita confundir ids iguales entre orígenes.",
+      "evidence": "Inventario de enlaces, script de ambos casos y diagnóstico o referencia no resuelta.",
+      "mistakes": "Confundir tipo permitido con existencia; resolver por posición; ignorar procedencia de ids.",
       "code": ""
     },
     {
       "id": "F05",
-      "title": "Crear y modificar una vista de inmunizaciones",
+      "title": "Examinar bindings y fidelidad de Coding",
       "required": true,
-      "goal": "Resolver una tarea nueva usando la documentacion y registrar la ayuda.",
+      "required_scope": null,
+      "goal": "Comprobar selección de vocabularios sin convertir etiquetas o listas parciales en validación completa.",
       "steps": [
-        "Crear un ViewDefinition para Immunization con id, estado, paciente y fecha.",
-        "Guardar el JSON; anadir las dos variantes de occurrence y guardar otra version.",
-        "Contrastar las dos inmunizaciones y explicar los NA. Pedir la referencia solo despues del primer intento."
+        "Revisar los Coding de clinicalStatus y verificationStatus del ejemplo de alergias. Identificar sistema canónico, código, display y traducciones adicionales.",
+        "Contrastar qué Coding elige la vista y comprobar que sistema, código y display provienen de la misma entrada. Revisar el caso con Coding sin código.",
+        "Crear dos Patient ficticios en intentos separados: gender válido e inválido. Registrar el rechazo del binding requerido enumerable y explicar por qué no valida cualquier terminología clínica.",
+        "Preparar una lista de sistemas/ValueSets/versiones que exigiría el entorno propio, distinguiendo required/extensible y datos de ejemplo. La consulta a un servidor queda fuera si no se acordó."
       ],
       "checks": [
-        "Se guardaron las vistas antes y despues de modificarlas.",
-        "Ambas inmunizaciones aparecen con claves correctas.",
-        "Se explicaron NA y variantes; se registraron consultas y ayuda."
+        "Los Coding se revisaron como pares system/code coherentes.",
+        "Se contrastaron estados canónicos y traducciones sin mezclarlos.",
+        "El binding requerido enumerable rechazó el código inválido.",
+        "Las terminologías externas y perfiles propios quedaron como requisitos explícitos."
       ],
-      "expected": "El participante conserva el JSON y contrasta la tabla con el recurso original; usar la solucion cuenta como ayuda.",
-      "evidence": "Dos archivos ViewDefinition, tabla y registro del observador.",
+      "questions": [
+        "¿Puede usarse display como identificador estable de un concepto?",
+        "¿Por qué una lista parcial de códigos o code.text no acredita un binding requerido completo?"
+      ],
+      "expected": "a1 incluye la traducción activo y el código canónico active; la vista elige por sistema. En a3 no se debe combinar urn:ejemplo:primero con NO-MEZCLAR de otra entrada. Patient.gender inválido se rechaza. Los bindings extensibles no son enumeraciones cerradas; ValueSets externos o filtrados requieren terminología acordada.",
+      "evidence": "Tabla de Coding contrastados, caso negativo y lista de requisitos terminológicos del proyecto.",
+      "mistakes": "Mezclar system/code/display de entradas distintas; validar por display; aplicar como cerrado un binding extensible.",
       "code": ""
     },
     {
       "id": "F06",
-      "title": "Leer alergias sin confundir registros y filas",
+      "title": "Auditar la proyección y sus pérdidas de información",
       "required": true,
-      "goal": "Explicar la relacion entre alergia, reaccion, manifestacion y categorias.",
+      "required_scope": null,
+      "goal": "Evaluar si las vistas conservan relaciones suficientes para el uso declarado.",
       "steps": [
-        "Abrir el ejemplo de alergias instalado y ejecutar la vista del catalogo.",
-        "Explicar por que tres registros producen cinco filas y como contar ids distintos.",
-        "Contrastar categorias como listas, gravedad por reaccion, criticidad y valores ausentes.",
-        "Revisar que los estados se seleccionan por sistema y no se mezclan dos Coding."
+        "Crear y guardar una vista de Immunization con paciente y ambas variantes de occurrence; justificar claves, tipos y columnas omitidas.",
+        "Ejecutar la vista de alergias y contrastar relación reacción/manifestación, categorías como listas y conservación de registros sin reacción.",
+        "Comparar filas, ids distintos y significado de cada fila; identificar una extracción que podría producir una asociación falsa o un sobreconteo.",
+        "En completo, comparar tablas equivalentes V8/DuckDB por claves, valores y tipos. En básico, dejar comparación entre motores como no evaluada; explicar alcance del banco de conformidad."
       ],
       "checks": [
-        "Se identificaron tres registros y cinco filas.",
-        "Las manifestaciones permanecen asociadas a su reaccion.",
-        "Se distinguen categoria, criticidad y gravedad; no se infieren ausentes.",
-        "La vista no se confundio con un sexto constructor SQL a FHIR."
+        "La definición guardada y sus pérdidas fueron explicadas.",
+        "La relación reacción/manifestación y filas sin reacción se verificaron.",
+        "Se distinguieron filas y recursos sin asociación artificial.",
+        "La comparación de motores se documentó según el nivel técnico."
       ],
-      "expected": "a1 aporta tres filas; a2 y a3 una cada uno. AllergyIntolerance se extrae mediante una vista; no es un constructor SQL → FHIR.",
-      "evidence": "Conteo de ids, filas y campos contrastados con los recursos ficticios.",
-      "code": "archivo <- system.file(\"extdata\", \"alergias_r4.ndjson\", package = \"fhirviews\")\nalergias <- vista_ejecutar(archivo, vista_plantilla(\"alergias\"))\nalergias[, c(\"id\", \"estado_clinico\", \"gravedad_reaccion\", \"reaccion_codigo\")]\nlength(unique(alergias$id))"
+      "questions": [
+        "¿Qué información necesitarías además de esta vista para reconstruir el recurso original?",
+        "¿Pasar el banco de pruebas implica que cualquier FHIRPath podrá traducirse a SQL?"
+      ],
+      "expected": "Immunization conserva i1/i2 y variantes ausentes como NA; alergias tiene tres registros/cinco filas con manifestaciones vinculadas a su reacción. Una vista puede perder datos. 144/144 corresponde al banco fijado; DuckDB mantiene un subconjunto documentado y no admite cualquier expresión.",
+      "evidence": "ViewDefinition propio, tabla de auditoría y comparación de motores o exclusión justificada.",
+      "mistakes": "Interpretar la extracción como conversión reversible; ignorar tipos; extrapolar el banco a FHIRPath completo.",
+      "code": ""
     },
     {
       "id": "F07",
-      "title": "Repetir el ensayo conservando ambos intentos",
+      "title": "Diseñar la validación de perfiles del entorno",
       "required": true,
-      "goal": "Comprobar repetibilidad sin sobrescribir evidencia ni exigir tiempos iguales.",
+      "required_scope": null,
+      "goal": "Producir un plan revisable de interoperabilidad sin atribuir ejecuciones no realizadas.",
       "steps": [
-        "Ejecutar el perfil acordado en una carpeta nueva de intento02.",
-        "Comparar hallazgos y estados, no rutas, sesiones ni duraciones.",
-        "Registrar cualquier ayuda y conservar ambas salidas; reiniciar R antes de abrir otra biblioteca si hace falta."
+        "Inventariar, para los recursos del alcance, perfil base, perfil del proyecto si existe, versión FHIR, terminología y referencias que habrá que resolver.",
+        "Revisar la evidencia HAPI entregada como antecedente del mantenedor y distinguirla de una ejecución propia. Registrar qué invariantes y requisitos del proyecto siguen pendientes.",
+        "Definir un ensayo futuro o, solo si se acordó un servidor de pruebas, ejecutar $validate sobre el JSON exacto conservando perfil canónico, servidor/versión, fecha, estado HTTP y OperationOutcome.",
+        "Incluir en el plan un recurso válido y uno alterado que deba rechazarse. Si se ejecutó el servidor, clasificar válido/rechazado/indeterminado y revisar advertencias; si no, dejar la validación de perfiles no_evaluada."
       ],
       "checks": [
-        "Ambas carpetas y sus informes se conservaron.",
-        "Los hallazgos esperados coinciden.",
-        "Cambios, advertencias y ayuda quedaron registrados; no se afirmo autonomia sin repetir sin ayuda."
+        "Existe una matriz de perfiles, versiones y requisitos por recurso.",
+        "Se separaron antecedentes del mantenedor y ejecución del participante.",
+        "El plan incluye casos positivo/negativo y criterio de interpretación.",
+        "El estado de validación externa se registró sin aprobar lo no ejecutado."
       ],
-      "expected": "Los hallazgos de datos ficticios coinciden; cada intento conserva su propio entorno y tiempos.",
-      "evidence": "Dos informes, comparacion de hallazgos y registro de ayuda.",
-      "code": "iniciar_piloto(\"completo\", \"sesion-P02-intento02\")\na <- jsonlite::read_json(\"sesion-P02-intento01/piloto/aceptacion.json\")\nb <- jsonlite::read_json(\"sesion-P02-intento02/piloto/aceptacion.json\")\nidentical(a$hallazgos, b$hallazgos)"
+      "questions": [
+        "¿Qué significa valido=NA o un OperationOutcome incompleto?",
+        "¿Por qué declarar meta.profile no prueba por sí mismo el cumplimiento de ese perfil?"
+      ],
+      "expected": "La tarea obligatoria se completa al producir y explicar el plan; ejecutar un servidor es una ampliación opcional. No se requiere red ni servidor para el núcleo. $validate con HTTP erróneo o respuesta incompleta es indeterminado; advertencias se revisan. No se guarda ni envía un recurso a producción. Un perfil base aprobado no acredita el perfil nacional.",
+      "evidence": "Matriz y plan de validación; si hubo ejecución acordada, JSON exacto y OperationOutcome revisado con fecha/perfil/servidor.",
+      "mistakes": "Marcar perfiles aprobados por redactar el plan; tratar NA como TRUE; ejecutar contra producción sin acuerdo.",
+      "code": ""
     },
     {
       "id": "F08",
-      "title": "Revisar hallazgos y registrar la decision humana",
+      "title": "Repetir la auditoría y emitir una conclusión delimitada",
       "required": true,
-      "goal": "Entregar evidencia revisable y un cierre acordado, separado del resultado tecnico.",
+      "required_scope": null,
+      "goal": "Comprobar repetición, revisar hallazgos y decidir qué interoperabilidad se evaluó.",
       "steps": [
-        "Completar experiencia-usuario.txt y registrar incidencias, pasos, esperado y observado.",
-        "Revisar con el mantenedor los datos ficticios y archivos que se compartiran.",
-        "Registrar conclusion, responsables y pruebas no evaluadas; exportar las fichas JSON.",
-        "Preparar el aviso si se acordo. El envio se realiza fuera del formulario."
+        "Repetir el ensayo instalado en carpeta nueva y una auditoría manual de referencias, Coding y elecciones sin pistas; identificar las tareas repetidas y conservar ambas evidencias.",
+        "Comparar hallazgos y registrar discrepancias de datos, tipos o interpretación separadas de diferencias de entorno. Corregir y repetir cualquier incidencia crítica/alta antes de cerrar favorablemente.",
+        "Responder la entrevista: decisión de mapeo más difícil, información faltante para un entorno propio, confianza en revisar resultados y hasta tres mejoras prioritarias.",
+        "Revisar con participante y mantenedor la matriz de alcance, perfiles no ejecutados, ayudas, responsables y decisión humana; exportar fichas y revisar adjuntos."
       ],
       "checks": [
-        "Experiencia e incidencias revisadas con el participante.",
-        "Se guardo la exportacion y se revisaron los adjuntos.",
-        "Se registraron decision y seguimiento o su estado pendiente.",
-        "No se afirmo validacion clinica, de servidores propios ni de otros motores."
+        "Se conservó el segundo intento y se delimitó la repetición manual.",
+        "Los hallazgos se compararon y las discrepancias quedaron registradas.",
+        "La conclusión distingue estructura, semántica, perfiles y utilidad.",
+        "La ficha exportada, prioridades y seguimiento fueron revisados por ambas personas."
       ],
-      "expected": "Una decision humana explicita; tareas obligatorias incompletas o incidencias altas/criticas abiertas requieren revision.",
-      "evidence": "Ficha exportada, experiencia-usuario.txt y acuerdos de seguimiento.",
+      "questions": [
+        "¿Qué afirmación de interoperabilidad puedes sostener con esta sesión y cuál requiere otra prueba?",
+        "¿Recomendarías este flujo para una prueba de integración? ¿Con qué condiciones concretas?"
+      ],
+      "expected": "El resultado técnico permanece separado de la decisión humana y de perfiles. Un cierre favorable requiere tareas del alcance completas, comprensión correcta y ausencia de incidencias altas/críticas abiertas. La autonomía se limita a las tareas repetidas con evidencia y sin intervenciones; no se extiende automáticamente al perfil completo.",
+      "evidence": "Dos intentos, auditoría repetida, ficha exportada y conclusión con alcances pendientes.",
+      "mistakes": "Generalizar a otros servidores o perfiles; confundir ayuda en R con defecto FHIR; declarar autonomía global sin repetir cada tarea.",
       "code": ""
     },
     {
       "id": "F09",
-      "title": "Probar Specimen y DiagnosticReport desde SQL (opcional)",
+      "title": "Auditar Specimen y DiagnosticReport de extremo a extremo",
       "required": false,
-      "goal": "Explorar el ejemplo de laboratorio del candidato actual y sus referencias variables.",
+      "required_scope": "siete",
+      "goal": "Completar la revisión semántica de los dos constructores adicionales en alcance siete.",
       "steps": [
-        "Si se acordo el perfil completo, revisar examples/laboratorio-r4.R en la instalacion aislada.",
-        "Ejecutar laboratorio_r4() con datos ficticios; identificar Patient, Specimen, dos Observation y DiagnosticReport.",
-        "Seguir las referencias result[].reference y specimen[].reference; comparar las tablas V8/DuckDB.",
-        "Si no se evalua, registrar no_evaluada y el motivo. Esta tarea requiere DBI/DuckDB; Rust es opcional."
+        "Confirmar nivel completo y ejecutar el ejemplo laboratorio-r4.R con datos ficticios. Identificar mapas, consultas, tipos y recursos generados.",
+        "Auditar el grafo Patient→Specimen/Observation/DiagnosticReport y las colecciones result[].reference/specimen[].reference; comprobar todas las referencias del caso por tipo e id.",
+        "Contrastar status/code obligatorios de DiagnosticReport, opcionalidad base de subject y de status/subject de Specimen, issued con zona y precisión de cantidades. Probar por separado status inválido y result apuntando al tipo incorrecto.",
+        "Guardar las tres vistas, el NDJSON exacto y comparaciones V8/DuckDB; añadir estos tipos al plan F07. En núcleo, justificar no_evaluada sin afirmar revisión de siete tipos."
       ],
       "checks": [
-        "Se registraron perfil y entorno con DBI/DuckDB.",
-        "El informe contiene referencias a los resultados y la muestra.",
-        "Las vistas V8 y DuckDB coinciden o se documento el hallazgo.",
-        "La no evaluacion no se presento como aprobacion."
+        "Los mapas y el grafo del laboratorio se auditaron con todos sus enlaces.",
+        "Se distinguieron cardinalidades base y exigencias del proyecto.",
+        "Los dos casos inválidos se rechazaron y la precisión se contrastó.",
+        "Las tres vistas/motores y requisitos de perfiles quedaron documentados."
       ],
-      "expected": "En el perfil completo, una muestra, dos observaciones y un informe; basico no evalua esta tarea.",
-      "evidence": "Salida ficticia local, tablas comparadas y registro de ayuda; no compartir rutas sin revisarlas.",
+      "questions": [
+        "¿Todo Specimen debe tener Patient como subject en la base R4?",
+        "¿Qué impide que una referencia válida en estructura se resuelva a un resultado equivocado en otra fuente?"
+      ],
+      "expected": "Cinco recursos de cuatro tipos en laboratorio, que amplían a siete los tipos cubiertos junto al núcleo. Specimen puede tener sujeto ambiental y no exige status/subject en la base; DiagnosticReport exige status/code, no subject; issued es instante con zona. El informe referencia dos Observation y un Specimen. Se rechazan status inválido y result hacia Patient. Tres vistas deben coincidir en V8/DuckDB; HAPI/perfil propio siguen separados.",
+      "evidence": "Grafo, matriz de campos, NDJSON, diagnósticos negativos, tres vistas y tablas comparadas.",
+      "mistakes": "Exigir siempre Patient a una muestra ambiental; confundir referencia estructural con resolución; declarar perfil validado por comparar tablas.",
       "code": ""
     }
   ]

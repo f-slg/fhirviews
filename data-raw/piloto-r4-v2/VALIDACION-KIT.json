@@ -1,44 +1,93 @@
 {
   "estado": "preparado_y_comprobado_tecnicamente",
+  "revision_protocolo": "2.1",
+  "idiomas": [
+    "es",
+    "en"
+  ],
   "version_candidato": "0.5.0.9002",
-  "fuente_kit_commit": "57adbacdde416ca67e5cdd44d939ce220760ff9d",
+  "fuente_kit_commit": "559c6b5ff2847464c2795765c6c2f9676d145e94",
+  "fuente_kit_estado": "commit_git",
   "fuente_candidato_commit": "8d6a122356d9a23f6d71e690ee542108fa15ce8a",
+  "protocolo_sha256": "b6e5d4ab5e49df7fac1fa15293afc08864478a851a690ccacea3ad951e3f498d",
   "zip": {
     "archivo": "fhirviews-kit-piloto-r4-v2.zip",
-    "bytes": 1366513,
-    "sha256": "de927ae5233ca9224826572a7e636090502cb0221a7030d8358cc0d72c77be05",
-    "archivos": 15
+    "bytes": 1685651,
+    "sha256": "05f3d1c549fb0767cd4efe0b628a087688669d028773fbbf65deb5118f1a0822",
+    "archivos": 23
   },
   "paquete_sha256": "305e5db0d637aecfbea612201abd4efc1995e6769a7026d29be1fc52308e8833",
-  "comprobado_utc": "2026-11-15T19:25:31+00:00",
+  "comprobado_utc": "2026-11-16T00:37:21.476612+00:00",
+  "entorno_local": "Linux",
   "pruebas_locales": {
-    "ZIP_reconstruido_identico": true,
+    "ZIP_entregado_reconstruido_identico": true,
     "hashes_internos": true,
     "rechazo_paquete_alterado": true,
+    "rechazo_material_de_protocolo_alterado": true,
     "rechazo_sobrescritura": true,
-    "perfiles_instalados": [
-      "basico",
-      "completo"
-    ],
-    "carpetas_con_espacios": true,
-    "abrir_sesion_aislada_y_alergias": true,
-    "laboratorio_specimen_diagnosticreport_v8_duckdb": true,
+    "protocolos_ES_EN_sincronizados": true,
+    "enlaces_locales_y_bloques_codigo": true,
+    "candidato_y_lanzador": {
+      "perfiles_instalados": [
+        "basico",
+        "completo"
+      ],
+      "carpetas_con_espacios": true,
+      "sesion_aislada_y_alergias": true,
+      "laboratorio_tres_vistas_V8_DuckDB": true,
+      "nota": "Candidato y lanzadores sin cambios respecto del ZIP auditado con ambos perfiles. El ZIP publicado se reconstruye desde el commit fuente y se contrasta con sus materiales; la CI ejecuta de nuevo ambos perfiles en Linux, Windows y macOS."
+    },
+    "ejemplos_observador": {
+      "candidato_instalado": "0.5.0.9002",
+      "construccion_y_casos_negativos": true,
+      "DBI_parametrizado": true,
+      "laboratorio": true
+    },
     "formulario": {
       "motor": "jsdom 26.1.0",
-      "tipo_datos": "SIMULADOS; no fichas de participantes",
-      "identidad_y_protocolo": true,
-      "estados_y_revision_humana": true,
-      "importacion_y_perfiles": true,
-      "sin_almacenamiento_local": true
+      "tipo_datos": "SIMULADOS en memoria; no fichas de participantes",
+      "perfiles_R_FHIR_y_alcances_nucleo_siete": true,
+      "comprension_respuestas_y_evidencia": true,
+      "laboratorio_obligatorio_en_siete": true,
+      "ayuda_y_repeticion_por_tarea": true,
+      "cierres_e_incidencias": true,
+      "idioma_sin_perdida_de_respuestas": true,
+      "exportaciones_ES_EN_JSON_CSV_TXT": true,
+      "importacion_identidad_y_protocolo": true,
+      "modo_sin_almacenamiento_local": true,
+      "botones_exportar_e_importar_reales": true,
+      "respuesta_completa_caracteres_verificados": 2200000,
+      "importacion_propia_mayor_de_4MB": true,
+      "incidencias_preservadas_verificadas": 201,
+      "autonomia_excluye_tareas_incompletas": true,
+      "CSV_valores_traducidos_y_codigos_estables": true,
+      "decision_efectiva_traducida": true
     },
-    "documentacion_participante": {
-      "README_kit_detallado": true,
-      "README_principal_es_en_revisados": true,
-      "enlaces_locales_y_repositorio": true,
-      "bloques_codigo_balanceados": true
-    }
+    "ZIP_entregado_coincide_con_fuentes_actuales": true
+  },
+  "ci_revision_actual": {
+    "estado": "pendiente_de_ejecucion_en_PR",
+    "matriz_prevista": [
+      "Linux",
+      "Windows",
+      "macOS"
+    ],
+    "nota": "Resultados de esta revisión disponibles en GitHub Actions; las pruebas locales no se presentan como CI remota."
   },
   "evaluacion_usuario_externo": "pendiente",
-  "participantes": "sin_asignar",
-  "notas": "Kit reconstruido desde el commit identificado y verificado con prueba de reproducción byte a byte. Perfiles básico/completo y formulario aprobados. Para DuckDB completo se permitió descargar la extensión json; los datos de prueba son ficticios. La evaluación humana y asignación de participantes siguen pendientes. La CI de esta revisión de documentación está pendiente."
+  "participantes": "no_incluidos_en_el_kit",
+  "continuidad": "Protocolo 2.0 conserva sus fichas y hashes. 2.1 es otra ronda; no importa fichas anteriores.",
+  "notas": "Candidato R intacto. Materiales ES/EN y formulario corregido, fichas vacias y sin envios automaticos. Fuente del kit fijada al commit Git indicado; reconstruccion byte a byte desde los materiales hashados incluidos.",
+  "auditoria_implementacion": {
+    "fallos_reproducidos": [
+      "Importacion recortaba respuestas a 10000 caracteres y descartaba incidencias despues de 200.",
+      "Una exportacion propia mayor de 4MB no podia importarse.",
+      "CSV ingles conservaba valores visibles en espanol y la decision efectiva podia mostrar un codigo sin traducir.",
+      "El resumen de autonomia admitia tareas con comprobaciones y evidencia incompletas.",
+      "El comprobador no contrastaba materiales del ZIP con los archivos actuales del repositorio."
+    ],
+    "correcciones_comprobadas": true,
+    "github_main_observado": "7af7a4d21e8d31b3469d2c984ae87b426f102720",
+    "publicacion_de_estos_cambios": "Publicación por PR con CI; consultar estado y merge en GitHub."
+  }
 }

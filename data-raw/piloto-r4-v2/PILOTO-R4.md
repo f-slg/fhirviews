@@ -1,50 +1,62 @@
 # Piloto externo del alcance R4
 
-Este protocolo acompana al candidato de desarrollo **0.5.0.9002**. Registra
-el archivo exacto, su SHA-256 y la plataforma antes de empezar. No es un
-lanzamiento estable ni un aval de CRAN. El candidato 0.5.0.9000 tiene un DOI
-propio distinto; no se atribuye a 0.5.0.9002. Los datos del piloto son
-enteramente ficticios.
+**Español** · [English](PILOTO-R4.en.md)
 
-## Alcance
+Protocolo **2.1**, candidato **0.5.0.9002**, datos ficticios. Registre archivo,
+commit, SHA-256 y entorno. Los informes técnicos, la decisión humana y la
+validación de perfiles son evidencias separadas. El candidato no tiene DOI
+propio y no hereda el de 0.5.0.9000.
 
-La aceptacion tecnica instalada conserva el control historico de seis recursos
-y cinco tipos, ademas de pruebas del paquete. Una tarea opcional separada del
-perfil completo ejercita Specimen y DiagnosticReport desde SQL. El perfil **completo** incluye
-una tarea opcional nueva para ejecutar `examples/laboratorio-r4.R`: construye
-Patient, Specimen, dos Observation y DiagnosticReport desde DBI/DuckDB, prueba
-referencias variables de informe a resultados y muestras y compara V8 con
-DuckDB. El perfil basico no instala DuckDB y no evalua esa tarea.
+## Elegir y preparar la sesión
 
-`fhir_componente_rust()` es una opcion CLI externa. El candidato no descarga ni
-instala Rust automaticamente; usar Rust no es requisito para completar este
-piloto. Los perfiles base R4 probados con HAPI no sustituyen perfiles
-clinicos/nacionales, invariantes ni terminologia del proyecto.
+Acordar tres decisiones: perfil de persona R/FHIR, nivel básico/completo y
+alcance núcleo/siete. Núcleo cubre cinco tipos constructores y extracción de
+alergias; siete añade Specimen y DiagnosticReport y exige nivel completo y
+R09/F09 terminada. Son siete tipos cubiertos entre casos; el ejemplo de
+laboratorio produce cinco recursos de cuatro tipos.
 
-## Preparacion y ejecucion
+La [evaluación detallada](EVALUACION-PILOTO.md) define preguntas, observación,
+comprensión, ayuda, repetición, incidencias y criterios de cierre. La
+[guía de preparación](LEEME.md) describe dependencias, hashes, instalación,
+apertura de sesión y archivos. Use el protocolo [R](PROTOCOLO-PERFIL-R.md) o
+[FHIR](PROTOCOLO-PERFIL-FHIR.md); el [anexo](ANEXO-OBSERVADOR.md) contiene las
+soluciones para contrastar después del primer intento.
 
-1. Acordar el perfil basico/completo, identificador de participante, sistema,
-   version de R y quien observa. No usar datos de pacientes, credenciales ni
-   servidores de produccion.
-2. Comparar `CANDIDATO.json`, `MANIFIESTO-KIT.json` y `SHA256SUMS`. El lanzador
-   verifica SHA-256, MD5 y tamano antes de instalar en una biblioteca aislada.
-3. Seguir `LEEME.md` y el protocolo de perfil R o FHIR. Registrar ayuda y
-   conservar un directorio distinto por intento.
-4. En el perfil completo, acordar si se hace R09/F09; requiere DBI y DuckDB.
-   Abrir y revisar el ejemplo de laboratorio instalado; sus datos siguen
-   siendo ficticios. No se requiere componente Rust.
-5. Exportar fichas e informe del formulario y revisar personalmente cualquier
-   ruta local antes de compartirlos. El kit no transmite resultados.
+## Ejecutar y registrar
 
-## Interpretacion y cierre
+1. Preparar dependencias, identidad y carpeta nueva por intento. El lanzador
+   verifica el candidato y lo instala en una biblioteca aislada.
+2. Realizar tareas y preguntas sin consultar soluciones anticipadamente.
+   Documentación espontánea está permitida; cada intervención del observador
+   se registra con contenido, tipo y cantidad.
+3. En R, realizar 01–06, 09 si corresponde, 07 y 08; en FHIR, 01–07, 09 si
+   corresponde y 08. Laboratorio precede al cierre de alcance siete.
+4. Registrar estado, comprensión, respuestas, evidencia, minutos activos y
+   esperas. Repetir tareas manuales identificadas conservando ambos intentos.
+5. Revisar incidencias y conclusión, exportar JSON/CSV/TXT y comprobar archivos
+   antes de compartirlos por el canal acordado. El formulario es bilingüe,
+   funciona localmente y no envía resultados.
 
-La comprobacion automatica no completa tareas humanas. En perfil basico,
-`recuperacion` es `no_evaluado`; no equivale a aprobacion. Las pruebas nuevas
-del ejemplo de laboratorio son una actividad opcional del perfil completo y
-no forman un control adicional del esquema de aceptacion. Registrar errores,
-advertencias, ayuda, incidencias y limitaciones sin convertirlas en aprobacion.
+## Interpretar y cerrar
 
-El cierre requiere revision del participante y del mantenedor. Una sesion con
-ayuda no demuestra autonomia sin una repeticion independiente. Validacion de
-perfiles propios, instalacion externa y evaluacion humana siguen siendo
-resultados separados.
+Los cinco controles automáticos mantienen el esquema del candidato: básico
+excluye recuperación; completo la exige. El laboratorio humano no añade un
+control automático al informe. F07 requiere un plan de validación; ejecutar un
+servidor de pruebas es una ampliación opcional que se acuerda y registra aparte.
+Rust también es opcional. No se requieren servidores ni datos de pacientes.
+
+Una aceptación humana exige tareas del alcance completas con comprensión
+correcta, evidencia contrastada y revisión de ambas personas. Incidencias
+críticas/altas abiertas impiden cierre favorable. La ayuda se conserva; autonomía
+solo se declara para tareas repetidas sin ayuda y con archivos del nuevo intento.
+Una validación de perfiles no ejecutada queda no evaluada aunque la sesión
+local se acepte. Se pueden aceptar pendientes menores explícitos o repetir
+tras correcciones; la decisión automática nunca sustituye la humana.
+
+## Continuidad entre rondas
+
+Conserve 2.0 con sus fichas y hashes si ya comenzó esa ronda. Use 2.1 en una
+ronda nueva o tras acuerdo antes de iniciar tareas; las exportaciones anteriores
+no se importan aquí. Los idiomas comparten tareas, criterios e identidad;
+cambiar idioma conserva las respuestas sin traducirlas. El paquete R sigue
+siendo el mismo candidato comprobado.

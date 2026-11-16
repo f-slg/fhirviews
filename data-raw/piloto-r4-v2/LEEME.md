@@ -1,5 +1,10 @@
 # Guía de participación en el piloto externo R4
 
+**Español** · [English](LEEME.en.md) · Protocolo **2.1**
+
+La [evaluación detallada](EVALUACION-PILOTO.md) define observación, comprensión,
+ayuda, repetición y cierre. Léala antes de acordar la sesión.
+
 Esta guía explica cómo preparar, ejecutar y documentar una sesión con el kit
 de **fhirviews 0.5.0.9002**. Está dirigida a la persona participante y a quien
 observe la sesión. El kit contiene datos ficticios y una copia identificada del
@@ -14,17 +19,19 @@ paquete; no necesita un servidor FHIR ni datos clínicos.
 
 ### Perfiles y roles
 
-Hay dos perfiles de competencia y dos niveles técnicos; son decisiones
-independientes:
+Hay dos perfiles de competencia, dos niveles técnicos y dos alcances humanos;
+son tres decisiones independientes:
 
 | Elección | Qué significa |
 |---|---|
 | Perfil **R** | Analista, investigador o epidemiólogo; realiza las tareas R01–R09. |
 | Perfil **FHIR** | Persona con experiencia en interoperabilidad o informática sanitaria; realiza F01–F09. |
 | Nivel **básico** | Ejecuta los controles instalados y las tareas manuales. No instala ni evalúa DuckDB. |
-| Nivel **completo** | Añade DBI/DuckDB a los controles y permite evaluar la tarea opcional R09/F09 de laboratorio. |
+| Nivel **completo** | Añade DBI/DuckDB, comparación de motores y recuperación. |
+| Alcance **núcleo** | Evalúa los cinco tipos del control y la extracción de alergias; excluye laboratorio con motivo. |
+| Alcance **siete** | Añade Specimen y DiagnosticReport: exige completo y R09/F09 terminada. |
 
-Acuerden antes de la sesión el perfil, el nivel, el identificador de
+Acuerden antes de la sesión el perfil, el nivel, el alcance, el identificador de
 participación, el sistema y la persona observadora. No se han asignado
 participantes de antemano. Use un identificador acordado, por ejemplo `P01`,
 sin incluir nombres, correos ni otros datos personales en los archivos que se
@@ -132,9 +139,9 @@ iniciar_piloto("completo", "sesion-P01-intento01")
 abrir_sesion("sesion-P01-intento01")
 ```
 
-En el nivel completo se puede realizar además R09/F09, la tarea opcional de
-laboratorio. No es obligatorio para completar los cinco controles técnicos.
-Registre como `no_evaluada` y explique el motivo si no se ejecuta.
+El alcance siete requiere nivel completo y R09/F09. El alcance núcleo excluye
+esa tarea como `no_evaluada`, con motivo. Los cinco controles automáticos no
+cambian: la aceptación humana de siete añade obligatoriamente el laboratorio.
 
 ## Qué hace y qué no hace la comprobación automática
 
@@ -169,24 +176,29 @@ completo explora específicamente Specimen y DiagnosticReport.
 Realice las tareas del protocolo asignado, en orden y con la menor ayuda
 posible:
 
-| Perfil R | Perfil FHIR | Tema |
-|---|---|---|
-| R01 | F01 | Identificar e instalar el candidato. |
-| R02 | F02 | Leer los cinco controles y entender su alcance. |
-| R03 | F03 | Contrastar recursos R4, tablas y referencias. |
-| R04 | F04 | Explicar escala decimal y elecciones de fecha/dosis. |
-| R05 | F05 | Crear y modificar un `ViewDefinition`. |
-| R06 | F06 | Leer alergias y distinguir registros de filas. |
-| R07 | F07 | Repetir en una carpeta nueva conservando ambos intentos. |
-| R08 | F08 | Revisar hallazgos y registrar la decisión humana. |
-| R09 (opcional) | F09 (opcional) | Construir Specimen y DiagnosticReport desde SQL. |
+| Perfil R | Énfasis | Perfil FHIR | Énfasis |
+|---|---|---|---|
+| R01 | Preparación y biblioteca correcta. | F01 | Alcance y capas de validación. |
+| R02 | Vigilancia y unidad del indicador. | F02 | Mapas y cardinalidades. |
+| R03 | Procedencia, claves y precisión. | F03 | Tipos, elecciones y casos negativos. |
+| R04 | Construcción propia y errores. | F04 | Referencias e integridad del grafo. |
+| R05 | Diseñar y reutilizar vistas. | F05 | Bindings y coherencia de Coding. |
+| R06 | Conteos y relaciones de alergias. | F06 | Proyección y pérdidas de información. |
+| R07 | Repetición y recuperación. | F07 | Plan de validación de perfiles. |
+| R08 | Utilidad y cierre. | F08 | Repetición y conclusión delimitada. |
+| R09 | Laboratorio analítico. | F09 | Auditoría semántica de laboratorio. |
+
+Las tareas 01–08 son obligatorias; 09 también lo es en alcance siete.
+Realice laboratorio antes del cierre. Orden R: 01–06, 09 si corresponde, 07, 08;
+orden FHIR: 01–07, 09 si corresponde, 08. La tarea F07 exige un plan; ejecutar
+un servidor es una ampliación separada y no es necesario para completar el núcleo.
 
 Los protocolos [Perfil R](PROTOCOLO-PERFIL-R.md) y [Perfil FHIR](PROTOCOLO-PERFIL-FHIR.md)
 describen pasos, evidencia y preguntas de cada tarea. Los datos y salidas de
 la sesión permanecen locales hasta que participante y mantenedor acuerden qué
 compartir.
 
-### Tarea opcional de laboratorio R09/F09
+### Laboratorio R09/F09 según el alcance acordado
 
 Solo en nivel completo: abra `examples/laboratorio-r4.R` desde la instalación
 aislada y ejecute el ejemplo siguiendo el protocolo. Usa datos ficticios para
@@ -203,10 +215,10 @@ externas, un servidor propio ni la idoneidad clínica de los datos.
 
 Durante cada tarea, la persona observadora registra:
 
-- si se completó, quedó incompleta o no se evaluó;
-- el tiempo aproximado y los pasos donde hubo duda o bloqueo;
-- cada pista, ayuda o consulta al anexo;
-- qué esperaba la persona y qué resultado observó;
+- estado, criterios contrastados y comprensión correcta/parcial/incorrecta;
+- tiempo activo separado de esperas y pasos con duda o bloqueo;
+- cada pista, ayuda o consulta al anexo; documentación consultada por iniciativa propia;
+- respuestas propias, evidencia y repetición manual por tarea; facilidad 1–5 opcional;
 - identificador de incidencia, gravedad, evidencia y si necesita repetición.
 
 No es necesario exigir tiempos idénticos ni que una persona memorice comandos.
@@ -222,7 +234,7 @@ Antes de terminar:
 2. Registre los obstáculos en `experiencia-usuario.txt` o en la ficha e incluya
    los pasos mínimos para reproducirlos.
 3. Exporte el JSON y, si sirve para la revisión, CSV e informe de texto. El
-   formulario no guarda ni envía la información de forma automática.
+   almacenamiento local es auxiliar; la exportación conserva la evidencia y el formulario no envía resultados.
 4. Revise cada archivo antes de compartirlo. Las rutas pueden revelar nombres
    de usuario o estructura local. Elimine nombres, credenciales y datos de
    pacientes; este piloto no debe contener datos personales ni clínicos.
@@ -245,7 +257,7 @@ El directorio de sesión contiene, entre otros:
 | `piloto/aceptacion.json` y `piloto/aceptacion.csv` | Resultado estructurado y resumen de los controles automáticos. |
 | `piloto/sessionInfo.txt` | Versiones de R y paquetes usados; puede mostrar rutas del sistema. |
 | `piloto/experiencia-usuario.txt` | Espacio local para observaciones de uso. |
-| `piloto/r4/` | Recursos NDJSON, tablas, definiciones y salidas de la prueba R4. |
+| `piloto/r4/` | recursos-r4.ndjson, recursos-r4.json y resumen.json del control; guarde por separado las vistas y tablas de las tareas humanas. |
 
 Comparte únicamente los archivos acordados después de revisarlos y
 desidentificarlos. No publiques la ficha completa en un issue público si
@@ -255,12 +267,24 @@ antes de comenzar.
 
 ## Formulario local
 
-`FORMULARIO-PILOTO.html` funciona sin conexión. Mantiene fichas separadas para
+`FORMULARIO-PILOTO.html` funciona sin conexión y ofrece Español/English.
+El idioma cambia consignas y rótulos; no traduce las respuestas introducidas
+ni cambia estados, identidad, alcance o evidencia. Los documentos tienen pares
+`.md`/`.en.md`, con las mismas tareas y criterios. Mantiene fichas separadas para
 los perfiles R y FHIR y permite exportar JSON, CSV e informe de texto. El
 almacenamiento local del navegador puede no estar disponible al abrir un
 archivo `file://`; exporte el JSON antes de cerrar el navegador o cambiar de
 equipo. Si importa un JSON, compruebe que corresponde al protocolo y al
 candidato de esta sesión. Importar sustituye las fichas actualmente abiertas.
+
+La exportación CSV muestra rótulos en el idioma seleccionado y conserva
+columnas `*_codigo` para comparar estados entre idiomas. JSON conserva las
+respuestas completas y todas las incidencias al retomar una ficha; los textos
+introducidos no se traducen automáticamente.
+
+Abra `FORMULARIO-PILOTO.html` del ZIP extraído. `formulario.template.html` es
+un archivo fuente del desarrollo y contiene marcadores que deben procesarse;
+no es el formulario ejecutable para participantes.
 
 El formulario sirve para registrar tareas, incidencias, ayudas y decisiones;
 no instala el paquete, ejecuta scripts, valida FHIR ni transmite los archivos.
@@ -286,7 +310,9 @@ de compartir registros.
 
 ## Contenido del kit y límites
 
+- `EVALUACION-PILOTO.md`: diseño de evaluación, criterios y análisis de la ronda.
 - `PROTOCOLO-PERFIL-R.md` y `PROTOCOLO-PERFIL-FHIR.md`: tareas detalladas.
+- Archivos `.en.md` y `tareas.en.json`: contenido equivalente en inglés.
 - `PILOTO-R4.md`: alcance, preparación e interpretación del piloto.
 - `ANEXO-OBSERVADOR.md`: resultados de contraste, para consultar después del primer intento.
 - `FORMULARIO-PILOTO.html` y `tareas.json`: registro local y tareas asociadas.
@@ -298,3 +324,16 @@ El archivo del kit no tiene un DOI propio. El DOI Zenodo de `0.5.0.9000`
 identifica otro archivo y no se transfiere a `0.5.0.9002`. La publicación de
 este kit tampoco equivale a aceptación de CRAN, evaluación clínica o
 aprobación de perfiles nacionales.
+
+## Cambios de ronda y construcción del kit
+
+El protocolo 2.1 cambia tareas y criterios respecto de 2.0. Conserve las fichas
+anteriores con su ZIP y hash; no se importan en esta revisión. Para sesiones
+ya iniciadas, mantenga el protocolo acordado o programe una ronda nueva.
+
+El manifiesto identifica la fuente del kit, sus hashes y el candidato intacto.
+Si `fuente_kit_estado` indica `archivos_de_trabajo_sobre_commit`, el commit es
+la base de edición; los materiales exactos son los archivos hashados del ZIP.
+No se afirma que las modificaciones ya estén publicadas en ese commit.
+La reconstrucción desde esos materiales debe producir el mismo ZIP y rechaza
+fuentes alteradas. El kit nunca incorpora fichas completadas ni sesiones locales.

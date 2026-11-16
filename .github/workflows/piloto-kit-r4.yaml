@@ -54,7 +54,10 @@ jobs:
         run: npm install --prefix "$RUNNER_TEMP/fhirviews-kit-node" --ignore-scripts --no-audit --no-fund jsdom@26.1.0
       - name: Verificar archivo, instalacion y ambos perfiles tecnicos
         shell: bash
-        run: python data-raw/piloto-r4-v2/probar-kit.py data-raw/fhirviews-kit-piloto-r4-v2.zip --ejecutar-r > "$RUNNER_TEMP/piloto-kit-r4.log" 2>&1
+        run: python data-raw/piloto-r4-v2/probar-kit.py data-raw/fhirviews-kit-piloto-r4-v2.zip --contrastar-fuentes --ejecutar-r > "$RUNNER_TEMP/piloto-kit-r4.log" 2>&1
+      - name: Contrastar protocolos y preguntas de evaluacion
+        shell: bash
+        run: python data-raw/piloto-r4-v2/actualizar-protocolos.py --comprobar
       - name: Extraer el formulario para contrastar su integridad
         shell: bash
         run: python -c "import os,zipfile; zipfile.ZipFile('data-raw/fhirviews-kit-piloto-r4-v2.zip').extractall(os.path.join(os.environ['RUNNER_TEMP'],'piloto-formulario'))"

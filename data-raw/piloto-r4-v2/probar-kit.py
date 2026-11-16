@@ -2,6 +2,7 @@
 """Verifica el kit sin completar fichas humanas. Usa solo carpetas temporales."""
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path, PurePosixPath
 import shutil
@@ -14,6 +15,8 @@ ROOT=Path(__file__).resolve().parents[2]
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('zip')
 parser.add_argument('--ejecutar-r', action='store_true')
+parser.add_argument('--contrastar-fuentes', action='store_true',
+    help='Exige que los materiales del ZIP coincidan con los archivos actuales del repositorio.')
 args=parser.parse_args()
 archivo=Path(args.zip).resolve()
 with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
@@ -22,27 +25,58 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
         assert z.testzip() is None
         assert all(i.compress_type==zipfile.ZIP_STORED for i in z.infolist())
         nombres=z.namelist()
-        assert len(nombres)==len(set(nombres))==15
+        assert len(nombres)==len(set(nombres))==23
         assert all(not PurePosixPath(n).is_absolute() and '..' not in PurePosixPath(n).parts for n in nombres)
         z.extractall(temp/'Kit con espacios')
     kit=next((temp/'Kit con espacios').iterdir())
-    m=json.loads((kit/'MANIFIESTO-KIT.json').read_text())
-    c=json.loads((kit/'CANDIDATO.json').read_text())
+    m=json.loads((kit/'MANIFIESTO-KIT.json').read_text(encoding='utf-8'))
+    c=json.loads((kit/'CANDIDATO.json').read_text(encoding='utf-8'))
     assert c['version']=='0.5.0.9002'
     assert m['evaluacion_externa']==c['evaluacion_externa']=='pendiente'
     assert m['participantes']==c['participantes']=='sin_asignar'
-    assert len(m['archivos_sha256'])==13
+    assert m['revision_protocolo']=='2.1'
+    assert m['fuente_kit_estado'] in ('commit_git','archivos_de_trabajo_sobre_commit')
+    assert m['idiomas']==['es','en']
+    assert len(m['archivos_sha256'])==21
     for n,h in m['archivos_sha256'].items():
         assert hashlib.sha256((kit/n).read_bytes()).hexdigest()==h,n
-    sumas=(kit/'SHA256SUMS').read_text().splitlines()
-    assert len(sumas)==14
+    sumas=(kit/'SHA256SUMS').read_text(encoding='utf-8').splitlines()
+    assert len(sumas)==22
     for linea in sumas:
         h,n=linea.split('  ',1)
         assert hashlib.sha256((kit/n).read_bytes()).hexdigest()==h,n
     paquete=kit/'paquete'/c['paquete']['archivo']
     assert hashlib.sha256(paquete.read_bytes()).hexdigest()==m['paquete_sha256']
     assert paquete.stat().st_size==c['paquete']['bytes']
+    tareas=json.loads((kit/'tareas.json').read_text(encoding='utf-8'))
+    assert len(tareas['r'])==len(tareas['fhir'])==9
+    assert tareas['r'][-1]['required_scope']==tareas['fhir'][-1]['required_scope']=='siete'
+    assert sum(a['title']!=b['title'] for a,b in zip(tareas['r'],tareas['fhir']))>=7
+    for perfil in ('r','fhir'):
+        protocolo=(kit/('PROTOCOLO-PERFIL-'+perfil.upper()+'.md')).read_text(encoding='utf-8')
+        for tarea in tareas[perfil]:
+            assert tarea['title'] in protocolo
+            assert all(pregunta in protocolo for pregunta in tarea['questions'])
+    tareas_en=json.loads((kit/'tareas.en.json').read_text(encoding='utf-8'))
+    for perfil in ('r','fhir'):
+        protocolo=(kit/('PROTOCOLO-PERFIL-'+perfil.upper()+'.en.md')).read_text(encoding='utf-8')
+        for es,en in zip(tareas[perfil],tareas_en[perfil],strict=True):
+            assert es['id']==en['id'] and es['required']==en['required']
+            assert es['required_scope']==en['required_scope']
+            assert en['title'] in protocolo
+            assert all(pregunta in protocolo for pregunta in en['questions'])
     builder=ROOT/'data-raw/preparar-kit-r4.py'
+    if args.contrastar_fuentes:
+        spec=importlib.util.spec_from_file_location('preparador_kit',builder)
+        preparador=importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(preparador)
+        rutas={nombre: ROOT/'data-raw/piloto-r4-v2'/nombre for nombre in preparador.ARCHIVOS}
+        rutas.update({'PROBAR-CANDIDATO.R': ROOT/'data-raw/probar-candidato.R',
+                      'LICENSE.md': ROOT/'LICENSE.md'})
+        diferentes=[nombre for nombre,ruta in rutas.items()
+                    if not ruta.is_file() or ruta.read_bytes()!=(kit/nombre).read_bytes()]
+        if diferentes:
+            raise AssertionError('El ZIP no incorpora los materiales actuales: '+', '.join(diferentes))
     comun=[sys.executable,str(builder),'--paquete',str(paquete),'--ref','HEAD',
            '--kit-dir',str(kit)]
     copia=temp/'reconstruido.zip'
@@ -66,15 +100,23 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
     mal=temp/'paquete-alterado.tar.gz'; mal.write_bytes(paquete.read_bytes()+b'alterado')
     no_crear=temp/'no-crear'/'rechazado.zip'
     r=subprocess.run([sys.executable,str(builder),'--paquete',str(mal),'--salida',str(no_crear),
-        '--ref',m['fuente_kit_commit']],capture_output=True)
+        '--ref','HEAD'],capture_output=True)
     assert r.returncode!=0 and not no_crear.parent.exists()
+    assert b'El paquete no coincide con el candidato comprobado.' in r.stderr
+    alterado=temp/'material-alterado'
+    shutil.copytree(kit,alterado)
+    with (alterado/'EVALUACION-PILOTO.md').open('ab') as f:
+        f.write(b'ALTERADO')
+    r=subprocess.run([sys.executable,str(builder),'--paquete',str(paquete),
+        '--ref','HEAD','--kit-dir',str(alterado),'--salida',str(temp/'alterado.zip')],capture_output=True)
+    assert r.returncode!=0 and not (temp/'alterado.zip').exists()
     print('ZIP: hashes, candidato, reproduccion y rechazos aprobados.',flush=True)
     if args.ejecutar_r:
         for perfil in ('basico','completo'):
             sesion=temp/('Sesion '+perfil)
             subprocess.run(['Rscript','--vanilla',str(kit/'INICIAR.R'),perfil,str(sesion)],check=True)
-            ses=json.loads((sesion/'SESION.json').read_text())
-            acept=json.loads((sesion/'piloto/aceptacion.json').read_text())
+            ses=json.loads((sesion/'SESION.json').read_text(encoding='utf-8'))
+            acept=json.loads((sesion/'piloto/aceptacion.json').read_text(encoding='utf-8'))
             assert ses['resultado_tecnico']==acept['resultado_tecnico']=='aprobado'
             assert ses['evaluacion_externa']==acept['validacion_usuario_externo']=='pendiente'
             assert acept['candidato_md5']==c['paquete']['md5']

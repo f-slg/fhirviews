@@ -1,0 +1,492 @@
+{
+  "r": [
+    {
+      "id": "R01",
+      "title": "Prepare the environment and identify the installation",
+      "required": true,
+      "required_scope": null,
+      "goal": "Check whether an external participant can prepare and open the supplied candidate using the documentation.",
+      "steps": [
+        "Agree on the R participant profile, basic/full technical level and five-type core/seven-constructor scope. Record prior R, SQL and FHIR experience, existing dependencies and planned assistance.",
+        "Check the ZIP and CANDIDATO.json. Record package version, commit and SHA-256, operating system, architecture and R version. Separate dependency preparation time from candidate installation time.",
+        "Run INICIAR.R into a new directory and abrir_sesion() in a clean R session. Check packageVersion(), find.package(), help and vignettes.",
+        "Keep SESION.json and the original log; describe each obstacle and the documentation used."
+      ],
+      "checks": [
+        "The supplied identity and the loaded installation were checked.",
+        "Environment, technical level and scope were recorded before the tasks.",
+        "Help and vignettes were located, or the obstacle was documented.",
+        "Preparation times and observer interventions were recorded separately."
+      ],
+      "questions": [
+        "How would you check that R is using this candidate rather than another installed copy?",
+        "Which steps need network access, and which should work once dependencies are prepared?"
+      ],
+      "expected": "Version 0.5.0.9002 with the supplied commit and file hash; the session library is loaded. Full level needs DBI/DuckDB and R ≥ 4.2; basic needs R ≥ 4.1. Finding documentation independently is not an observer intervention.",
+      "evidence": "SESION.json, candidato.txt, reviewed library location, versions and preparation log.",
+      "mistakes": "Confusing version with file identity; loading another library; including network waits in analysis time.",
+      "code": "source(\"INICIAR.R\")\niniciar_piloto(\"basico\", \"sesion-P01-intento01\")\nabrir_sesion(\"sesion-P01-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
+    },
+    {
+      "id": "R02",
+      "title": "Interpret checks and surveillance indicators",
+      "required": true,
+      "required_scope": null,
+      "goal": "Explain what the trial measures and identify an incorrect epidemiological interpretation.",
+      "steps": [
+        "Open aceptacion.json and aceptacion.csv. Locate identity, schema, checks, warnings and findings without editing the reports.",
+        "Explain what each check demonstrates and what is not evaluated at the chosen level. Check totals and event exclusions against the fictional files.",
+        "Follow den-c0001 to its patient and residence; check that den-c0002 is absent from confirmed events. Review at least one territorial and one monthly count in the example outputs.",
+        "Describe the unit of analysis and the additional information needed to count unique people or calculate a population rate."
+      ],
+      "checks": [
+        "The five checks, exclusions and warnings were interpreted.",
+        "Totals and an included/excluded event were checked against evidence.",
+        "One territorial and one monthly aggregation were reviewed.",
+        "Events, people and rates were distinguished, and limitations were written down."
+      ],
+      "questions": [
+        "Can every output row be interpreted as a different person? Why?",
+        "Does an automatic pass demonstrate unassisted use by another person or validation against a national profile?"
+      ],
+      "expected": "755 input events, 661 confirmed, 94 excluded and 65 cantons. den-c0001→den-p0001, residence 0701, onset 2025-02-27; den-c0002 excluded. Canton 0701: 55 events; February: 73. These are fictional event counts; a rate needs a compatible denominator and period. Basic: recovery not evaluated; full: five checks passed.",
+      "evidence": "Original report and interpretation note identifying the rows or fields checked.",
+      "mistakes": "Turning counts into rates; counting events as patients; treating not evaluated as passed.",
+      "code": "informe <- jsonlite::read_json(\"sesion-P01-intento01/piloto/aceptacion.json\")\ninforme[c(\"version_fhirviews\", \"candidato_md5\", \"esquema_informe\", \"resultado_tecnico\")]\nread.csv(\"sesion-P01-intento01/piloto/aceptacion.csv\")"
+    },
+    {
+      "id": "R03",
+      "title": "Trace a table back to its R4 sources",
+      "required": true,
+      "required_scope": null,
+      "goal": "Relate tables to resources and explain keys, missing values and precision.",
+      "steps": [
+        "Open the six resources in piloto/r4/recursos-r4.ndjson and create a local type/id/relevant references table.",
+        "Follow Patient, Encounter, Condition, Observation and Immunization; compare at least one table row with its NDJSON line.",
+        "Compare false, an absent field and NA; locate both immunizations’ occurrence and dose-number alternatives.",
+        "Inspect decimal literals in the file and explain what is lost if the SQL source supplies them as double."
+      ],
+      "checks": [
+        "The number of types, resources and output rows were distinguished.",
+        "The selected row’s keys and references were traced to their sources.",
+        "FALSE, absence and NA were explained without filling in data.",
+        "Scale was checked in JSON as well as in the R table."
+      ],
+      "questions": [
+        "Why does a table printing 72 not demonstrate preservation of the literal 72.00?",
+        "What is the risk of filling in an unknown date or joining tables only by row order?"
+      ],
+      "expected": "Five types and six resources: p1/e1/c1/o1/i1/i2. Condition/c1 and Immunization/i1 reference Encounter/e1; both immunizations reference Patient/p1. active=false is present information. i2 has no encounter or quantity and retains textual date/dose alternatives. 72.00 and 0.50 have lower boundaries 71.995 and 0.495.",
+      "evidence": "Local provenance table, references and reviewed fictional JSON fragments.",
+      "mistakes": "Confusing false with absence; losing trailing zeros before mapping; inventing a date, quantity or patient.",
+      "code": "recursos <- fhir_recursos(\"sesion-P01-intento01/piloto/r4/recursos-r4.ndjson\")\nprint(recursos)"
+    },
+    {
+      "id": "R04",
+      "title": "Build new resources and understand errors",
+      "required": true,
+      "required_scope": null,
+      "goal": "Create a small mapping with fictional data and resolve an error using the help.",
+      "steps": [
+        "Write a script with two new fictional Patient rows: distinct ids, valid gender, birthDate and logical active, including FALSE. Consult fhir_mapa(), fhir_desde_tabla() and fhir_escribir().",
+        "Build resources using an explicit map, write NDJSON and read it again. Check both records and retain the script, map and output.",
+        "In separate data copies, duplicate an id and use an invalid gender. Capture each rejection and explain how to correct the source without hiding the error.",
+        "At full level, repeat the valid case using a DuckDB table and a parameterized query selecting one id. Compare outputs and close the connection. At basic level, record that DBI was not evaluated."
+      ],
+      "checks": [
+        "The valid case was built, saved and reread with its explicit values.",
+        "Both invalid inputs were rejected and their diagnostics were retained.",
+        "The source correction was explained and made in a new copy.",
+        "The DBI path was checked at full level or explicitly excluded at basic level."
+      ],
+      "questions": [
+        "What does one input row mean to this constructor, and how would you prepare two rows with the same id?",
+        "When would you use SQL parameters, and what would you do if a large identifier arrived rounded?"
+      ],
+      "expected": "Two valid Patient resources retain their ids and active=FALSE. Duplicate ids and gender outside the required binding produce fhirviews_error_mapeo. Ids are not grouped or silently overwritten. DBI uses WHERE id = ? with parametros=list(...), and CAST to text when source precision requires it. Local construction does not demonstrate profile validation.",
+      "evidence": "Participant script, valid NDJSON, diagnostics for both negative cases and DBI comparison when applicable.",
+      "mistakes": "Using the text \"false\" as a logical value; deleting rows merely to obtain a pass; interpolating values into SQL.",
+      "code": ""
+    },
+    {
+      "id": "R05",
+      "title": "Design, modify and reuse a view",
+      "required": true,
+      "required_scope": null,
+      "goal": "Solve a new extraction task using documentation and verify its meaning.",
+      "steps": [
+        "Create an Immunization view with status, patient and date from the trial NDJSON; retain the definition before extending it.",
+        "Add columns for both occurrence alternatives and save a second JSON definition. Run it and explain every NA using the original resources.",
+        "Read the saved definition with vista_leer() and repeat the extraction; check keys, values, types and counts without requiring row order unless agreed.",
+        "Describe a change for an analysis need of your own, using only the fictional data. Record documentation consulted and any supplied solution."
+      ],
+      "checks": [
+        "Two JSON versions were retained and the second was reused.",
+        "Both immunizations remained correctly identified.",
+        "Missing alternatives and types were checked against NDJSON.",
+        "The participant explained the view and any assistance, beyond executing it."
+      ],
+      "questions": [
+        "What must you save so another person can reproduce this extraction?",
+        "Which original information does your view leave out that another analysis might need?"
+      ],
+      "expected": "Two rows i1/i2 with patient key p1. Project occurrence.ofType(dateTime) and occurrence.ofType(string) separately; missing alternatives remain NA. The reread definition produces the same table and types. A ViewDefinition can omit information and is insufficient to reconstruct the complete resource.",
+      "evidence": "vista-inmunizaciones-01.json, vista-inmunizaciones-02.json, tables and the participant’s explanation.",
+      "mistakes": "Copying a solution and claiming independence; replacing NA; assuming a projection is reversible.",
+      "code": ""
+    },
+    {
+      "id": "R06",
+      "title": "Analyze allergies while preserving the counting unit",
+      "required": true,
+      "required_scope": null,
+      "goal": "Avoid overcounting records when expanding reactions and manifestations.",
+      "steps": [
+        "Locate the allergy NDJSON and execute the catalogue view. Compare nrow() with the number of distinct ids.",
+        "Group rows by id and reconstruct allergy→reaction→manifestation for a record with multiple rows.",
+        "Inspect an allergy with no reaction and its missing values. Identify multiple categories and distinguish criticality from reaction severity.",
+        "Explain which count you would report for recorded allergies and how it changes when counting manifestations. Retain the code and justification."
+      ],
+      "checks": [
+        "Row and distinct-id counts were calculated separately.",
+        "Manifestations retained their own reaction and severity.",
+        "Allergies without reactions were retained in the analysis.",
+        "The counting unit and treatment of missing values and lists were justified."
+      ],
+      "questions": [
+        "What error would result from using nrow(table) as the number of allergies?",
+        "Does an allergy with no documented reaction mean that no reaction occurred?"
+      ],
+      "expected": "Three ids and five rows: a1 has three manifestations in two reactions; a2 and a3 each retain a row without a reaction. Do not infer clinical absence from missing documentation. Categories remain lists. criticality and reaction.severity have different meanings.",
+      "evidence": "Counting script, table by id and explanation of the unit of analysis.",
+      "mistakes": "Counting rows as records; dropping allergies without reactions; assigning one severity to all manifestations.",
+      "code": "archivo <- system.file(\"extdata\", \"alergias_r4.ndjson\", package = \"fhirviews\")\nalergias <- vista_ejecutar(archivo, vista_plantilla(\"alergias\"))\nalergias[, c(\"id\", \"estado_clinico\", \"gravedad_reaccion\", \"reaccion_codigo\")]\nlength(unique(alergias$id))"
+    },
+    {
+      "id": "R07",
+      "title": "Repeat the analysis and examine recovery",
+      "required": true,
+      "required_scope": null,
+      "goal": "Check repeatability and document which tasks can be repeated without intervention.",
+      "steps": [
+        "Run the agreed technical level again in a different directory, retaining both reports and the same candidate.",
+        "Compare findings and states; distinguish path/time differences from data/type differences.",
+        "Repeat view creation/reuse and allergy counting without observer hints. Identify the tasks and files supporting the repeat.",
+        "At full level, review recovery and explain rollback/retry without duplicates. At basic level, retain not evaluated and limit the conclusion."
+      ],
+      "checks": [
+        "Both attempts and the candidate were identified.",
+        "Data, states and types were compared, with differences explained.",
+        "The manual repeat recorded scope, result and interventions.",
+        "Recovery was interpreted according to the technical level."
+      ],
+      "questions": [
+        "Why does rerunning the automatic command alone not demonstrate that you can modify a view?",
+        "What would you check before retrying a load that failed halfway through?"
+      ],
+      "expected": "Findings match; paths and durations need not match. A full retry replaces the load after rollback without accumulating duplicates. Independence is limited to manual tasks actually repeated without assistance, with evidence of the second attempt.",
+      "evidence": "Two reports, written comparison and manual-repeat files; describe any assistance.",
+      "mistakes": "Overwriting the first attempt; comparing totals only; claiming independence from an automatic script.",
+      "code": "iniciar_piloto(\"basico\", \"sesion-P01-intento02\")\na <- jsonlite::read_json(\"sesion-P01-intento01/piloto/aceptacion.json\")\nb <- jsonlite::read_json(\"sesion-P01-intento02/piloto/aceptacion.json\")\nidentical(a$hallazgos, b$hallazgos)"
+    },
+    {
+      "id": "R08",
+      "title": "Assess usefulness and agree on closure",
+      "required": true,
+      "required_scope": null,
+      "goal": "Decide what use was demonstrated and which improvements need follow-up.",
+      "steps": [
+        "Review R01–R07 and R09 when applicable; log obstacles and interpretation errors with expected/observed behavior and evidence.",
+        "Answer the closing interview: usefulness for your own task, most confusing step, confidence interpreting outputs and up to three priority improvements. Distinguish opinion from measurement.",
+        "Participant and maintainer review the decision for the exact scope, excluded tasks, owners and next check. Critical/high issues require correction and retesting.",
+        "Export JSON, CSV and text; check that records can be reopened and agreed attachments are readable and contain no personal information."
+      ],
+      "checks": [
+        "Usefulness was related to a specific task and its limitations.",
+        "Issues and priorities have evidence and an owner.",
+        "The human decision and unevaluated scopes were explicit.",
+        "Agreed exports and attachments were reviewed and retained."
+      ],
+      "questions": [
+        "Which real task would you try next with this tool, and what prevents you from doing it today?",
+        "What would you need to check before recommending it to a colleague?"
+      ],
+      "expected": "Conclusions may request retesting after corrections, accept the stated scope, or accept with explicit minor follow-up. No favorable closure with incomplete required tasks, incorrect understanding or unverified critical/high issues. The session does not constitute clinical or institutional acceptance.",
+      "evidence": "Reviewed exported record, experiencia-usuario.txt, issues and follow-up plan.",
+      "mistakes": "Confusing satisfaction with correctness; closing an issue merely because code changed; omitting limitations.",
+      "code": ""
+    },
+    {
+      "id": "R09",
+      "title": "Evaluate the laboratory path for seven constructors",
+      "required": false,
+      "required_scope": "siete",
+      "goal": "Complete SQL→R4 laboratory→tables when evaluating the seven-type scope.",
+      "steps": [
+        "Confirm seven-type scope and full level; open the installed laboratorio-r4.R example and read inputs, maps and queries before execution.",
+        "Run laboratorio_r4() and write its resources to a new NDJSON. Identify types, ids and links between patient, specimen, observations and report.",
+        "Save the three views and compare V8/DuckDB tables by keys, values and types. Inspect volume/result scale in NDJSON.",
+        "Explain how to obtain one row per result and avoid counting a report twice. For core scope, mark not evaluated with a reason; do not claim evaluation of all seven types."
+      ],
+      "checks": [
+        "The example ran from the verified installation using DBI/DuckDB.",
+        "Specimen, result and report references and literals were checked.",
+        "All three views were saved and tables compared with both engines.",
+        "The interpretation distinguishes specimen, observation, report and view rows."
+      ],
+      "questions": [
+        "Why does the report-reference table contain more rows than reports?",
+        "Which parts of this case would require new decisions for another SQL source?"
+      ],
+      "expected": "The example produces five resources of four types: Patient, Specimen, two Observation and DiagnosticReport. Together with the core case it covers seven constructor types; it is not seven resources in one file. One specimen/report, two observations and two result rows. Literals 5.00/72.00/13.50; lower boundaries 4.995/71.995/13.495. Compare specimens, observations and results with both engines.",
+      "evidence": "Laboratory NDJSON, three JSON view definitions, compared tables and participant explanation.",
+      "mistakes": "Confusing seven types across cases with seven laboratory resources; omitting a view; assuming profile validation.",
+      "code": ""
+    }
+  ],
+  "fhir": [
+    {
+      "id": "F01",
+      "title": "Define interoperability scope and candidate identity",
+      "required": true,
+      "required_scope": null,
+      "goal": "Delimit the claims this session can support and prepare a reproducible environment.",
+      "steps": [
+        "Agree on FHIR participant profile, technical level, core/seven scope and interoperability questions. Record FHIR, R, SQL, profile and terminology experience separately.",
+        "Check candidate identity and open the isolated library using LEEME.en.md; record R assistance separately from semantic defects.",
+        "Read the five checks and distinguish local construction, table comparison, profile validation and human evaluation. Record DBI/recovery exclusions at basic level.",
+        "Identify the supplied base-profile/HAPI evidence as prior evidence and state which checks of your own environment are outside this session."
+      ],
+      "checks": [
+        "Identity, environment, level and agreed scope were recorded.",
+        "Installation was checked and assistance described.",
+        "Checking layers and their evidence were distinguished.",
+        "Unevaluated profiles and servers were stated explicitly."
+      ],
+      "questions": [
+        "What does the local constructor check, and what requires profile or terminology validation?",
+        "What evidence would you request to claim interoperability with a specific system?"
+      ],
+      "expected": "R4 4.0.1, candidate 0.5.0.9002 identified by commit and SHA-256. HAPI CI is prior maintainer evidence, not a participant execution. A local pass or 144/144 view-suite result does not validate national profiles, terminology or reference existence.",
+      "evidence": "Identity/environment, reports consulted and a written checked/not-evaluated matrix.",
+      "mistakes": "Using view conformance as general FHIR certification; claiming the participant ran HAPI after reading a report.",
+      "code": "source(\"INICIAR.R\")\niniciar_piloto(\"completo\", \"sesion-P02-intento01\")\nabrir_sesion(\"sesion-P02-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
+    },
+    {
+      "id": "F02",
+      "title": "Review mappings, cardinalities and semantic decisions",
+      "required": true,
+      "required_scope": null,
+      "goal": "Distinguish base-model rules, constructor contract and source decisions.",
+      "steps": [
+        "Review maps in r4-estabilidad.R and the resulting resources. Relate columns, constants and references to concrete JSON destinations.",
+        "For Patient, Encounter, Condition, Observation and Immunization, create a field/source-or-constant/base-or-constructor requirement/project-decision matrix.",
+        "Check at least Encounter status/class, Condition subject, Observation status/code and Immunization patient/vaccineCode/occurrence using the help and agreed R4 model.",
+        "Explain a constant that cannot automatically transfer to another source and why a ViewDefinition is not a complete inverse map."
+      ],
+      "checks": [
+        "The matrix distinguishes columns, constants and references.",
+        "Base requirements, invariants/profiles and local contract were separated.",
+        "Semantic decisions requiring project agreement were identified.",
+        "The limits of reconstruction from a tabular projection were explained."
+      ],
+      "questions": [
+        "Why does the constructor requiring id not mean every FHIR resource must already have it before creation?",
+        "Is it valid to assume status=final for every source because the example uses it?"
+      ],
+      "expected": "The constructor requires a unique id per row by contract. Encounter requires status/class; Condition requires subject in the base; Observation status/code; Immunization status/vaccineCode/patient/one occurrence alternative. Invariants/profiles may require more. Example constants are explicit decisions, not clinical inference. Maps use JSON paths such as valueQuantity.value, not FHIRPath.",
+      "evidence": "Per-resource matrix with versioned documentary sources and decision rationale.",
+      "mistakes": "Confusing the id contract with base cardinality; inventing codes/status; treating a snapshot as the entire profile.",
+      "code": ""
+    },
+    {
+      "id": "F03",
+      "title": "Audit types, choices, dates and precision",
+      "required": true,
+      "required_scope": null,
+      "goal": "Check that transformation preserves meaning and rejects incompatible alternatives.",
+      "steps": [
+        "Compare FALSE, absence and i1/i2 texts against NDJSON and views. Identify occurrence[x] and doseNumber[x] by their JSON names and types.",
+        "Inspect the JSON literals 72.00/0.50 and computed boundaries; explain the risk of SQL DECIMAL→double before mapping.",
+        "In a separate fictional script, try Patient.active=\"false\", an impossible date and an Immunization with both occurrence alternatives. Record rejections with class and field when known.",
+        "Explain partial date/Date versus an instant with timezone and why hours, quantities or absent fields must not be filled in for convenience."
+      ],
+      "checks": [
+        "Present values and missing fields were checked without invented conversions.",
+        "Choice alternatives and scale were checked in the exact source.",
+        "All three invalid cases were rejected and diagnostics retained.",
+        "The participant explained dates and precision with their limitations."
+      ],
+      "questions": [
+        "Do the literals 72 and 72.00 provide the same precision evidence?",
+        "What semantic harm could result from replacing an unknown date with an invented date?"
+      ],
+      "expected": "active=\"false\" is not boolean; 2025-02-29 is invalid; simultaneous occurrenceDateTime/occurrenceString are exclusive choices. Expect fhirviews_error_mapeo. FALSE remains present, absent alternatives are omitted/NA, and 72.00/0.50 retain boundaries 71.995/0.495. A date without time is not an instant; issued requires an instant with timezone.",
+      "evidence": "Choice matrix, NDJSON fragments, script and negative-case diagnostics.",
+      "mistakes": "Checking precision only in R printing; converting text to boolean automatically; inventing timezone/time.",
+      "code": ""
+    },
+    {
+      "id": "F04",
+      "title": "Check references and graph integrity",
+      "required": true,
+      "required_scope": null,
+      "goal": "Distinguish permitted target, constructed key and existence of the referenced resource.",
+      "steps": [
+        "Draw or tabulate links among the six core resources. Identify type/id, patient references and encounter relationships.",
+        "Check that each local reference resolves to the expected resource by type and id; record absent optional links.",
+        "Create one negative case targeting Group from Immunization.patient and another using a syntactically valid patient id absent from the dataset. Compare behavior.",
+        "Explain handling of duplicate ids across servers, absolute references, URNs and persistence dependencies; identify what the local constructor does not check."
+      ],
+      "checks": [
+        "The case’s links were checked by type and id.",
+        "Optional absences were retained and explained.",
+        "Incompatible target rejection and an unresolved reference were contrasted.",
+        "Structural validation was distinguished from existence/resolution."
+      ],
+      "questions": [
+        "Can Patient/nonexistent pass the constructor? What remains to be checked?",
+        "Is id p1 sufficient to join resources from two different servers?"
+      ],
+      "expected": "Group as an Immunization.patient target is rejected. Patient/no-existe can be structurally admissible while absent from the dataset; existence needs an additional check. Condition/c1 and Immunization/i1 link Encounter/e1; i2 has no encounter. Server provenance prevents confusing equal ids from different sources.",
+      "evidence": "Link inventory, both-case script and rejection/unresolved-reference evidence.",
+      "mistakes": "Confusing allowed type with existence; resolving by position; ignoring id provenance.",
+      "code": ""
+    },
+    {
+      "id": "F05",
+      "title": "Examine bindings and Coding fidelity",
+      "required": true,
+      "required_scope": null,
+      "goal": "Check vocabulary selection without treating labels or partial lists as full validation.",
+      "steps": [
+        "Inspect clinicalStatus/verificationStatus Coding in the allergy example. Identify canonical system, code, display and additional translations.",
+        "Check the Coding selected by the view and that system/code/display belong to the same entry. Inspect the Coding entry without a code.",
+        "Create two fictional Patient cases separately: valid and invalid gender. Record rejection of the enumerable required binding and explain why this does not validate any clinical terminology.",
+        "List systems/ValueSets/versions needed for your environment, distinguishing required/extensible bindings and example data. Server terminology queries remain outside scope unless agreed."
+      ],
+      "checks": [
+        "Coding entries were reviewed as coherent system/code pairs.",
+        "Canonical states and translations were checked without mixing entries.",
+        "The enumerable required binding rejected the invalid code.",
+        "External terminology and project profiles remained explicit requirements."
+      ],
+      "questions": [
+        "Can display be used as a stable concept identifier?",
+        "Why does a partial code list or code.text not demonstrate a complete required binding?"
+      ],
+      "expected": "a1 contains the translation activo and canonical code active; the view selects by system. For a3, do not combine urn:ejemplo:primero with NO-MEZCLAR from another entry. Invalid Patient.gender is rejected. Extensible bindings are not closed enumerations; external/filtered ValueSets require agreed terminology services.",
+      "evidence": "Checked Coding table, negative case and project terminology requirements.",
+      "mistakes": "Mixing system/code/display across entries; validating by display; closing an extensible binding.",
+      "code": ""
+    },
+    {
+      "id": "F06",
+      "title": "Audit the projection and its information loss",
+      "required": true,
+      "required_scope": null,
+      "goal": "Assess whether views retain sufficient relationships for the declared use.",
+      "steps": [
+        "Create and save an Immunization view with patient and both occurrence alternatives; justify keys, types and omitted columns.",
+        "Run the allergy view and check reaction/manifestation relationships, categories as lists and records without reactions.",
+        "Compare rows, distinct ids and row meaning; identify an extraction that could introduce false associations or overcounting.",
+        "At full level, compare equivalent V8/DuckDB tables by keys, values and types. At basic level, leave engine comparison not evaluated; explain the conformance suite’s scope."
+      ],
+      "checks": [
+        "The saved definition and information loss were explained.",
+        "Reaction/manifestation relationships and rows without reactions were checked.",
+        "Rows and resources were distinguished without artificial associations.",
+        "Engine comparison was documented according to technical level."
+      ],
+      "questions": [
+        "What information beyond this view would you need to reconstruct the original resource?",
+        "Does passing the test suite imply that any FHIRPath can be translated to SQL?"
+      ],
+      "expected": "Immunization retains i1/i2 and missing alternatives as NA; allergies has three records/five rows with manifestations tied to their reactions. A view can lose information. 144/144 applies to the fixed suite; DuckDB retains a documented subset and does not accept every expression.",
+      "evidence": "Participant ViewDefinition, audit table and engine comparison or justified exclusion.",
+      "mistakes": "Treating extraction as reversible conversion; ignoring types; extrapolating the suite to all FHIRPath.",
+      "code": ""
+    },
+    {
+      "id": "F07",
+      "title": "Design validation against environment profiles",
+      "required": true,
+      "required_scope": null,
+      "goal": "Produce a reviewable interoperability plan without claiming unperformed executions.",
+      "steps": [
+        "For each resource in scope, list base profile, project profile if any, FHIR version, terminology and references needing resolution.",
+        "Review supplied HAPI evidence as prior maintainer evidence and distinguish it from participant execution. Record remaining project invariants/requirements.",
+        "Define a future trial or, only if a test server was agreed, run $validate on exact JSON retaining canonical profile, server/version, date, HTTP status and OperationOutcome.",
+        "Include a valid resource and an altered resource that must be rejected. For an executed server trial classify valid/rejected/indeterminate and review warnings; otherwise leave profile validation not evaluated."
+      ],
+      "checks": [
+        "A per-resource profile/version/requirements matrix exists.",
+        "Maintainer evidence was separated from participant execution.",
+        "The plan includes positive/negative cases and interpretation rules.",
+        "External validation status was recorded without approving unexecuted checks."
+      ],
+      "questions": [
+        "What does valido=NA or an incomplete OperationOutcome mean?",
+        "Why does declaring meta.profile not itself prove conformance with that profile?"
+      ],
+      "expected": "The required task is completed by producing and explaining the plan; a server execution is an optional extension. No network/server is required for the core. $validate HTTP errors or incomplete responses are indeterminate; warnings need review. No production resources are saved/sent. A base-profile pass does not demonstrate a national profile pass.",
+      "evidence": "Validation matrix/plan; for an agreed execution, exact JSON and reviewed OperationOutcome with date/profile/server.",
+      "mistakes": "Marking profiles passed because a plan was written; treating NA as TRUE; executing against production without agreement.",
+      "code": ""
+    },
+    {
+      "id": "F08",
+      "title": "Repeat the audit and issue a bounded conclusion",
+      "required": true,
+      "required_scope": null,
+      "goal": "Check repetition, review findings and decide what interoperability was evaluated.",
+      "steps": [
+        "Repeat the installed trial in a new directory and a manual references/Coding/choices audit without hints; identify repeated tasks and retain both evidence sets.",
+        "Compare findings and record data/type/interpretation discrepancies separately from environment differences. Correct and retest critical/high issues before favorable closure.",
+        "Answer the interview: hardest mapping decision, missing information for your environment, confidence reviewing results and up to three priority improvements.",
+        "Participant and maintainer review scope, unexecuted profiles, assistance, owners and human decision; export records and review attachments."
+      ],
+      "checks": [
+        "The second attempt was retained and manual-repeat scope identified.",
+        "Findings were compared and discrepancies recorded.",
+        "The conclusion distinguishes structure, semantics, profiles and usefulness.",
+        "Both people reviewed the export, priorities and follow-up."
+      ],
+      "questions": [
+        "Which interoperability claim can this session support, and which requires another test?",
+        "Would you recommend this path for an integration trial, and under which concrete conditions?"
+      ],
+      "expected": "Technical results remain separate from human and profile decisions. Favorable closure requires completed in-scope tasks, correct understanding and no open critical/high issues. Independence is limited to tasks repeated with evidence and zero interventions; it does not automatically extend to the entire profile.",
+      "evidence": "Two attempts, repeated audit, exported record and conclusion identifying pending scope.",
+      "mistakes": "Generalizing to other servers/profiles; confusing R assistance with FHIR defects; claiming global independence without repeating every task.",
+      "code": ""
+    },
+    {
+      "id": "F09",
+      "title": "Audit Specimen and DiagnosticReport end to end",
+      "required": false,
+      "required_scope": "siete",
+      "goal": "Complete semantic review of the two additional constructors under seven-type scope.",
+      "steps": [
+        "Confirm full level and run laboratorio-r4.R with fictional data. Identify maps, queries, types and generated resources.",
+        "Audit the Patient→Specimen/Observation/DiagnosticReport graph and result[].reference/specimen[].reference collections; check all references by type and id.",
+        "Check required DiagnosticReport status/code, base optionality of subject and Specimen status/subject, issued timezone and quantity precision. Separately test invalid status and result targeting the wrong type.",
+        "Save all three views, exact NDJSON and V8/DuckDB comparisons; add these types to the F07 plan. Under core scope, justify not evaluated without claiming seven-type review."
+      ],
+      "checks": [
+        "Laboratory maps and graph were audited with all links.",
+        "Base cardinalities were distinguished from project requirements.",
+        "Both invalid cases were rejected and precision checked.",
+        "All three views/engines and profile requirements were documented."
+      ],
+      "questions": [
+        "Must every Specimen have a Patient subject in base R4?",
+        "What prevents a structurally valid reference from resolving to the wrong result in another source?"
+      ],
+      "expected": "Five resources/four types in the laboratory extend joint coverage to seven constructor types. Specimen can have an environmental subject and base status/subject are optional; DiagnosticReport requires status/code, not subject; issued is an instant with timezone. The report references two Observation and one Specimen. Reject invalid status and result targeting Patient. All three views must match in V8/DuckDB; HAPI/project profiles remain separate.",
+      "evidence": "Graph, field matrix, NDJSON, negative diagnostics, three views and compared tables.",
+      "mistakes": "Always requiring Patient for an environmental specimen; confusing structural references with resolution; claiming profile validation from table comparison.",
+      "code": ""
+    }
+  ]
+}
