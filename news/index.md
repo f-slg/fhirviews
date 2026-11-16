@@ -2,6 +2,19 @@
 
 ## fhirviews 0.5.0.9002
 
+- El formulario del piloto conserva respuestas largas y todas las
+  incidencias al exportar/retomar JSON. El CSV traduce rótulos y valores
+  y conserva códigos para análisis entre idiomas; la autonomía requiere
+  comprobaciones y evidencia completas. La CI contrasta los materiales
+  del ZIP con los archivos del repositorio.
+
+- Evaluación externa R4, protocolo 2.1: guías equivalentes en español e
+  inglés, tareas distintas para perfiles R/FHIR y formulario bilingüe.
+  Se registran comprensión, respuestas, evidencia, ayuda y repetición
+  por tarea. El alcance de siete constructores exige laboratorio y nivel
+  completo; se conserva el mismo candidato comprobado y se separan las
+  fichas de rondas anteriores.
+
 - Distribucion independiente del componente Rust en ZIP para Linux
   x86_64 con musl estatico, Windows x64 con CRT estatico y macOS 15
   Intel/Apple Silicon. Incluye SHA-256, fuente, manifiestos y licencias;
@@ -9,21 +22,25 @@
   sin invocar Rust. GitHub Pages conserva los paquetes por version y
   commit. No se crea una release R ni se modifica la identidad de los
   archivos Zenodo anteriores.
+
 - La prueba de privacidad de Bulk Data distingue el token de una ruta de
   archivos: usa una credencial ficticia inequivoca y una carpeta que
   contiene `abc`. Evita fallos intermitentes al coincidir esas letras
   con una ruta temporal y mantiene la comprobacion de que no se imprime
   la credencial.
+
 - El constructor SQL/R a FHIR incorpora `Specimen` y `DiagnosticReport`
   R4, con metadatos generados de los snapshots oficiales 4.0.1. No exige
   paciente o status en Specimen ni subject en DiagnosticReport cuando la
   base R4 no los exige; el id sigue siendo obligatorio por el contrato
   del constructor.
+
 - Nuevas colecciones de referencias como `result[].reference`,
   `specimen[].reference` y `parent[].reference`, desde columnas de
   listas. Mantienen orden y duplicados y rechazan campos/indices que se
   solapen. Los demas objetos complejos repetidos siguen usando indices
   explicitos.
+
 - [`fhir_componente_rust()`](https://f-slg.github.io/fhirviews/reference/fhir_componente_rust.md)
   selecciona un ejecutable local opcional mediante un contrato CLI
   versionado.
@@ -35,10 +52,12 @@
   precedencia; el respaldo R avisa ante indisponibilidad o
   incumplimiento del contrato. La instalacion del paquete no instala
   Rust ni compila el componente.
+
 - Nuevo ejemplo `inst/examples/laboratorio-r4.R`: consulta SQL, muestra,
   dos observaciones, informe con colecciones variables y tablas
   equivalentes en V8/DuckDB. El candidato de piloto 0.5.0.9001 conserva
   su identidad.
+
 - Concatenar recursos a un acumulador `fhir_recursos(NULL)` conserva
   ahora los literales decimales de las partes no vacias. Antes el
   acumulador descartaba la fuente JSON y cambiaba los limites de

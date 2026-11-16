@@ -120,7 +120,7 @@
 </tr>
 <tr>
 <td><strong>Candidato de piloto <code>0.5.0.9002</code></strong></td>
-<td>El kit actualizado incluye los siete constructores R4 y una tarea opcional del ejemplo Specimen → Observation → DiagnosticReport. No requiere Rust.</td>
+<td>El kit actualizado incluye los siete constructores R4 y evaluación bilingüe por alcance; siete tipos exige la tarea Specimen → Observation → DiagnosticReport. No requiere Rust.</td>
 </tr>
 <tr>
 <td><strong>Archivo <code>0.5.0.9000</code></strong></td>
@@ -1797,7 +1797,7 @@ Mediciones históricas de motores y comparación con fhircrackr
 <li>Literales <code>72.00</code> y <code>0.50</code> en JSON y NDJSON, límites inferiores <code>71.995</code> y <code>0.495</code>, y regreso a las cinco tablas con V8.</li>
 <li>Rechazo de cinco casos: sujeto obligatorio ausente, ids duplicados, estado inválido, paciente ausente y comparador prohibido en SimpleQuantity.</li>
 </ul>
-<p>El perfil <code>completo</code> construye los recursos del control mediante consultas parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL. La nueva tarea opcional R09 ejecuta <code>examples/laboratorio-r4.R</code>, que construye Specimen y DiagnosticReport con referencias repetibles y compara V8/DuckDB. El grupo obligatorio HAPI valida los recursos del control contra perfiles base; las integraciones PostgreSQL y SQL Server comprueban sus controladores y tipos.</p>
+<p>El perfil <code>completo</code> construye los recursos del control mediante consultas parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL. La tarea R09/F09, obligatoria en alcance siete y excluida con motivo en núcleo, ejecuta <code>examples/laboratorio-r4.R</code>, que construye Specimen y DiagnosticReport con referencias repetibles y compara V8/DuckDB. El grupo obligatorio HAPI valida los recursos del control contra perfiles base; las integraciones PostgreSQL y SQL Server comprueban sus controladores y tipos.</p>
 <p>La <strong>evaluación externa</strong> requiere que otra persona instale el candidato, explique los resultados, modifique una vista, contraste el NDJSON y repita las tareas. El protocolo <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md" class="external-link">PILOTO-R4.md</a> incluye tareas, referencias y criterios de cierre. Los informes automáticos dejan <code>validacion_usuario_externo = pendiente</code> hasta documentar esa evaluación aparte. El ensayo local marca la validación de perfiles como no evaluada; HAPI aporta su evidencia independiente, y los perfiles propios requieren otra comprobación.</p>
 <p>Después del piloto y de corregir sus hallazgos se fijará la versión estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y el ORCID del autor; el desarrollo actual 0.5.0.9002 mantiene metadatos de cita separados. El orden posterior será federación entre servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust dispone de una interfaz CLI opcional; los ZIP por plataforma tienen su propia compilación y prueba de consumo. La integración nativa dentro del paquete R sigue siendo un trabajo separado.</p>
 </div>
@@ -1859,7 +1859,8 @@ Mediciones históricas de motores y comparación con fhircrackr
 <h3 id="protocolo-actual-para-el-cierre-r4">Protocolo actual para el cierre R4<a class="anchor" aria-label="anchor" href="#protocolo-actual-para-el-cierre-r4"></a>
 </h3>
 <p><strong><a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip" class="external-link">Descargar el kit externo R4 ZIP</a></strong> · <a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256" class="external-link">SHA-256 del ZIP</a></p>
-<p>El kit incluye el <strong>paquete comprobado 0.5.0.9002</strong>, su identidad, un lanzador, protocolos R/FHIR y un formulario local. Extrae todo el ZIP y abre R desde esa carpeta. Instala las dependencias indicadas en <code>LEEME.md</code> y ejecuta:</p>
+<p>El kit incluye el <strong>paquete comprobado 0.5.0.9002</strong>, su identidad, un lanzador, protocolos R/FHIR y un formulario local en <strong>español e inglés</strong>. El protocolo <strong>2.1</strong> distingue perfil de persona, nivel técnico y alcance núcleo/siete. Cada perfil tiene nueve tareas diferentes, preguntas de comprensión, criterios observables, evidencia, ayuda, tiempos activos/esperas y repetición por tarea. El alcance siete exige completo y laboratorio R09/F09; núcleo lo excluye expresamente. La autonomía se limita a tareas repetidas sin ayuda y con evidencia. <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.md" class="external-link">Evaluación detallada</a> · <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.en.md" class="external-link">English</a>. Conserva las fichas 2.0 con su kit y hash: no se importan en 2.1.</p>
+<p>Extrae todo el ZIP y abre R desde esa carpeta. Instala las dependencias indicadas en <code>LEEME.md</code> y ejecuta:</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"INICIAR.R"</span><span class="op">)</span></span>
 <span><span class="fu">iniciar_piloto</span><span class="op">(</span><span class="st">"basico"</span>, <span class="st">"sesion-P01-intento01"</span><span class="op">)</span></span>
