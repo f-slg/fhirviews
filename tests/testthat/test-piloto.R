@@ -50,7 +50,7 @@ test_that("un fallo del piloto deja evidencia y no puede declararse aprobado", {
 
 test_that("el perfil completo verifica tambien la recuperacion transaccional", {
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   con_piloto(function(carpeta, script) {
     expect_output(source(script), "Rollback verificado")
     resultado <- jsonlite::read_json(file.path(carpeta, "aceptacion.json"))

@@ -47,7 +47,7 @@ sis_prueba <- "https://f-slg.github.io/fhirviews/prueba"
 test_that("Candidato R4 con cinco recursos y perfiles base", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   salida <- tempfile("candidato-r4-")
   on.exit(unlink(salida, recursive = TRUE), add = TRUE)
   anterior <- Sys.getenv(c("FHIRVIEWS_R4_SALIDA", "FHIRVIEWS_R4_SQL"), unset = NA_character_)
@@ -77,7 +77,7 @@ test_that("Candidato R4 con cinco recursos y perfiles base", {
 test_that("SQL a FHIR, perfiles R4, referencias y retorno a tablas", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   marca <- marca_prueba()
   id_paciente <- paste0(marca, "-p")
   ids_observaciones <- paste0(marca, "-o", 1:2)
@@ -151,7 +151,7 @@ test_that("SQL a FHIR, perfiles R4, referencias y retorno a tablas", {
 test_that("Encounter y Condition desde SQL, perfiles R4 y referencias", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   db <- conectar_duckdb()
   on.exit(DBI::dbDisconnect(db), add = TRUE)
   creados <- list()
@@ -234,7 +234,7 @@ test_that("Encounter y Condition desde SQL, perfiles R4 y referencias", {
 test_that("Immunization desde SQL, perfil R4, dosis y referencias", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   db <- conectar_duckdb()
   on.exit(DBI::dbDisconnect(db), add = TRUE)
   creados <- list()
@@ -327,7 +327,7 @@ test_that("Immunization desde SQL, perfil R4, dosis y referencias", {
 test_that("Specimen y DiagnosticReport desde SQL, perfiles R4 y retorno a tablas", {
   con <- fhir_conectar(servidor_escritura(), panel = FALSE)
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   e <- new.env(parent = globalenv())
   sys.source(system.file("examples", "laboratorio-r4.R", package = "fhirviews"), e)
   prefijo <- marca_prueba()
@@ -528,7 +528,7 @@ test_that("transaccion, vistas con V8 y DuckDB y fhir_tabla con datos reales", {
   expect_identical(rapida$id, id_paciente)
   expect_match(rapida$name, "Salazar Moreno", fixed = TRUE)
 
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   expect_identical(vista_ejecutar_duckdb(pac, vp), tabla_v8)
   expect_identical(vista_ejecutar_duckdb(obs, vista)[order(df$fecha), ],
                    df[order(df$fecha), ])
@@ -604,7 +604,7 @@ test_that("exportacion masiva ($export) de punta a punta", {
   v <- vista_crear("Patient", c(sexo = "gender"))
   df <- vista_ejecutar(r, v)
   expect_identical(df$sexo[df$id == p$id], "female")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   db <- vista_ejecutar_duckdb(x$archivos$Patient, v)
   expect_identical(db[order(db$id), ], df[order(df$id), ],
                    ignore_attr = "row.names")

@@ -106,7 +106,7 @@ test_that("vista_plantilla() maneja casos limite", {
 # Prueba diferencial: los dos motores deben dar la misma tabla
 skip_on_cran()
 skip_if_not_installed("DBI")
-skip_if_not_installed("duckdb", "1.3.0")
+skip_if_not_installed("duckdb", "1.4.0")
 json_disponible <- tryCatch({
   con <- conectar_duckdb()
   cargar_json_duckdb(con)

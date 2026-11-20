@@ -57,7 +57,7 @@ completo con \code{fhirpath.js}. Este motor admite un subconjunto de FHIRPath
 (ver \code{\link[=vista_sql]{vista_sql()}}); si la vista usa algo que no se puede traducir, el
 error lo indica y sugiere usar \code{\link[=vista_ejecutar]{vista_ejecutar()}}.
 
-Requiere los paquetes DBI y duckdb (versión 1.3.0 o posterior) y la
+Requiere los paquetes DBI y duckdb (versión 1.4.0 o posterior) y la
 extensión \code{json} de DuckDB, que el paquete duckdb no trae incorporada:
 DuckDB la descarga la primera vez que se usa en cada sesión de R (hace
 falta conexión a internet). La conexión que crea esta función guarda las

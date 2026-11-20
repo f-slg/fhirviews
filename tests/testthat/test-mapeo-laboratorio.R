@@ -89,7 +89,7 @@ test_that("colecciones de referencias rechazan objetos ambiguos y solapamientos"
 
 test_that("el ejemplo SQL de laboratorio produce relaciones y tablas iguales en los dos motores", {
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   e <- new.env(parent = globalenv())
   sys.source(system.file("examples", "laboratorio-r4.R", package = "fhirviews"), e)
   r <- e$laboratorio_r4()

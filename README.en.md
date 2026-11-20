@@ -166,7 +166,7 @@ Install the optional dependencies that your workflow needs:
 
 | Feature | Additional packages |
 |---|---|
-| DuckDB tables and SQL engine | `DBI`, `duckdb` ≥ 1.3.0; the current DuckDB version requires R ≥ 4.2 |
+| DuckDB tables and SQL engine | `DBI`, `duckdb` ≥ 1.4.0; the current DuckDB version requires R ≥ 4.2 |
 | Lazy queries on DuckDB | The above, plus `dplyr` and `dbplyr` |
 | SMART Backend Services, with a signed JWT | `jose`, `openssl` |
 | Interactive login, with PKCE | `httpuv` |
@@ -627,10 +627,12 @@ avoids that download; its SQL examples are enabled explicitly with
 
 ### DuckDB versions
 
-CI tests the engine with three DuckDB lines: **1.3.0** (declared minimum),
+CI tests the engine with three DuckDB lines: **1.4.0** (declared minimum),
 **1.5** (extended support until March 2027) and the current CRAN version,
 **2.0**, on Windows, macOS and Linux. The `DuckDB versiones` workflow fails
-if any engine test is skipped.
+if any engine test is skipped. The minimum used to be 1.3.0, but DuckDB 1.3
+lacks `trunc(DECIMAL, n)`, which the translator uses for `lowBoundary()`
+and `highBoundary()`.
 
 | Aspect | What changes with DuckDB 2.0 |
 |---|---|

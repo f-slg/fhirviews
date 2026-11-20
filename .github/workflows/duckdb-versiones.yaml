@@ -1,7 +1,7 @@
 # Prueba el motor DuckDB con cada línea soportada de DuckDB.
 #
 # R-CMD-check.yaml instala la versión vigente de CRAN (2.0.x desde octubre
-# de 2026). Este workflow añade la versión mínima declarada (1.3.0) y la
+# de 2026). Este workflow añade la versión mínima declarada (1.4.0) y la
 # línea 1.5, que DuckDB mantiene con soporte extendido hasta marzo de 2027.
 # Falla si alguna prueba de DuckDB se omite, para que una extensión `json`
 # que no carga no pase como éxito.
@@ -55,9 +55,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # duckdb 1.3.0 no compila en R >= 4.6 (usa ATTRIB y
-          # R_NamespaceRegistry, retirados de la API de R); se prueba con R 4.4.
-          - {duckdb: '1.3.0', paquete: 'duckdb@1.3.0', linea: 'mínimo declarado', r: '4.4'}
+          # Las versiones antiguas de duckdb no compilan en R >= 4.6 (usan
+          # ATTRIB y R_NamespaceRegistry, retirados de la API de R); el
+          # mínimo se prueba con R 4.4. DuckDB 1.3 no basta: le falta
+          # trunc(DECIMAL, n), que usan los límites decimales.
+          - {duckdb: '1.4.0', paquete: 'duckdb@1.4.0', linea: 'mínimo declarado', r: '4.4'}
           - {duckdb: '1.5.5', paquete: 'duckdb@1.5.5', linea: 'LTS 1.5', r: 'release'}
           - {duckdb: 'CRAN',  paquete: 'any::duckdb',  linea: 'vigente', r: 'release'}
 

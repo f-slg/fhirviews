@@ -328,7 +328,7 @@ test_that("vista_con_valueset revisa sus argumentos", {
 test_that("vista_con_valueset funciona con el motor DuckDB", {
   skip_on_cran()
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.4.0")
   json_disponible <- tryCatch({
     con <- conectar_duckdb()
     cargar_json_duckdb(con)

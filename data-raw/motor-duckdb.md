@@ -348,7 +348,7 @@ a fhirpath.js o dan error.
   la carpeta temporal y la descarga se repite en cada sesión de R. Sin
   internet falla con un mensaje claro. Por eso las pruebas que ejecutan SQL
   se saltan en CRAN.
-* Necesita duckdb 1.3.0 o posterior (sintaxis `lambda x: ...`).
+* Necesita duckdb 1.4.0 o posterior (sintaxis `lambda x: ...` y `trunc(DECIMAL, n)` para los límites decimales).
 * El SQL generado es largo (cada navegación se expande en línea para que la
   consulta funcione sin macros); `vista_sql()` sirve para revisarlo, no para
   editarlo a mano.
