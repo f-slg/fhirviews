@@ -142,7 +142,7 @@ Instala las dependencias opcionales según tu flujo:
 
 | Funcionalidad | Paquetes adicionales |
 |---|---|
-| Tablas y motor SQL de DuckDB | `DBI`, `duckdb` ≥ 1.4.0; la versión actual de DuckDB requiere R ≥ 4.2 |
+| Tablas y motor SQL de DuckDB | `DBI`, `duckdb` ≥ 1.5.5; la versión actual de DuckDB requiere R ≥ 4.2 |
 | Consultas diferidas sobre DuckDB | Los anteriores, más `dplyr` y `dbplyr` |
 | SMART Backend Services, con JWT firmado | `jose`, `openssl` |
 | Inicio de sesión interactivo, con PKCE | `httpuv` |
@@ -600,12 +600,15 @@ habilitan explícitamente con `FHIRVIEWS_VINETAS_DUCKDB=true`.
 
 ### Versiones de DuckDB
 
-La CI prueba el motor con tres líneas de DuckDB: **1.4.0** (mínimo
-declarado), **1.5** (soporte extendido hasta marzo de 2027) y la versión
-vigente de CRAN, **2.0**, en Windows, macOS y Linux. El workflow
-`DuckDB versiones` falla si alguna prueba del motor se omite. Antes el
-mínimo era 1.3.0, pero DuckDB 1.3 no tiene `trunc(DECIMAL, n)`, que el
-traductor usa para `lowBoundary()` y `highBoundary()`.
+El mínimo es **duckdb 1.5.5**, la versión más antigua verificada de una
+línea con soporte (la 1.5 lo tiene hasta marzo de 2027; la 1.4 terminó el
+17 de noviembre de 2026). La CI la prueba junto con la versión vigente de
+CRAN, **2.0**, que además se verifica en Windows, macOS y Linux. El workflow
+`DuckDB versiones` falla si alguna prueba del motor se omite.
+
+Antes se declaraba 1.3.0, pero DuckDB 1.3 no tiene `trunc(DECIMAL, n)`, que
+el traductor usa para `lowBoundary()` y `highBoundary()`, y el cliente R
+1.4.0 falla al agregar filas con columnas de lista en `vista_duckdb()`.
 
 | Aspecto | Qué cambia con DuckDB 2.0 |
 |---|---|

@@ -96,7 +96,7 @@ print.fhir_sql <- function(x, ...) {
 #' (ver [vista_sql()]); si la vista usa algo que no se puede traducir, el
 #' error lo indica y sugiere usar [vista_ejecutar()].
 #'
-#' Requiere los paquetes DBI y duckdb (versión 1.4.0 o posterior) y la
+#' Requiere los paquetes DBI y duckdb (versión 1.5.5 o posterior) y la
 #' extensión `json` de DuckDB, que el paquete duckdb no trae incorporada:
 #' DuckDB la descarga la primera vez que se usa en cada sesión de R (hace
 #' falta conexión a internet). La conexión que crea esta función guarda las
@@ -161,9 +161,9 @@ vista_ejecutar_duckdb <- function(archivos, vista, con_db = NULL,
                      class = "fhirviews_error")
     }
   }
-  if (utils::packageVersion("duckdb") < "1.4.0") {
+  if (utils::packageVersion("duckdb") < "1.5.5") {
     cli::cli_abort(c(
-      "El motor DuckDB necesita el paquete {.pkg duckdb} 1.4.0 o posterior.",
+      "El motor DuckDB necesita el paquete {.pkg duckdb} 1.5.5 o posterior.",
       "i" = "Actualiza con {.code install.packages(\"duckdb\")}."
     ), class = "fhirviews_error")
   }

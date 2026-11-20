@@ -65,7 +65,7 @@ test_that("lo que no se traduce da un error que sugiere vista_ejecutar()", {
 # se descarga la primera vez
 skip_on_cran()
 skip_if_not_installed("DBI")
-skip_if_not_installed("duckdb", "1.4.0")
+skip_if_not_installed("duckdb", "1.5.5")
 json_disponible <- tryCatch({
   con <- conectar_duckdb()
   cargar_json_duckdb(con)

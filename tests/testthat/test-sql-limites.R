@@ -1,5 +1,5 @@
 skip_on_cran()
-skip_if_not_installed("duckdb", "1.4.0")
+skip_if_not_installed("duckdb", "1.5.5")
 skip_if_not_installed("DBI")
 
 test_that("los dos motores aprueban todos los limites oficiales", {
