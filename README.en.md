@@ -166,7 +166,7 @@ Install the optional dependencies that your workflow needs:
 
 | Feature | Additional packages |
 |---|---|
-| DuckDB tables and SQL engine | `DBI`, `duckdb` ≥ 1.3.0; the current DuckDB version requires R ≥ 4.2 |
+| DuckDB tables and SQL engine | `DBI`, `duckdb` ≥ 1.5.5; the current DuckDB version requires R ≥ 4.2 |
 | Lazy queries on DuckDB | The above, plus `dplyr` and `dbplyr` |
 | SMART Backend Services, with a signed JWT | `jose`, `openssl` |
 | Interactive login, with PKCE | `httpuv` |
@@ -624,6 +624,26 @@ time. In offline environments, prepare the extension for the same DuckDB version
 and check `LOAD json` before running the process. The standard vignette build
 avoids that download; its SQL examples are enabled explicitly with
 `FHIRVIEWS_VINETAS_DUCKDB=true`.
+
+### DuckDB versions
+
+The minimum is **duckdb 1.5.5**, the oldest verified version of a
+supported line (1.5 is supported until March 2027; 1.4 ended on
+17 November 2026). CI tests it together with the current CRAN version,
+**2.0**, which is also checked on Windows, macOS and Linux. The
+`DuckDB versiones` workflow fails if any engine test is skipped.
+
+The declared minimum used to be 1.3.0, but DuckDB 1.3 lacks
+`trunc(DECIMAL, n)`, which the translator uses for `lowBoundary()` and
+`highBoundary()`, and the 1.4.0 R client fails when `vista_duckdb()`
+appends rows with list columns.
+
+| Aspect | What changes with DuckDB 2.0 |
+|---|---|
+| Generated queries | Nothing: the translator uses `lambda x: ...`, the syntax 2.0 requires by default and 2.1 will keep as the only one. |
+| `.duckdb` files | A database **created** with DuckDB 2.0 cannot be opened by earlier versions. If `vista_duckdb()` or `tabla =` write to a file that machines with DuckDB 1.x also read, use the same version everywhere or share results as Parquet. Databases created with 1.x still open in 2.0. |
+| NDJSON and Parquet | Input files are unaffected: any version reads them. |
+| Production | DuckDB recommends waiting for the first patch release (2.0.1) and testing on a parallel system first for critical workloads. The 1.5 line remains supported meanwhile. |
 
 To store several views evaluated with the V8 engine and query them with SQL,
 use `vista_duckdb()`. This function writes the tables in one transaction; it

@@ -216,7 +216,7 @@ test_that("un fallo no mezcla archivos ni altera los bloques confirmados", {
 
 test_that("una transaccion externa revierte los bloques y permite reintentar sin duplicados", {
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.5.5")
   db <- conectar_duckdb()
   on.exit(DBI::dbDisconnect(db), add = TRUE)
   DBI::dbWriteTable(db, "resultados", data.frame(id = "anterior", valor = 9))

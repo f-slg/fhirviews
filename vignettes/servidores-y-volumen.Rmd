@@ -13,7 +13,7 @@ vignette: >
 # R CMD build y R CMD check no dependan de la red.
 tiene_duckdb <- requireNamespace("duckdb", quietly = TRUE) &&
   requireNamespace("DBI", quietly = TRUE) &&
-  utils::packageVersion("duckdb") >= "1.3.0" &&
+  utils::packageVersion("duckdb") >= "1.5.5" &&
   identical(Sys.getenv("FHIRVIEWS_VINETAS_DUCKDB"), "true") &&
   !nzchar(Sys.getenv("_R_CHECK_PACKAGE_NAME_"))
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
@@ -212,7 +212,7 @@ preciso, pero trabaja en memoria y su tiempo crece con cada recurso. Para
 volúmenes grandes, `vista_ejecutar_duckdb()` **traduce el `ViewDefinition` a
 una consulta SQL** y la ejecuta con [DuckDB](https://duckdb.org/)
 directamente sobre los archivos NDJSON (también comprimidos, y con comodines
-como `"exportacion/*.ndjson"`) o Parquet, sin cargarlos en R. Requiere los paquetes duckdb (1.3.0 o posterior) y DBI.
+como `"exportacion/*.ndjson"`) o Parquet, sin cargarlos en R. Requiere los paquetes duckdb (1.5.5 o posterior) y DBI.
 
 ### Mismo resultado, otro motor
 
