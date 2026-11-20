@@ -1,5 +1,12 @@
 # fhirviews 0.5.0.9002
 
+* Nuevo workflow `DuckDB versiones`: prueba el motor SQL con duckdb 1.3.0
+  (minimo declarado), 1.5.5 (linea con soporte hasta marzo de 2027) y la
+  version vigente de CRAN (2.0). Falla si alguna prueba de DuckDB se omite.
+  Los README y `vista_duckdb()` documentan que una base creada con DuckDB 2.0
+  no se abre con versiones anteriores; las consultas generadas ya usan la
+  sintaxis `lambda` que exige DuckDB 2.0. No cambia el codigo del paquete.
+
 * El formulario del piloto conserva respuestas largas y todas las incidencias
   al exportar/retomar JSON. El CSV traduce rótulos y valores y conserva códigos
   para análisis entre idiomas; la autonomía requiere comprobaciones y evidencia

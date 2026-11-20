@@ -1,0 +1,135 @@
+# Prueba el motor DuckDB con cada línea soportada de DuckDB.
+#
+# R-CMD-check.yaml instala la versión vigente de CRAN (2.0.x desde octubre
+# de 2026). Este workflow añade la versión mínima declarada (1.3.0) y la
+# línea 1.5, que DuckDB mantiene con soporte extendido hasta marzo de 2027.
+# Falla si alguna prueba de DuckDB se omite, para que una extensión `json`
+# que no carga no pase como éxito.
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'R/sql*.R'
+      - 'R/duckdb.R'
+      - 'R/lotes.R'
+      - 'R/terminologia.R'
+      - 'R/catalogo.R'
+      - 'inst/vistas/**'
+      - 'tests/testthat/**'
+      - 'DESCRIPTION'
+      - '.github/workflows/duckdb-versiones.yaml'
+  pull_request:
+    paths:
+      - 'R/sql*.R'
+      - 'R/duckdb.R'
+      - 'R/lotes.R'
+      - 'R/terminologia.R'
+      - 'R/catalogo.R'
+      - 'inst/vistas/**'
+      - 'tests/testthat/**'
+      - 'DESCRIPTION'
+      - '.github/workflows/duckdb-versiones.yaml'
+  schedule:
+    # Lunes 07:17 UTC: detecta cambios de una nueva versión de DuckDB en CRAN
+    - cron: '17 7 * * 1'
+  workflow_dispatch:
+
+name: DuckDB versiones
+
+permissions:
+  contents: read
+
+concurrency:
+  group: duckdb-versiones-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  duckdb:
+    runs-on: ubuntu-24.04
+    name: duckdb ${{ matrix.config.duckdb }} (${{ matrix.config.linea }})
+    # Una versión archivada sin binario en Posit Package Manager se compila
+    # desde el código fuente, lo que puede tardar cerca de una hora.
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {duckdb: '1.3.0', paquete: 'duckdb@1.3.0', linea: 'mínimo declarado'}
+          - {duckdb: '1.5.5', paquete: 'duckdb@1.5.5', linea: 'LTS 1.5'}
+          - {duckdb: 'CRAN',  paquete: 'any::duckdb',  linea: 'vigente'}
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      NOT_CRAN: 'true'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"hard"'
+          cache-version: duckdb-${{ matrix.config.duckdb }}
+          extra-packages: |
+            any::pkgload
+            any::testthat
+            any::withr
+            any::DBI
+            any::dbplyr
+            any::dplyr
+            any::RSQLite
+            ${{ matrix.config.paquete }}
+
+      - name: Versión de DuckDB y extensión json
+        shell: Rscript {0}
+        run: |
+          pkgload::load_all(quiet = TRUE)
+          con <- fhirviews:::conectar_duckdb()
+          fhirviews:::cargar_json_duckdb(con)
+          version <- DBI::dbGetQuery(con, "SELECT version() AS v")$v
+          cat("Paquete duckdb:", as.character(packageVersion("duckdb")),
+              "\nMotor DuckDB:", version, "\n")
+          esperada <- "${{ matrix.config.duckdb }}"
+          if (esperada != "CRAN") {
+            stopifnot(packageVersion("duckdb") == esperada)
+          }
+          stopifnot(DBI::dbGetQuery(con, "SELECT json_valid('{}') AS ok")$ok)
+          # La sintaxis de flecha simple (x -> ...) se elimina en DuckDB 2.1.
+          # En 2.0 ya está desactivada por defecto; el traductor usa `lambda`.
+          if (packageVersion("duckdb") >= "2.0.0") {
+            ajuste <- DBI::dbGetQuery(con,
+              "SELECT current_setting('lambda_syntax') AS v")$v
+            cat("lambda_syntax:", ajuste, "\n")
+          }
+          DBI::dbDisconnect(con)
+
+      - name: Pruebas del motor DuckDB sin omisiones
+        shell: Rscript {0}
+        run: |
+          archivos <- paste0("^(duckdb|sql|sql-limites|catalogo|catalogo-alergias|",
+                             "lotes|terminologia|mapeo-laboratorio|fhir-desde-sql)$")
+          res <- testthat::test_local(filter = archivos,
+                                      reporter = testthat::ProgressReporter$new(),
+                                      stop_on_failure = TRUE)
+          omitidas <- unlist(lapply(res, function(prueba) {
+            lapply(prueba$results, function(e) {
+              if (inherits(e, "expectation_skip")) {
+                paste0(prueba$file, " / ", prueba$test, ": ",
+                       conditionMessage(e))
+              }
+            })
+          }))
+          if (length(omitidas)) {
+            cat("Pruebas omitidas:\n", paste("-", omitidas, collapse = "\n"),
+                "\n")
+          }
+          de_duckdb <- grepl("duckdb|json", omitidas, ignore.case = TRUE)
+          if (any(de_duckdb)) {
+            stop("Se omitieron pruebas del motor DuckDB con duckdb ",
+                 packageVersion("duckdb"), ".", call. = FALSE)
+          }

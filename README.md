@@ -598,6 +598,20 @@ versión de DuckDB y comprueba `LOAD json` antes de ejecutar el proceso. La
 construcción estándar de las viñetas evita esa descarga; sus ejemplos SQL se
 habilitan explícitamente con `FHIRVIEWS_VINETAS_DUCKDB=true`.
 
+### Versiones de DuckDB
+
+La CI prueba el motor con tres líneas de DuckDB: **1.3.0** (mínimo
+declarado), **1.5** (soporte extendido hasta marzo de 2027) y la versión
+vigente de CRAN, **2.0**, en Windows, macOS y Linux. El workflow
+`DuckDB versiones` falla si alguna prueba del motor se omite.
+
+| Aspecto | Qué cambia con DuckDB 2.0 |
+|---|---|
+| Consultas generadas | Sin cambios: el traductor usa `lambda x: ...`, la sintaxis que 2.0 exige por defecto y que 2.1 dejará como única. |
+| Archivos `.duckdb` | Una base **creada** con DuckDB 2.0 no se abre con versiones anteriores. Si `vista_duckdb()` o `tabla =` escriben en un archivo que también leen equipos con DuckDB 1.x, usa la misma versión en todos o comparte los resultados en Parquet. Las bases creadas con 1.x siguen abriéndose en 2.0. |
+| NDJSON y Parquet | Los archivos de entrada no cambian: cualquier versión los lee. |
+| Producción | DuckDB recomienda esperar la primera versión de corrección (2.0.1) y probar antes en un entorno paralelo cuando el proceso sea crítico. La línea 1.5 sigue soportada mientras tanto. |
+
 Para guardar varias vistas evaluadas con el motor V8 y consultarlas con SQL,
 usa `vista_duckdb()`. Esta función escribe las tablas en una transacción; no
 utiliza el traductor experimental.

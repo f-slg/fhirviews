@@ -625,6 +625,20 @@ and check `LOAD json` before running the process. The standard vignette build
 avoids that download; its SQL examples are enabled explicitly with
 `FHIRVIEWS_VINETAS_DUCKDB=true`.
 
+### DuckDB versions
+
+CI tests the engine with three DuckDB lines: **1.3.0** (declared minimum),
+**1.5** (extended support until March 2027) and the current CRAN version,
+**2.0**, on Windows, macOS and Linux. The `DuckDB versiones` workflow fails
+if any engine test is skipped.
+
+| Aspect | What changes with DuckDB 2.0 |
+|---|---|
+| Generated queries | Nothing: the translator uses `lambda x: ...`, the syntax 2.0 requires by default and 2.1 will keep as the only one. |
+| `.duckdb` files | A database **created** with DuckDB 2.0 cannot be opened by earlier versions. If `vista_duckdb()` or `tabla =` write to a file that machines with DuckDB 1.x also read, use the same version everywhere or share results as Parquet. Databases created with 1.x still open in 2.0. |
+| NDJSON and Parquet | Input files are unaffected: any version reads them. |
+| Production | DuckDB recommends waiting for the first patch release (2.0.1) and testing on a parallel system first for critical workloads. The 1.5 line remains supported meanwhile. |
+
 To store several views evaluated with the V8 engine and query them with SQL,
 use `vista_duckdb()`. This function writes the tables in one transaction; it
 does not use the experimental translator.
