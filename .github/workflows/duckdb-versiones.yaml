@@ -46,7 +46,7 @@ concurrency:
 jobs:
   duckdb:
     runs-on: ubuntu-24.04
-    name: duckdb ${{ matrix.config.duckdb }} (${{ matrix.config.linea }})
+    name: duckdb ${{ matrix.config.duckdb }} (${{ matrix.config.linea }}, R ${{ matrix.config.r }})
     # Una versión archivada sin binario en Posit Package Manager se compila
     # desde el código fuente, lo que puede tardar cerca de una hora.
     timeout-minutes: 90
@@ -55,9 +55,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {duckdb: '1.3.0', paquete: 'duckdb@1.3.0', linea: 'mínimo declarado'}
-          - {duckdb: '1.5.5', paquete: 'duckdb@1.5.5', linea: 'LTS 1.5'}
-          - {duckdb: 'CRAN',  paquete: 'any::duckdb',  linea: 'vigente'}
+          # duckdb 1.3.0 no compila en R >= 4.6 (usa ATTRIB y
+          # R_NamespaceRegistry, retirados de la API de R); se prueba con R 4.4.
+          - {duckdb: '1.3.0', paquete: 'duckdb@1.3.0', linea: 'mínimo declarado', r: '4.4'}
+          - {duckdb: '1.5.5', paquete: 'duckdb@1.5.5', linea: 'LTS 1.5', r: 'release'}
+          - {duckdb: 'CRAN',  paquete: 'any::duckdb',  linea: 'vigente', r: 'release'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -68,13 +70,13 @@ jobs:
 
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: 'release'
+          r-version: ${{ matrix.config.r }}
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
-          cache-version: duckdb-${{ matrix.config.duckdb }}
+          cache-version: duckdb-${{ matrix.config.duckdb }}${{ matrix.config.r != 'release' && format('-r{0}', matrix.config.r) || '' }}
           extra-packages: |
             any::pkgload
             any::testthat
