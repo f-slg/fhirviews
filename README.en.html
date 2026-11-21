@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,9 +78,9 @@
 <h2 id="status-and-versions">Status and versions<a class="anchor" aria-label="anchor" href="#status-and-versions"></a></h2>
 <table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Version or component</th>
 <th>Status and use</th>
-</tr></thead><tbody><tr><td><strong>Current development: <code>0.5.0.9002</code></strong></td>
+</tr></thead><tbody><tr><td><strong>Current development: <code>0.5.0.9003</code></strong></td>
 <td>GitHub source. SQL → FHIR for seven R4 resources, variable reference collections and an API for an optional external Rust component; eight catalogue views. No version DOI assigned yet.</td>
-</tr><tr><td><strong>Pilot candidate <code>0.5.0.9002</code></strong></td>
+</tr><tr><td><strong>Pilot candidate <code>0.5.0.9003</code></strong></td>
 <td>Updated external R4 kit with the exact checked package, seven constructors and bilingual scope-based evaluation; seven-type scope requires the Specimen/DiagnosticReport task. Human evaluation remains pending.</td>
 </tr><tr><td><strong>Archived <code>0.5.0.9000</code></strong></td>
 <td>Earlier source preserved in <a href="https://doi.org/10.5281/zenodo.24238726" class="external-link">Zenodo</a>. Its DOI identifies that specific archive.</td>
@@ -1338,7 +1338,7 @@ Historical engine benchmarks and fhircrackr comparison
 </div>
 <div class="section level2">
 <h2 id="stabilising-r4">Stabilising R4<a class="anchor" aria-label="anchor" href="#stabilising-r4"></a></h2>
-<p>The current priority is to consolidate <strong>FHIR R4 4.0.1</strong> before federation or R4/R6 conversion. Current development and the updated pilot candidate are <code>0.5.0.9002</code>. The kit’s historical acceptance control covers six fictitious resources across five types; a separate full-level task, required under seven-type scope, runs the Specimen and DiagnosticReport laboratory example. Verifying a candidate does not publish a release, change its version or issue a DOI.</p>
+<p>The current priority is to consolidate <strong>FHIR R4 4.0.1</strong> before federation or R4/R6 conversion. Current development and the updated pilot candidate are <code>0.5.0.9003</code>. The kit’s historical acceptance control covers six fictitious resources across five types; a separate full-level task, required under seven-type scope, runs the Specimen and DiagnosticReport laboratory example. Verifying a candidate does not publish a release, change its version or issue a DOI.</p>
 <table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Component</th>
 <th>Scope of the R4 milestone</th>
 </tr></thead><tbody><tr><td>Client and V8 views</td>
@@ -1358,7 +1358,7 @@ Historical engine benchmarks and fhircrackr comparison
 </tr></tbody></table><p>Both acceptance profiles of the pilot require <code>r4_cinco_recursos</code>: six fictitious resources of five types, including two Immunization records. It checks references, false booleans, missing optional objects, date and dose choices, JSON/NDJSON round trips and the five V8 views. Decimal literals <code>72.00</code> and <code>0.50</code> retain their lower boundaries <code>71.995</code> and <code>0.495</code>. Five invalid cases must be rejected: missing required subject, duplicate ids, invalid status, missing patient and a prohibited SimpleQuantity comparator.</p>
 <p>The complete profile builds through parameterised DBI/DuckDB queries and checks all five views with the SQL engine. A mandatory HAPI group validates the exact six JSON resources against their base profiles and rejects an altered Patient. The separate R09/F09 task, required for seven-type scope and excluded with a reason for core scope, runs the installed laboratory example for Patient, Specimen, two Observations and DiagnosticReport, including variable result references and V8/DuckDB comparison. PostgreSQL and SQL Server integration continues to check native database types.</p>
 <p>An external participant must install the exact tested candidate, interpret the results, change a view, compare it with NDJSON and repeat the agreed tasks. <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.en.md" class="external-link"><code>PILOTO-R4.md</code></a>, included in the updated kit, provides the protocol in English, with matching Spanish materials. Automated reports retain <code>validacion_usuario_externo = pendiente</code>; the local trial marks profile validation as unevaluated, with HAPI evidence recorded separately.</p>
-<p>After addressing the pilot findings, select the stable version and artifact. The earlier 0.5.0.9000 archive has a verified DOI and author ORCID; the current 0.5.0.9002 development has separate citation metadata. Later work will address federation between R4 servers, followed by resource-specific R4/R6 adapters and export. Rust has an optional CLI interface and separately built and consumer-tested platform ZIPs. Native integration within the R package remains separate work. Historical timings belong to their frozen laboratory commit; the current public API has its own measurement report.</p>
+<p>After addressing the pilot findings, select the stable version and artifact. The earlier 0.5.0.9000 archive has a verified DOI and author ORCID; the current 0.5.0.9003 development has separate citation metadata. Later work will address federation between R4 servers, followed by resource-specific R4/R6 adapters and export. Rust has an optional CLI interface and separately built and consumer-tested platform ZIPs. Native integration within the R package remains separate work. Historical timings belong to their frozen laboratory commit; the current public API has its own measurement report.</p>
 </div>
 <div class="section level2">
 <h2 id="remaining-work-and-priorities">Remaining work and priorities<a class="anchor" aria-label="anchor" href="#remaining-work-and-priorities"></a></h2>
@@ -1393,7 +1393,7 @@ Historical engine benchmarks and fhircrackr comparison
 <h3 id="current-r4-protocol">Current R4 protocol<a class="anchor" aria-label="anchor" href="#current-r4-protocol"></a></h3>
 <p><strong><a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip" class="external-link">Download the external R4 pilot kit ZIP</a></strong> · <a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256" class="external-link">ZIP SHA-256</a></p>
 <p>Protocol <strong>2.1</strong> provides <strong>English and Spanish</strong> guides and a bilingual form. It separates participant profile, technical level and core/seven scope. Each profile has nine different tasks with understanding questions, observable criteria, evidence, assistance, active/wait times and per-task repetition. Seven-type scope requires full level and laboratory R09/F09; core excludes it explicitly. Independence is limited to evidenced unassisted task repeats. <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.en.md" class="external-link">Detailed evaluation</a> · <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.md" class="external-link">Español</a>. Retain 2.0 records with their original kit/hash; they cannot be imported into 2.1.</p>
-<p>The kit includes the <strong>checked 0.5.0.9002 package</strong>, its identity, a launcher, R/FHIR protocols and a local bilingual form. Materials are available in English and Spanish. Extract the entire ZIP and open R in that folder. Install the dependencies listed in <code>LEEME.en.md</code>, then run:</p>
+<p>The kit includes the <strong>checked 0.5.0.9003 package</strong>, its identity, a launcher, R/FHIR protocols and a local bilingual form. Materials are available in English and Spanish. Extract the entire ZIP and open R in that folder. Install the dependencies listed in <code>LEEME.en.md</code>, then run:</p>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"INICIAR.R"</span><span class="op">)</span></span>
 <span><span class="fu">iniciar_piloto</span><span class="op">(</span><span class="st">"basico"</span>, <span class="st">"sesion-P01-intento01"</span><span class="op">)</span></span>
@@ -1433,7 +1433,7 @@ Historical participant kit for 0.5.0
 <p>This check uses bundled fictitious data. Install the dependencies and the source archive provided by the maintainer:</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.9002.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.9003.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <p>Restart R, choose a new folder and run:</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
@@ -1479,7 +1479,7 @@ Historical participant kit for 0.5.0
 <span><span class="fu"><a href="https://rdrr.io/r/utils/toLatex.html" class="external-link">toBibtex</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fhirviews"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>What you used</th>
 <th>How to identify it</th>
-</tr></thead><tbody><tr><td>Current development <code>0.5.0.9002</code>
+</tr></thead><tbody><tr><td>Current development <code>0.5.0.9003</code>
 </td>
 <td>Cite the installed version and keep the commit SHA. No version DOI assigned yet.</td>
 </tr><tr><td>Archived <code>0.5.0.9000</code>
@@ -1489,7 +1489,7 @@ Historical participant kit for 0.5.0
 </tr><tr><td>The project and its versions</td>
 <td>
 <a href="https://doi.org/10.5281/zenodo.24238725" class="external-link">Concept DOI 10.5281/zenodo.24238725</a>. Also identify the specific version for reproducibility.</td>
-</tr></tbody></table><p>ORCID identifies the author; Zenodo preserves a citable archive. Both can be used before CRAN publication: they are not mandatory prior steps or evidence of CRAN acceptance. R’s citation includes the <code>0.5.0.9000</code> DOI only for that version. Development <code>0.5.0.9002</code> keeps its own version and repository URL. Metadata is recorded in <a href="https://github.com/f-slg/fhirviews/blob/main/CITATION.cff" class="external-link">CITATION.cff</a> and <a href="https://github.com/f-slg/fhirviews/blob/main/.zenodo.json" class="external-link">.zenodo.json</a>.</p>
+</tr></tbody></table><p>ORCID identifies the author; Zenodo preserves a citable archive. Both can be used before CRAN publication: they are not mandatory prior steps or evidence of CRAN acceptance. R’s citation includes the <code>0.5.0.9000</code> DOI only for that version. Development <code>0.5.0.9003</code> keeps its own version and repository URL. Metadata is recorded in <a href="https://github.com/f-slg/fhirviews/blob/main/CITATION.cff" class="external-link">CITATION.cff</a> and <a href="https://github.com/f-slg/fhirviews/blob/main/.zenodo.json" class="external-link">.zenodo.json</a>.</p>
 <p>The <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md" class="external-link">Zenodo guide</a> describes authorship, archives, hashes and later versions. The <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json" class="external-link">publication receipt</a> identifies the actual preserved ZIP; the supplementary GitHub R package has a different hash and separate evidence. New changes do not modify the archive identified by the earlier DOI.</p>
 </div>
 <div class="section level2">

@@ -65,8 +65,8 @@ decisiones propias.
 
 | Versión o componente | Estado y uso |
 |----|----|
-| **Desarrollo actual: `0.5.0.9002`** | Código de GitHub. SQL → FHIR para siete recursos R4, colecciones de referencias y API para un componente Rust externo opcional; ocho vistas de catálogo. Todavía sin DOI de versión propio. |
-| **Candidato de piloto `0.5.0.9002`** | El kit actualizado incluye los siete constructores R4 y evaluación bilingüe por alcance; siete tipos exige la tarea Specimen → Observation → DiagnosticReport. No requiere Rust. |
+| **Desarrollo actual: `0.5.0.9003`** | Código de GitHub. SQL → FHIR para siete recursos R4, colecciones de referencias y API para un componente Rust externo opcional; ocho vistas de catálogo. Todavía sin DOI de versión propio. |
+| **Candidato de piloto `0.5.0.9003`** | El kit actualizado incluye los siete constructores R4 y evaluación bilingüe por alcance; siete tipos exige la tarea Specimen → Observation → DiagnosticReport. No requiere Rust. |
 | **Archivo `0.5.0.9000`** | Código anterior preservado en [Zenodo](https://doi.org/10.5281/zenodo.24238726). Su DOI identifica ese archivo concreto. |
 | **`0.5.0`** | [Lanzamiento de GitHub](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), enviado a CRAN el 7 de noviembre de 2026. No incluye SQL → FHIR. Consulta el [catálogo oficial de CRAN](https://cran.r-project.org/web/packages/available_packages_by_name.html) para su publicación. |
 | **Rust** | Componente CLI opcional, seleccionado por el usuario; R sigue siendo la ruta predeterminada. ZIP independientes para Linux x86_64, Windows x64 y macOS Intel/Apple Silicon, con SHA-256 y procedencia. [Uso](#validaci%C3%B3n-con-el-componente-rust-opcional) · [Resultados y límites](#rendimiento). |
@@ -1904,7 +1904,7 @@ Issues](https://github.com/f-slg/fhirviews/issues).
 ## Estabilización de R4
 
 La próxima entrega consolidará **FHIR R4 4.0.1** con un alcance
-explícito. La versión de desarrollo actual es `0.5.0.9002`; el kit
+explícito. La versión de desarrollo actual es `0.5.0.9003`; el kit
 actualizado entrega ese mismo archivo y prueba por separado el ejemplo
 de laboratorio. El archivo Zenodo de `0.5.0.9000` tiene un DOI propio,
 que no se transfiere a esta versión. Preparar el candidato no publica un
@@ -1959,7 +1959,7 @@ perfiles propios requieren otra comprobación.
 
 Después del piloto y de corregir sus hallazgos se fijará la versión
 estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y
-el ORCID del autor; el desarrollo actual 0.5.0.9002 mantiene metadatos
+el ORCID del autor; el desarrollo actual 0.5.0.9003 mantiene metadatos
 de cita separados. El orden posterior será federación entre servidores
 R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust dispone
 de una interfaz CLI opcional; los ZIP por plataforma tienen su propia
@@ -1994,7 +1994,7 @@ ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-k
 · [SHA-256 del
 ZIP](https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256)
 
-El kit incluye el **paquete comprobado 0.5.0.9002**, su identidad, un
+El kit incluye el **paquete comprobado 0.5.0.9003**, su identidad, un
 lanzador, protocolos R/FHIR y un formulario local en **español e
 inglés**. El protocolo **2.1** distingue perfil de persona, nivel
 técnico y alcance núcleo/siete. Cada perfil tiene nueve tareas
@@ -2108,7 +2108,7 @@ el archivo fuente que te entregue el mantenedor:
 ``` r
 
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9002.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9003.tar.gz", repos = NULL, type = "source")
 ```
 
 Reinicia R, elige una carpeta nueva y ejecuta:
@@ -2190,14 +2190,14 @@ toBibtex(citation("fhirviews"))
 
 | Qué utilizaste | Cómo identificarlo |
 |----|----|
-| Desarrollo actual `0.5.0.9002` | Cita la versión instalada y conserva el SHA del commit. Todavía no tiene DOI de versión. |
+| Desarrollo actual `0.5.0.9003` | Cita la versión instalada y conserva el SHA del commit. Todavía no tiene DOI de versión. |
 | Archivo `0.5.0.9000` | [DOI 10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726), correspondiente al código archivado desde `565243e`. |
 | Proyecto y sus versiones | [DOI de concepto 10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725). Para reproducir un análisis, identifica además la versión concreta. |
 
 ORCID identifica al autor; Zenodo preserva un archivo citable. Pueden
 utilizarse antes de la publicación en CRAN: no son un trámite previo
 obligatorio ni una certificación de aceptación. La cita de R incorpora
-el DOI de `0.5.0.9000` solo para esa versión. El desarrollo `0.5.0.9002`
+el DOI de `0.5.0.9000` solo para esa versión. El desarrollo `0.5.0.9003`
 conserva su propia versión y la URL del repositorio. Los metadatos están
 en
 [`CITATION.cff`](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff)

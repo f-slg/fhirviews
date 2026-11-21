@@ -32,7 +32,7 @@
 
     <a class="navbar-brand me-2" href="index.html">fhirviews</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,11 +115,11 @@
 </tr></thead>
 <tbody>
 <tr>
-<td><strong>Desarrollo actual: <code>0.5.0.9002</code></strong></td>
+<td><strong>Desarrollo actual: <code>0.5.0.9003</code></strong></td>
 <td>Código de GitHub. SQL → FHIR para siete recursos R4, colecciones de referencias y API para un componente Rust externo opcional; ocho vistas de catálogo. Todavía sin DOI de versión propio.</td>
 </tr>
 <tr>
-<td><strong>Candidato de piloto <code>0.5.0.9002</code></strong></td>
+<td><strong>Candidato de piloto <code>0.5.0.9003</code></strong></td>
 <td>El kit actualizado incluye los siete constructores R4 y evaluación bilingüe por alcance; siete tipos exige la tarea Specimen → Observation → DiagnosticReport. No requiere Rust.</td>
 </tr>
 <tr>
@@ -1780,7 +1780,7 @@ Mediciones históricas de motores y comparación con fhircrackr
 <div class="section level2">
 <h2 id="estabilización-de-r4">Estabilización de R4<a class="anchor" aria-label="anchor" href="#estabilizaci%C3%B3n-de-r4"></a>
 </h2>
-<p>La próxima entrega consolidará <strong>FHIR R4 4.0.1</strong> con un alcance explícito. La versión de desarrollo actual es <code>0.5.0.9002</code>; el kit actualizado entrega ese mismo archivo y prueba por separado el ejemplo de laboratorio. El archivo Zenodo de <code>0.5.0.9000</code> tiene un DOI propio, que no se transfiere a esta versión. Preparar el candidato no publica un lanzamiento ni emite otro DOI.</p>
+<p>La próxima entrega consolidará <strong>FHIR R4 4.0.1</strong> con un alcance explícito. La versión de desarrollo actual es <code>0.5.0.9003</code>; el kit actualizado entrega ese mismo archivo y prueba por separado el ejemplo de laboratorio. El archivo Zenodo de <code>0.5.0.9000</code> tiene un DOI propio, que no se transfiere a esta versión. Preparar el candidato no publica un lanzamiento ni emite otro DOI.</p>
 <table class="table">
 <colgroup>
 <col width="50%">
@@ -1834,7 +1834,7 @@ Mediciones históricas de motores y comparación con fhircrackr
 </ul>
 <p>El perfil <code>completo</code> construye los recursos del control mediante consultas parametrizadas DBI/DuckDB y compara las cinco vistas con el motor SQL. La tarea R09/F09, obligatoria en alcance siete y excluida con motivo en núcleo, ejecuta <code>examples/laboratorio-r4.R</code>, que construye Specimen y DiagnosticReport con referencias repetibles y compara V8/DuckDB. El grupo obligatorio HAPI valida los recursos del control contra perfiles base; las integraciones PostgreSQL y SQL Server comprueban sus controladores y tipos.</p>
 <p>La <strong>evaluación externa</strong> requiere que otra persona instale el candidato, explique los resultados, modifique una vista, contraste el NDJSON y repita las tareas. El protocolo <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/PILOTO-R4.md" class="external-link">PILOTO-R4.md</a> incluye tareas, referencias y criterios de cierre. Los informes automáticos dejan <code>validacion_usuario_externo = pendiente</code> hasta documentar esa evaluación aparte. El ensayo local marca la validación de perfiles como no evaluada; HAPI aporta su evidencia independiente, y los perfiles propios requieren otra comprobación.</p>
-<p>Después del piloto y de corregir sus hallazgos se fijará la versión estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y el ORCID del autor; el desarrollo actual 0.5.0.9002 mantiene metadatos de cita separados. El orden posterior será federación entre servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust dispone de una interfaz CLI opcional; los ZIP por plataforma tienen su propia compilación y prueba de consumo. La integración nativa dentro del paquete R sigue siendo un trabajo separado.</p>
+<p>Después del piloto y de corregir sus hallazgos se fijará la versión estable y su artefacto. El archivo anterior 0.5.0.9000 conserva su DOI y el ORCID del autor; el desarrollo actual 0.5.0.9003 mantiene metadatos de cita separados. El orden posterior será federación entre servidores R4 y, después, adaptadores y exportación R4/R6 por recurso. Rust dispone de una interfaz CLI opcional; los ZIP por plataforma tienen su propia compilación y prueba de consumo. La integración nativa dentro del paquete R sigue siendo un trabajo separado.</p>
 </div>
 <div class="section level2">
 <h2 id="pendientes-y-orden-de-trabajo">Pendientes y orden de trabajo<a class="anchor" aria-label="anchor" href="#pendientes-y-orden-de-trabajo"></a>
@@ -1894,7 +1894,7 @@ Mediciones históricas de motores y comparación con fhircrackr
 <h3 id="protocolo-actual-para-el-cierre-r4">Protocolo actual para el cierre R4<a class="anchor" aria-label="anchor" href="#protocolo-actual-para-el-cierre-r4"></a>
 </h3>
 <p><strong><a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip" class="external-link">Descargar el kit externo R4 ZIP</a></strong> · <a href="https://github.com/f-slg/fhirviews/raw/refs/heads/main/data-raw/fhirviews-kit-piloto-r4-v2.zip.sha256" class="external-link">SHA-256 del ZIP</a></p>
-<p>El kit incluye el <strong>paquete comprobado 0.5.0.9002</strong>, su identidad, un lanzador, protocolos R/FHIR y un formulario local en <strong>español e inglés</strong>. El protocolo <strong>2.1</strong> distingue perfil de persona, nivel técnico y alcance núcleo/siete. Cada perfil tiene nueve tareas diferentes, preguntas de comprensión, criterios observables, evidencia, ayuda, tiempos activos/esperas y repetición por tarea. El alcance siete exige completo y laboratorio R09/F09; núcleo lo excluye expresamente. La autonomía se limita a tareas repetidas sin ayuda y con evidencia. <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.md" class="external-link">Evaluación detallada</a> · <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.en.md" class="external-link">English</a>. Conserva las fichas 2.0 con su kit y hash: no se importan en 2.1.</p>
+<p>El kit incluye el <strong>paquete comprobado 0.5.0.9003</strong>, su identidad, un lanzador, protocolos R/FHIR y un formulario local en <strong>español e inglés</strong>. El protocolo <strong>2.1</strong> distingue perfil de persona, nivel técnico y alcance núcleo/siete. Cada perfil tiene nueve tareas diferentes, preguntas de comprensión, criterios observables, evidencia, ayuda, tiempos activos/esperas y repetición por tarea. El alcance siete exige completo y laboratorio R09/F09; núcleo lo excluye expresamente. La autonomía se limita a tareas repetidas sin ayuda y con evidencia. <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.md" class="external-link">Evaluación detallada</a> · <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.en.md" class="external-link">English</a>. Conserva las fichas 2.0 con su kit y hash: no se importan en 2.1.</p>
 <p>Extrae todo el ZIP y abre R desde esa carpeta. Instala las dependencias indicadas en <code>LEEME.md</code> y ejecuta:</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"INICIAR.R"</span><span class="op">)</span></span>
@@ -1943,7 +1943,7 @@ Material histórico del piloto 0.5.0
 <p>El control usa los datos ficticios incluidos. Instala las dependencias y el archivo fuente que te entregue el mantenedor:</p>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cli"</span>, <span class="st">"httr2"</span>, <span class="st">"jsonlite"</span>, <span class="st">"rlang"</span>, <span class="st">"V8"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.9002.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"fhirviews_0.5.0.9003.tar.gz"</span>, repos <span class="op">=</span> <span class="cn">NULL</span>, type <span class="op">=</span> <span class="st">"source"</span><span class="op">)</span></span></code></pre></div>
 <p>Reinicia R, elige una carpeta nueva y ejecuta:</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html" class="external-link">Sys.setenv</a></span><span class="op">(</span></span>
@@ -2022,7 +2022,7 @@ Material histórico del piloto 0.5.0
 </tr></thead>
 <tbody>
 <tr>
-<td>Desarrollo actual <code>0.5.0.9002</code>
+<td>Desarrollo actual <code>0.5.0.9003</code>
 </td>
 <td>Cita la versión instalada y conserva el SHA del commit. Todavía no tiene DOI de versión.</td>
 </tr>
@@ -2039,7 +2039,7 @@ Material histórico del piloto 0.5.0
 </tr>
 </tbody>
 </table>
-<p>ORCID identifica al autor; Zenodo preserva un archivo citable. Pueden utilizarse antes de la publicación en CRAN: no son un trámite previo obligatorio ni una certificación de aceptación. La cita de R incorpora el DOI de <code>0.5.0.9000</code> solo para esa versión. El desarrollo <code>0.5.0.9002</code> conserva su propia versión y la URL del repositorio. Los metadatos están en <a href="https://github.com/f-slg/fhirviews/blob/main/CITATION.cff" class="external-link"><code>CITATION.cff</code></a> y <a href="https://github.com/f-slg/fhirviews/blob/main/.zenodo.json" class="external-link"><code>.zenodo.json</code></a>.</p>
+<p>ORCID identifica al autor; Zenodo preserva un archivo citable. Pueden utilizarse antes de la publicación en CRAN: no son un trámite previo obligatorio ni una certificación de aceptación. La cita de R incorpora el DOI de <code>0.5.0.9000</code> solo para esa versión. El desarrollo <code>0.5.0.9003</code> conserva su propia versión y la URL del repositorio. Los metadatos están en <a href="https://github.com/f-slg/fhirviews/blob/main/CITATION.cff" class="external-link"><code>CITATION.cff</code></a> y <a href="https://github.com/f-slg/fhirviews/blob/main/.zenodo.json" class="external-link"><code>.zenodo.json</code></a>.</p>
 <p>La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/README.md" class="external-link">guía de Zenodo</a> detalla autoría, archivos, hashes y futuras versiones. La <a href="https://github.com/f-slg/fhirviews/blob/main/data-raw/zenodo/publicacion-0.5.0.9000.json" class="external-link">constancia de publicación</a> identifica el ZIP realmente preservado; el paquete R complementario de GitHub tiene un hash distinto y se documenta por separado. Los nuevos cambios no modifican el archivo al que corresponde el DOI anterior.</p>
 </div>
 <div class="section level2">
