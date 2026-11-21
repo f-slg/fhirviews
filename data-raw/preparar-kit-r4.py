@@ -11,7 +11,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 KIT = 'data-raw/piloto-r4-v2'
-EVIDENCIA = 'data-raw/validacion-0.5.0.9002/MANIFIESTO.json'
+EVIDENCIA = 'data-raw/validacion-0.5.0.9003/MANIFIESTO.json'
 ARCHIVOS = ('INICIAR.R', 'LEEME.md', 'ANEXO-OBSERVADOR.md',
             'PROTOCOLO-PERFIL-R.md', 'PROTOCOLO-PERFIL-FHIR.md',
             'PILOTO-R4.md', 'EVALUACION-PILOTO.md', 'tareas.json',

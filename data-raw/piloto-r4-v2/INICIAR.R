@@ -19,8 +19,8 @@ iniciar_piloto <- function(perfil = c("basico", "completo"), salida,
     stop(paste("Faltan dependencias. Instalalas antes de repetir:\n",
       paste(deparse(substitute(install.packages(x), list(x = faltan))), collapse = "")), call. = FALSE)
   }
-  if (perfil == "completo" && utils::packageVersion("duckdb") < "1.3.0") {
-    stop("El perfil completo requiere duckdb >= 1.3.0.", call. = FALSE)
+  if (perfil == "completo" && utils::packageVersion("duckdb") < "1.5.5") {
+    stop("El perfil completo requiere duckdb >= 1.5.5.", call. = FALSE)
   }
   candidato <- jsonlite::read_json(file.path(kit, "CANDIDATO.json"))
   nombre <- candidato$paquete$archivo

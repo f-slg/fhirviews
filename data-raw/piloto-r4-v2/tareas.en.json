@@ -22,7 +22,7 @@
         "How would you check that R is using this candidate rather than another installed copy?",
         "Which steps need network access, and which should work once dependencies are prepared?"
       ],
-      "expected": "Version 0.5.0.9002 with the supplied commit and file hash; the session library is loaded. Full level needs DBI/DuckDB and R ≥ 4.2; basic needs R ≥ 4.1. Finding documentation independently is not an observer intervention.",
+      "expected": "Version 0.5.0.9003 with the supplied commit and file hash; the session library is loaded. Full level needs DBI/DuckDB and R ≥ 4.2; basic needs R ≥ 4.1. Finding documentation independently is not an observer intervention.",
       "evidence": "SESION.json, candidato.txt, reviewed library location, versions and preparation log.",
       "mistakes": "Confusing version with file identity; loading another library; including network waits in analysis time.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"basico\", \"sesion-P01-intento01\")\nabrir_sesion(\"sesion-P01-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
@@ -267,7 +267,7 @@
         "What does the local constructor check, and what requires profile or terminology validation?",
         "What evidence would you request to claim interoperability with a specific system?"
       ],
-      "expected": "R4 4.0.1, candidate 0.5.0.9002 identified by commit and SHA-256. HAPI CI is prior maintainer evidence, not a participant execution. A local pass or 144/144 view-suite result does not validate national profiles, terminology or reference existence.",
+      "expected": "R4 4.0.1, candidate 0.5.0.9003 identified by commit and SHA-256. HAPI CI is prior maintainer evidence, not a participant execution. A local pass or 144/144 view-suite result does not validate national profiles, terminology or reference existence.",
       "evidence": "Identity/environment, reports consulted and a written checked/not-evaluated matrix.",
       "mistakes": "Using view conformance as general FHIR certification; claiming the participant ran HAPI after reading a report.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"completo\", \"sesion-P02-intento01\")\nabrir_sesion(\"sesion-P02-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"

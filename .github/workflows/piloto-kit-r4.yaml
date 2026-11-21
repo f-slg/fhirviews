@@ -63,7 +63,7 @@ jobs:
         run: python -c "import os,zipfile; zipfile.ZipFile('data-raw/fhirviews-kit-piloto-r4-v2.zip').extractall(os.path.join(os.environ['RUNNER_TEMP'],'piloto-formulario'))"
       - name: Comprobar las reglas del formulario con datos simulados
         shell: bash
-        run: node data-raw/piloto-r4-v2/probar-formulario.mjs "$RUNNER_TEMP/piloto-formulario/fhirviews-piloto-r4-0.5.0.9002/FORMULARIO-PILOTO.html" "$RUNNER_TEMP/fhirviews-kit-node/node_modules/jsdom" > "$RUNNER_TEMP/piloto-formulario.log" 2>&1
+        run: node data-raw/piloto-r4-v2/probar-formulario.mjs "$RUNNER_TEMP/piloto-formulario/fhirviews-piloto-r4-0.5.0.9003/FORMULARIO-PILOTO.html" "$RUNNER_TEMP/fhirviews-kit-node/node_modules/jsdom" > "$RUNNER_TEMP/piloto-formulario.log" 2>&1
       - name: Conservar registros tecnicos
         if: always()
         uses: actions/upload-artifact@v6

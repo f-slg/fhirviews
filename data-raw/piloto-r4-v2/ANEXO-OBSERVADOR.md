@@ -2,7 +2,7 @@
 
 **Español** · [English](ANEXO-OBSERVADOR.en.md)
 
-**Protocolo 2.1 · Candidato 0.5.0.9002.** Consultar las soluciones después de
+**Protocolo 2.1 · Candidato 0.5.0.9003.** Consultar las soluciones después de
 registrar el primer intento. Mostrar una solución, corregir código o dar una
 pista conceptual cuenta como intervención. Los resultados esperados de este
 anexo proceden de datos ficticios y no son observaciones de participantes.
@@ -204,7 +204,7 @@ y registrar qué se repetirá. No fabricar fichas ni completar participantes.
 
 ### R01. Preparar el entorno e identificar la instalación
 
-**Contraste:** Versión 0.5.0.9002, commit y hash del candidato entregado; biblioteca de la sesión. El nivel completo necesita DBI/DuckDB y R ≥ 4.2; el básico R ≥ 4.1. Encontrar por cuenta propia la ayuda no cuenta como intervención del observador.
+**Contraste:** Versión 0.5.0.9003, commit y hash del candidato entregado; biblioteca de la sesión. El nivel completo necesita DBI/DuckDB y R ≥ 4.2; el básico R ≥ 4.1. Encontrar por cuenta propia la ayuda no cuenta como intervención del observador.
 
 **Errores a detectar:** Confundir versión con identidad del archivo; cargar otra biblioteca; sumar esperas de red al tiempo de análisis.
 
@@ -285,7 +285,7 @@ y registrar qué se repetirá. No fabricar fichas ni completar participantes.
 
 ### F01. Fijar el alcance de interoperabilidad y el candidato
 
-**Contraste:** R4 4.0.1, candidato 0.5.0.9002 identificado por commit y SHA-256. La CI HAPI es antecedente técnico del mantenedor; no una ejecución del participante. Un aprobado local o 144/144 del banco de vistas no acredita perfiles nacionales, terminología ni existencia de referencias.
+**Contraste:** R4 4.0.1, candidato 0.5.0.9003 identificado por commit y SHA-256. La CI HAPI es antecedente técnico del mantenedor; no una ejecución del participante. Un aprobado local o 144/144 del banco de vistas no acredita perfiles nacionales, terminología ni existencia de referencias.
 
 **Errores a detectar:** Usar conformidad de vistas como certificado general FHIR; declarar que el participante ejecutó HAPI al leer un informe.
 

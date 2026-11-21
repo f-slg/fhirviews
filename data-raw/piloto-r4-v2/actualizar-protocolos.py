@@ -32,7 +32,7 @@ def documentos():
                 f'[Español]({base}.md) · **English**' if english else
                 f'**Español** · [English]({base}.en.md)', '']
             if english:
-                texto += ['Protocol **2.1**, candidate **0.5.0.9002**, fictional data.', '',
+                texto += ['Protocol **2.1**, candidate **0.5.0.9003**, fictional data.', '',
                     'Read [the evaluation](EVALUACION-PILOTO.en.md) and',
                     '[technical preparation](LEEME.en.md) first. Record participant profile,',
                     'basic/full technical level and core/seven scope as three separate choices.', '',
@@ -43,7 +43,7 @@ def documentos():
                     'answers, consulted documentation, evidence and manual repeats. Do not consult',
                     'reference answers before the first attempt. Memorized commands are not required.', '']
             else:
-                texto += ['Protocolo **2.1**, candidato **0.5.0.9002**, datos ficticios.', '',
+                texto += ['Protocolo **2.1**, candidato **0.5.0.9003**, datos ficticios.', '',
                     'Lea [la evaluación](EVALUACION-PILOTO.md) y',
                     '[la preparación técnica](LEEME.md). Registre perfil de persona, nivel',
                     'básico/completo y alcance núcleo/siete como tres elecciones distintas.', '',
