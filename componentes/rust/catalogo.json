@@ -1,9 +1,9 @@
 {
-  "commit_fuente": "533fee34d4137553f9caae6eeccff681dab7f5ed",
+  "commit_fuente": "6c04fff0a85e045c11e4d8a980afc44f24dda7b4",
   "componente": "fhirviews-rust-validator",
   "contrato": "fhirviews-r4-validator/1",
   "formato": 1,
-  "inmutable": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/533fee34d4137553f9caae6eeccff681dab7f5ed/MANIFIESTO-DISTRIBUCION.json",
+  "inmutable": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/6c04fff0a85e045c11e4d8a980afc44f24dda7b4/MANIFIESTO-DISTRIBUCION.json",
   "plataformas": {
     "linux-x86_64": {
       "archivo": "fhirviews-rust-validator-0.1.0-x86_64-unknown-linux-musl.zip",
@@ -13,10 +13,10 @@
       "directorio": "fhirviews-rust-validator-0.1.0-x86_64-unknown-linux-musl",
       "ejecutable": "bin/fhirviews-rust-validator",
       "plataforma": "linux-x86_64",
-      "sha256": "359bc0e2177c244335e0011991c335ff82bdc5aaba4f7cdf82f73299c26cdd08",
+      "sha256": "b5d52f67de53d04ba9c318bf9e035d6651c43030e75569696e2eff81262940d5",
       "sistema": "Linux",
       "target": "x86_64-unknown-linux-musl",
-      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/533fee34d4137553f9caae6eeccff681dab7f5ed/fhirviews-rust-validator-0.1.0-x86_64-unknown-linux-musl.zip"
+      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/6c04fff0a85e045c11e4d8a980afc44f24dda7b4/fhirviews-rust-validator-0.1.0-x86_64-unknown-linux-musl.zip"
     },
     "macos-apple-silicon": {
       "archivo": "fhirviews-rust-validator-0.1.0-aarch64-apple-darwin.zip",
@@ -26,10 +26,10 @@
       "directorio": "fhirviews-rust-validator-0.1.0-aarch64-apple-darwin",
       "ejecutable": "bin/fhirviews-rust-validator",
       "plataforma": "macos-apple-silicon",
-      "sha256": "5f8a1a8906ee8e2a9c69970d205b06b7122d4f005fff696b3f9281c1b9c020b9",
+      "sha256": "04f82a8dc3c896397f24198e48ef22b6de1a5d19d525e9f4ed046c402e3bfae9",
       "sistema": "Darwin",
       "target": "aarch64-apple-darwin",
-      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/533fee34d4137553f9caae6eeccff681dab7f5ed/fhirviews-rust-validator-0.1.0-aarch64-apple-darwin.zip"
+      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/6c04fff0a85e045c11e4d8a980afc44f24dda7b4/fhirviews-rust-validator-0.1.0-aarch64-apple-darwin.zip"
     },
     "macos-intel": {
       "archivo": "fhirviews-rust-validator-0.1.0-x86_64-apple-darwin.zip",
@@ -39,23 +39,23 @@
       "directorio": "fhirviews-rust-validator-0.1.0-x86_64-apple-darwin",
       "ejecutable": "bin/fhirviews-rust-validator",
       "plataforma": "macos-intel",
-      "sha256": "2e543667842a3276482b69c25ea44362ef78fdbb159a4de25fe5e5f5542f8547",
+      "sha256": "ce5dc9f8587d66a1a97804d4071d92a67bb6a9c34cbb0226f82d10415dd92075",
       "sistema": "Darwin",
       "target": "x86_64-apple-darwin",
-      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/533fee34d4137553f9caae6eeccff681dab7f5ed/fhirviews-rust-validator-0.1.0-x86_64-apple-darwin.zip"
+      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/6c04fff0a85e045c11e4d8a980afc44f24dda7b4/fhirviews-rust-validator-0.1.0-x86_64-apple-darwin.zip"
     },
     "windows-x86_64": {
       "archivo": "fhirviews-rust-validator-0.1.0-x86_64-pc-windows-msvc.zip",
       "arquitectura": "x86_64",
-      "bytes": 2344785,
+      "bytes": 2344273,
       "comprobaciones": 286,
       "directorio": "fhirviews-rust-validator-0.1.0-x86_64-pc-windows-msvc",
       "ejecutable": "bin/fhirviews-rust-validator.exe",
       "plataforma": "windows-x86_64",
-      "sha256": "e84c79bef0b7529758b6ede13b898aa9207c722625eae02122dacaf32ecd0fe1",
+      "sha256": "971487e1a4dbbed46c2cb653240543b41022c8912b681b99b7382f0e916854d1",
       "sistema": "Windows",
       "target": "x86_64-pc-windows-msvc",
-      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/533fee34d4137553f9caae6eeccff681dab7f5ed/fhirviews-rust-validator-0.1.0-x86_64-pc-windows-msvc.zip"
+      "url": "https://f-slg.github.io/fhirviews/componentes/rust/0.1.0/6c04fff0a85e045c11e4d8a980afc44f24dda7b4/fhirviews-rust-validator-0.1.0-x86_64-pc-windows-msvc.zip"
     }
   },
   "version": "0.1.0",
