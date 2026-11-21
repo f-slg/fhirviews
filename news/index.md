@@ -2,6 +2,21 @@
 
 ## fhirviews 0.5.0.9002
 
+- El motor DuckDB requiere ahora duckdb 1.5.5 o posterior (antes 1.3.0).
+  DuckDB 1.3 no tiene `trunc(DECIMAL, n)`, que el traductor usa para
+  `lowBoundary()` y `highBoundary()`; con el cliente R 1.4.0,
+  `vista_duckdb(sobrescribir = FALSE)` falla al agregar columnas de
+  lista; la linea 1.4 dejo de tener soporte el 17 de noviembre de 2026.
+  El kit del piloto R4 conserva su identidad y aun indica 1.3.0.
+
+- Nuevo workflow `DuckDB versiones`: prueba el motor SQL con duckdb
+  1.5.5 (minimo) y la version vigente de CRAN (2.0), y falla si alguna
+  prueba de DuckDB se omite. Los README y
+  [`vista_duckdb()`](https://f-slg.github.io/fhirviews/reference/vista_duckdb.md)
+  documentan que una base creada con DuckDB 2.0 no se abre con versiones
+  anteriores; las consultas generadas ya usan la sintaxis `lambda` que
+  exige DuckDB 2.0.
+
 - El formulario del piloto conserva respuestas largas y todas las
   incidencias al exportar/retomar JSON. El CSV traduce rótulos y valores
   y conserva códigos para análisis entre idiomas; la autonomía requiere

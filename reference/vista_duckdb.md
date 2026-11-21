@@ -59,6 +59,11 @@ columnas.
 Todas las vistas se guardan en una transacción: si alguna falla, se
 revierten las escrituras de esta llamada.
 
+Si `con_db` es una base en archivo, ten en cuenta que un archivo creado
+con DuckDB 2.0 o posterior no se abre con versiones anteriores de
+DuckDB. Para compartir resultados con equipos que usan DuckDB 1.x,
+exporta las tablas a Parquet.
+
 ## Examples
 
 ``` r

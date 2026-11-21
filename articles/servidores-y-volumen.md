@@ -214,7 +214,7 @@ grandes,
 **traduce el `ViewDefinition` a una consulta SQL** y la ejecuta con
 [DuckDB](https://duckdb.org/) directamente sobre los archivos NDJSON
 (también comprimidos, y con comodines como `"exportacion/*.ndjson"`) o
-Parquet, sin cargarlos en R. Requiere los paquetes duckdb (1.3.0 o
+Parquet, sin cargarlos en R. Requiere los paquetes duckdb (1.5.5 o
 posterior) y DBI.
 
 ### Mismo resultado, otro motor

@@ -66,14 +66,14 @@ fhir_vista(con, vista_crear("Patient", c(sexo = "gender",
                                          nacimiento = "birthDate")),
            `_count` = 10, max_paginas = 1)
 #>               id   sexo nacimiento
-#> 1  nhanes-120412   male 1973-02-28
-#> 2  nhanes-117807 female 1958-12-24
-#> 3  nhanes-123231   male 1958-05-23
-#> 4  nhanes-116163 female 1988-11-19
-#> 5  nhanes-123867 female 1957-07-04
-#> 6  nhanes-111640   male 1974-03-10
-#> 7  nhanes-117806   male 1963-03-18
-#> 8  nhanes-120218   male 1960-09-19
-#> 9  nhanes-121480   male 1957-04-08
-#> 10 nhanes-122691   male 1983-07-03
+#> 1  nhanes-123231   male 1958-05-23
+#> 2  nhanes-123867 female 1957-07-04
+#> 3  nhanes-111640   male 1974-03-10
+#> 4  nhanes-117806   male 1963-03-18
+#> 5  nhanes-120218   male 1960-09-19
+#> 6  nhanes-121480   male 1957-04-08
+#> 7  nhanes-122691   male 1983-07-03
+#> 8  nhanes-113734   male 1951-01-26
+#> 9  nhanes-120636   male 1972-09-05
+#> 10 nhanes-112406   male 1988-04-09
 ```

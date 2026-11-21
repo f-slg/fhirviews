@@ -77,7 +77,7 @@ si la vista usa algo que no se puede traducir, el error lo indica y
 sugiere usar
 [`vista_ejecutar()`](https://f-slg.github.io/fhirviews/reference/vista_ejecutar.md).
 
-Requiere los paquetes DBI y duckdb (versión 1.3.0 o posterior) y la
+Requiere los paquetes DBI y duckdb (versión 1.5.5 o posterior) y la
 extensión `json` de DuckDB, que el paquete duckdb no trae incorporada:
 DuckDB la descarga la primera vez que se usa en cada sesión de R (hace
 falta conexión a internet). La conexión que crea esta función guarda las
