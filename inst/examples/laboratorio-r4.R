@@ -1,5 +1,5 @@
 # SQL -> Specimen -> Observation -> DiagnosticReport -> SQL on FHIR.
-# Datos exclusivamente ficticios. Requiere DBI y DuckDB >= 1.3.0.
+# Datos exclusivamente ficticios. Requiere DBI y DuckDB >= 1.5.5.
 # source(system.file("examples", "laboratorio-r4.R", package = "fhirviews"))
 # ejemplo <- laboratorio_r4()
 # ejemplo$tablas$resultados
@@ -8,7 +8,7 @@
 laboratorio_r4 <- function(prefijo = "demo-lab", componente = NULL) {
   stopifnot(requireNamespace("DBI", quietly = TRUE),
     requireNamespace("duckdb", quietly = TRUE),
-    utils::packageVersion("duckdb") >= "1.3.0",
+    utils::packageVersion("duckdb") >= "1.5.5",
     is.character(prefijo), length(prefijo) == 1L, !is.na(prefijo),
     grepl("^[A-Za-z0-9.-]{1,45}$", prefijo))
   args <- if ("shared_home" %in% names(formals(duckdb::duckdb))) list(shared_home = FALSE) else list()

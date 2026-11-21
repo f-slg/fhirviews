@@ -45,7 +45,7 @@ test_that("alergias permite elegir sistemas de estado y conserva una salida vaci
 test_that("alergias conserva todos los datos con V8 y DuckDB", {
   skip_on_cran()
   skip_if_not_installed("DBI")
-  skip_if_not_installed("duckdb", "1.3.0")
+  skip_if_not_installed("duckdb", "1.5.5")
   v <- vista_plantilla("alergias")
   v8 <- vista_ejecutar(archivo_alergias(), v)
   sql <- vista_ejecutar_duckdb(archivo_alergias(), v)
