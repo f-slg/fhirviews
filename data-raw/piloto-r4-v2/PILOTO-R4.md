@@ -2,7 +2,7 @@
 
 **Español** · [English](PILOTO-R4.en.md)
 
-Protocolo **2.1**, candidato **0.5.0.9002**, datos ficticios. Registre archivo,
+Protocolo **2.1**, candidato **0.5.0.9003**, datos ficticios. Registre archivo,
 commit, SHA-256 y entorno. Los informes técnicos, la decisión humana y la
 validación de perfiles son evidencias separadas. El candidato no tiene DOI
 propio y no hereda el de 0.5.0.9000.

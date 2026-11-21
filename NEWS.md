@@ -1,3 +1,14 @@
+# fhirviews 0.5.0.9003
+
+* Nuevo candidato del piloto R4 con duckdb >= 1.5.5 declarado tambien en
+  Suggests. El lanzador y las guias bilingues exigen la misma version minima
+  antes de crear una sesion completa. El protocolo sigue siendo 2.1; la
+  nueva version, el commit fuente y los checksums distinguen sus fichas de
+  las rondas anteriores. La evaluacion con personas sigue pendiente.
+* El paquete y el kit se reconstruyen y comprueban con identidades propias.
+  Los archivos y la evidencia anteriores conservan sus versiones originales;
+  este candidato no modifica el envio 0.5.0 a CRAN ni asigna un DOI nuevo.
+
 # fhirviews 0.5.0.9002
 
 * El motor DuckDB requiere ahora duckdb 1.5.5 o posterior (antes 1.3.0).

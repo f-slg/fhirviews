@@ -1,8 +1,8 @@
 {
   "title": "fhirviews: FHIR desde R y vistas tabulares con SQL on FHIR",
-  "version": "0.5.0.9002",
+  "version": "0.5.0.9003",
   "upload_type": "software",
-  "description": "Development 0.5.0.9002, not a CRAN release and not assigned a version DOI yet. R client for FHIR R4 servers and SQL on FHIR view engine. Includes eight catalogue views and explicit SQL/table mappings to Patient, Observation, Encounter, Condition, Immunization, Specimen and DiagnosticReport, with variable reference collections. JSON/NDJSON output preserves decimal precision. An optional external Rust CLI component validates structures constructed and primitive-typed by R, with a versioned protocol and explicit R fallback; neither Rust nor its executable is installed automatically. R4 structural checks require separate clinical profile validation. No R4/R6 conversion is enabled. The earlier 0.5.0.9000 source archive has its own DOI; the external pilot kit remains tied to 0.5.0.9001.",
+  "description": "Development 0.5.0.9003, not a CRAN release and not assigned a version DOI yet. R client for FHIR R4 servers and SQL on FHIR view engine. Includes eight catalogue views and explicit SQL/table mappings to Patient, Observation, Encounter, Condition, Immunization, Specimen and DiagnosticReport, with variable reference collections. JSON/NDJSON output preserves decimal precision. An optional external Rust CLI component validates structures constructed and primitive-typed by R, with a versioned protocol and explicit R fallback; neither Rust nor its executable is installed automatically. R4 structural checks require separate clinical profile validation. No R4/R6 conversion is enabled. The earlier 0.5.0.9000 source archive has its own DOI; the external pilot kit uses the independently checked 0.5.0.9003 candidate and requires duckdb >= 1.5.5 for its full profile.",
   "creators": [
     {
       "name": "Salas Guerrero, Ronald Fabricio",

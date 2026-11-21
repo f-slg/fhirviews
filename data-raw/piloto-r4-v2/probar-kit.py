@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
     kit=next((temp/'Kit con espacios').iterdir())
     m=json.loads((kit/'MANIFIESTO-KIT.json').read_text(encoding='utf-8'))
     c=json.loads((kit/'CANDIDATO.json').read_text(encoding='utf-8'))
-    assert c['version']=='0.5.0.9002'
+    assert c['version']=='0.5.0.9003'
     assert m['evaluacion_externa']==c['evaluacion_externa']=='pendiente'
     assert m['participantes']==c['participantes']=='sin_asignar'
     assert m['revision_protocolo']=='2.1'
@@ -128,7 +128,7 @@ with tempfile.TemporaryDirectory(prefix='fhirviews-kit-r4-') as temporal:
         script.write_text('''args <- commandArgs(trailingOnly=TRUE)
 source(args[1], encoding="UTF-8")
 abrir_sesion(args[2])
-stopifnot(as.character(packageVersion("fhirviews")) == "0.5.0.9002")
+stopifnot(as.character(packageVersion("fhirviews")) == "0.5.0.9003")
 f <- system.file("extdata", "alergias_r4.ndjson", package="fhirviews")
 x <- vista_ejecutar(f, vista_plantilla("alergias"))
 stopifnot(nrow(x)==5L, length(unique(x$id))==3L)

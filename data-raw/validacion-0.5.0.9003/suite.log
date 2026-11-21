@@ -1,0 +1,139 @@
+auditoria: .........................................................
+autenticacion: ..................................................................
+bulk: .....................................................................................................................
+catalogo-alergias: ...........................
+catalogo: ..............................................................................................
+cliente: ....................................................................................................................................................
+componente-rust: ..............................SSSS...S
+conformidad: ......................................................................................................................................................
+demo-vigilancia: ...............
+duckdb: ............
+fhir-desde-sql: ..............................................................................................
+fhirpath: .........................................
+limites: .........................
+lotes: .................................................................................................
+mapeo-immunization: ......................................
+mapeo-laboratorio: ...............................................
+mapeo-lexico: .......................................................
+piloto: ..................              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-26b59503e/vigilancia 
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-26b59503e 
+..........              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-26bdd8ffa/vigilancia 
+Recorrido R4 aprobado con seis recursos ficticios y cinco tipos.
+            prueba            estado advertencias
+     api_instalada          aprobado            0
+        vigilancia requiere_revision            2
+ contrato_estricto          aprobado            0
+      recuperacion       no_evaluado            0
+ r4_cinco_recursos requiere_revision           15
+                          codigo
+                                
+ advertencias_requieren_revision
+                                
+                                
+ advertencias_requieren_revision
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-26bdd8ffa 
+.......              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-22cefd514/vigilancia 
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-22cefd514 
+.....              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-2490a2123/vigilancia 
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-2490a2123 
+...              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-2664226eb/vigilancia 
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-2664226eb 
+...              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-27d25d228/vigilancia 
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-27d25d228 
+......              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-249d2ca73/vigilancia 
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-249d2ca73 
+......              metrica valor
+      eventos_entrada   755
+  eventos_confirmados   661
+    eventos_excluidos    94
+            pacientes   755
+ cantones_con_eventos    65
+Salida: /tmp/RtmpuFdwSI/piloto-test-2f5dcdd/vigilancia 
+Informe local del piloto: /tmp/RtmpuFdwSI/piloto-test-2f5dcdd 
+....
+recursos: ..................................
+rstudio: ..........................................
+servidor: ......SSSSSSSSSS
+sql-limites: .........
+sql: ..................................................................................................................................................................................................................................................................................................................................................................
+terminologia: ..................................................................................................
+vista: ............................................................................
+
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. el componente real produce el mismo JSON y las mismas tablas para siete recursos ('test-componente-rust.R:66:3') - Reason: FHIRVIEWS_RUST_BIN no esta definido
+
+2. el ejecutable local admite rutas con espacios y limpia el transporte ('test-componente-rust.R:94:3') - Reason: FHIRVIEWS_RUST_BIN no esta definido
+
+3. el componente real conserva mensajes completos y el primer error ('test-componente-rust.R:112:3') - Reason: FHIRVIEWS_RUST_BIN no esta definido
+
+4. bindings, elecciones y objetos anidados mantienen el diagnostico completo ('test-componente-rust.R:141:3') - Reason: FHIRVIEWS_RUST_BIN no esta definido
+
+5. SQL parametrizado transmite el componente al constructor ('test-componente-rust.R:175:3') - Reason: FHIRVIEWS_RUST_BIN no esta definido
+
+6. Candidato R4 con cinco recursos y perfiles base ('test-servidor.R:48:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+7. SQL a FHIR, perfiles R4, referencias y retorno a tablas ('test-servidor.R:78:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+8. Encounter y Condition desde SQL, perfiles R4 y referencias ('test-servidor.R:152:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+9. Immunization desde SQL, perfil R4, dosis y referencias ('test-servidor.R:235:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+10. Specimen y DiagnosticReport desde SQL, perfiles R4 y retorno a tablas ('test-servidor.R:328:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+11. ciclo completo de escritura en un servidor de pruebas ('test-servidor.R:382:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+12. transaccion, vistas con V8 y DuckDB y fhir_tabla con datos reales ('test-servidor.R:451:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+13. terminologia del servidor: $expand y $validate-code en lote ('test-servidor.R:544:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+14. terminologia con ValueSet en linea ('test-servidor.R:560:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+15. exportacion masiva ($export) de punta a punta ('test-servidor.R:581:3') - Reason: FHIRVIEWS_SERVIDOR_ESCRITURA no está definida
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+STATUS_TOTALS
+     nb  failed skipped   error warning  passed 
+   1812       0      15       0       0    1797 

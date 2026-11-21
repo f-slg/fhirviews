@@ -5,7 +5,7 @@
 The [detailed evaluation](EVALUACION-PILOTO.en.md) defines observation,
 understanding, assistance, repetition and closure. Read it before agreeing the
 session. This guide explains preparation, execution and documentation for
-**fhirviews 0.5.0.9002**, for participants and observers. The kit contains
+**fhirviews 0.5.0.9003**, for participants and observers. The kit contains
 fictional data and an identified package copy. It needs neither patient data
 nor a FHIR server. It is a development candidate, not a stable release or a
 clinical evaluation. Automatic checks cover only the included cases; record
@@ -38,7 +38,7 @@ Hints/solutions count as assistance. Consult the
 | Level | Requirements |
 |---|---|
 | Basic | R ≥ 4.1.0; cli, httr2, jsonlite, rlang, V8, openssl. |
-| Full | R ≥ 4.2.0; basic dependencies plus DBI and duckdb ≥ 1.3.0. |
+| Full | R ≥ 4.2.0; basic dependencies plus DBI and duckdb ≥ 1.5.5. |
 
 Install dependencies before starting; the launcher checks but does not install them:
 
@@ -73,7 +73,7 @@ run R, verify the package or send results.
 
 Check internal files with `sha256sum -c SHA256SUMS` on Linux or
 `shasum -a 256 -c SHA256SUMS` on macOS. PowerShell can check the package with
-`Get-FileHash .\paquete\fhirviews_0.5.0.9002.tar.gz -Algorithm SHA256` and compare
+`Get-FileHash .\paquete\fhirviews_0.5.0.9003.tar.gz -Algorithm SHA256` and compare
 with CANDIDATO.json. Checksums detect changes but are not a cryptographic
 publisher signature; obtain files from the agreed official source.
 
@@ -106,7 +106,7 @@ values remain as provided by the Spanish-language package in both guides.
 
 The launcher verifies identity, installs into an isolated R library and runs
 the technical trial in a new R process. It does not observe tasks or fill in
-the form. Verify 0.5.0.9002 and matching candidate checksums in SESION.json and
+the form. Verify 0.5.0.9003 and matching candidate checksums in SESION.json and
 piloto/aceptacion.json.
 
 | Check | What it covers |
@@ -220,7 +220,7 @@ Review and manually send a prepared notice only through the agreed channel.
 | Symptom | Action |
 |---|---|
 | Missing dependency | Install the named package and retry in a new output directory. |
-| Missing/old DuckDB | Use basic scope or R ≥ 4.2 and duckdb ≥ 1.3.0; record the limitation. |
+| Missing/old DuckDB | Use basic scope or R ≥ 4.2 and duckdb ≥ 1.5.5; record the limitation. |
 | Output directory exists | Retain it and choose a new attempt directory. |
 | Candidate checksum mismatch | Stop; obtain the correct ZIP/hash. |
 | Another copy already loaded | Restart R, source INICIAR.R and reopen the same isolated session. |
@@ -239,7 +239,7 @@ the bilingual form/template; INICIAR.R and PROBAR-CANDIDATO.R; candidate and
 kit manifests, SHA256SUMS, LICENSE.md and the source package in paquete/.
 
 The kit has no DOI. The 0.5.0.9000 Zenodo DOI identifies a different archive
-and does not transfer to 0.5.0.9002. Distribution is not CRAN acceptance,
+and does not transfer to 0.5.0.9003. Distribution is not CRAN acceptance,
 clinical evaluation or approval against national profiles.
 
 ## Rounds and kit construction

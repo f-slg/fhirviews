@@ -2,7 +2,7 @@
 
 [Español](ANEXO-OBSERVADOR.md) · **English**
 
-**Protocol 2.1 · Candidate 0.5.0.9002.** Consult solutions after recording the
+**Protocol 2.1 · Candidate 0.5.0.9003.** Consult solutions after recording the
 first attempt. Showing a solution, correcting code or giving a conceptual hint
 counts as intervention. Expected results use fictional data and are not
 participant observations.
@@ -191,7 +191,7 @@ fabricate observations or prefill participants.
 
 ### R01. Prepare the environment and identify the installation
 
-**Reference answer:** Version 0.5.0.9002 with the supplied commit and file hash; the session library is loaded. Full level needs DBI/DuckDB and R ≥ 4.2; basic needs R ≥ 4.1. Finding documentation independently is not an observer intervention.
+**Reference answer:** Version 0.5.0.9003 with the supplied commit and file hash; the session library is loaded. Full level needs DBI/DuckDB and R ≥ 4.2; basic needs R ≥ 4.1. Finding documentation independently is not an observer intervention.
 
 **Errors to detect:** Confusing version with file identity; loading another library; including network waits in analysis time.
 
@@ -272,7 +272,7 @@ fabricate observations or prefill participants.
 
 ### F01. Define interoperability scope and candidate identity
 
-**Reference answer:** R4 4.0.1, candidate 0.5.0.9002 identified by commit and SHA-256. HAPI CI is prior maintainer evidence, not a participant execution. A local pass or 144/144 view-suite result does not validate national profiles, terminology or reference existence.
+**Reference answer:** R4 4.0.1, candidate 0.5.0.9003 identified by commit and SHA-256. HAPI CI is prior maintainer evidence, not a participant execution. A local pass or 144/144 view-suite result does not validate national profiles, terminology or reference existence.
 
 **Errors to detect:** Using view conformance as general FHIR certification; claiming the participant ran HAPI after reading a report.
 

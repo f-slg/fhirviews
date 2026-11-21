@@ -22,7 +22,7 @@
         "¿Cómo comprobarías que R está usando este candidato y no otra copia instalada?",
         "¿Qué pasos necesitan red y cuáles deberían funcionar después de preparar las dependencias?"
       ],
-      "expected": "Versión 0.5.0.9002, commit y hash del candidato entregado; biblioteca de la sesión. El nivel completo necesita DBI/DuckDB y R ≥ 4.2; el básico R ≥ 4.1. Encontrar por cuenta propia la ayuda no cuenta como intervención del observador.",
+      "expected": "Versión 0.5.0.9003, commit y hash del candidato entregado; biblioteca de la sesión. El nivel completo necesita DBI/DuckDB y R ≥ 4.2; el básico R ≥ 4.1. Encontrar por cuenta propia la ayuda no cuenta como intervención del observador.",
       "evidence": "SESION.json, candidato.txt, ruta revisada de biblioteca, versiones y registro de preparación.",
       "mistakes": "Confundir versión con identidad del archivo; cargar otra biblioteca; sumar esperas de red al tiempo de análisis.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"basico\", \"sesion-P01-intento01\")\nabrir_sesion(\"sesion-P01-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"
@@ -267,7 +267,7 @@
         "¿Qué acredita aquí el constructor local y qué requiere un validador de perfiles o terminología?",
         "¿Qué evidencias pedirías para afirmar interoperabilidad con un sistema específico?"
       ],
-      "expected": "R4 4.0.1, candidato 0.5.0.9002 identificado por commit y SHA-256. La CI HAPI es antecedente técnico del mantenedor; no una ejecución del participante. Un aprobado local o 144/144 del banco de vistas no acredita perfiles nacionales, terminología ni existencia de referencias.",
+      "expected": "R4 4.0.1, candidato 0.5.0.9003 identificado por commit y SHA-256. La CI HAPI es antecedente técnico del mantenedor; no una ejecución del participante. Un aprobado local o 144/144 del banco de vistas no acredita perfiles nacionales, terminología ni existencia de referencias.",
       "evidence": "Identidad y entorno, informes consultados y matriz escrita de validado/no evaluado.",
       "mistakes": "Usar conformidad de vistas como certificado general FHIR; declarar que el participante ejecutó HAPI al leer un informe.",
       "code": "source(\"INICIAR.R\")\niniciar_piloto(\"completo\", \"sesion-P02-intento01\")\nabrir_sesion(\"sesion-P02-intento01\")\npackageVersion(\"fhirviews\")\nfind.package(\"fhirviews\")\nhelp(\"fhir_mapa\", package = \"fhirviews\")\nbrowseVignettes(\"fhirviews\")"

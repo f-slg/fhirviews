@@ -6,11 +6,11 @@ La [evaluación detallada](EVALUACION-PILOTO.md) define observación, comprensi�
 ayuda, repetición y cierre. Léala antes de acordar la sesión.
 
 Esta guía explica cómo preparar, ejecutar y documentar una sesión con el kit
-de **fhirviews 0.5.0.9002**. Está dirigida a la persona participante y a quien
+de **fhirviews 0.5.0.9003**. Está dirigida a la persona participante y a quien
 observe la sesión. El kit contiene datos ficticios y una copia identificada del
 paquete; no necesita un servidor FHIR ni datos clínicos.
 
-> **Alcance de la evaluación.** 0.5.0.9002 es un candidato de desarrollo, no
+> **Alcance de la evaluación.** 0.5.0.9003 es un candidato de desarrollo, no
 > una versión estable ni una evaluación clínica. La comprobación automática
 > acredita solo los controles incluidos en el kit. La evaluación de uso y la
 > decisión de cierre deben registrarse por separado.
@@ -49,7 +49,7 @@ resultados esperados y se consulta después del intento inicial.
 | Nivel | Requisitos del kit |
 |---|---|
 | Básico | R ≥ 4.1.0 y paquetes R `cli`, `httr2`, `jsonlite`, `rlang`, `V8` y `openssl`. |
-| Completo | R ≥ 4.2.0, lo anterior, `DBI` y `duckdb` ≥ 1.3.0. |
+| Completo | R ≥ 4.2.0, lo anterior, `DBI` y `duckdb` ≥ 1.5.5. |
 
 Instale las dependencias antes de iniciar. El lanzador las comprueba, pero no
 las instala. Para instalarlas desde CRAN:
@@ -95,7 +95,7 @@ no ejecuta R, no comprueba el paquete y no envía resultados.
 En Linux o macOS, desde la raíz extraída, también puedes verificar los archivos
 internos con `sha256sum -c SHA256SUMS` o `shasum -a 256 -c SHA256SUMS`,
 respectivamente. PowerShell puede comprobar un archivo concreto con
-`Get-FileHash .\paquete\fhirviews_0.5.0.9002.tar.gz -Algorithm SHA256` y
+`Get-FileHash .\paquete\fhirviews_0.5.0.9003.tar.gz -Algorithm SHA256` y
 comparar el resultado con `CANDIDATO.json`.
 
 Los checksums permiten detectar alteraciones accidentales del contenido. No
@@ -148,7 +148,7 @@ cambian: la aceptación humana de siete añade obligatoriamente el laboratorio.
 El lanzador verifica la identidad del archivo, lo instala en una biblioteca
 R aislada y ejecuta el control técnico en un proceso R nuevo. No reemplaza la
 observación de las tareas ni completa el formulario. Al terminar, compruebe
-que `SESION.json` y `piloto/aceptacion.json` identifican 0.5.0.9002 y el mismo
+que `SESION.json` y `piloto/aceptacion.json` identifican 0.5.0.9003 y el mismo
 checksum del candidato.
 
 Hay cinco controles técnicos:
@@ -296,7 +296,7 @@ se acordó hacerlo.
 | Síntoma | Qué hacer |
 |---|---|
 | El lanzador dice que falta una dependencia | Instale el paquete indicado con `install.packages()` y vuelva a ejecutar en una carpeta nueva. |
-| DuckDB no está disponible o su versión es antigua | Use el nivel básico o instale R ≥ 4.2 y `duckdb` ≥ 1.3.0; registre cualquier limitación del equipo. |
+| DuckDB no está disponible o su versión es antigua | Use el nivel básico o instale R ≥ 4.2 y `duckdb` ≥ 1.5.5; registre cualquier limitación del equipo. |
 | La carpeta de sesión ya existe | No la borre ni sobrescriba. Use una ruta nueva para el nuevo intento. |
 | El checksum del candidato no coincide | Deténgase. No instale el archivo; solicite el ZIP correcto al mantenedor. |
 | `abrir_sesion()` detecta otra copia de fhirviews | Reinicie R, ejecute `source("INICIAR.R")` y vuelva a abrir la misma sesión. |
@@ -321,7 +321,7 @@ de compartir registros.
 - `LICENSE.md` y el archivo fuente en `paquete/`: licencias y candidato entregado.
 
 El archivo del kit no tiene un DOI propio. El DOI Zenodo de `0.5.0.9000`
-identifica otro archivo y no se transfiere a `0.5.0.9002`. La publicación de
+identifica otro archivo y no se transfiere a `0.5.0.9003`. La publicación de
 este kit tampoco equivale a aceptación de CRAN, evaluación clínica o
 aprobación de perfiles nacionales.
 

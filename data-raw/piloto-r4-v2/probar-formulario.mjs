@@ -30,7 +30,7 @@ function simular(perfil='r',alcance='nucleo'){
 }
 assert.equal(evaluar('state.schema'),'fhirviews-piloto-r4-v2');
 assert.equal(evaluar('state.revision_protocolo'),'2.1');
-assert.equal(evaluar('current().fields.version'),'0.5.0.9002');
+assert.equal(evaluar('current().fields.version'),'0.5.0.9003');
 assert.equal(evaluar('current().fields.participant'),'');
 assert.equal(revision(),'pendiente');
 assert.equal(w.document.querySelectorAll('#tasks article').length,9);

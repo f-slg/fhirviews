@@ -73,8 +73,8 @@ about omitted or aggregated columns.
 
 | Version or component | Status and use |
 |---|---|
-| **Current development: `0.5.0.9002`** | GitHub source. SQL → FHIR for seven R4 resources, variable reference collections and an API for an optional external Rust component; eight catalogue views. No version DOI assigned yet. |
-| **Pilot candidate `0.5.0.9002`** | Updated external R4 kit with the exact checked package, seven constructors and bilingual scope-based evaluation; seven-type scope requires the Specimen/DiagnosticReport task. Human evaluation remains pending. |
+| **Current development: `0.5.0.9003`** | GitHub source. SQL → FHIR for seven R4 resources, variable reference collections and an API for an optional external Rust component; eight catalogue views. No version DOI assigned yet. |
+| **Pilot candidate `0.5.0.9003`** | Updated external R4 kit with the exact checked package, seven constructors and bilingual scope-based evaluation; seven-type scope requires the Specimen/DiagnosticReport task. Human evaluation remains pending. |
 | **Archived `0.5.0.9000`** | Earlier source preserved in [Zenodo](https://doi.org/10.5281/zenodo.24238726). Its DOI identifies that specific archive. |
 | **`0.5.0`** | [GitHub release](https://github.com/f-slg/fhirviews/releases/tag/v0.5.0), submitted to CRAN on 7 November 2026. Does not include SQL → FHIR. Consult the [official CRAN catalogue](https://cran.r-project.org/web/packages/available_packages_by_name.html) for publication. |
 | **Rust** | Optional CLI component selected by the user; R remains the default. Separate ZIPs for Linux x86_64, Windows x64 and macOS Intel/Apple Silicon, with SHA-256 and provenance. [Usage](#validation-with-the-optional-rust-component) · [Results and limits](#performance). |
@@ -1668,7 +1668,7 @@ Proposals and their tracking are in
 
 The current priority is to consolidate **FHIR R4 4.0.1** before federation or
 R4/R6 conversion. Current development and the updated pilot candidate are
-`0.5.0.9002`. The kit's historical acceptance control covers six fictitious
+`0.5.0.9003`. The kit's historical acceptance control covers six fictitious
 resources across five types; a separate full-level task, required under seven-type scope, runs
 the Specimen and DiagnosticReport laboratory example. Verifying a candidate
 does not publish a release, change its version or issue a DOI.
@@ -1708,7 +1708,7 @@ validation as unevaluated, with HAPI evidence recorded separately.
 
 After addressing the pilot findings, select the stable version and artifact.
 The earlier 0.5.0.9000 archive has a verified DOI and author ORCID;
-the current 0.5.0.9002 development has separate citation metadata. Later work will address
+the current 0.5.0.9003 development has separate citation metadata. Later work will address
 federation between R4 servers, followed by resource-specific R4/R6 adapters
 and export. Rust has an optional CLI interface and separately built and
 consumer-tested platform ZIPs. Native integration within the R package
@@ -1750,7 +1750,7 @@ explicitly. Independence is limited to evidenced unassisted task repeats.
 · [Español](https://github.com/f-slg/fhirviews/blob/main/data-raw/piloto-r4-v2/EVALUACION-PILOTO.md).
 Retain 2.0 records with their original kit/hash; they cannot be imported into 2.1.
 
-The kit includes the **checked 0.5.0.9002 package**, its identity, a launcher,
+The kit includes the **checked 0.5.0.9003 package**, its identity, a launcher,
 R/FHIR protocols and a local bilingual form. Materials are available in English
 and Spanish. Extract the
 entire ZIP and open R in that folder. Install the dependencies listed in
@@ -1839,7 +1839,7 @@ source archive provided by the maintainer:
 
 ```r
 install.packages(c("cli", "httr2", "jsonlite", "rlang", "V8"))
-install.packages("fhirviews_0.5.0.9002.tar.gz", repos = NULL, type = "source")
+install.packages("fhirviews_0.5.0.9003.tar.gz", repos = NULL, type = "source")
 ```
 
 Restart R, choose a new folder and run:
@@ -1917,14 +1917,14 @@ toBibtex(citation("fhirviews"))
 
 | What you used | How to identify it |
 |---|---|
-| Current development `0.5.0.9002` | Cite the installed version and keep the commit SHA. No version DOI assigned yet. |
+| Current development `0.5.0.9003` | Cite the installed version and keep the commit SHA. No version DOI assigned yet. |
 | Archived `0.5.0.9000` | [DOI 10.5281/zenodo.24238726](https://doi.org/10.5281/zenodo.24238726), for source archived from `565243e`. |
 | The project and its versions | [Concept DOI 10.5281/zenodo.24238725](https://doi.org/10.5281/zenodo.24238725). Also identify the specific version for reproducibility. |
 
 ORCID identifies the author; Zenodo preserves a citable archive. Both can be
 used before CRAN publication: they are not mandatory prior steps or evidence
 of CRAN acceptance. R's citation includes the `0.5.0.9000` DOI only for that
-version. Development `0.5.0.9002` keeps its own version and repository URL.
+version. Development `0.5.0.9003` keeps its own version and repository URL.
 Metadata is recorded in
 [CITATION.cff](https://github.com/f-slg/fhirviews/blob/main/CITATION.cff) and
 [.zenodo.json](https://github.com/f-slg/fhirviews/blob/main/.zenodo.json).

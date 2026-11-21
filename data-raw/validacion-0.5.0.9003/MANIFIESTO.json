@@ -1,0 +1,155 @@
+{
+  "version": "0.5.0.9003",
+  "fuente_commit": "0df881f4ce6a776b3ea2bef671d1a7f427a8b2f2",
+  "commit_codigo": "0df881f4ce6a776b3ea2bef671d1a7f427a8b2f2",
+  "comprobado_utc": "2026-11-21T20:01:50.532488+00:00",
+  "paquete": {
+    "version": "0.5.0.9003",
+    "commit_fuente": "0df881f4ce6a776b3ea2bef671d1a7f427a8b2f2",
+    "archivo": "fhirviews_0.5.0.9003.tar.gz",
+    "bytes": 1214139,
+    "sha256": "35c53da33119b6e321fe82dc885f1bb90eb4c23e49ce647b3bb509b850d2484e",
+    "md5": "84efe8b71e0820a99483411ae81f9cbd",
+    "alcance": "Candidato de desarrollo para piloto R4; no modifica el envio 0.5.0 a CRAN."
+  },
+  "dependencias": {
+    "R_minimo": "4.1.0",
+    "R_completo_minimo": "4.2.0",
+    "duckdb_minimo": "1.5.5",
+    "duckdb_local": "2.0.0"
+  },
+  "comprobacion_instalada": {
+    "comando": "R CMD check --as-cran --no-manual",
+    "errores": 0,
+    "advertencias": 0,
+    "notas": 1,
+    "motivo_nota": "New submission; Version contains large components (0.5.0.9003)"
+  },
+  "suite_fuente_local": {
+    "aprobadas": 1797,
+    "fallos": 0,
+    "advertencias": 0,
+    "omitidas": 15,
+    "motivos_omision": {
+      "ejecutable_rust_no_configurado": 5,
+      "servidor_escritura_no_configurado": 10
+    }
+  },
+  "aceptacion_instalada": {
+    "basico": {
+      "resultado_tecnico": "aprobado",
+      "controles": [
+        {
+          "prueba": "api_instalada",
+          "estado": "aprobado",
+          "segundos": 0.003,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "vigilancia",
+          "estado": "aprobado",
+          "segundos": 0.952,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "contrato_estricto",
+          "estado": "aprobado",
+          "segundos": 0.08,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "recuperacion",
+          "estado": "no_evaluado",
+          "segundos": 0,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "r4_cinco_recursos",
+          "estado": "aprobado",
+          "segundos": 0.299,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        }
+      ],
+      "validacion_usuario_externo": "pendiente"
+    },
+    "completo": {
+      "resultado_tecnico": "aprobado",
+      "controles": [
+        {
+          "prueba": "api_instalada",
+          "estado": "aprobado",
+          "segundos": 0.003,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "vigilancia",
+          "estado": "aprobado",
+          "segundos": 0.969,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "contrato_estricto",
+          "estado": "aprobado",
+          "segundos": 0.078,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "recuperacion",
+          "estado": "aprobado",
+          "segundos": 0.556,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        },
+        {
+          "prueba": "r4_cinco_recursos",
+          "estado": "aprobado",
+          "segundos": 2.925,
+          "clase_error": "",
+          "codigo": "",
+          "advertencias": 0
+        }
+      ],
+      "validacion_usuario_externo": "pendiente"
+    }
+  },
+  "conformidad": [
+    {
+      "motor": "v8",
+      "aprobadas": 144,
+      "total": 144
+    },
+    {
+      "motor": "duckdb",
+      "aprobadas": 144,
+      "total": 144
+    }
+  ],
+  "ci": {
+    "estado": "pendiente_de_ejecucion_sobre_este_candidato",
+    "correccion_duckdb_previa": "https://github.com/f-slg/fhirviews/pull/33"
+  },
+  "citacion": {
+    "version": "0.5.0.9003",
+    "commit": "0df881f4ce6a776b3ea2bef671d1a7f427a8b2f2",
+    "doi_version": null
+  },
+  "evaluacion_externa": "pendiente",
+  "participantes": "sin_asignar"
+}

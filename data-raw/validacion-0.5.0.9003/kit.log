@@ -1,0 +1,19 @@
+ZIP: hashes, candidato, reproduccion y rechazos aprobados.
+Candidato: 0.5.0.9003 
+SHA-256: 35c53da33119b6e321fe82dc885f1bb90eb4c23e49ce647b3bb509b850d2484e 
+Perfil: basico 
+Instalacion y ensayo en un proceso R nuevo.
+Resultados: /tmp/fhirviews-kit-r4-pw10g6uc/Sesion basico 
+Candidato aprobado para el perfil basico ; validacion con usuarios pendiente.
+Ensayo tecnico aprobado. La evaluacion humana sigue pendiente.
+ Para las tareas manuales, usa abrir_sesion() y el formulario del kit.
+Candidato: 0.5.0.9003 
+SHA-256: 35c53da33119b6e321fe82dc885f1bb90eb4c23e49ce647b3bb509b850d2484e 
+Perfil: completo 
+Instalacion y ensayo en un proceso R nuevo.
+Resultados: /tmp/fhirviews-kit-r4-pw10g6uc/Sesion completo 
+Candidato aprobado para el perfil completo ; validacion con usuarios pendiente.
+Ensayo tecnico aprobado. La evaluacion humana sigue pendiente.
+ Para las tareas manuales, usa abrir_sesion() y el formulario del kit.
+Sesion abierta con fhirviews 0.5.0.9003 desde /tmp/fhirviews-kit-r4-pw10g6uc/Sesion basico/biblioteca/fhirviews 
+R: perfiles instalados, alergias, laboratorio R4 y rechazo de archivo alterado aprobados.
