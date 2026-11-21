@@ -49,12 +49,16 @@
     "duckdb_minimo": "1.5.5"
   },
   "ci_revision_actual": {
-    "estado": "pendiente_de_ejecucion_en_PR",
-    "matriz_prevista": [
+    "estado": "aprobado",
+    "commit_verificado": "97105dbb47cc12c47ad6933d13ea048df7bbf20b",
+    "ejecucion": "https://github.com/f-slg/fhirviews/actions/runs/44956149755",
+    "comprobaciones_aprobadas": 3,
+    "matriz_aprobada": [
       "Linux",
       "Windows",
       "macOS"
-    ]
+    ],
+    "alcance": "Instalacion de ambos perfiles y formulario ES/EN en el commit indicado; la evaluacion externa de R y FHIR sigue pendiente."
   },
   "evaluacion_usuario_externo": "pendiente",
   "participantes": "sin_asignar",

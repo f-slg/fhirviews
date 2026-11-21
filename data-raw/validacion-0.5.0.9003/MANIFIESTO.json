@@ -142,7 +142,20 @@
     }
   ],
   "ci": {
-    "estado": "pendiente_de_ejecucion_sobre_este_candidato",
+    "estado": "aprobado",
+    "commit_verificado": "97105dbb47cc12c47ad6933d13ea048df7bbf20b",
+    "comprobaciones_aprobadas": 25,
+    "ejecuciones": {
+      "R_CMD_check": "https://github.com/f-slg/fhirviews/actions/runs/44956149595",
+      "kit_piloto_R4": "https://github.com/f-slg/fhirviews/actions/runs/44956149755",
+      "HAPI": "https://github.com/f-slg/fhirviews/actions/runs/44956149784",
+      "SQL_DBI": "https://github.com/f-slg/fhirviews/actions/runs/44956149869",
+      "DuckDB_versiones": "https://github.com/f-slg/fhirviews/actions/runs/44956149711",
+      "componente_Rust": "https://github.com/f-slg/fhirviews/actions/runs/44956149744",
+      "distribucion_Rust": "https://github.com/f-slg/fhirviews/actions/runs/44956149737",
+      "documentacion": "https://github.com/f-slg/fhirviews/actions/runs/44956149634"
+    },
+    "alcance": "CI tecnica del commit indicado; la evaluacion externa de R y FHIR sigue pendiente.",
     "correccion_duckdb_previa": "https://github.com/f-slg/fhirviews/pull/33"
   },
   "citacion": {
